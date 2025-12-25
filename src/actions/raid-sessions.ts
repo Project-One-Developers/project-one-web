@@ -1,4 +1,4 @@
-'use server'
+"use server"
 
 import {
     addRaidSession,
@@ -7,19 +7,19 @@ import {
     getRaidSession,
     getRaidSessionRoster,
     getRaidSessionWithRoster,
-    getRaidSessionWithSummaryList
-} from '@/db/repositories/raid-sessions'
-import { getCharactersList } from '@/db/repositories/characters'
-import { newUUID } from '@/db/utils'
-import { getUnixTimestamp } from '@/shared/libs/date/date-utils'
+    getRaidSessionWithSummaryList,
+} from "@/db/repositories/raid-sessions"
+import { getCharactersList } from "@/db/repositories/characters"
+import { newUUID } from "@/db/utils"
+import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import type {
     Character,
     EditRaidSession,
     NewRaidSession,
     RaidSession,
     RaidSessionWithRoster,
-    RaidSessionWithSummary
-} from '@/shared/types/types'
+    RaidSessionWithSummary,
+} from "@/shared/types/types"
 
 export async function getRaidSessionWithRosterAction(
     id: string
@@ -27,7 +27,9 @@ export async function getRaidSessionWithRosterAction(
     return await getRaidSessionWithRoster(id)
 }
 
-export async function getRaidSessionWithSummaryListAction(): Promise<RaidSessionWithSummary[]> {
+export async function getRaidSessionWithSummaryListAction(): Promise<
+    RaidSessionWithSummary[]
+> {
     return await getRaidSessionWithSummaryList()
 }
 
@@ -52,9 +54,9 @@ export async function deleteRaidSessionAction(id: string): Promise<void> {
 export async function cloneRaidSessionAction(id: string): Promise<RaidSession> {
     const source = await getRaidSessionWithRoster(id)
     const cloned: NewRaidSession = {
-        name: source.name + '-' + newUUID().slice(0, 6),
+        name: source.name + "-" + newUUID().slice(0, 6),
         raidDate: getUnixTimestamp(),
-        roster: source.roster.map(r => r.id)
+        roster: source.roster.map((r) => r.id),
     }
     const newId = await addRaidSession(cloned)
     return await getRaidSession(newId)
@@ -69,12 +71,12 @@ export async function importRosterInRaidSessionAction(
 
     // Parse CSV: each line is a character name-server or character name
     const roster: Character[] = csv
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0)
-        .map(line => {
-            const [name] = line.split('-')
-            const matches = allCharacters.filter(r => r.name === name)
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0)
+        .map((line) => {
+            const [name] = line.split("-")
+            const matches = allCharacters.filter((r) => r.name === name)
 
             if (matches.length === 0) {
                 return undefined
@@ -82,14 +84,14 @@ export async function importRosterInRaidSessionAction(
                 return matches[0]
             } else {
                 // Multiple matches, prefer main
-                return matches.find(r => r.main)
+                return matches.find((r) => r.main)
             }
         })
         .filter((r): r is Character => r !== undefined)
 
     const editedRaidSession: EditRaidSession = {
         ...source,
-        roster: roster.map(r => r.id)
+        roster: roster.map((r) => r.id),
     }
 
     await editRaidSession(editedRaidSession)

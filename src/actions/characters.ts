@@ -1,4 +1,4 @@
-'use server'
+"use server"
 
 import {
     addCharacter,
@@ -12,11 +12,11 @@ import {
     getCharacterWithPlayerById,
     getPlayerById,
     getPlayerWithCharactersList,
-    getPlayersWithoutCharactersList
-} from '@/db/repositories/characters'
-import { getDroptimizerLastByChar } from '@/db/repositories/droptimizer'
-import { getLastRaiderioInfo } from '@/db/repositories/raiderio'
-import { getLastWowAuditInfo } from '@/db/repositories/wowaudit'
+    getPlayersWithoutCharactersList,
+} from "@/db/repositories/characters"
+import { getDroptimizerLastByChar } from "@/db/repositories/droptimizer"
+import { getLastRaiderioInfo } from "@/db/repositories/raiderio"
+import { getLastWowAuditInfo } from "@/db/repositories/wowaudit"
 import type {
     Character,
     CharacterGameInfo,
@@ -26,8 +26,8 @@ import type {
     NewCharacter,
     NewPlayer,
     Player,
-    PlayerWithCharacters
-} from '@/shared/types/types'
+    PlayerWithCharacters,
+} from "@/shared/types/types"
 
 // ============== CHARACTERS ==============
 
@@ -38,7 +38,9 @@ export async function addCharacterAction(
     return await getCharacterWithPlayerById(id)
 }
 
-export async function getCharacterAction(id: string): Promise<CharacterWithPlayer | null> {
+export async function getCharacterAction(
+    id: string
+): Promise<CharacterWithPlayer | null> {
     return await getCharacterWithPlayerById(id)
 }
 
@@ -46,7 +48,9 @@ export async function getCharacterListAction(): Promise<Character[]> {
     return await getCharactersList()
 }
 
-export async function getCharactersWithPlayerListAction(): Promise<CharacterWithPlayer[]> {
+export async function getCharactersWithPlayerListAction(): Promise<
+    CharacterWithPlayer[]
+> {
     return await getCharactersWithPlayerList()
 }
 
@@ -77,7 +81,9 @@ export async function editPlayerAction(edited: EditPlayer): Promise<Player | nul
     return await getPlayerById(edited.id)
 }
 
-export async function getPlayerWithCharactersListAction(): Promise<PlayerWithCharacters[]> {
+export async function getPlayerWithCharactersListAction(): Promise<
+    PlayerWithCharacters[]
+> {
     return await getPlayerWithCharactersList()
 }
 
@@ -94,12 +100,12 @@ export async function getCharLatestGameInfoAction(
     const [lastDroptimizer, lastWowAudit, lastRaiderio] = await Promise.all([
         getDroptimizerLastByChar(charName, charRealm),
         getLastWowAuditInfo(charName, charRealm),
-        getLastRaiderioInfo(charName, charRealm)
+        getLastRaiderioInfo(charName, charRealm),
     ])
 
     return {
         droptimizer: lastDroptimizer,
         wowaudit: lastWowAudit,
-        raiderio: lastRaiderio
+        raiderio: lastRaiderio,
     }
 }

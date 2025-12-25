@@ -1,23 +1,23 @@
-'use client'
+"use client"
 
-import { getBossesAction, getRaidLootTableAction } from '@/actions/bosses'
-import { getRosterProgressionAction } from '@/actions/raiderio'
-import { CURRENT_RAID_ID } from '@/shared/consts/wow.consts'
-import type { CharacterWithProgression } from '@/shared/types/types'
-import { useQuery } from '@tanstack/react-query'
-import { queryKeys } from './keys'
+import { getBossesAction, getRaidLootTableAction } from "@/actions/bosses"
+import { getRosterProgressionAction } from "@/actions/raiderio"
+import { CURRENT_RAID_ID } from "@/shared/consts/wow.consts"
+import type { CharacterWithProgression } from "@/shared/types/types"
+import { useQuery } from "@tanstack/react-query"
+import { queryKeys } from "./keys"
 
 export function useBosses(raidId: number = CURRENT_RAID_ID) {
     return useQuery({
         queryKey: [queryKeys.bosses, raidId],
-        queryFn: () => getBossesAction(raidId)
+        queryFn: () => getBossesAction(raidId),
     })
 }
 
 export function useRaidLootTable(raidId: number = CURRENT_RAID_ID) {
     return useQuery({
-        queryKey: [queryKeys.bosses, 'lootTable', raidId],
-        queryFn: () => getRaidLootTableAction(raidId)
+        queryKey: [queryKeys.bosses, "lootTable", raidId],
+        queryFn: () => getRaidLootTableAction(raidId),
     })
 }
 
@@ -36,6 +36,6 @@ export function useRosterProgression(showMains: boolean, showAlts: boolean) {
 
             const result = await getRosterProgressionAction(filterParam)
             return result as CharacterWithProgression[]
-        }
+        },
     })
 }

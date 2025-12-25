@@ -1,4 +1,4 @@
-import { match } from 'ts-pattern'
+import { match } from "ts-pattern"
 
 /**
  * Formats a Unix timestamp to a relative day string.
@@ -10,9 +10,9 @@ export function formatUnixTimestampToRelativeDays(unixTimestamp: number): string
     const diffDays = unixTimestampToRelativeDays(unixTimestamp)
 
     return match(diffDays)
-        .with(0, () => 'Today')
-        .with(1, () => 'Yesterday')
-        .otherwise(days => `${days} days ago`)
+        .with(0, () => "Today")
+        .with(1, () => "Yesterday")
+        .otherwise((days) => `${days} days ago`)
 }
 
 /**
@@ -76,13 +76,13 @@ export function unixTimestampToWowWeek(unixTimestamp: number): number {
 export function formaUnixTimestampToItalianDate(unixTimestamp: number): string {
     const date = new Date(unixTimestamp * 1000)
     const options: Intl.DateTimeFormatOptions = {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
     }
-    return new Intl.DateTimeFormat('it-IT', options).format(date)
+    return new Intl.DateTimeFormat("it-IT", options).format(date)
 }
 
 /**
@@ -96,7 +96,7 @@ export function formatWowWeek(wowWeek?: number): string {
         wowWeek = currentWowWeek()
     }
 
-    const WOW_START_DATE = new Date('2004-11-24T00:00:00Z') // WoW start date (Wednesday)
+    const WOW_START_DATE = new Date("2004-11-24T00:00:00Z") // WoW start date (Wednesday)
 
     // Calculate the start date of the given WoW week
     const weekStartDate = new Date(WOW_START_DATE.getTime() + wowWeek * 7 * 86400000)
@@ -106,12 +106,12 @@ export function formatWowWeek(wowWeek?: number): string {
 
     // Format the date range to DD/MM/YYYY
     const options: Intl.DateTimeFormatOptions = {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
     }
-    const startDateString = weekStartDate.toLocaleDateString('it-IT', options)
-    const endDateString = weekEndDate.toLocaleDateString('it-IT', options)
+    const startDateString = weekStartDate.toLocaleDateString("it-IT", options)
+    const endDateString = weekEndDate.toLocaleDateString("it-IT", options)
 
     return `${startDateString} - ${endDateString}`
 }
@@ -124,7 +124,7 @@ export function formatWowWeek(wowWeek?: number): string {
  */
 export const formatUnixTimestampForDisplay = (unixTimestamp: number): string => {
     const date = new Date(unixTimestamp * 1000)
-    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+    return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getFullYear()} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`
 }
 
 /**
@@ -134,9 +134,9 @@ export const formatUnixTimestampForDisplay = (unixTimestamp: number): string => 
  * @returns The Unix timestamp corresponding to the given date string.
  */
 export const parseStringToUnixTimestamp = (dateString: string): number => {
-    const [datePart, timePart] = dateString.split(' ')
-    const [day, month, year] = datePart.split('/').map(Number)
-    const [hours, minutes] = timePart.split(':').map(Number)
+    const [datePart, timePart] = dateString.split(" ")
+    const [day, month, year] = datePart.split("/").map(Number)
+    const [hours, minutes] = timePart.split(":").map(Number)
     const date = new Date(year, month - 1, day, hours, minutes)
     return Math.floor(date.getTime() / 1000)
 }

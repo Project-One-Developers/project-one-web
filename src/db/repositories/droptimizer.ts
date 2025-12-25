@@ -1,12 +1,15 @@
-import { db } from '@/db'
-import { droptimizerTable, droptimizerUpgradesTable } from '@/db/schema'
-import { newUUID, takeFirstResult } from '@/db/utils'
-import { gearItemSchema } from '@/shared/schemas/items.schema'
-import { droptimizerCurrencySchema, droptimizerUpgradeSchema } from '@/shared/schemas/simulations.schemas'
-import { wowClassNameSchema, wowRaidDiffSchema } from '@/shared/schemas/wow.schemas'
-import type { Droptimizer, NewDroptimizer, WowRaidDifficulty } from '@/shared/types/types'
-import { eq, InferInsertModel, lte, sql } from 'drizzle-orm'
-import { z } from 'zod'
+import { db } from "@/db"
+import { droptimizerTable, droptimizerUpgradesTable } from "@/db/schema"
+import { newUUID, takeFirstResult } from "@/db/utils"
+import { gearItemSchema } from "@/shared/schemas/items.schema"
+import {
+    droptimizerCurrencySchema,
+    droptimizerUpgradeSchema,
+} from "@/shared/schemas/simulations.schemas"
+import { wowClassNameSchema, wowRaidDiffSchema } from "@/shared/schemas/wow.schemas"
+import type { Droptimizer, NewDroptimizer, WowRaidDifficulty } from "@/shared/types/types"
+import { eq, InferInsertModel, lte, sql } from "drizzle-orm"
+import { z } from "zod"
 
 // Schema for parsing droptimizer storage results
 const droptimizerStorageSchema = z.object({
@@ -34,7 +37,7 @@ const droptimizerStorageSchema = z.object({
     itemsAverageItemLevelEquipped: z.number().nullable(),
     itemsInBag: z.array(gearItemSchema).nullable(),
     itemsEquipped: z.array(gearItemSchema),
-    tiersetInfo: z.array(gearItemSchema).nullable()
+    tiersetInfo: z.array(gearItemSchema).nullable(),
 })
 
 const droptimizerStorageToSchema = droptimizerStorageSchema.transform(
@@ -47,11 +50,11 @@ const droptimizerStorageToSchema = droptimizerStorageSchema.transform(
             fightstyle: data.simFightStyle,
             duration: data.simDuration,
             nTargets: data.simNTargets,
-            upgradeEquipped: data.simUpgradeEquipped ?? false
+            upgradeEquipped: data.simUpgradeEquipped ?? false,
         },
         raidInfo: {
             id: data.raidId,
-            difficulty: data.raidDifficulty
+            difficulty: data.raidDifficulty,
         },
         charInfo: {
             name: data.characterName,
@@ -60,9 +63,9 @@ const droptimizerStorageToSchema = droptimizerStorageSchema.transform(
             classId: data.characterClassId,
             spec: data.characterSpec,
             specId: data.characterSpecId,
-            talents: data.characterTalents
+            talents: data.characterTalents,
         },
-        upgrades: data.upgrades.map(up => ({
+        upgrades: data.upgrades.map((up) => ({
             id: up.id,
             item: up.item,
             dps: up.dps,
@@ -70,7 +73,7 @@ const droptimizerStorageToSchema = droptimizerStorageSchema.transform(
             slot: up.slot,
             catalyzedItemId: up.catalyzedItemId,
             tiersetItemId: up.tiersetItemId,
-            droptimizerId: up.droptimizerId
+            droptimizerId: up.droptimizerId,
         })),
         weeklyChest: data.weeklyChest ?? [],
         currencies: data.currencies ?? [],
@@ -78,7 +81,7 @@ const droptimizerStorageToSchema = droptimizerStorageSchema.transform(
         itemsAverageItemLevelEquipped: data.itemsAverageItemLevelEquipped,
         itemsEquipped: data.itemsEquipped,
         itemsInBag: data.itemsInBag ?? [],
-        tiersetInfo: data.tiersetInfo ?? []
+        tiersetInfo: data.tiersetInfo ?? [],
     })
 )
 
@@ -88,8 +91,8 @@ export async function getDroptimizer(url: string): Promise<Droptimizer | null> {
     const result = await db.query.droptimizerTable.findFirst({
         where: (droptimizerTable, { eq }) => eq(droptimizerTable.url, url),
         with: {
-            upgrades: true
-        }
+            upgrades: true,
+        },
     })
 
     if (!result) return null
@@ -101,9 +104,9 @@ export async function getDroptimizerList(): Promise<Droptimizer[]> {
         with: {
             upgrades: {
                 columns: { itemId: false },
-                with: { item: true }
-            }
-        }
+                with: { item: true },
+            },
+        },
     })
     return droptimizerStorageListToSchema.parse(result)
 }
@@ -114,9 +117,9 @@ export async function getDroptimizerByIdsList(ids: string[]): Promise<Droptimize
         with: {
             upgrades: {
                 columns: { itemId: false },
-                with: { item: true }
-            }
-        }
+                with: { item: true },
+            },
+        },
     })
     return droptimizerStorageListToSchema.parse(result)
 }
@@ -130,7 +133,7 @@ export async function getDroptimizerLatestList(): Promise<Droptimizer[]> {
         `
     )
 
-    const urls = (latestDroptimizers.rows as { url: string }[]).map(row => row.url)
+    const urls = (latestDroptimizers.rows as { url: string }[]).map((row) => row.url)
     return getDroptimizerByIdsList(urls)
 }
 
@@ -150,9 +153,9 @@ export async function getDroptimizerLastByCharAndDiff(
         with: {
             upgrades: {
                 columns: { itemId: false },
-                with: { item: true }
-            }
-        }
+                with: { item: true },
+            },
+        },
     })
     return result ? droptimizerStorageToSchema.parse(result) : null
 }
@@ -160,18 +163,23 @@ export async function getDroptimizerLastByCharAndDiff(
 export async function addDroptimizer(droptimizer: NewDroptimizer): Promise<Droptimizer> {
     // Check for existing droptimizer with same ak
     const alreadyPresent = await db.query.droptimizerTable.findFirst({
-        where: (droptimizerTable, { eq }) => eq(droptimizerTable.ak, droptimizer.ak)
+        where: (droptimizerTable, { eq }) => eq(droptimizerTable.ak, droptimizer.ak),
     })
 
     if (alreadyPresent) {
         if (alreadyPresent.simDate >= droptimizer.simInfo.date) {
-            console.log('addDroptimizer: not importing - not newer than existing - ak: ' + droptimizer.ak)
+            console.log(
+                "addDroptimizer: not importing - not newer than existing - ak: " +
+                    droptimizer.ak
+            )
             const existing = await getDroptimizer(alreadyPresent.url)
-            if (!existing) throw new Error('Failed to get existing droptimizer')
+            if (!existing) throw new Error("Failed to get existing droptimizer")
             return existing
         }
         // Delete older version
-        await db.delete(droptimizerTable).where(eq(droptimizerTable.url, alreadyPresent.url))
+        await db
+            .delete(droptimizerTable)
+            .where(eq(droptimizerTable.url, alreadyPresent.url))
     }
 
     // Insert new droptimizer
@@ -199,7 +207,7 @@ export async function addDroptimizer(droptimizer: NewDroptimizer): Promise<Dropt
             currencies: droptimizer.currencies,
             itemsEquipped: droptimizer.itemsEquipped,
             itemsInBag: droptimizer.itemsInBag,
-            tiersetInfo: droptimizer.tiersetInfo
+            tiersetInfo: droptimizer.tiersetInfo,
         })
         .returning({ url: droptimizerTable.url })
         .then(takeFirstResult)
@@ -213,7 +221,7 @@ export async function addDroptimizer(droptimizer: NewDroptimizer): Promise<Dropt
         (up): InferInsertModel<typeof droptimizerUpgradesTable> => ({
             id: newUUID(),
             droptimizerId: droptimizerRes.url,
-            ...up
+            ...up,
         })
     )
 
@@ -222,7 +230,7 @@ export async function addDroptimizer(droptimizer: NewDroptimizer): Promise<Dropt
     }
 
     const result = await getDroptimizer(droptimizerRes.url)
-    if (!result) throw new Error('Failed to get newly inserted droptimizer')
+    if (!result) throw new Error("Failed to get newly inserted droptimizer")
     return result
 }
 
@@ -236,7 +244,7 @@ export async function deleteDroptimizerOlderThanDate(dateUnixTs: number): Promis
 
 export async function getLatestDroptimizerUnixTs(): Promise<number | null> {
     const result = await db.query.droptimizerTable.findFirst({
-        orderBy: (droptimizerTable, { desc }) => desc(droptimizerTable.simDate)
+        orderBy: (droptimizerTable, { desc }) => desc(droptimizerTable.simDate),
     })
     return result ? result.simDate : null
 }
@@ -255,9 +263,9 @@ export async function getDroptimizerLastByChar(
         with: {
             upgrades: {
                 columns: { itemId: false },
-                with: { item: true }
-            }
-        }
+                with: { item: true },
+            },
+        },
     })
     return result ? droptimizerStorageToSchema.parse(result) : null
 }

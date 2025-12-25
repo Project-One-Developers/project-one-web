@@ -1,8 +1,8 @@
-'use client'
+"use client"
 
-import { specIcon } from '@/lib/wow-icon'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import React from 'react'
+import { specIcon } from "@/lib/wow-icon"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import React from "react"
 
 interface WowSpecIconProps extends React.ImgHTMLAttributes<HTMLImageElement> {
     specId: number
@@ -14,7 +14,7 @@ export const WowSpecIcon: React.FC<WowSpecIconProps> = ({
     showTooltip,
     ...props
 }) => {
-    const iconUrl = specIcon.get(specId) || ''
+    const iconUrl = specIcon.get(specId) || ""
 
     if (!showTooltip) {
         return (

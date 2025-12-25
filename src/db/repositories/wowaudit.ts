@@ -1,8 +1,8 @@
-import { db } from '@/db'
-import { charWowAuditTable } from '@/db/schema'
-import { gearItemSchema } from '@/shared/schemas/items.schema'
-import type { CharacterWowAudit } from '@/shared/types/types'
-import { z } from 'zod'
+import { db } from "@/db"
+import { charWowAuditTable } from "@/db/schema"
+import { gearItemSchema } from "@/shared/schemas/items.schema"
+import type { CharacterWowAudit } from "@/shared/types/types"
+import { z } from "zod"
 
 // Schema for new WowAudit character data (matches DB table)
 export const newCharacterWowAuditSchema = z.object({
@@ -46,7 +46,7 @@ export const newCharacterWowAuditSchema = z.object({
     greatVaultSlot9: z.number().nullable(),
     bestItemsEquipped: z.array(gearItemSchema),
     itemsEquipped: z.array(gearItemSchema),
-    tiersetInfo: z.array(gearItemSchema)
+    tiersetInfo: z.array(gearItemSchema),
 })
 
 export type NewCharacterWowAudit = z.infer<typeof newCharacterWowAuditSchema>
@@ -76,13 +76,25 @@ const charWowAuditStorageToCharacterWowAudit = newCharacterWowAuditSchema.transf
         enchant: {
             wrist: createEnchantPiece(data.enchantNameWrist, data.enchantQualityWrist),
             legs: createEnchantPiece(data.enchantNameLegs, data.enchantQualityLegs),
-            main_hand: createEnchantPiece(data.enchantNameMainHand, data.enchantQualityMainHand),
-            off_hand: createEnchantPiece(data.enchantNameOffHand, data.enchantQualityOffHand),
-            finger1: createEnchantPiece(data.enchantNameFinger1, data.enchantQualityFinger1),
-            finger2: createEnchantPiece(data.enchantNameFinger2, data.enchantQualityFinger2),
+            main_hand: createEnchantPiece(
+                data.enchantNameMainHand,
+                data.enchantQualityMainHand
+            ),
+            off_hand: createEnchantPiece(
+                data.enchantNameOffHand,
+                data.enchantQualityOffHand
+            ),
+            finger1: createEnchantPiece(
+                data.enchantNameFinger1,
+                data.enchantQualityFinger1
+            ),
+            finger2: createEnchantPiece(
+                data.enchantNameFinger2,
+                data.enchantQualityFinger2
+            ),
             back: createEnchantPiece(data.enchantNameBack, data.enchantQualityBack),
             chest: createEnchantPiece(data.enchantNameChest, data.enchantQualityChest),
-            feet: createEnchantPiece(data.enchantNameFeet, data.enchantQualityFeet)
+            feet: createEnchantPiece(data.enchantNameFeet, data.enchantQualityFeet),
         },
         greatVault: {
             slot1: data.greatVaultSlot1,
@@ -93,22 +105,25 @@ const charWowAuditStorageToCharacterWowAudit = newCharacterWowAuditSchema.transf
             slot6: data.greatVaultSlot6,
             slot7: data.greatVaultSlot7,
             slot8: data.greatVaultSlot8,
-            slot9: data.greatVaultSlot9
+            slot9: data.greatVaultSlot9,
         },
         itemsEquipped: data.itemsEquipped,
         tiersetInfo: data.tiersetInfo,
-        bestItemsEquipped: data.bestItemsEquipped
+        bestItemsEquipped: data.bestItemsEquipped,
     })
 )
 
-export async function addCharacterWowAudit(characters: NewCharacterWowAudit[]): Promise<void> {
+export async function addCharacterWowAudit(
+    characters: NewCharacterWowAudit[]
+): Promise<void> {
     if (characters.length === 0) return
     await db.insert(charWowAuditTable).values(characters)
 }
 
 export async function getLastTimeSyncedWowAudit(): Promise<number | null> {
     const result = await db.query.charWowAuditTable.findFirst({
-        orderBy: (charWowAuditTable, { desc }) => desc(charWowAuditTable.wowauditLastModifiedUnixTs)
+        orderBy: (charWowAuditTable, { desc }) =>
+            desc(charWowAuditTable.wowauditLastModifiedUnixTs),
     })
     return result ? result.wowauditLastModifiedUnixTs : null
 }
@@ -119,7 +134,10 @@ export async function getLastWowAuditInfo(
 ): Promise<CharacterWowAudit | null> {
     const result = await db.query.charWowAuditTable.findFirst({
         where: (charWowAuditTable, { eq, and }) =>
-            and(eq(charWowAuditTable.name, charName), eq(charWowAuditTable.realm, charRealm))
+            and(
+                eq(charWowAuditTable.name, charName),
+                eq(charWowAuditTable.realm, charRealm)
+            ),
     })
     return result ? charWowAuditStorageToCharacterWowAudit.parse(result) : null
 }

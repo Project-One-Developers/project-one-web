@@ -1,7 +1,7 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['discord.js', 'zlib-sync', '@discordjs/ws'],
-};
+    serverExternalPackages: ["discord.js", "zlib-sync", "@discordjs/ws"],
+}
 
-export default nextConfig;
+export default nextConfig

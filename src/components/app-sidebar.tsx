@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import {
     Code2Icon,
@@ -11,10 +11,10 @@ import {
     LucideScrollText,
     LucideSnail,
     LucideSwords,
-    Settings
-} from 'lucide-react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+    Settings,
+} from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
     Sidebar,
     SidebarContent,
@@ -25,101 +25,101 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarTrigger,
-    useSidebar
-} from './ui/sidebar'
+    useSidebar,
+} from "./ui/sidebar"
 
-import type { JSX } from 'react'
+import type { JSX } from "react"
 
 const preparationItems = [
     {
-        title: 'Roster',
-        url: '/roster',
-        icon: LucideAccessibility
+        title: "Roster",
+        url: "/roster",
+        icon: LucideAccessibility,
     },
     {
-        title: 'Droptimizer',
-        url: '/droptimizer',
-        icon: LucideBot
+        title: "Droptimizer",
+        url: "/droptimizer",
+        icon: LucideBot,
     },
     {
-        title: 'Loot Gains',
-        url: '/loot-gains',
-        icon: LucideGauge
+        title: "Loot Gains",
+        url: "/loot-gains",
+        icon: LucideGauge,
     },
     {
-        title: 'Loot Table',
-        url: '/loot-table',
-        icon: LucideScrollText
+        title: "Loot Table",
+        url: "/loot-table",
+        icon: LucideScrollText,
     },
     {
-        title: 'Raid Progression',
-        url: '/raid-progression',
-        icon: LucideSnail
+        title: "Raid Progression",
+        url: "/raid-progression",
+        icon: LucideSnail,
     },
     {
-        title: 'Summary',
-        url: '/summary',
-        icon: LucideCpu
-    }
+        title: "Summary",
+        url: "/summary",
+        icon: LucideCpu,
+    },
 ]
 
 const raidItems = [
     {
-        title: 'Raid Session',
-        url: '/raid-session',
-        icon: LucideSwords
+        title: "Raid Session",
+        url: "/raid-session",
+        icon: LucideSwords,
     },
     {
-        title: 'Assign',
-        url: '/assign',
-        icon: LucideMedal
-    }
+        title: "Assign",
+        url: "/assign",
+        icon: LucideMedal,
+    },
 ]
 
 const weakaurasItems = [
     {
-        title: 'Project One',
-        url: 'https://wago.io/_vARNxg02',
-        icon: Code2Icon
+        title: "Project One",
+        url: "https://wago.io/_vARNxg02",
+        icon: Code2Icon,
     },
     {
-        title: 'Reloe',
-        url: 'https://wago.io/search/imports/wow/all?q=User%3A%22Reloe%22',
-        icon: Code2Icon
+        title: "Reloe",
+        url: "https://wago.io/search/imports/wow/all?q=User%3A%22Reloe%22",
+        icon: Code2Icon,
     },
     {
-        title: 'Northern Sky',
-        url: 'https://wago.io/Y7yEWhBqV',
-        icon: Code2Icon
+        title: "Northern Sky",
+        url: "https://wago.io/Y7yEWhBqV",
+        icon: Code2Icon,
     },
     {
-        title: 'Liquid',
-        url: 'https://wago.io/LiquidManaforge',
-        icon: Code2Icon
-    }
+        title: "Liquid",
+        url: "https://wago.io/LiquidManaforge",
+        icon: Code2Icon,
+    },
 ]
 
 const spreadsheetItems = [
     {
-        title: 'Split',
-        url: 'https://docs.google.com/spreadsheets/d/1kA2AIMB65xXnOY-dHKhOkaecwbmymdXP_jLg1Bu7xTI/edit?gid=2067098323#gid=2067098323',
-        icon: FileSpreadsheet
+        title: "Split",
+        url: "https://docs.google.com/spreadsheets/d/1kA2AIMB65xXnOY-dHKhOkaecwbmymdXP_jLg1Bu7xTI/edit?gid=2067098323#gid=2067098323",
+        icon: FileSpreadsheet,
     },
     {
-        title: 'Farm 11.1',
-        url: 'https://docs.google.com/spreadsheets/d/1U8kKbRJQ13-cdH93otDlmc-6qbzQ1g55q9lRokvwSME/edit?pli=1&gid=0#gid=0',
-        icon: FileSpreadsheet
+        title: "Farm 11.1",
+        url: "https://docs.google.com/spreadsheets/d/1U8kKbRJQ13-cdH93otDlmc-6qbzQ1g55q9lRokvwSME/edit?pli=1&gid=0#gid=0",
+        icon: FileSpreadsheet,
     },
     {
-        title: 'Ulria PI/Tier',
-        url: 'https://docs.google.com/spreadsheets/d/1exJeu5eVe4bTmyg3WFx5PTxIWvDLi0j-WW-XWpGoG88/htmlview?gid=8138119#',
-        icon: FileSpreadsheet
+        title: "Ulria PI/Tier",
+        url: "https://docs.google.com/spreadsheets/d/1exJeu5eVe4bTmyg3WFx5PTxIWvDLi0j-WW-XWpGoG88/htmlview?gid=8138119#",
+        icon: FileSpreadsheet,
     },
     {
-        title: 'WoW Audit',
-        url: 'https://docs.google.com/spreadsheets/d/1oXDiksY6UFl6QEW0cFqF0iuxUE3ZM3g5WrrCBIx4OTA/edit?gid=0#gid=0',
-        icon: FileSpreadsheet
-    }
+        title: "WoW Audit",
+        url: "https://docs.google.com/spreadsheets/d/1oXDiksY6UFl6QEW0cFqF0iuxUE3ZM3g5WrrCBIx4OTA/edit?gid=0#gid=0",
+        icon: FileSpreadsheet,
+    },
 ]
 
 export default function AppSidebar(): JSX.Element {
@@ -139,10 +139,10 @@ export default function AppSidebar(): JSX.Element {
                         <SidebarGroupLabel>Preparation</SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
-                                {preparationItems.map(item => (
+                                {preparationItems.map((item) => (
                                     <SidebarMenuItem
                                         key={item.title}
-                                        className={`hover:bg-muted ${pathname === item.url ? 'bg-muted' : ''}`}
+                                        className={`hover:bg-muted ${pathname === item.url ? "bg-muted" : ""}`}
                                     >
                                         <SidebarMenuButton asChild>
                                             <Link href={item.url}>
@@ -159,10 +159,10 @@ export default function AppSidebar(): JSX.Element {
                         <SidebarGroupLabel>Raid</SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
-                                {raidItems.map(item => (
+                                {raidItems.map((item) => (
                                     <SidebarMenuItem
                                         key={item.title}
-                                        className={`hover:bg-muted ${pathname === item.url ? 'bg-muted' : ''}`}
+                                        className={`hover:bg-muted ${pathname === item.url ? "bg-muted" : ""}`}
                                     >
                                         <SidebarMenuButton asChild>
                                             <Link href={item.url}>
@@ -179,13 +179,17 @@ export default function AppSidebar(): JSX.Element {
                         <SidebarGroupLabel>Weakauras</SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
-                                {weakaurasItems.map(item => (
+                                {weakaurasItems.map((item) => (
                                     <SidebarMenuItem
                                         key={item.title}
                                         className="hover:bg-muted"
                                     >
                                         <SidebarMenuButton asChild>
-                                            <a href={item.url} rel="noreferrer" target="_blank">
+                                            <a
+                                                href={item.url}
+                                                rel="noreferrer"
+                                                target="_blank"
+                                            >
                                                 <item.icon />
                                                 <span>{item.title}</span>
                                             </a>
@@ -199,13 +203,17 @@ export default function AppSidebar(): JSX.Element {
                         <SidebarGroupLabel>Spreadsheet</SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
-                                {spreadsheetItems.map(item => (
+                                {spreadsheetItems.map((item) => (
                                     <SidebarMenuItem
                                         key={item.title}
                                         className="hover:bg-muted"
                                     >
                                         <SidebarMenuButton asChild>
-                                            <a href={item.url} rel="noreferrer" target="_blank">
+                                            <a
+                                                href={item.url}
+                                                rel="noreferrer"
+                                                target="_blank"
+                                            >
                                                 <item.icon />
                                                 <span>{item.title}</span>
                                             </a>

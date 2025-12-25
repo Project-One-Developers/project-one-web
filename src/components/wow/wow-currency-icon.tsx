@@ -1,7 +1,7 @@
-'use client'
+"use client"
 
-import { currencyIcon } from '@/lib/wow-icon'
-import type { DroptimizerCurrency } from '@/shared/types/types'
+import { currencyIcon } from "@/lib/wow-icon"
+import type { DroptimizerCurrency } from "@/shared/types/types"
 
 type WowCurrencyIconProps = {
     currency: DroptimizerCurrency
@@ -29,7 +29,7 @@ export function WowCurrencyIcon({ currency, iconClassName }: WowCurrencyIconProp
                 <img
                     src={currencyInfo?.url}
                     alt={currencyInfo?.name}
-                    className={`${iconClassName || 'object-cover object-top rounded-lg h-8 w-8 border border-background'} block`}
+                    className={`${iconClassName || "object-cover object-top rounded-lg h-8 w-8 border border-background"} block`}
                 />
                 <p className="text-bold text-[11px]">{currency.amount}</p>
             </div>

@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from "zod"
 
 export type QELiveJson = z.infer<typeof qeliveJsonSchema>
 
@@ -14,14 +14,14 @@ export const qeliveEquippedItemSchema = z.object({
     isCatalystItem: z.boolean(),
     softScore: z.number(),
     bonusIDS: z.string(), // colon separated string of bonus IDs
-    gemString: z.string() // colon separated string of gem IDs
+    gemString: z.string(), // colon separated string of gem IDs
 })
 
 export const qeliveResultSchema = z.object({
     item: z.number(),
     dropLoc: z.string(),
-    dropDifficulty: z.preprocess(val => {
-        if (val === '' || val === null || val === undefined) {
+    dropDifficulty: z.preprocess((val) => {
+        if (val === "" || val === null || val === undefined) {
             return 0
         }
         return val
@@ -29,7 +29,7 @@ export const qeliveResultSchema = z.object({
     level: z.number(),
     score: z.number(),
     rawDiff: z.number(),
-    percDiff: z.number()
+    percDiff: z.number(),
 })
 
 export const qeliveJsonSchema = z.object({
@@ -46,9 +46,9 @@ export const qeliveJsonSchema = z.object({
         dungeon: z.number(),
         pvp: z.number(),
         craftedLevel: z.number(),
-        craftedStats: z.string()
+        craftedStats: z.string(),
     }),
     equippedItems: z.array(qeliveEquippedItemSchema),
     results: z.array(qeliveResultSchema),
-    gameType: z.string()
+    gameType: z.string(),
 })

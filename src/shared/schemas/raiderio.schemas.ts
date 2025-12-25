@@ -1,5 +1,5 @@
-import { z } from 'zod'
-import { gearItemSchema } from './items.schema'
+import { z } from "zod"
+import { gearItemSchema } from "./items.schema"
 
 export const encounterSchema = z.object({
     slug: z.string(),
@@ -8,23 +8,23 @@ export const encounterSchema = z.object({
     numKills: z.number(),
     firstDefeated: z.string().nullable(), // ISO date string
     lastDefeated: z.string().nullable(), // ISO date string
-    bossIcon: z.string()
+    bossIcon: z.string(),
 })
 
 export const encountersDefeatedSchema = z.object({
     normal: z.array(encounterSchema).optional(),
     heroic: z.array(encounterSchema).optional(),
-    mythic: z.array(encounterSchema).optional()
+    mythic: z.array(encounterSchema).optional(),
 })
 
 export const raidProgressSchema = z.object({
     raid: z.string(),
-    encountersDefeated: encountersDefeatedSchema
+    encountersDefeated: encountersDefeatedSchema,
 })
 
 export const raiderIoProgressSchema = z.object({
     tier: z.string(),
-    raidProgress: z.array(raidProgressSchema)
+    raidProgress: z.array(raidProgressSchema),
 })
 
 export const charRaiderioSchema = z.object({
@@ -37,7 +37,7 @@ export const charRaiderioSchema = z.object({
     itemUpdateAt: z.number(), // 2025-07-29T06:00:12.000Z
     averageItemLevel: z.string(),
     itemsEquipped: z.array(gearItemSchema),
-    progress: raiderIoProgressSchema
+    progress: raiderIoProgressSchema,
 })
 
 // Types

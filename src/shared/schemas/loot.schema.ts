@@ -1,8 +1,8 @@
-import { z } from 'zod'
-import { characterSchema } from './characters.schemas'
-import { gearItemSchema, itemSchema } from './items.schema'
-import { raidSessionWithRosterSchema } from './raid.schemas'
-import { tierSetBonusSchema, wowRaidDiffSchema } from './wow.schemas'
+import { z } from "zod"
+import { characterSchema } from "./characters.schemas"
+import { gearItemSchema, itemSchema } from "./items.schema"
+import { raidSessionWithRosterSchema } from "./raid.schemas"
+import { tierSetBonusSchema, wowRaidDiffSchema } from "./wow.schemas"
 
 export const newLootSchema = z.object({
     gearItem: gearItemSchema,
@@ -10,7 +10,7 @@ export const newLootSchema = z.object({
     raidDifficulty: wowRaidDiffSchema,
     assignedTo: characterSchema.shape.id.optional(),
     itemString: z.string().nullable(), // only in rc csv import
-    addonId: z.string().nullable() // only in rc csv/mrt import
+    addonId: z.string().nullable(), // only in rc csv/mrt import
 })
 
 export const newLootManualSchema = z.object({
@@ -19,7 +19,7 @@ export const newLootManualSchema = z.object({
     hasSocket: z.boolean(),
     hasAvoidance: z.boolean(),
     hasLeech: z.boolean(),
-    hasSpeed: z.boolean()
+    hasSpeed: z.boolean(),
 })
 
 export const lootSchema = z.object({
@@ -32,11 +32,11 @@ export const lootSchema = z.object({
     itemString: z.string().nullable(), // only in rc/mrt csv import
     charsEligibility: z.string().array(),
     assignedCharacterId: characterSchema.shape.id.nullable(),
-    tradedToAssigned: z.boolean()
+    tradedToAssigned: z.boolean(),
 })
 
 export const lootWithItemSchema = lootSchema.extend({
-    item: itemSchema
+    item: itemSchema,
 })
 
 export const charAssignmentHighlightsSchema = z.object({
@@ -47,18 +47,18 @@ export const charAssignmentHighlightsSchema = z.object({
     gearIsBis: z.boolean(),
     alreadyGotIt: z.boolean(),
     score: z.number(),
-    isTrackUpgrade: z.boolean()
+    isTrackUpgrade: z.boolean(),
 })
 
 export const lootWithAssignedSchema = lootSchema.extend({
     assignedCharacter: characterSchema.nullable(),
-    assignedHighlights: charAssignmentHighlightsSchema.nullable()
+    assignedHighlights: charAssignmentHighlightsSchema.nullable(),
 })
 
 export const newLootsFromManualInputSchema = z
     .object({
         raidSessionId: z.uuid(),
-        loots: z.array(newLootManualSchema).min(1)
+        loots: z.array(newLootManualSchema).min(1),
     })
     .strict()
 
@@ -68,6 +68,6 @@ export const newLootsFromRcSchema = z
         csv: z
             .string()
             .min(1)
-            .refine(csv => csv.includes(','), { message: 'Invalid CSV format' })
+            .refine((csv) => csv.includes(","), { message: "Invalid CSV format" }),
     })
     .strict()

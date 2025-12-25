@@ -1,24 +1,24 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
 import {
     Dialog,
     DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogTrigger
-} from '@/components/ui/dialog'
-import { Textarea } from '@/components/ui/textarea'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { importRcLootCsvAction, importMrtLootAction } from '@/actions/loots'
-import { Upload, LoaderCircle } from 'lucide-react'
-import { toast } from 'sonner'
-import { useQueryClient } from '@tanstack/react-query'
-import { queryKeys } from '@/lib/queries/keys'
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { importRcLootCsvAction, importMrtLootAction } from "@/actions/loots"
+import { Upload, LoaderCircle } from "lucide-react"
+import { toast } from "sonner"
+import { useQueryClient } from "@tanstack/react-query"
+import { queryKeys } from "@/lib/queries/keys"
 
 interface LootImportDialogProps {
     raidSessionId: string
@@ -26,28 +26,34 @@ interface LootImportDialogProps {
 
 export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
     const [open, setOpen] = useState(false)
-    const [rcCsvData, setRcCsvData] = useState('')
-    const [mrtData, setMrtData] = useState('')
+    const [rcCsvData, setRcCsvData] = useState("")
+    const [mrtData, setMrtData] = useState("")
     const [importAssigned, setImportAssigned] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const queryClient = useQueryClient()
 
     const handleRcImport = async () => {
         if (!rcCsvData.trim()) {
-            toast.error('Please paste RC Loot Council CSV data')
+            toast.error("Please paste RC Loot Council CSV data")
             return
         }
 
         setIsLoading(true)
         try {
-            const result = await importRcLootCsvAction(raidSessionId, rcCsvData, importAssigned)
+            const result = await importRcLootCsvAction(
+                raidSessionId,
+                rcCsvData,
+                importAssigned
+            )
             toast.success(`Imported ${result.imported} loot items`)
             queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.raidSession, raidSessionId] })
-            setRcCsvData('')
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.raidSession, raidSessionId],
+            })
+            setRcCsvData("")
             setOpen(false)
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'Failed to import loot')
+            toast.error(error instanceof Error ? error.message : "Failed to import loot")
         } finally {
             setIsLoading(false)
         }
@@ -55,7 +61,7 @@ export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
 
     const handleMrtImport = async () => {
         if (!mrtData.trim()) {
-            toast.error('Please paste MRT loot data')
+            toast.error("Please paste MRT loot data")
             return
         }
 
@@ -64,11 +70,13 @@ export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
             const result = await importMrtLootAction(raidSessionId, mrtData)
             toast.success(`Imported ${result.imported} loot items`)
             queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.raidSession, raidSessionId] })
-            setMrtData('')
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.raidSession, raidSessionId],
+            })
+            setMrtData("")
             setOpen(false)
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'Failed to import loot')
+            toast.error(error instanceof Error ? error.message : "Failed to import loot")
         } finally {
             setIsLoading(false)
         }
@@ -104,7 +112,7 @@ export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
                                 id="rc-csv"
                                 placeholder="player,date,time,id,item,itemID,itemString,response,..."
                                 value={rcCsvData}
-                                onChange={e => setRcCsvData(e.target.value)}
+                                onChange={(e) => setRcCsvData(e.target.value)}
                                 className="mt-2 h-48 font-mono text-xs"
                             />
                         </div>
@@ -112,13 +120,19 @@ export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
                             <Checkbox
                                 id="import-assigned"
                                 checked={importAssigned}
-                                onCheckedChange={checked => setImportAssigned(checked === true)}
+                                onCheckedChange={(checked) =>
+                                    setImportAssigned(checked === true)
+                                }
                             />
                             <Label htmlFor="import-assigned" className="text-sm">
                                 Import assigned character from CSV
                             </Label>
                         </div>
-                        <Button onClick={handleRcImport} disabled={isLoading} className="w-full">
+                        <Button
+                            onClick={handleRcImport}
+                            disabled={isLoading}
+                            className="w-full"
+                        >
                             {isLoading ? (
                                 <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                             ) : (
@@ -130,18 +144,20 @@ export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
 
                     <TabsContent value="mrt" className="space-y-4">
                         <div>
-                            <Label htmlFor="mrt-data">
-                                Paste MRT loot export data
-                            </Label>
+                            <Label htmlFor="mrt-data">Paste MRT loot export data</Label>
                             <Textarea
                                 id="mrt-data"
                                 placeholder="timeRec#encounterID#instanceID#difficulty#playerName#classID#quantity#itemLink#rollType"
                                 value={mrtData}
-                                onChange={e => setMrtData(e.target.value)}
+                                onChange={(e) => setMrtData(e.target.value)}
                                 className="mt-2 h-48 font-mono text-xs"
                             />
                         </div>
-                        <Button onClick={handleMrtImport} disabled={isLoading} className="w-full">
+                        <Button
+                            onClick={handleMrtImport}
+                            disabled={isLoading}
+                            className="w-full"
+                        >
                             {isLoading ? (
                                 <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                             ) : (

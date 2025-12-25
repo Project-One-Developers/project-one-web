@@ -1,9 +1,9 @@
-'use client'
+"use client"
 
-import { cn } from '@/lib/utils'
-import type { GearItem } from '@/shared/types/types'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { WowGearIcon } from './wow-gear-icon'
+import { cn } from "@/lib/utils"
+import type { GearItem } from "@/shared/types/types"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { WowGearIcon } from "./wow-gear-icon"
 
 type TiersetInfoProps = {
     tierset: GearItem[]
@@ -11,19 +11,19 @@ type TiersetInfoProps = {
 }
 
 export function TiersetInfo({ tierset, className }: TiersetInfoProps) {
-    const tierSlots = ['head', 'shoulder', 'chest', 'hands', 'legs']
-    const omniItems = tierset.filter(t => t.item.slotKey === 'omni')
+    const tierSlots = ["head", "shoulder", "chest", "hands", "legs"]
+    const omniItems = tierset.filter((t) => t.item.slotKey === "omni")
 
     return (
-        <div className={cn('flex flex-row gap-1', className)}>
+        <div className={cn("flex flex-row gap-1", className)}>
             {/* Standard Tier Slots */}
-            {tierSlots.map(slot => {
-                const tiersetItem = tierset.find(t => t.item.slotKey === slot)
+            {tierSlots.map((slot) => {
+                const tiersetItem = tierset.find((t) => t.item.slotKey === slot)
                 return (
                     <div key={slot} className="flex flex-col items-center space-x-1">
                         <span className="text-[9px] text-gray-400">{slot}</span>
                         {tiersetItem ? (
-                            tiersetItem.source === 'bag' ? (
+                            tiersetItem.source === "bag" ? (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <div className="relative text-yellow-500">
@@ -53,7 +53,10 @@ export function TiersetInfo({ tierset, className }: TiersetInfoProps) {
                                     </TooltipContent>
                                 </Tooltip>
                             ) : (
-                                <WowGearIcon gearItem={tiersetItem} showTiersetLine={false} />
+                                <WowGearIcon
+                                    gearItem={tiersetItem}
+                                    showTiersetLine={false}
+                                />
                             )
                         ) : (
                             <div className="w-8 h-8 bg-gray-700 border border-cyan-400/50 rounded-md"></div>
@@ -68,7 +71,7 @@ export function TiersetInfo({ tierset, className }: TiersetInfoProps) {
                     {omniItems.map((omniItem, index) => (
                         <div key={index} className="flex flex-col items-center space-x-1">
                             <span className="text-[9px] text-gray-400">omni</span>
-                            {omniItem.source === 'bag' ? (
+                            {omniItem.source === "bag" ? (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <div className="relative">
@@ -98,7 +101,10 @@ export function TiersetInfo({ tierset, className }: TiersetInfoProps) {
                                     </TooltipContent>
                                 </Tooltip>
                             ) : (
-                                <WowGearIcon gearItem={omniItem} showTiersetLine={false} />
+                                <WowGearIcon
+                                    gearItem={omniItem}
+                                    showTiersetLine={false}
+                                />
                             )}
                         </div>
                     ))}

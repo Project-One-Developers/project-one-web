@@ -1,42 +1,49 @@
-import { db } from '@/db'
-import { charTable, lootTable, raidSessionRosterTable, raidSessionTable } from '@/db/schema'
-import { newUUID, takeFirstResult } from '@/db/utils'
-import { characterSchema } from '@/shared/schemas/characters.schemas'
+import { db } from "@/db"
+import {
+    charTable,
+    lootTable,
+    raidSessionRosterTable,
+    raidSessionTable,
+} from "@/db/schema"
+import { newUUID, takeFirstResult } from "@/db/utils"
+import { characterSchema } from "@/shared/schemas/characters.schemas"
 import {
     raidSessionSchema,
     raidSessionWithRosterSchema,
-    raidSessionWithSummarySchema
-} from '@/shared/schemas/raid.schemas'
+    raidSessionWithSummarySchema,
+} from "@/shared/schemas/raid.schemas"
 import type {
     Character,
     EditRaidSession,
     NewRaidSession,
     RaidSession,
     RaidSessionWithRoster,
-    RaidSessionWithSummary
-} from '@/shared/types/types'
-import { count, eq, InferInsertModel } from 'drizzle-orm'
-import { z } from 'zod'
+    RaidSessionWithSummary,
+} from "@/shared/types/types"
+import { count, eq, InferInsertModel } from "drizzle-orm"
+import { z } from "zod"
 
 function flattenRaidPartecipation(result: any): RaidSessionWithRoster {
     return {
         ...result,
-        roster: result?.charPartecipation?.map((cp: any) => cp.character) ?? []
+        roster: result?.charPartecipation?.map((cp: any) => cp.character) ?? [],
     }
 }
 
-export async function getRaidSessionWithRoster(id: string): Promise<RaidSessionWithRoster> {
+export async function getRaidSessionWithRoster(
+    id: string
+): Promise<RaidSessionWithRoster> {
     const result = await db.query.raidSessionTable.findFirst({
         where: (raidSessionTable, { eq }) => eq(raidSessionTable.id, id),
         with: {
             charPartecipation: {
                 with: {
                     character: {
-                        with: { player: true }
-                    }
-                }
-            }
-        }
+                        with: { player: true },
+                    },
+                },
+            },
+        },
     })
 
     const processedResult = flattenRaidPartecipation(result)
@@ -45,7 +52,7 @@ export async function getRaidSessionWithRoster(id: string): Promise<RaidSessionW
 
 export async function getRaidSession(id: string): Promise<RaidSession> {
     const result = await db.query.raidSessionTable.findFirst({
-        where: (raidSessionTable, { eq }) => eq(raidSessionTable.id, id)
+        where: (raidSessionTable, { eq }) => eq(raidSessionTable.id, id),
     })
     return raidSessionSchema.parse(result)
 }
@@ -74,12 +81,15 @@ async function countRoster(id: string): Promise<number> {
 export async function getRaidSessionWithSummaryList(): Promise<RaidSessionWithSummary[]> {
     const sessions = await getRaidSessions()
 
-    const allPromise = sessions.map(async s => {
-        const [lootCount, rosterCount] = await Promise.all([countLoot(s.id), countRoster(s.id)])
+    const allPromise = sessions.map(async (s) => {
+        const [lootCount, rosterCount] = await Promise.all([
+            countLoot(s.id),
+            countRoster(s.id),
+        ])
         return {
             ...s,
             rosterCount: rosterCount,
-            lootCount: lootCount
+            lootCount: lootCount,
         }
     })
 
@@ -87,13 +97,15 @@ export async function getRaidSessionWithSummaryList(): Promise<RaidSessionWithSu
     return z.array(raidSessionWithSummarySchema).parse(result)
 }
 
-export async function editRaidSession(editedRaidSession: EditRaidSession): Promise<string> {
+export async function editRaidSession(
+    editedRaidSession: EditRaidSession
+): Promise<string> {
     // Update session
     await db
         .update(raidSessionTable)
         .set({
             name: editedRaidSession.name,
-            raidDate: editedRaidSession.raidDate
+            raidDate: editedRaidSession.raidDate,
         })
         .where(eq(raidSessionTable.id, editedRaidSession.id))
 
@@ -107,7 +119,7 @@ export async function editRaidSession(editedRaidSession: EditRaidSession): Promi
         const raidPartecipation = editedRaidSession.roster.map(
             (characterId): InferInsertModel<typeof raidSessionRosterTable> => ({
                 raidSessionId: editedRaidSession.id,
-                charId: characterId
+                charId: characterId,
             })
         )
         await db.insert(raidSessionRosterTable).values(raidPartecipation)
@@ -122,20 +134,22 @@ export async function addRaidSession(newRaidSession: NewRaidSession): Promise<st
         .values({
             id: newUUID(),
             name: newRaidSession.name,
-            raidDate: newRaidSession.raidDate
+            raidDate: newRaidSession.raidDate,
         })
         .returning({ id: raidSessionTable.id })
         .then(takeFirstResult)
 
     if (!res) {
-        throw new Error(`Failed to insert raid session: ${JSON.stringify(newRaidSession)}`)
+        throw new Error(
+            `Failed to insert raid session: ${JSON.stringify(newRaidSession)}`
+        )
     }
 
     if (newRaidSession.roster.length > 0) {
         const raidPartecipation = newRaidSession.roster.map(
             (characterId): InferInsertModel<typeof raidSessionRosterTable> => ({
                 raidSessionId: res.id,
-                charId: characterId
+                charId: characterId,
             })
         )
         await db.insert(raidSessionRosterTable).values(raidPartecipation)
@@ -155,5 +169,5 @@ export async function getRaidSessionRoster(id: string): Promise<Character[]> {
         .innerJoin(charTable, eq(raidSessionRosterTable.charId, charTable.id))
         .where(eq(raidSessionRosterTable.raidSessionId, id))
 
-    return z.array(characterSchema).parse(result.flatMap(sr => sr.characters))
+    return z.array(characterSchema).parse(result.flatMap((sr) => sr.characters))
 }

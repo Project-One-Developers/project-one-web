@@ -1,28 +1,33 @@
-'use client'
+"use client"
 
-import type { JSX } from 'react'
-import { useState, useMemo } from 'react'
-import { LoaderCircle, ExternalLink, Search, TrendingUp } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import type { JSX } from "react"
+import { useState, useMemo } from "react"
+import { LoaderCircle, ExternalLink, Search, TrendingUp } from "lucide-react"
+import { Input } from "@/components/ui/input"
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
-    SelectValue
-} from '@/components/ui/select'
+    SelectValue,
+} from "@/components/ui/select"
 import {
     Table,
     TableBody,
     TableCell,
     TableHead,
     TableHeader,
-    TableRow
-} from '@/components/ui/table'
-import { WowClassIcon } from '@/components/wow/wow-class-icon'
-import { useLatestDroptimizers } from '@/lib/queries/droptimizers'
-import { RAID_DIFF } from '@/shared/consts/wow.consts'
-import type { Droptimizer, DroptimizerUpgrade, WowClassName, WowRaidDifficulty } from '@/shared/types/types'
+    TableRow,
+} from "@/components/ui/table"
+import { WowClassIcon } from "@/components/wow/wow-class-icon"
+import { useLatestDroptimizers } from "@/lib/queries/droptimizers"
+import { RAID_DIFF } from "@/shared/consts/wow.consts"
+import type {
+    Droptimizer,
+    DroptimizerUpgrade,
+    WowClassName,
+    WowRaidDifficulty,
+} from "@/shared/types/types"
 
 // Type for aggregated upgrade data
 type UpgradeWithChar = {
@@ -35,13 +40,16 @@ type UpgradeWithChar = {
 // Group upgrades by boss
 function groupUpgradesByBoss(
     droptimizers: Droptimizer[],
-    difficultyFilter: WowRaidDifficulty | 'all'
+    difficultyFilter: WowRaidDifficulty | "all"
 ): Map<string, UpgradeWithChar[]> {
     const groups = new Map<string, UpgradeWithChar[]>()
 
     for (const droptimizer of droptimizers) {
         // Filter by difficulty
-        if (difficultyFilter !== 'all' && droptimizer.raidInfo.difficulty !== difficultyFilter) {
+        if (
+            difficultyFilter !== "all" &&
+            droptimizer.raidInfo.difficulty !== difficultyFilter
+        ) {
             continue
         }
 
@@ -54,7 +62,7 @@ function groupUpgradesByBoss(
                 upgrade,
                 charName: droptimizer.charInfo.name,
                 charSpec: droptimizer.charInfo.spec,
-                charClass: droptimizer.charInfo.class
+                charClass: droptimizer.charInfo.class,
             })
         }
     }
@@ -69,7 +77,7 @@ function groupUpgradesByBoss(
 
 // Format DPS number with commas
 function formatDps(dps: number): string {
-    return dps.toLocaleString('en-US', { maximumFractionDigits: 0 })
+    return dps.toLocaleString("en-US", { maximumFractionDigits: 0 })
 }
 
 function UpgradeRow({ data }: { data: UpgradeWithChar }) {
@@ -106,8 +114,7 @@ function UpgradeRow({ data }: { data: UpgradeWithChar }) {
             </TableCell>
             <TableCell className="text-right">
                 <span className="inline-flex items-center gap-1 text-green-500 font-medium">
-                    <TrendingUp className="h-4 w-4" />
-                    +{formatDps(upgrade.dps)}
+                    <TrendingUp className="h-4 w-4" />+{formatDps(upgrade.dps)}
                 </span>
             </TableCell>
         </TableRow>
@@ -116,8 +123,10 @@ function UpgradeRow({ data }: { data: UpgradeWithChar }) {
 
 export default function LootGainsPage(): JSX.Element {
     const { data: droptimizers, isLoading, error } = useLatestDroptimizers()
-    const [searchTerm, setSearchTerm] = useState('')
-    const [difficultyFilter, setDifficultyFilter] = useState<WowRaidDifficulty | 'all'>('all')
+    const [searchTerm, setSearchTerm] = useState("")
+    const [difficultyFilter, setDifficultyFilter] = useState<WowRaidDifficulty | "all">(
+        "all"
+    )
 
     const groupedUpgrades = useMemo((): Map<string, UpgradeWithChar[]> => {
         if (!droptimizers) return new Map()
@@ -131,8 +140,10 @@ export default function LootGainsPage(): JSX.Element {
         const filtered = new Map<string, UpgradeWithChar[]>()
         for (const [bossName, upgrades] of groupedUpgrades) {
             const matchingUpgrades = upgrades.filter(
-                data =>
-                    data.upgrade.item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (data) =>
+                    data.upgrade.item.name
+                        .toLowerCase()
+                        .includes(searchTerm.toLowerCase()) ||
                     data.charName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     bossName.toLowerCase().includes(searchTerm.toLowerCase())
             )
@@ -178,7 +189,9 @@ export default function LootGainsPage(): JSX.Element {
             <div className="w-full min-h-screen flex flex-col gap-y-8 items-center p-8">
                 <h1 className="text-3xl font-bold">Loot Gains</h1>
                 <div className="bg-destructive/10 p-4 rounded-lg">
-                    <p className="text-destructive">Error loading droptimizers: {error.message}</p>
+                    <p className="text-destructive">
+                        Error loading droptimizers: {error.message}
+                    </p>
                 </div>
             </div>
         )
@@ -200,20 +213,22 @@ export default function LootGainsPage(): JSX.Element {
                     <Input
                         placeholder="Search items, characters, bosses..."
                         value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-9 w-80"
                     />
                 </div>
                 <Select
                     value={difficultyFilter}
-                    onValueChange={v => setDifficultyFilter(v as WowRaidDifficulty | 'all')}
+                    onValueChange={(v) =>
+                        setDifficultyFilter(v as WowRaidDifficulty | "all")
+                    }
                 >
                     <SelectTrigger className="w-40">
                         <SelectValue placeholder="All Difficulties" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Difficulties</SelectItem>
-                        {RAID_DIFF.filter(d => d !== 'LFR').map(diff => (
+                        {RAID_DIFF.filter((d) => d !== "LFR").map((diff) => (
                             <SelectItem key={diff} value={diff.toLowerCase()}>
                                 {diff}
                             </SelectItem>
@@ -226,7 +241,9 @@ export default function LootGainsPage(): JSX.Element {
             <div className="flex gap-6 p-4 bg-muted rounded-lg">
                 <div>
                     <p className="text-sm text-muted-foreground">Total Potential Gains</p>
-                    <p className="text-2xl font-bold text-green-500">+{formatDps(totalDpsGain)} DPS</p>
+                    <p className="text-2xl font-bold text-green-500">
+                        +{formatDps(totalDpsGain)} DPS
+                    </p>
                 </div>
                 <div>
                     <p className="text-sm text-muted-foreground">Unique Items</p>
@@ -244,7 +261,9 @@ export default function LootGainsPage(): JSX.Element {
                 return (
                     <div key={bossName} className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-semibold text-primary">{bossName}</h2>
+                            <h2 className="text-lg font-semibold text-primary">
+                                {bossName}
+                            </h2>
                             <span className="text-sm text-green-500 font-medium">
                                 +{formatDps(bossTotalDps)} total DPS
                             </span>
@@ -256,9 +275,13 @@ export default function LootGainsPage(): JSX.Element {
                                         <TableHead className="w-12"></TableHead>
                                         <TableHead>Item</TableHead>
                                         <TableHead>Slot</TableHead>
-                                        <TableHead className="text-center">ilvl</TableHead>
+                                        <TableHead className="text-center">
+                                            ilvl
+                                        </TableHead>
                                         <TableHead>Character</TableHead>
-                                        <TableHead className="text-right">DPS Gain</TableHead>
+                                        <TableHead className="text-right">
+                                            DPS Gain
+                                        </TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -279,8 +302,8 @@ export default function LootGainsPage(): JSX.Element {
                 <div className="bg-muted p-8 rounded-lg text-center">
                     <p className="text-muted-foreground">
                         {droptimizers?.length === 0
-                            ? 'No droptimizers found. Import some simulations to see loot gains.'
-                            : 'No upgrades found matching your filters.'}
+                            ? "No droptimizers found. Import some simulations to see loot gains."
+                            : "No upgrades found matching your filters."}
                     </p>
                 </div>
             )}

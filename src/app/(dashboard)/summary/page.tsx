@@ -1,31 +1,31 @@
-'use client'
+"use client"
 
-import { TiersetInfo } from '@/components/wow/tierset-info'
-import { WowClassIcon } from '@/components/wow/wow-class-icon'
-import { WowCurrencyIcon } from '@/components/wow/wow-currency-icon'
-import { WowGearIcon } from '@/components/wow/wow-gear-icon'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
+import { TiersetInfo } from "@/components/wow/tierset-info"
+import { WowClassIcon } from "@/components/wow/wow-class-icon"
+import { WowCurrencyIcon } from "@/components/wow/wow-currency-icon"
+import { WowGearIcon } from "@/components/wow/wow-gear-icon"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
 import {
     Table,
     TableBody,
     TableCell,
     TableHead,
     TableHeader,
-    TableRow
-} from '@/components/ui/table'
-import { useRosterSummary } from '@/lib/queries/summary'
-import { isRelevantCurrency } from '@/shared/libs/currency/currency-utils'
+    TableRow,
+} from "@/components/ui/table"
+import { useRosterSummary } from "@/lib/queries/summary"
+import { isRelevantCurrency } from "@/shared/libs/currency/currency-utils"
 import {
     DroptimizerWarn,
     TierSetCompletion,
     WowAuditWarn,
-    type CharacterSummary
-} from '@/shared/types/types'
-import clsx from 'clsx'
-import { AlertTriangle, CheckCircle, LoaderCircle, XCircle } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useMemo, useState, type JSX } from 'react'
+    type CharacterSummary,
+} from "@/shared/types/types"
+import clsx from "clsx"
+import { AlertTriangle, CheckCircle, LoaderCircle, XCircle } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useMemo, useState, type JSX } from "react"
 
 // Constants
 const DEFAULT_TIER_COMPLETION_FILTER = {
@@ -34,7 +34,7 @@ const DEFAULT_TIER_COMPLETION_FILTER = {
     [TierSetCompletion.TwoPiece]: true,
     [TierSetCompletion.ThreePiece]: true,
     [TierSetCompletion.FourPiece]: true,
-    [TierSetCompletion.FivePiece]: true
+    [TierSetCompletion.FivePiece]: true,
 }
 
 // Types
@@ -42,7 +42,7 @@ type TierCompletionFilterType = { [key in TierSetCompletion]: boolean }
 
 // Utility functions
 const hasVaultTierPieces = (weeklyChest: { item: { tierset?: boolean } }[]): boolean => {
-    return weeklyChest.some(gear => gear.item.tierset)
+    return weeklyChest.some((gear) => gear.item.tierset)
 }
 
 const formatTierCompletion = (completion: TierSetCompletion): string => {
@@ -51,12 +51,12 @@ const formatTierCompletion = (completion: TierSetCompletion): string => {
 
 const getTierCompletionStyle = (tierCompletion: TierSetCompletion): string => {
     return clsx(
-        'px-2 py-1 rounded-full text-xs font-bold',
+        "px-2 py-1 rounded-full text-xs font-bold",
         tierCompletion >= TierSetCompletion.FourPiece
-            ? 'bg-green-900/50 text-green-400'
+            ? "bg-green-900/50 text-green-400"
             : tierCompletion >= TierSetCompletion.TwoPiece
-              ? 'bg-yellow-900/50 text-yellow-400'
-              : 'bg-red-900/50 text-red-400'
+              ? "bg-yellow-900/50 text-yellow-400"
+              : "bg-red-900/50 text-red-400"
     )
 }
 
@@ -72,37 +72,37 @@ const LoadingSpinner = () => (
 
 const StatusIndicator = ({
     status,
-    label
+    label,
 }: {
-    status: 'success' | 'warning' | 'error' | 'none'
+    status: "success" | "warning" | "error" | "none"
     label?: string
 }) => {
     const getStatusConfig = () => {
         switch (status) {
-            case 'success':
+            case "success":
                 return {
                     icon: CheckCircle,
-                    className: 'bg-green-900/30 text-green-400 border-green-500/30',
-                    label: label || 'OK'
+                    className: "bg-green-900/30 text-green-400 border-green-500/30",
+                    label: label || "OK",
                 }
-            case 'warning':
+            case "warning":
                 return {
                     icon: AlertTriangle,
-                    className: 'bg-yellow-900/30 text-yellow-400 border-yellow-500/30',
-                    label: label || 'Warning'
+                    className: "bg-yellow-900/30 text-yellow-400 border-yellow-500/30",
+                    label: label || "Warning",
                 }
-            case 'error':
+            case "error":
                 return {
                     icon: XCircle,
-                    className: 'bg-red-900/30 text-red-400 border-red-500/30',
-                    label: label || 'Error'
+                    className: "bg-red-900/30 text-red-400 border-red-500/30",
+                    label: label || "Error",
                 }
-            case 'none':
+            case "none":
             default:
                 return {
                     icon: null,
-                    className: 'bg-gray-800/50 text-gray-500 border-gray-600/30',
-                    label: '—'
+                    className: "bg-gray-800/50 text-gray-500 border-gray-600/30",
+                    label: "—",
                 }
         }
     }
@@ -113,7 +113,7 @@ const StatusIndicator = ({
     return (
         <div
             className={clsx(
-                'inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium border',
+                "inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium border",
                 config.className
             )}
         >
@@ -127,13 +127,13 @@ const DroptimizerStatus = ({ warn }: { warn: DroptimizerWarn }) => {
     const getDroptimizerStatus = (warn: DroptimizerWarn) => {
         switch (warn) {
             case DroptimizerWarn.None:
-                return { status: 'success' as const, label: 'Synced' }
+                return { status: "success" as const, label: "Synced" }
             case DroptimizerWarn.NotImported:
-                return { status: 'warning' as const, label: 'Not Imported' }
+                return { status: "warning" as const, label: "Not Imported" }
             case DroptimizerWarn.Outdated:
-                return { status: 'warning' as const, label: 'Out of Date' }
+                return { status: "warning" as const, label: "Out of Date" }
             default:
-                return { status: 'error' as const, label: 'Unknown' }
+                return { status: "error" as const, label: "Unknown" }
         }
     }
 
@@ -145,11 +145,11 @@ const WowAuditStatus = ({ warn }: { warn: WowAuditWarn }) => {
     const getWowAuditStatus = (warn: WowAuditWarn) => {
         switch (warn) {
             case WowAuditWarn.None:
-                return { status: 'success' as const, label: 'Tracked' }
+                return { status: "success" as const, label: "Tracked" }
             case WowAuditWarn.NotTracked:
-                return { status: 'error' as const, label: 'Missing' }
+                return { status: "error" as const, label: "Missing" }
             default:
-                return { status: 'error' as const, label: 'Unknown' }
+                return { status: "error" as const, label: "Unknown" }
         }
     }
 
@@ -160,7 +160,7 @@ const WowAuditStatus = ({ warn }: { warn: WowAuditWarn }) => {
 const TierCompletionCheckbox = ({
     completion,
     checked,
-    onChange
+    onChange,
 }: {
     completion: TierSetCompletion
     checked: boolean
@@ -174,7 +174,7 @@ const TierCompletionCheckbox = ({
 
 const SearchBar = ({
     searchQuery,
-    onSearchChange
+    onSearchChange,
 }: {
     searchQuery: string
     onSearchChange: (value: string) => void
@@ -183,7 +183,7 @@ const SearchBar = ({
         type="text"
         placeholder="Search players or characters..."
         value={searchQuery}
-        onChange={e => onSearchChange(e.target.value)}
+        onChange={(e) => onSearchChange(e.target.value)}
         className="w-full p-3 border border-gray-300 rounded-md"
     />
 )
@@ -196,7 +196,7 @@ const FilterControls = ({
     showMains,
     showAlts,
     onMainsChange,
-    onAltsChange
+    onAltsChange,
 }: {
     tierCompletionFilter: TierCompletionFilterType
     onTierToggle: (completion: TierSetCompletion) => void
@@ -210,8 +210,8 @@ const FilterControls = ({
     <div className="flex flex-wrap gap-4 items-center">
         <div className="flex flex-wrap gap-2 items-center">
             {Object.values(TierSetCompletion)
-                .filter(v => typeof v === 'number')
-                .map(completion => (
+                .filter((v) => typeof v === "number")
+                .map((completion) => (
                     <TierCompletionCheckbox
                         key={completion}
                         completion={completion as TierSetCompletion}
@@ -224,18 +224,24 @@ const FilterControls = ({
         <div className="flex items-center space-x-2">
             <Checkbox
                 checked={showOnlyWithVaultTier}
-                onCheckedChange={checked => onVaultFilterChange(checked === true)}
+                onCheckedChange={(checked) => onVaultFilterChange(checked === true)}
             />
             <span className="text-sm text-gray-300">Tierset in vault</span>
         </div>
 
         <div className="flex items-center space-x-4">
             <label className="flex items-center space-x-1 cursor-pointer">
-                <Checkbox checked={showMains} onCheckedChange={checked => onMainsChange(checked === true)} />
+                <Checkbox
+                    checked={showMains}
+                    onCheckedChange={(checked) => onMainsChange(checked === true)}
+                />
                 <span className="text-sm text-gray-300">Mains</span>
             </label>
             <label className="flex items-center space-x-1 cursor-pointer">
-                <Checkbox checked={showAlts} onCheckedChange={checked => onAltsChange(checked === true)} />
+                <Checkbox
+                    checked={showAlts}
+                    onCheckedChange={(checked) => onAltsChange(checked === true)}
+                />
                 <span className="text-sm text-gray-300">Alts</span>
             </label>
         </div>
@@ -261,7 +267,9 @@ const PlayerRow = ({ summary }: { summary: CharacterSummary }) => {
                             className="h-8 w-8 border-2 border-background rounded-lg"
                         />
                         <div>
-                            <h1 className="font-bold text-gray-100">{summary.character.name}</h1>
+                            <h1 className="font-bold text-gray-100">
+                                {summary.character.name}
+                            </h1>
                             <p className="text-xs text-gray-400">{summary.itemLevel}</p>
                         </div>
                     </div>
@@ -281,7 +289,7 @@ const PlayerRow = ({ summary }: { summary: CharacterSummary }) => {
             <TableCell className="p-3">
                 <div className="flex space-x-1 relative">
                     {summary.weeklyChest.length > 0 ? (
-                        summary.weeklyChest.map(gear => (
+                        summary.weeklyChest.map((gear) => (
                             <WowGearIcon
                                 key={gear.item.id}
                                 gearItem={gear}
@@ -290,7 +298,9 @@ const PlayerRow = ({ summary }: { summary: CharacterSummary }) => {
                             />
                         ))
                     ) : (
-                        <span className="text-xs text-gray-500 italic">No vault items</span>
+                        <span className="text-xs text-gray-500 italic">
+                            No vault items
+                        </span>
                     )}
                 </div>
             </TableCell>
@@ -299,9 +309,9 @@ const PlayerRow = ({ summary }: { summary: CharacterSummary }) => {
                 <div className="flex space-x-1">
                     {summary.currencies.length > 0 ? (
                         summary.currencies
-                            .filter(c => isRelevantCurrency(c.id))
+                            .filter((c) => isRelevantCurrency(c.id))
                             .sort((a, b) => a.id - b.id)
-                            .map(currency => (
+                            .map((currency) => (
                                 <WowCurrencyIcon
                                     key={currency.id}
                                     currency={currency}
@@ -309,7 +319,9 @@ const PlayerRow = ({ summary }: { summary: CharacterSummary }) => {
                                 />
                             ))
                     ) : (
-                        <span className="text-xs text-gray-500 italic">No currencies</span>
+                        <span className="text-xs text-gray-500 italic">
+                            No currencies
+                        </span>
                     )}
                 </div>
             </TableCell>
@@ -328,11 +340,10 @@ const PlayerRow = ({ summary }: { summary: CharacterSummary }) => {
 // Main component
 export default function SummaryPage(): JSX.Element {
     // Local state for filters
-    const [tierCompletionFilter, setTierCompletionFilter] = useState<TierCompletionFilterType>(
-        DEFAULT_TIER_COMPLETION_FILTER
-    )
+    const [tierCompletionFilter, setTierCompletionFilter] =
+        useState<TierCompletionFilterType>(DEFAULT_TIER_COMPLETION_FILTER)
     const [showOnlyWithVaultTier, setShowOnlyWithVaultTier] = useState(false)
-    const [searchQuery, setSearchQuery] = useState('')
+    const [searchQuery, setSearchQuery] = useState("")
     const [showMains, setShowMains] = useState(true)
     const [showAlts, setShowAlts] = useState(true)
 
@@ -341,9 +352,9 @@ export default function SummaryPage(): JSX.Element {
 
     // Handlers
     const toggleTierCompletion = (completion: TierSetCompletion) => {
-        setTierCompletionFilter(prev => ({
+        setTierCompletionFilter((prev) => ({
             ...prev,
-            [completion]: !prev[completion]
+            [completion]: !prev[completion],
         }))
     }
 
@@ -351,20 +362,25 @@ export default function SummaryPage(): JSX.Element {
         if (!characterQuery.data) return []
 
         return characterQuery.data
-            .filter(summary => {
+            .filter((summary) => {
                 const isMain = summary.character.main
                 const playerMatches = summary.character.name
                     .toLowerCase()
                     .includes(searchQuery.toLowerCase())
 
-                const passesMainAltFilter =
-                    (showMains && isMain) || (showAlts && !isMain)
+                const passesMainAltFilter = (showMains && isMain) || (showAlts && !isMain)
                 const tierCompletion = summary.tierset.length
-                const passesTierFilter = tierCompletionFilter[tierCompletion as TierSetCompletion]
+                const passesTierFilter =
+                    tierCompletionFilter[tierCompletion as TierSetCompletion]
                 const passesVaultFilter =
                     !showOnlyWithVaultTier || hasVaultTierPieces(summary.weeklyChest)
 
-                return playerMatches && passesMainAltFilter && passesTierFilter && passesVaultFilter
+                return (
+                    playerMatches &&
+                    passesMainAltFilter &&
+                    passesTierFilter &&
+                    passesVaultFilter
+                )
             })
             .sort(sortPlayersByItemLevel)
     }, [
@@ -373,7 +389,7 @@ export default function SummaryPage(): JSX.Element {
         showMains,
         showAlts,
         tierCompletionFilter,
-        showOnlyWithVaultTier
+        showOnlyWithVaultTier,
     ])
 
     if (characterQuery.isLoading) {
@@ -403,17 +419,31 @@ export default function SummaryPage(): JSX.Element {
             <Table className="w-full">
                 <TableHeader className="bg-gray-800">
                     <TableRow className="hover:bg-gray-800">
-                        <TableHead className="text-gray-300 font-semibold">Name</TableHead>
-                        <TableHead className="text-gray-300 font-semibold">Tierset</TableHead>
-                        <TableHead className="text-gray-300 font-semibold">Completion</TableHead>
-                        <TableHead className="text-gray-300 font-semibold">Vault</TableHead>
-                        <TableHead className="text-gray-300 font-semibold">Currency</TableHead>
-                        <TableHead className="text-gray-300 font-semibold">Droptimizer</TableHead>
-                        <TableHead className="text-gray-300 font-semibold">WoW Audit</TableHead>
+                        <TableHead className="text-gray-300 font-semibold">
+                            Name
+                        </TableHead>
+                        <TableHead className="text-gray-300 font-semibold">
+                            Tierset
+                        </TableHead>
+                        <TableHead className="text-gray-300 font-semibold">
+                            Completion
+                        </TableHead>
+                        <TableHead className="text-gray-300 font-semibold">
+                            Vault
+                        </TableHead>
+                        <TableHead className="text-gray-300 font-semibold">
+                            Currency
+                        </TableHead>
+                        <TableHead className="text-gray-300 font-semibold">
+                            Droptimizer
+                        </TableHead>
+                        <TableHead className="text-gray-300 font-semibold">
+                            WoW Audit
+                        </TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {filteredPlayers.map(summary => (
+                    {filteredPlayers.map((summary) => (
                         <PlayerRow key={summary.character.id} summary={summary} />
                     ))}
                 </TableBody>

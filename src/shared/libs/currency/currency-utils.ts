@@ -1,4 +1,4 @@
-import { CURRENT_SEASON } from '@/shared/consts/wow.consts'
+import { CURRENT_SEASON } from "@/shared/consts/wow.consts"
 
 /**
  * List of currency IDs that should not be displayed in the UI
@@ -34,7 +34,7 @@ export const CURRENCY_BLACKLIST: number[] = [
     3109, // TWW Season 2 Runed Undermine Crest
     3110, // TWW Season 2 Gilded Undermine Crest
     230936, // TWW Season 2 Enchanted Runed Undermine Crest
-    230935 // TWW Season 2 Enchanted Gilded Undermine Crest
+    230935, // TWW Season 2 Enchanted Gilded Undermine Crest
 ]
 
 /**

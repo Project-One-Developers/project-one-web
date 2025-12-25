@@ -1,27 +1,27 @@
-'use client'
+"use client"
 
-import type { JSX } from 'react'
-import { useState, useMemo } from 'react'
-import { LoaderCircle, ExternalLink, Search } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import type { JSX } from "react"
+import { useState, useMemo } from "react"
+import { LoaderCircle, ExternalLink, Search } from "lucide-react"
+import { Input } from "@/components/ui/input"
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
-    SelectValue
-} from '@/components/ui/select'
+    SelectValue,
+} from "@/components/ui/select"
 import {
     Table,
     TableBody,
     TableCell,
     TableHead,
     TableHeader,
-    TableRow
-} from '@/components/ui/table'
-import { useRaidItems } from '@/lib/queries/items'
-import { ITEM_SLOTS_DESC, ARMOR_TYPES } from '@/shared/consts/wow.consts'
-import type { Item } from '@/shared/types/types'
+    TableRow,
+} from "@/components/ui/table"
+import { useRaidItems } from "@/lib/queries/items"
+import { ITEM_SLOTS_DESC, ARMOR_TYPES } from "@/shared/consts/wow.consts"
+import type { Item } from "@/shared/types/types"
 
 // Group items by boss for display
 function groupItemsByBoss(items: Item[]): Map<string, Item[]> {
@@ -40,11 +40,7 @@ function ItemRow({ item }: { item: Item }) {
     return (
         <TableRow>
             <TableCell className="w-12">
-                <img
-                    src={item.iconUrl}
-                    alt={item.name}
-                    className="w-8 h-8 rounded"
-                />
+                <img src={item.iconUrl} alt={item.name} className="w-8 h-8 rounded" />
             </TableCell>
             <TableCell>
                 <a
@@ -58,7 +54,9 @@ function ItemRow({ item }: { item: Item }) {
                 </a>
             </TableCell>
             <TableCell className="text-muted-foreground">{item.slot}</TableCell>
-            <TableCell className="text-muted-foreground">{item.armorType ?? '-'}</TableCell>
+            <TableCell className="text-muted-foreground">
+                {item.armorType ?? "-"}
+            </TableCell>
             <TableCell className="text-center">{item.ilvlMythic}</TableCell>
             <TableCell>
                 {item.tierset && (
@@ -78,7 +76,7 @@ function ItemRow({ item }: { item: Item }) {
                 )}
             </TableCell>
             <TableCell className="text-muted-foreground text-xs max-w-48 truncate">
-                {item.specs?.join(', ') ?? 'All specs'}
+                {item.specs?.join(", ") ?? "All specs"}
             </TableCell>
         </TableRow>
     )
@@ -86,33 +84,33 @@ function ItemRow({ item }: { item: Item }) {
 
 export default function LootTablePage(): JSX.Element {
     const { data: items, isLoading, error } = useRaidItems()
-    const [searchTerm, setSearchTerm] = useState('')
-    const [slotFilter, setSlotFilter] = useState<string>('all')
-    const [armorFilter, setArmorFilter] = useState<string>('all')
+    const [searchTerm, setSearchTerm] = useState("")
+    const [slotFilter, setSlotFilter] = useState<string>("all")
+    const [armorFilter, setArmorFilter] = useState<string>("all")
 
     const filteredItems = useMemo(() => {
         if (!items) return []
-        return items.filter(item => {
+        return items.filter((item) => {
             // Search filter
-            if (searchTerm && !item.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+            if (
+                searchTerm &&
+                !item.name.toLowerCase().includes(searchTerm.toLowerCase())
+            ) {
                 return false
             }
             // Slot filter
-            if (slotFilter !== 'all' && item.slot !== slotFilter) {
+            if (slotFilter !== "all" && item.slot !== slotFilter) {
                 return false
             }
             // Armor type filter
-            if (armorFilter !== 'all' && item.armorType !== armorFilter) {
+            if (armorFilter !== "all" && item.armorType !== armorFilter) {
                 return false
             }
             return true
         })
     }, [items, searchTerm, slotFilter, armorFilter])
 
-    const groupedItems = useMemo(
-        () => groupItemsByBoss(filteredItems),
-        [filteredItems]
-    )
+    const groupedItems = useMemo(() => groupItemsByBoss(filteredItems), [filteredItems])
 
     if (isLoading) {
         return (
@@ -127,7 +125,9 @@ export default function LootTablePage(): JSX.Element {
             <div className="w-full min-h-screen flex flex-col gap-y-8 items-center p-8">
                 <h1 className="text-3xl font-bold">Loot Table</h1>
                 <div className="bg-destructive/10 p-4 rounded-lg">
-                    <p className="text-destructive">Error loading items: {error.message}</p>
+                    <p className="text-destructive">
+                        Error loading items: {error.message}
+                    </p>
                 </div>
             </div>
         )
@@ -149,7 +149,7 @@ export default function LootTablePage(): JSX.Element {
                     <Input
                         placeholder="Search items..."
                         value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-9 w-64"
                     />
                 </div>
@@ -159,7 +159,7 @@ export default function LootTablePage(): JSX.Element {
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Slots</SelectItem>
-                        {ITEM_SLOTS_DESC.map(slot => (
+                        {ITEM_SLOTS_DESC.map((slot) => (
                             <SelectItem key={slot} value={slot}>
                                 {slot}
                             </SelectItem>
@@ -172,7 +172,7 @@ export default function LootTablePage(): JSX.Element {
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Armor</SelectItem>
-                        {ARMOR_TYPES.map(armor => (
+                        {ARMOR_TYPES.map((armor) => (
                             <SelectItem key={armor} value={armor}>
                                 {armor}
                             </SelectItem>
@@ -202,7 +202,7 @@ export default function LootTablePage(): JSX.Element {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {bossItems.map(item => (
+                                {bossItems.map((item) => (
                                     <ItemRow key={item.id} item={item} />
                                 ))}
                             </TableBody>
@@ -213,7 +213,9 @@ export default function LootTablePage(): JSX.Element {
 
             {groupedItems.size === 0 && (
                 <div className="bg-muted p-8 rounded-lg text-center">
-                    <p className="text-muted-foreground">No items found matching your filters.</p>
+                    <p className="text-muted-foreground">
+                        No items found matching your filters.
+                    </p>
                 </div>
             )}
         </div>

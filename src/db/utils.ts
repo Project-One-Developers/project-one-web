@@ -1,5 +1,5 @@
-import { getTableColumns, sql, SQL } from 'drizzle-orm'
-import { PgTable } from 'drizzle-orm/pg-core'
+import { getTableColumns, sql, SQL } from "drizzle-orm"
+import { PgTable } from "drizzle-orm/pg-core"
 
 export const isPresent = <T>(value: T | null | undefined): value is T =>
     value !== null && value !== undefined
@@ -12,7 +12,7 @@ export const takeFirstResult = <T>(results: T[]): T | null =>
 // https://orm.drizzle.team/docs/guides/upsert#postgresql-and-sqlite
 export const buildConflictUpdateColumns = <
     T extends PgTable,
-    Q extends keyof T['_']['columns']
+    Q extends keyof T["_"]["columns"],
 >(
     table: T,
     columns: Q[]
@@ -32,7 +32,7 @@ export const buildConflictUpdateColumns = <
 // Build conflict update set for all columns except the specified ones
 export const conflictUpdateAllExcept = <
     T extends PgTable,
-    Q extends keyof T['_']['columns']
+    Q extends keyof T["_"]["columns"],
 >(
     table: T,
     excludeColumns: Q[]

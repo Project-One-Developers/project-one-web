@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from "zod"
 
 export const rawLootRecordSchema = z.object({
     player: z.string(),
@@ -23,7 +23,7 @@ export const rawLootRecordSchema = z.object({
     subType: z.string(),
     equipLoc: z.string().nullish(),
     note: z.string().nullish(),
-    owner: z.string().nullish()
+    owner: z.string().nullish(),
 })
 
 export const rawMrtRecordSchema = z.object({
@@ -35,7 +35,7 @@ export const rawMrtRecordSchema = z.object({
     classID: z.number(),
     quantity: z.number(),
     itemLink: z.string(),
-    rollType: z.number().nullable() // 0 = pass (if personal this is null)
+    rollType: z.number().nullable(), // 0 = pass (if personal this is null)
 })
 
 export type RawLootRecord = z.infer<typeof rawLootRecordSchema>

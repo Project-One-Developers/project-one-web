@@ -1,34 +1,37 @@
-import type { Character } from '@/shared/types/types'
+import type { Character } from "@/shared/types/types"
 
 type WowCharacterLinkProps = {
     character: Character
-    site: 'raiderio' | 'warcraftlogs' | 'armory'
+    site: "raiderio" | "warcraftlogs" | "armory"
 }
 
 export const WowCharacterLink = ({ character, site }: WowCharacterLinkProps) => {
-    const getHref = (character: Character, site: 'raiderio' | 'warcraftlogs' | 'armory') => {
+    const getHref = (
+        character: Character,
+        site: "raiderio" | "warcraftlogs" | "armory"
+    ) => {
         switch (site) {
-            case 'warcraftlogs':
+            case "warcraftlogs":
                 return `https://www.warcraftlogs.com/character/eu/${character.realm}/${character.name}?private=1`
-            case 'raiderio':
+            case "raiderio":
                 return `https://raider.io/characters/eu/${character.realm}/${character.name}`
-            case 'armory':
+            case "armory":
                 return `https://worldofwarcraft.blizzard.com/en-gb/character/eu/${character.realm}/${character.name}`
             default:
-                return '#'
+                return "#"
         }
     }
 
-    const getIconSrc = (site: 'raiderio' | 'warcraftlogs' | 'armory') => {
+    const getIconSrc = (site: "raiderio" | "warcraftlogs" | "armory") => {
         switch (site) {
-            case 'warcraftlogs':
-                return 'https://assets.rpglogs.com/img/warcraft/favicon.png?v=2'
-            case 'raiderio':
-                return 'https://cdn.raiderio.net/images/mstile-150x150.png'
-            case 'armory':
-                return 'https://cdn.raiderio.net/assets/img/wow-icon-a718385c1d75ca9edbb3eed0a5546c30.png'
+            case "warcraftlogs":
+                return "https://assets.rpglogs.com/img/warcraft/favicon.png?v=2"
+            case "raiderio":
+                return "https://cdn.raiderio.net/images/mstile-150x150.png"
+            case "armory":
+                return "https://cdn.raiderio.net/assets/img/wow-icon-a718385c1d75ca9edbb3eed0a5546c30.png"
             default:
-                return ''
+                return ""
         }
     }
 

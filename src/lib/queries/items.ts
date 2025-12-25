@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import {
     deleteItemNoteAction,
@@ -8,24 +8,24 @@ import {
     getItemsAction,
     getRaidItemsAction,
     searchItemsAction,
-    setItemNoteAction
-} from '@/actions/items'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { queryKeys } from './keys'
+    setItemNoteAction,
+} from "@/actions/items"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { queryKeys } from "./keys"
 
 // ============== QUERIES ==============
 
 export function useItems() {
     return useQuery({
         queryKey: [queryKeys.items],
-        queryFn: () => getItemsAction()
+        queryFn: () => getItemsAction(),
     })
 }
 
 export function useRaidItems() {
     return useQuery({
-        queryKey: [queryKeys.items, 'raid'],
-        queryFn: () => getRaidItemsAction()
+        queryKey: [queryKeys.items, "raid"],
+        queryFn: () => getRaidItemsAction(),
     })
 }
 
@@ -33,36 +33,36 @@ export function useItem(id: number | undefined) {
     return useQuery({
         queryKey: [queryKeys.items, id],
         queryFn: () => {
-            if (!id) throw new Error('No item id provided')
+            if (!id) throw new Error("No item id provided")
             return getItemByIdAction(id)
         },
-        enabled: !!id
+        enabled: !!id,
     })
 }
 
 export function useSearchItems(searchTerm: string, limit: number = 20) {
     return useQuery({
-        queryKey: [queryKeys.items, 'search', searchTerm, limit],
+        queryKey: [queryKeys.items, "search", searchTerm, limit],
         queryFn: () => searchItemsAction(searchTerm, limit),
-        enabled: searchTerm.length >= 2
+        enabled: searchTerm.length >= 2,
     })
 }
 
 export function useItemNotes() {
     return useQuery({
-        queryKey: [queryKeys.items, 'notes'],
-        queryFn: () => getAllItemNotesAction()
+        queryKey: [queryKeys.items, "notes"],
+        queryFn: () => getAllItemNotesAction(),
     })
 }
 
 export function useItemNote(id: number | undefined) {
     return useQuery({
-        queryKey: [queryKeys.items, 'notes', id],
+        queryKey: [queryKeys.items, "notes", id],
         queryFn: () => {
-            if (!id) throw new Error('No item id provided')
+            if (!id) throw new Error("No item id provided")
             return getItemNoteAction(id)
         },
-        enabled: !!id
+        enabled: !!id,
     })
 }
 
@@ -72,11 +72,14 @@ export function useSetItemNote() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: ({ id, note }: { id: number; note: string }) => setItemNoteAction(id, note),
+        mutationFn: ({ id, note }: { id: number; note: string }) =>
+            setItemNoteAction(id, note),
         onSuccess: (_, vars) => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.items, 'notes'] })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.items, 'notes', vars.id] })
-        }
+            queryClient.invalidateQueries({ queryKey: [queryKeys.items, "notes"] })
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.items, "notes", vars.id],
+            })
+        },
     })
 }
 
@@ -86,8 +89,10 @@ export function useDeleteItemNote() {
     return useMutation({
         mutationFn: (id: number) => deleteItemNoteAction(id),
         onSuccess: (_, id) => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.items, 'notes'] })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.items, 'notes', id] })
-        }
+            queryClient.invalidateQueries({ queryKey: [queryKeys.items, "notes"] })
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.items, "notes", id],
+            })
+        },
     })
 }

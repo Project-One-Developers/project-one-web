@@ -1,13 +1,19 @@
-'use client'
+"use client"
 
-import { useDeleteCharacter } from '@/lib/queries/players'
-import type { Character } from '@/shared/types/types'
-import { Loader2 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { type JSX } from 'react'
-import { toast } from 'sonner'
-import { Button } from './ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog'
+import { useDeleteCharacter } from "@/lib/queries/players"
+import type { Character } from "@/shared/types/types"
+import { Loader2 } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { type JSX } from "react"
+import { toast } from "sonner"
+import { Button } from "./ui/button"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "./ui/dialog"
 
 type CharacterDeleteDialogProps = {
     isOpen: boolean
@@ -18,7 +24,7 @@ type CharacterDeleteDialogProps = {
 export default function CharacterDeleteDialog({
     isOpen,
     setOpen,
-    character
+    character,
 }: CharacterDeleteDialogProps): JSX.Element {
     const router = useRouter()
     const deleteMutation = useDeleteCharacter()
@@ -27,11 +33,11 @@ export default function CharacterDeleteDialog({
         deleteMutation.mutate(character.id, {
             onSuccess: () => {
                 toast.success(`Character ${character.name} has been deleted.`)
-                router.push('/roster')
+                router.push("/roster")
             },
-            onError: error => {
+            onError: (error) => {
                 toast.error(`Unable to delete the character. Error: ${error.message}`)
-            }
+            },
         })
     }
 
@@ -41,8 +47,8 @@ export default function CharacterDeleteDialog({
                 <DialogHeader>
                     <DialogTitle>Delete Character</DialogTitle>
                     <DialogDescription>
-                        The character <strong>{character.name}</strong> and relative data will be
-                        permanently deleted from the database
+                        The character <strong>{character.name}</strong> and relative data
+                        will be permanently deleted from the database
                     </DialogDescription>
                 </DialogHeader>
                 <Button
@@ -50,7 +56,11 @@ export default function CharacterDeleteDialog({
                     disabled={deleteMutation.isPending}
                     onClick={handleDelete}
                 >
-                    {deleteMutation.isPending ? <Loader2 className="animate-spin" /> : 'Confirm'}
+                    {deleteMutation.isPending ? (
+                        <Loader2 className="animate-spin" />
+                    ) : (
+                        "Confirm"
+                    )}
                 </Button>
             </DialogContent>
         </Dialog>

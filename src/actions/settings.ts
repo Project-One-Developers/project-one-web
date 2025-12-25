@@ -1,11 +1,11 @@
-'use server'
+"use server"
 
 import {
     deleteConfig,
     getAllConfig,
     getConfig,
-    setConfig
-} from '@/db/repositories/settings'
+    setConfig,
+} from "@/db/repositories/settings"
 
 export async function getConfigAction(key: string): Promise<string | null> {
     return await getConfig(key)

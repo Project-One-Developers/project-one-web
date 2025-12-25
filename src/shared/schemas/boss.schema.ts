@@ -1,5 +1,5 @@
-import { z } from 'zod'
-import { itemSchema } from './items.schema'
+import { z } from "zod"
+import { itemSchema } from "./items.schema"
 
 export const bossSchema = z.object({
     id: z.number(),
@@ -9,9 +9,9 @@ export const bossSchema = z.object({
     instanceId: z.number(),
     order: z.number(),
     raiderioRaidSlug: z.string().nullish(),
-    raiderioEncounterSlug: z.string().nullish()
+    raiderioEncounterSlug: z.string().nullish(),
 })
 
 export const bossWithItemsSchema = bossSchema.extend({
-    items: z.array(itemSchema)
+    items: z.array(itemSchema),
 })

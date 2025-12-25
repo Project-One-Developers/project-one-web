@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import {
     addSimCAction,
@@ -8,23 +8,23 @@ import {
     getDroptimizerLastByCharAndDiffAction,
     getDroptimizerLatestListAction,
     getDroptimizerListAction,
-    syncDroptimizersFromDiscordAction
-} from '@/actions/droptimizer'
-import type { WowRaidDifficulty } from '@/shared/types/types'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { queryKeys } from './keys'
+    syncDroptimizersFromDiscordAction,
+} from "@/actions/droptimizer"
+import type { WowRaidDifficulty } from "@/shared/types/types"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { queryKeys } from "./keys"
 
 export function useDroptimizers() {
     return useQuery({
         queryKey: [queryKeys.droptimizers],
-        queryFn: () => getDroptimizerListAction()
+        queryFn: () => getDroptimizerListAction(),
     })
 }
 
 export function useLatestDroptimizers() {
     return useQuery({
-        queryKey: [queryKeys.droptimizers, 'latest'],
-        queryFn: () => getDroptimizerLatestListAction()
+        queryKey: [queryKeys.droptimizers, "latest"],
+        queryFn: () => getDroptimizerLatestListAction(),
     })
 }
 
@@ -35,7 +35,7 @@ export function useDeleteDroptimizer() {
         mutationFn: (url: string) => deleteDroptimizerAction(url),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
-        }
+        },
     })
 }
 
@@ -45,12 +45,19 @@ export function useDroptimizerLastByCharAndDiff(
     raidDiff: WowRaidDifficulty | undefined
 ) {
     return useQuery({
-        queryKey: [queryKeys.droptimizers, 'lastByCharAndDiff', charName, charRealm, raidDiff],
+        queryKey: [
+            queryKeys.droptimizers,
+            "lastByCharAndDiff",
+            charName,
+            charRealm,
+            raidDiff,
+        ],
         queryFn: () => {
-            if (!charName || !charRealm || !raidDiff) throw new Error('Missing parameters')
+            if (!charName || !charRealm || !raidDiff)
+                throw new Error("Missing parameters")
             return getDroptimizerLastByCharAndDiffAction(charName, charRealm, raidDiff)
         },
-        enabled: !!charName && !!charRealm && !!raidDiff
+        enabled: !!charName && !!charRealm && !!raidDiff,
     })
 }
 
@@ -61,7 +68,7 @@ export function useAddSimC() {
         mutationFn: (simcData: string) => addSimCAction(simcData),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
-        }
+        },
     })
 }
 
@@ -72,7 +79,7 @@ export function useAddSimulationFromUrl() {
         mutationFn: (url: string) => addSimulationFromUrlAction(url),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
-        }
+        },
     })
 }
 
@@ -83,7 +90,7 @@ export function useSyncDroptimizersFromDiscord() {
         mutationFn: (hours: number) => syncDroptimizersFromDiscordAction(hours),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
-        }
+        },
     })
 }
 
@@ -94,6 +101,6 @@ export function useDeleteSimulationsOlderThanHours() {
         mutationFn: (hours: number) => deleteSimulationsOlderThanHoursAction(hours),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
-        }
+        },
     })
 }

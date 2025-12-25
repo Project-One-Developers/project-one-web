@@ -1,15 +1,18 @@
-'use client'
+"use client"
 
-import CharacterDialog from '@/components/character-dialog'
-import PlayerDeleteDialog from '@/components/player-delete-dialog'
-import PlayerDialog from '@/components/player-dialog'
-import { CharacterOverviewIcon } from '@/components/wow/character-overview-icon'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { usePlayersSummary, type PlayerWithCharactersSummary } from '@/lib/queries/players'
-import type { Player } from '@/shared/types/types'
-import { Download, LoaderCircle, PlusIcon, UserRoundPlus, Users, X } from 'lucide-react'
-import { type JSX, useMemo, useState } from 'react'
+import CharacterDialog from "@/components/character-dialog"
+import PlayerDeleteDialog from "@/components/player-delete-dialog"
+import PlayerDialog from "@/components/player-dialog"
+import { CharacterOverviewIcon } from "@/components/wow/character-overview-icon"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+    usePlayersSummary,
+    type PlayerWithCharactersSummary,
+} from "@/lib/queries/players"
+import type { Player } from "@/shared/types/types"
+import { Download, LoaderCircle, PlusIcon, UserRoundPlus, Users, X } from "lucide-react"
+import { type JSX, useMemo, useState } from "react"
 
 type ItemLevelStats = {
     mean: number
@@ -22,24 +25,26 @@ export default function RosterPage(): JSX.Element {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [isNewCharDialogOpen, setIsNewCharDialogOpen] = useState(false)
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
-    const [searchQuery, setSearchQuery] = useState('')
+    const [searchQuery, setSearchQuery] = useState("")
 
     const playersQuery = usePlayersSummary()
 
     const players = useMemo(() => playersQuery.data ?? [], [playersQuery.data])
 
     const itemLevelStats: ItemLevelStats = useMemo(() => {
-        const playersWithChars = players.filter(p => p.charsSummary.length > 0)
-        const allCharacters = playersWithChars.flatMap(player => player.charsSummary)
+        const playersWithChars = players.filter((p) => p.charsSummary.length > 0)
+        const allCharacters = playersWithChars.flatMap((player) => player.charsSummary)
         const validItemLevels = allCharacters
-            .map(char => parseInt(char.itemLevel))
-            .filter(level => !isNaN(level) && level > 0)
+            .map((char) => parseInt(char.itemLevel))
+            .filter((level) => !isNaN(level) && level > 0)
 
         if (validItemLevels.length === 0) {
             return { mean: 0, standardDeviation: 0, threshold: 0 }
         }
 
-        const mean = validItemLevels.reduce((sum, level) => sum + level, 0) / validItemLevels.length
+        const mean =
+            validItemLevels.reduce((sum, level) => sum + level, 0) /
+            validItemLevels.length
         const variance =
             validItemLevels.reduce((sum, level) => sum + Math.pow(level - mean, 2), 0) /
             validItemLevels.length
@@ -57,15 +62,15 @@ export default function RosterPage(): JSX.Element {
     // Prepare CSV data for export
     const csvData = useMemo(() => {
         return players
-            .filter(p => p.charsSummary.length > 0)
-            .flatMap(player =>
-                player.charsSummary.map(charSummary => ({
-                    'Player Name': player.name,
-                    'Character Name': charSummary.character.name,
-                    'Character Realm': charSummary.character.realm,
-                    'Character Item Level': charSummary.itemLevel,
-                    'Tierset Set': charSummary.tierset.length,
-                    'Raider.io URL': `https://raider.io/characters/eu/${charSummary.character.realm}/${charSummary.character.name}`
+            .filter((p) => p.charsSummary.length > 0)
+            .flatMap((player) =>
+                player.charsSummary.map((charSummary) => ({
+                    "Player Name": player.name,
+                    "Character Name": charSummary.character.name,
+                    "Character Realm": charSummary.character.realm,
+                    "Character Item Level": charSummary.itemLevel,
+                    "Tierset Set": charSummary.tierset.length,
+                    "Raider.io URL": `https://raider.io/characters/eu/${charSummary.character.realm}/${charSummary.character.name}`,
                 }))
             )
     }, [players])
@@ -75,16 +80,16 @@ export default function RosterPage(): JSX.Element {
 
         const headers = Object.keys(csvData[0])
         const csvContent = [
-            headers.join(','),
-            ...csvData.map(row =>
-                headers.map(header => `"${row[header as keyof typeof row]}"`).join(',')
-            )
-        ].join('\n')
+            headers.join(","),
+            ...csvData.map((row) =>
+                headers.map((header) => `"${row[header as keyof typeof row]}"`).join(",")
+            ),
+        ].join("\n")
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-        const link = document.createElement('a')
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+        const link = document.createElement("a")
         link.href = URL.createObjectURL(blob)
-        link.download = 'roster.csv'
+        link.download = "roster.csv"
         link.click()
     }
 
@@ -98,12 +103,12 @@ export default function RosterPage(): JSX.Element {
 
     const filteredPlayers = players
         .sort((a, b) => a.name.localeCompare(b.name))
-        .filter(player => {
+        .filter((player) => {
             return (
                 player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 player.charsSummary
-                    ?.map(cs => cs.character)
-                    .some(character =>
+                    ?.map((cs) => cs.character)
+                    .some((character) =>
                         character.name.toLowerCase().includes(searchQuery.toLowerCase())
                     )
             )
@@ -127,7 +132,7 @@ export default function RosterPage(): JSX.Element {
                     type="text"
                     placeholder="Search players or characters..."
                     value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="flex-1 p-3 border border-gray-300 rounded-md"
                 />
 
@@ -184,7 +189,7 @@ export default function RosterPage(): JSX.Element {
             </div>
 
             <div className="flex flex-wrap gap-x-4 gap-y-4">
-                {filteredPlayers.map(player => (
+                {filteredPlayers.map((player) => (
                     <div
                         key={player.id}
                         className="flex flex-col justify-between p-6 bg-muted h-[150px] w-[250px] rounded-lg relative"
@@ -216,7 +221,10 @@ export default function RosterPage(): JSX.Element {
                                     </div>
                                 </div>
                             )}
-                            <div className="ml-5 mb-3" onClick={() => handleNewCharClick(player)}>
+                            <div
+                                className="ml-5 mb-3"
+                                onClick={() => handleNewCharClick(player)}
+                            >
                                 <PlusIcon className="w-5 h-5 cursor-pointer hover:text-primary transition-colors" />
                             </div>
                         </div>

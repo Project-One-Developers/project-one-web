@@ -1,8 +1,8 @@
-import { signIn } from '@/auth'
-import { Button } from '@/components/ui/button'
+import { signIn } from "@/auth"
+import { Button } from "@/components/ui/button"
 
 export default function LoginPage({
-    searchParams
+    searchParams,
 }: {
     searchParams: Promise<{ error?: string }>
 }) {
@@ -29,7 +29,7 @@ export default function LoginPage({
 }
 
 async function LoginForm({
-    searchParams
+    searchParams,
 }: {
     searchParams: Promise<{ error?: string }>
 }) {
@@ -40,16 +40,16 @@ async function LoginForm({
         <div className="grid gap-4">
             {error && (
                 <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-                    {error === 'AccessDenied'
-                        ? 'Access denied. You are not authorized to use this application.'
-                        : 'An error occurred during sign in. Please try again.'}
+                    {error === "AccessDenied"
+                        ? "Access denied. You are not authorized to use this application."
+                        : "An error occurred during sign in. Please try again."}
                 </div>
             )}
 
             <form
                 action={async () => {
-                    'use server'
-                    await signIn('discord', { redirectTo: '/' })
+                    "use server"
+                    await signIn("discord", { redirectTo: "/" })
                 }}
             >
                 <Button type="submit" className="w-full" size="lg">

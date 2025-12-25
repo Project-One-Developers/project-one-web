@@ -1,8 +1,8 @@
-'use client'
+"use client"
 
-import type { Character } from '@/shared/types/types'
-import { useRouter } from 'next/navigation'
-import { WowClassIcon } from './wow-class-icon'
+import type { Character } from "@/shared/types/types"
+import { useRouter } from "next/navigation"
+import { WowClassIcon } from "./wow-class-icon"
 
 export interface WowCharacterIconProps {
     character: Character
@@ -11,21 +11,21 @@ export interface WowCharacterIconProps {
     showMainIndicator?: boolean
     showName?: boolean
     truncateAfter?: number
-    size?: 'sm' | 'md' | 'lg'
+    size?: "sm" | "md" | "lg"
     showRoleBadges?: boolean
     onClick?: () => void
 }
 
 export function WowCharacterIcon({
     character,
-    className = '',
+    className = "",
     showTooltip = false,
     showMainIndicator = true,
     showName = true,
     truncateAfter = 4,
-    size = 'md',
+    size = "md",
     showRoleBadges = false,
-    onClick
+    onClick,
 }: WowCharacterIconProps) {
     const router = useRouter()
 
@@ -38,37 +38,37 @@ export function WowCharacterIcon({
     }
 
     const sizeClasses = {
-        sm: 'h-6 w-6',
-        md: 'h-8 w-8',
-        lg: 'h-10 w-10'
+        sm: "h-6 w-6",
+        md: "h-8 w-8",
+        lg: "h-10 w-10",
     }
 
     const textSizeClasses = {
-        sm: 'text-[8px]',
-        md: 'text-[9px]',
-        lg: 'text-[10px]'
+        sm: "text-[8px]",
+        md: "text-[9px]",
+        lg: "text-[10px]",
     }
 
     const mainIndicatorSizeClasses = {
-        sm: 'h-[1px] w-4',
-        md: 'h-[2px] w-6',
-        lg: 'h-[3px] w-8'
+        sm: "h-[1px] w-4",
+        md: "h-[2px] w-6",
+        lg: "h-[3px] w-8",
     }
 
     const roleBadgeSizeClasses = {
-        sm: 'w-3 h-3',
-        md: 'w-4 h-4',
-        lg: 'w-5 h-5'
+        sm: "w-3 h-3",
+        md: "w-4 h-4",
+        lg: "w-5 h-5",
     }
 
     const roleBadgeIconSizeClasses = {
-        sm: 'w-2 h-2',
-        md: 'w-3 h-3',
-        lg: 'w-4 h-4'
+        sm: "w-2 h-2",
+        md: "w-3 h-3",
+        lg: "w-4 h-4",
     }
 
-    const showHealerBadge = showRoleBadges && character.role === 'Healer'
-    const showTankBadge = showRoleBadges && character.role === 'Tank'
+    const showHealerBadge = showRoleBadges && character.role === "Healer"
+    const showTankBadge = showRoleBadges && character.role === "Tank"
 
     return (
         <div
@@ -125,7 +125,9 @@ export function WowCharacterIcon({
                 )}
             </div>
             {showMainIndicator && character.main ? (
-                <div className={`${mainIndicatorSizeClasses[size]} bg-white rounded-lg mt-2`} />
+                <div
+                    className={`${mainIndicatorSizeClasses[size]} bg-white rounded-lg mt-2`}
+                />
             ) : null}
         </div>
     )

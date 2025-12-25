@@ -1,5 +1,5 @@
-import { auth } from '@/auth'
-import { redirect } from 'next/navigation'
+import { auth } from "@/auth"
+import { redirect } from "next/navigation"
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
     let session
@@ -12,7 +12,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
 
     // Redirect to home if already logged in
     if (session?.user) {
-        redirect('/')
+        redirect("/")
     }
 
     return <div className="min-h-screen flex items-center justify-center">{children}</div>

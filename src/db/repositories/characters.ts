@@ -1,8 +1,12 @@
-import { db } from '@/db'
-import { charTable, playerTable } from '@/db/schema'
-import { newUUID, takeFirstResult } from '@/db/utils'
-import { characterSchema, characterWithPlayerSchema, playerSchema } from '@/shared/schemas/characters.schemas'
-import { wowClassNameSchema, wowRolesSchema } from '@/shared/schemas/wow.schemas'
+import { db } from "@/db"
+import { charTable, playerTable } from "@/db/schema"
+import { newUUID, takeFirstResult } from "@/db/utils"
+import {
+    characterSchema,
+    characterWithPlayerSchema,
+    playerSchema,
+} from "@/shared/schemas/characters.schemas"
+import { wowClassNameSchema, wowRolesSchema } from "@/shared/schemas/wow.schemas"
 import type {
     Character,
     CharacterWithPlayer,
@@ -11,10 +15,10 @@ import type {
     NewCharacter,
     NewPlayer,
     Player,
-    PlayerWithCharacters
-} from '@/shared/types/types'
-import { eq, isNull } from 'drizzle-orm'
-import { z } from 'zod'
+    PlayerWithCharacters,
+} from "@/shared/types/types"
+import { eq, isNull } from "drizzle-orm"
+import { z } from "zod"
 
 // Player storage schema for parsing DB results
 const playerStorageSchema = z
@@ -29,22 +33,22 @@ const playerStorageSchema = z
                 class: wowClassNameSchema,
                 role: wowRolesSchema,
                 main: z.boolean(),
-                playerId: z.string()
+                playerId: z.string(),
             })
-        )
+        ),
     })
-    .transform(data => ({
+    .transform((data) => ({
         id: data.id,
         name: data.name,
-        characters: data.characters.map(char => ({
+        characters: data.characters.map((char) => ({
             id: char.id,
             name: char.name,
             realm: char.realm,
             main: char.main,
             class: char.class,
             role: char.role,
-            playerId: char.playerId
-        }))
+            playerId: char.playerId,
+        })),
     }))
 
 const playersListStorageSchema = z.array(playerStorageSchema)
@@ -54,8 +58,8 @@ const playersListStorageSchema = z.array(playerStorageSchema)
 export async function getPlayerWithCharactersList(): Promise<PlayerWithCharacters[]> {
     const result = await db.query.playerTable.findMany({
         with: {
-            characters: true
-        }
+            characters: true,
+        },
     })
     return playersListStorageSchema.parse(result)
 }
@@ -66,7 +70,7 @@ export async function getPlayersWithoutCharactersList(): Promise<Player[]> {
         .from(playerTable)
         .leftJoin(charTable, eq(playerTable.id, charTable.playerId))
         .where(isNull(charTable.playerId))
-    return z.array(playerSchema).parse(result.map(row => row.players))
+    return z.array(playerSchema).parse(result.map((row) => row.players))
 }
 
 export async function getPlayerById(id: string): Promise<Player | null> {
@@ -88,7 +92,7 @@ export async function addPlayer(player: NewPlayer): Promise<string> {
 
     await db.insert(playerTable).values({
         id: id,
-        name: player.name
+        name: player.name,
     })
 
     return id
@@ -98,7 +102,7 @@ export async function editPlayer(edited: EditPlayer): Promise<void> {
     await db
         .update(playerTable)
         .set({
-            name: edited.name
+            name: edited.name,
         })
         .where(eq(playerTable.id, edited.id))
 }
@@ -116,8 +120,8 @@ export async function getCharacterWithPlayerById(
     const result = await db.query.charTable.findFirst({
         where: (char, { eq }) => eq(char.id, id),
         with: {
-            player: true
-        }
+            player: true,
+        },
     })
 
     if (!result) {
@@ -130,8 +134,8 @@ export async function getCharacterWithPlayerById(
 export async function getCharactersWithPlayerList(): Promise<CharacterWithPlayer[]> {
     const result = await db.query.charTable.findMany({
         with: {
-            player: true
-        }
+            player: true,
+        },
     })
     return z.array(characterWithPlayerSchema).parse(result)
 }
@@ -151,7 +155,7 @@ export async function addCharacter(character: NewCharacter): Promise<string> {
         class: character.class,
         role: character.role,
         main: character.main,
-        playerId: character.playerId
+        playerId: character.playerId,
     })
 
     return id
@@ -165,7 +169,7 @@ export async function editCharacter(edited: EditCharacter): Promise<void> {
             realm: edited.realm,
             class: edited.class,
             role: edited.role,
-            main: edited.main
+            main: edited.main,
         })
         .where(eq(charTable.id, edited.id))
 }

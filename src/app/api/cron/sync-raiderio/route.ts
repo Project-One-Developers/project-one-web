@@ -1,34 +1,37 @@
-import { checkRaiderioUpdatesAction } from '@/actions/raiderio'
-import { NextResponse } from 'next/server'
+import { checkRaiderioUpdatesAction } from "@/actions/raiderio"
+import { NextResponse } from "next/server"
 
 // Verify this is a cron request from Vercel (optional but recommended)
 function verifyCronSecret(request: Request): boolean {
-    const authHeader = request.headers.get('authorization')
+    const authHeader = request.headers.get("authorization")
     if (!process.env.CRON_SECRET) return true // No secret configured, allow
     return authHeader === `Bearer ${process.env.CRON_SECRET}`
 }
 
 export async function GET(request: Request) {
     if (!verifyCronSecret(request)) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     try {
-        console.log('[Cron] Raider.io sync started at', new Date().toISOString())
+        console.log("[Cron] Raider.io sync started at", new Date().toISOString())
 
         const result = await checkRaiderioUpdatesAction()
 
-        console.log('[Cron] Raider.io sync completed:', result.message)
+        console.log("[Cron] Raider.io sync completed:", result.message)
 
         return NextResponse.json({
             success: true,
             ...result,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         })
     } catch (error) {
-        console.error('[Cron] Raider.io sync failed:', error)
+        console.error("[Cron] Raider.io sync failed:", error)
         return NextResponse.json(
-            { error: 'Sync failed', message: error instanceof Error ? error.message : 'Unknown error' },
+            {
+                error: "Sync failed",
+                message: error instanceof Error ? error.message : "Unknown error",
+            },
             { status: 500 }
         )
     }

@@ -1,18 +1,24 @@
-'use client'
+"use client"
 
-import { useAddRaidSession } from '@/lib/queries/raid-sessions'
-import { useCharacters } from '@/lib/queries/players'
-import { getUnixTimestamp } from '@/shared/libs/date/date-utils'
-import type { Character, NewRaidSession } from '@/shared/types/types'
-import { Loader2 } from 'lucide-react'
-import { useState, useEffect, type JSX, useMemo } from 'react'
-import { toast } from 'sonner'
-import { Button } from './ui/button'
-import { Checkbox } from './ui/checkbox'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog'
-import { Input } from './ui/input'
-import { Label } from './ui/label'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { useAddRaidSession } from "@/lib/queries/raid-sessions"
+import { useCharacters } from "@/lib/queries/players"
+import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
+import type { Character, NewRaidSession } from "@/shared/types/types"
+import { Loader2 } from "lucide-react"
+import { useState, useEffect, type JSX, useMemo } from "react"
+import { toast } from "sonner"
+import { Button } from "./ui/button"
+import { Checkbox } from "./ui/checkbox"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "./ui/dialog"
+import { Input } from "./ui/input"
+import { Label } from "./ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 type RaidSessionDialogProps = {
     isOpen: boolean
@@ -21,10 +27,10 @@ type RaidSessionDialogProps = {
 
 export default function RaidSessionDialog({
     isOpen,
-    setOpen
+    setOpen,
 }: RaidSessionDialogProps): JSX.Element {
-    const [sessionName, setSessionName] = useState('')
-    const [nameError, setNameError] = useState('')
+    const [sessionName, setSessionName] = useState("")
+    const [nameError, setNameError] = useState("")
     const [selectedCharacters, setSelectedCharacters] = useState<Set<string>>(new Set())
 
     const addMutation = useAddRaidSession()
@@ -33,26 +39,26 @@ export default function RaidSessionDialog({
     // Group characters by main/alt status
     const { mains, alts } = useMemo(() => {
         if (!characters) return { mains: [], alts: [] }
-        const mainChars = characters.filter(c => c.main)
-        const altChars = characters.filter(c => !c.main)
+        const mainChars = characters.filter((c) => c.main)
+        const altChars = characters.filter((c) => !c.main)
         return { mains: mainChars, alts: altChars }
     }, [characters])
 
     useEffect(() => {
         if (isOpen) {
             // Reset form when opening
-            setSessionName('')
-            setNameError('')
+            setSessionName("")
+            setNameError("")
             // Pre-select all mains by default
             if (mains.length > 0) {
-                setSelectedCharacters(new Set(mains.map(c => c.id)))
+                setSelectedCharacters(new Set(mains.map((c) => c.id)))
             }
         }
     }, [isOpen, mains])
 
     const resetForm = () => {
-        setSessionName('')
-        setNameError('')
+        setSessionName("")
+        setNameError("")
         setSelectedCharacters(new Set())
     }
 
@@ -60,11 +66,11 @@ export default function RaidSessionDialog({
         const trimmedName = sessionName.trim()
 
         if (!trimmedName) {
-            setNameError('Session name is required')
+            setNameError("Session name is required")
             return false
         }
 
-        setNameError('')
+        setNameError("")
         return true
     }
 
@@ -78,7 +84,7 @@ export default function RaidSessionDialog({
         const sessionData: NewRaidSession = {
             name: sessionName.trim(),
             raidDate: getUnixTimestamp(),
-            roster: Array.from(selectedCharacters)
+            roster: Array.from(selectedCharacters),
         }
 
         addMutation.mutate(sessionData, {
@@ -87,21 +93,21 @@ export default function RaidSessionDialog({
                 setOpen(false)
                 toast.success(`Raid session "${sessionData.name}" created successfully`)
             },
-            onError: error => {
+            onError: (error) => {
                 toast.error(`Unable to create raid session. Error: ${error.message}`)
-            }
+            },
         })
     }
 
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSessionName(e.target.value)
         if (nameError) {
-            setNameError('')
+            setNameError("")
         }
     }
 
     const toggleCharacter = (charId: string) => {
-        setSelectedCharacters(prev => {
+        setSelectedCharacters((prev) => {
             const newSet = new Set(prev)
             if (newSet.has(charId)) {
                 newSet.delete(charId)
@@ -113,7 +119,7 @@ export default function RaidSessionDialog({
     }
 
     const selectAllMains = () => {
-        setSelectedCharacters(new Set(mains.map(c => c.id)))
+        setSelectedCharacters(new Set(mains.map((c) => c.id)))
     }
 
     const selectNone = () => {
@@ -128,7 +134,8 @@ export default function RaidSessionDialog({
                 <DialogHeader>
                     <DialogTitle>New Raid Session</DialogTitle>
                     <DialogDescription>
-                        Create a new raid session and select the characters that will participate.
+                        Create a new raid session and select the characters that will
+                        participate.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -139,7 +146,7 @@ export default function RaidSessionDialog({
                             id="name"
                             value={sessionName}
                             onChange={handleNameChange}
-                            className={nameError ? 'border-red-500' : ''}
+                            className={nameError ? "border-red-500" : ""}
                             placeholder="e.g., Mythic Progression - Week 15"
                         />
                         {nameError && <p className="text-sm text-red-500">{nameError}</p>}
@@ -175,7 +182,7 @@ export default function RaidSessionDialog({
                                         Mains
                                     </h4>
                                     <div className="space-y-2">
-                                        {mains.map(char => (
+                                        {mains.map((char) => (
                                             <CharacterCheckbox
                                                 key={char.id}
                                                 character={char}
@@ -193,7 +200,7 @@ export default function RaidSessionDialog({
                                         Alts
                                     </h4>
                                     <div className="space-y-2">
-                                        {alts.map(char => (
+                                        {alts.map((char) => (
                                             <CharacterCheckbox
                                                 key={char.id}
                                                 character={char}
@@ -207,14 +214,19 @@ export default function RaidSessionDialog({
 
                             {mains.length === 0 && alts.length === 0 && (
                                 <p className="text-sm text-muted-foreground text-center py-4">
-                                    No characters found. Add characters in the Roster page first.
+                                    No characters found. Add characters in the Roster page
+                                    first.
                                 </p>
                             )}
                         </ScrollArea>
                     </div>
 
                     <Button disabled={isLoading} type="submit">
-                        {isLoading ? <Loader2 className="animate-spin" /> : 'Create Session'}
+                        {isLoading ? (
+                            <Loader2 className="animate-spin" />
+                        ) : (
+                            "Create Session"
+                        )}
                     </Button>
                 </form>
             </DialogContent>
@@ -225,7 +237,7 @@ export default function RaidSessionDialog({
 function CharacterCheckbox({
     character,
     checked,
-    onToggle
+    onToggle,
 }: {
     character: Character
     checked: boolean

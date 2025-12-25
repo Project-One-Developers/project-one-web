@@ -1,14 +1,20 @@
-'use client'
+"use client"
 
-import { useAddPlayer, useEditPlayer } from '@/lib/queries/players'
-import type { NewPlayer, Player } from '@/shared/types/types'
-import { Loader2 } from 'lucide-react'
-import { useState, useEffect, type JSX } from 'react'
-import { toast } from 'sonner'
-import { Button } from './ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog'
-import { Input } from './ui/input'
-import { Label } from './ui/label'
+import { useAddPlayer, useEditPlayer } from "@/lib/queries/players"
+import type { NewPlayer, Player } from "@/shared/types/types"
+import { Loader2 } from "lucide-react"
+import { useState, useEffect, type JSX } from "react"
+import { toast } from "sonner"
+import { Button } from "./ui/button"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "./ui/dialog"
+import { Input } from "./ui/input"
+import { Label } from "./ui/label"
 
 type PlayerDialogProps = {
     isOpen: boolean
@@ -19,12 +25,12 @@ type PlayerDialogProps = {
 export default function PlayerDialog({
     isOpen,
     setOpen,
-    existingPlayer
+    existingPlayer,
 }: PlayerDialogProps): JSX.Element {
     const isEditing = existingPlayer != null
 
-    const [playerName, setPlayerName] = useState('')
-    const [nameError, setNameError] = useState('')
+    const [playerName, setPlayerName] = useState("")
+    const [nameError, setNameError] = useState("")
 
     const addMutation = useAddPlayer()
     const editMutation = useEditPlayer()
@@ -33,25 +39,25 @@ export default function PlayerDialog({
         if (isEditing && existingPlayer) {
             setPlayerName(existingPlayer.name)
         } else {
-            setPlayerName('')
+            setPlayerName("")
         }
-        setNameError('')
+        setNameError("")
     }, [isEditing, existingPlayer, isOpen])
 
     const resetForm = () => {
-        setPlayerName('')
-        setNameError('')
+        setPlayerName("")
+        setNameError("")
     }
 
     const validateForm = (): boolean => {
         const trimmedName = playerName.trim()
 
         if (!trimmedName) {
-            setNameError('Name is required')
+            setNameError("Name is required")
             return false
         }
 
-        setNameError('')
+        setNameError("")
         return true
     }
 
@@ -63,7 +69,7 @@ export default function PlayerDialog({
         }
 
         const playerData: NewPlayer = {
-            name: playerName.trim()
+            name: playerName.trim(),
         }
 
         if (isEditing && existingPlayer) {
@@ -74,9 +80,9 @@ export default function PlayerDialog({
                         setOpen(false)
                         toast.success(`Player ${playerData.name} edited successfully`)
                     },
-                    onError: error => {
+                    onError: (error) => {
                         toast.error(`Unable to edit the player. Error: ${error.message}`)
-                    }
+                    },
                 }
             )
         } else {
@@ -84,11 +90,13 @@ export default function PlayerDialog({
                 onSuccess: () => {
                     resetForm()
                     setOpen(false)
-                    toast.success(`The player ${playerData.name} has been successfully added.`)
+                    toast.success(
+                        `The player ${playerData.name} has been successfully added.`
+                    )
                 },
-                onError: error => {
+                onError: (error) => {
                     toast.error(`Unable to add the player. Error: ${error.message}`)
-                }
+                },
             })
         }
     }
@@ -96,7 +104,7 @@ export default function PlayerDialog({
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setPlayerName(e.target.value)
         if (nameError) {
-            setNameError('')
+            setNameError("")
         }
     }
 
@@ -106,10 +114,10 @@ export default function PlayerDialog({
         <Dialog open={isOpen} onOpenChange={setOpen}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>{isEditing ? 'Edit' : 'New'} player</DialogTitle>
+                    <DialogTitle>{isEditing ? "Edit" : "New"} player</DialogTitle>
                     <DialogDescription>
-                        Enter only the player&apos;s nickname. Characters played should be added
-                        later and must be named as they are in the game.
+                        Enter only the player&apos;s nickname. Characters played should be
+                        added later and must be named as they are in the game.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -120,14 +128,14 @@ export default function PlayerDialog({
                             id="name"
                             value={playerName}
                             onChange={handleNameChange}
-                            className={nameError ? 'border-red-500' : ''}
+                            className={nameError ? "border-red-500" : ""}
                             placeholder="Enter player name"
                         />
                         {nameError && <p className="text-sm text-red-500">{nameError}</p>}
                     </div>
 
                     <Button disabled={isLoading} type="submit">
-                        {isLoading ? <Loader2 className="animate-spin" /> : 'Confirm'}
+                        {isLoading ? <Loader2 className="animate-spin" /> : "Confirm"}
                     </Button>
                 </form>
             </DialogContent>

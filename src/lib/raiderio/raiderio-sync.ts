@@ -1,13 +1,13 @@
-import { getUnixTimestamp } from '@/shared/libs/date/date-utils'
-import { evalRealSeason, parseItemTrack } from '@/shared/libs/items/item-bonus-utils'
-import { CharacterRaiderio } from '@/shared/schemas/raiderio.schemas'
+import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
+import { evalRealSeason, parseItemTrack } from "@/shared/libs/items/item-bonus-utils"
+import { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
 import {
     raiderioResponseSchema,
     type RaiderioItems,
-    type RaiderioResponse
-} from '@/shared/schemas/raiderio-response.schemas'
-import type { GearItem, Item, WowItemEquippedSlotKey } from '@/shared/types/types'
-import { getItems } from '@/db/repositories/items'
+    type RaiderioResponse,
+} from "@/shared/schemas/raiderio-response.schemas"
+import type { GearItem, Item, WowItemEquippedSlotKey } from "@/shared/types/types"
+import { getItems } from "@/db/repositories/items"
 
 export async function fetchCharacterRaidProgress(
     characterName: string,
@@ -25,7 +25,7 @@ export async function fetchCharacterRaidProgress(
                 character: characterName,
                 realm,
                 status: response.status,
-                statusText: response.statusText
+                statusText: response.statusText,
             },
             errorMessage
         )
@@ -58,12 +58,16 @@ export async function parseRaiderioData(
         loggedOutAt: Math.floor(
             new Date(raiderioCharData.characterDetails.meta.loggedOutAt).getTime() / 1000
         ),
-        averageItemLevel: raiderioCharData.characterDetails.itemDetails.item_level_equipped,
+        averageItemLevel:
+            raiderioCharData.characterDetails.itemDetails.item_level_equipped,
         itemUpdateAt: Math.floor(
-            new Date(raiderioCharData.characterDetails.itemDetails.updated_at).getTime() / 1000
+            new Date(raiderioCharData.characterDetails.itemDetails.updated_at).getTime() /
+                1000
         ),
-        itemsEquipped: createEquippedInfo(raiderioCharData.characterDetails.itemDetails.items),
-        progress: raiderioCharData.characterRaidProgress
+        itemsEquipped: createEquippedInfo(
+            raiderioCharData.characterDetails.itemDetails.items
+        ),
+        progress: raiderioCharData.characterRaidProgress,
     }
 
     return res
@@ -73,22 +77,22 @@ function createEquippedInfo(itemsEquipped: RaiderioItems): GearItem[] {
     const res: GearItem[] = []
 
     const slots: { key: keyof RaiderioItems; slotKey: WowItemEquippedSlotKey }[] = [
-        { key: 'head', slotKey: 'head' },
-        { key: 'neck', slotKey: 'neck' },
-        { key: 'shoulder', slotKey: 'shoulder' },
-        { key: 'back', slotKey: 'back' },
-        { key: 'chest', slotKey: 'chest' },
-        { key: 'wrist', slotKey: 'wrist' },
-        { key: 'hands', slotKey: 'hands' },
-        { key: 'waist', slotKey: 'waist' },
-        { key: 'legs', slotKey: 'legs' },
-        { key: 'feet', slotKey: 'feet' },
-        { key: 'finger1', slotKey: 'finger1' },
-        { key: 'finger2', slotKey: 'finger2' },
-        { key: 'trinket1', slotKey: 'trinket1' },
-        { key: 'trinket2', slotKey: 'trinket2' },
-        { key: 'mainhand', slotKey: 'main_hand' },
-        { key: 'offhand', slotKey: 'off_hand' }
+        { key: "head", slotKey: "head" },
+        { key: "neck", slotKey: "neck" },
+        { key: "shoulder", slotKey: "shoulder" },
+        { key: "back", slotKey: "back" },
+        { key: "chest", slotKey: "chest" },
+        { key: "wrist", slotKey: "wrist" },
+        { key: "hands", slotKey: "hands" },
+        { key: "waist", slotKey: "waist" },
+        { key: "legs", slotKey: "legs" },
+        { key: "feet", slotKey: "feet" },
+        { key: "finger1", slotKey: "finger1" },
+        { key: "finger2", slotKey: "finger2" },
+        { key: "trinket1", slotKey: "trinket1" },
+        { key: "trinket2", slotKey: "trinket2" },
+        { key: "mainhand", slotKey: "main_hand" },
+        { key: "offhand", slotKey: "off_hand" },
     ]
 
     for (const { key, slotKey } of slots) {
@@ -118,12 +122,12 @@ function createGearPiece(
     equippedInSlot: WowItemEquippedSlotKey
 ): GearItem | null {
     if (!itemId || !ilvl || !itemsInDb) return null
-    const wowItem = itemsInDb.find(i => i.id === itemId)
+    const wowItem = itemsInDb.find((i) => i.id === itemId)
     if (wowItem == null) {
         console.log(
             `raiderio.createGearPiece: skipping equipped item in ${equippedInSlot} not in db: ` +
                 itemId +
-                ' https://www.wowhead.com/item=' +
+                " https://www.wowhead.com/item=" +
                 itemId
         )
         return null
@@ -140,15 +144,15 @@ function createGearPiece(
             veryRare: wowItem.veryRare,
             iconName: wowItem.iconName,
             season: evalRealSeason(wowItem, ilvl),
-            specIds: wowItem.specIds
+            specIds: wowItem.specIds,
         },
-        source: 'equipped',
+        source: "equipped",
         equippedInSlot: equippedInSlot,
         itemLevel: ilvl,
         bonusIds: bonusIds ?? null,
         itemTrack: bonusIds ? parseItemTrack(bonusIds) : null,
         gemIds: gemIds ?? null,
-        enchantIds: enchantIds ?? null
+        enchantIds: enchantIds ?? null,
     }
     return res
 }

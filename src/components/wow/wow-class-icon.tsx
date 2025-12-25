@@ -1,9 +1,9 @@
-'use client'
+"use client"
 
-import { classIcon } from '@/lib/wow-icon'
-import type { WowClassName } from '@/shared/types/types'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import React from 'react'
+import { classIcon } from "@/lib/wow-icon"
+import type { WowClassName } from "@/shared/types/types"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import React from "react"
 
 interface WowClassIconProps extends React.ImgHTMLAttributes<HTMLImageElement> {
     wowClassName: WowClassName
@@ -20,7 +20,11 @@ export const WowClassIcon: React.FC<WowClassIconProps> = ({
     if (!showTooltip) {
         return (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={classIcon.get(wowClassName)} alt={`Class ${wowClassName}`} {...props} />
+            <img
+                src={classIcon.get(wowClassName)}
+                alt={`Class ${wowClassName}`}
+                {...props}
+            />
         )
     }
 
@@ -28,7 +32,11 @@ export const WowClassIcon: React.FC<WowClassIconProps> = ({
         <Tooltip>
             <TooltipTrigger asChild>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={classIcon.get(wowClassName)} alt={`Class ${wowClassName}`} {...props} />
+                <img
+                    src={classIcon.get(wowClassName)}
+                    alt={`Class ${wowClassName}`}
+                    {...props}
+                />
             </TooltipTrigger>
             <TooltipContent sideOffset={5}>{charname}</TooltipContent>
         </Tooltip>

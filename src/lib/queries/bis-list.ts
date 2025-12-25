@@ -1,13 +1,13 @@
-'use client'
+"use client"
 
-import { getBisListAction, updateItemBisSpecAction } from '@/actions/bis-list'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { queryKeys } from './keys'
+import { getBisListAction, updateItemBisSpecAction } from "@/actions/bis-list"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { queryKeys } from "./keys"
 
 export function useBisList() {
     return useQuery({
         queryKey: [queryKeys.bisList],
-        queryFn: () => getBisListAction()
+        queryFn: () => getBisListAction(),
     })
 }
 
@@ -19,6 +19,6 @@ export function useUpdateItemBisSpecs() {
             updateItemBisSpecAction(itemId, specIds),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [queryKeys.bisList] })
-        }
+        },
     })
 }

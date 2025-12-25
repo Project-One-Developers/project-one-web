@@ -1,7 +1,7 @@
-'use server'
+"use server"
 
-import { db } from '@/db'
-import { itemTable } from '@/db/schema'
+import { db } from "@/db"
+import { itemTable } from "@/db/schema"
 import {
     deleteItemNote,
     getAllItemNotes,
@@ -9,13 +9,13 @@ import {
     getItemNote,
     getItems,
     searchItems,
-    setItemNote
-} from '@/db/repositories/items'
-import { CURRENT_SEASON } from '@/shared/consts/wow.consts'
-import { itemSchema } from '@/shared/schemas/items.schema'
-import type { Item, ItemNote } from '@/shared/types/types'
-import { and, eq } from 'drizzle-orm'
-import { z } from 'zod'
+    setItemNote,
+} from "@/db/repositories/items"
+import { CURRENT_SEASON } from "@/shared/consts/wow.consts"
+import { itemSchema } from "@/shared/schemas/items.schema"
+import type { Item, ItemNote } from "@/shared/types/types"
+import { and, eq } from "drizzle-orm"
+import { z } from "zod"
 
 export async function getItemsAction(): Promise<Item[]> {
     return await getItems()
@@ -26,10 +26,7 @@ export async function getRaidItemsAction(): Promise<Item[]> {
         .select()
         .from(itemTable)
         .where(
-            and(
-                eq(itemTable.season, CURRENT_SEASON),
-                eq(itemTable.sourceType, 'raid')
-            )
+            and(eq(itemTable.season, CURRENT_SEASON), eq(itemTable.sourceType, "raid"))
         )
     return z.array(itemSchema).parse(items)
 }

@@ -1,20 +1,20 @@
-import z from 'zod'
-import { gearItemSchema } from './items.schema'
-import { wowRaidDiffSchema } from './wow.schemas'
+import z from "zod"
+import { gearItemSchema } from "./items.schema"
+import { wowRaidDiffSchema } from "./wow.schemas"
 
 export const wowauditEnchantSchema = z.object({
     name: z.string(),
-    quality: z.number()
+    quality: z.number(),
 })
 
 export const wowauditGearItemSchema = z.object({
     ilvl: z.number(),
-    id: z.number()
+    id: z.number(),
 })
 
 export const wowauditTiersetItemSchema = z.object({
     ilvl: z.number(),
-    diff: wowRaidDiffSchema
+    diff: wowRaidDiffSchema,
 })
 
 export const charWowAuditSchema = z.object({
@@ -38,7 +38,7 @@ export const charWowAuditSchema = z.object({
         finger2: wowauditEnchantSchema.nullable(),
         back: wowauditEnchantSchema.nullable(),
         chest: wowauditEnchantSchema.nullable(),
-        feet: wowauditEnchantSchema.nullable()
+        feet: wowauditEnchantSchema.nullable(),
     }),
     greatVault: z.object({
         slot1: z.number().nullable(),
@@ -49,9 +49,9 @@ export const charWowAuditSchema = z.object({
         slot6: z.number().nullable(),
         slot7: z.number().nullable(),
         slot8: z.number().nullable(),
-        slot9: z.number().nullable()
+        slot9: z.number().nullable(),
     }),
     bestItemsEquipped: z.array(gearItemSchema),
     itemsEquipped: z.array(gearItemSchema),
-    tiersetInfo: z.array(gearItemSchema)
+    tiersetInfo: z.array(gearItemSchema),
 })

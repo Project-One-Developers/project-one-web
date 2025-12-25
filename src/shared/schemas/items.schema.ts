@@ -1,11 +1,11 @@
-import { z } from 'zod'
+import { z } from "zod"
 import {
     wowArmorTypeSchema,
     wowItemEquippedSlotKeySchema,
     wowItemSlotKeySchema,
     wowItemSlotSchema,
-    wowItemTrackNameSchema
-} from './wow.schemas'
+    wowItemTrackNameSchema,
+} from "./wow.schemas"
 
 export const itemSchema = z.object({
     id: z.number(),
@@ -42,20 +42,20 @@ export const itemSchema = z.object({
     sourceName: z.string(),
     sourceType: z.string(),
     onUseTrinket: z.boolean(),
-    season: z.number()
+    season: z.number(),
 })
 
 export const itemToTiersetSchema = z.object({
     itemId: z.number(),
     tokenId: z.number(),
-    classId: z.number()
+    classId: z.number(),
 })
 export const itemToTiersetArraySchema = z.array(itemToTiersetSchema)
 
 export const itemToCatalystSchema = z.object({
     itemId: z.number(),
     encounterId: z.number(),
-    catalyzedItemId: z.number()
+    catalyzedItemId: z.number(),
 })
 export const itemToCatalystArraySchema = z.array(itemToCatalystSchema)
 
@@ -66,7 +66,7 @@ export const itemTrackSchema = z.object({
     max: z.number(),
     itemLevel: z.number(),
     season: z.number(),
-    maxItemLevel: z.number()
+    maxItemLevel: z.number(),
 })
 
 /**
@@ -84,9 +84,9 @@ export const gearItemSchema = z.object({
         veryRare: itemSchema.shape.veryRare,
         iconName: itemSchema.shape.iconName,
         season: itemSchema.shape.season,
-        specIds: itemSchema.shape.specIds
+        specIds: itemSchema.shape.specIds,
     }),
-    source: z.enum(['equipped', 'bag', 'great-vault', 'loot']),
+    source: z.enum(["equipped", "bag", "great-vault", "loot"]),
     equippedInSlot: wowItemEquippedSlotKeySchema.optional(),
     itemLevel: z.number(),
     itemTrack: itemTrackSchema.nullable(),
@@ -94,5 +94,5 @@ export const gearItemSchema = z.object({
     enchantIds: z.array(z.number()).nullable(),
     gemIds: z.array(z.number()).nullable(),
     craftedStats: z.string().optional(),
-    craftingQuality: z.string().optional()
+    craftingQuality: z.string().optional(),
 })

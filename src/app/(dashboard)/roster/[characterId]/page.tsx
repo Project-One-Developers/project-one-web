@@ -1,18 +1,27 @@
-'use client'
+"use client"
 
-import { getCharLatestGameInfoAction } from '@/actions/characters'
-import CharacterDeleteDialog from '@/components/character-delete-dialog'
-import CharacterDialog from '@/components/character-dialog'
-import { Button } from '@/components/ui/button'
-import { WowCharacterLink } from '@/components/wow/wow-character-links'
-import { WowClassIcon } from '@/components/wow/wow-class-icon'
-import { WowItemIcon } from '@/components/wow/wow-item-icon'
-import { useCharacter } from '@/lib/queries/players'
-import { formaUnixTimestampToItalianDate } from '@/shared/libs/date/date-utils'
-import type { CharacterGameInfo, Droptimizer } from '@/shared/types/types'
-import { ArrowLeft, Edit, LoaderCircle, Trash2, TrendingUp, Calendar, Shield, Swords } from 'lucide-react'
-import { useParams, useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { getCharLatestGameInfoAction } from "@/actions/characters"
+import CharacterDeleteDialog from "@/components/character-delete-dialog"
+import CharacterDialog from "@/components/character-dialog"
+import { Button } from "@/components/ui/button"
+import { WowCharacterLink } from "@/components/wow/wow-character-links"
+import { WowClassIcon } from "@/components/wow/wow-class-icon"
+import { WowItemIcon } from "@/components/wow/wow-item-icon"
+import { useCharacter } from "@/lib/queries/players"
+import { formaUnixTimestampToItalianDate } from "@/shared/libs/date/date-utils"
+import type { CharacterGameInfo, Droptimizer } from "@/shared/types/types"
+import {
+    ArrowLeft,
+    Edit,
+    LoaderCircle,
+    Trash2,
+    TrendingUp,
+    Calendar,
+    Shield,
+    Swords,
+} from "lucide-react"
+import { useParams, useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 
 export default function CharacterPage() {
     const params = useParams<{ characterId: string }>()
@@ -50,7 +59,11 @@ export default function CharacterPage() {
         return (
             <div className="flex flex-col items-center w-full justify-center mt-10 mb-10">
                 <p className="text-muted-foreground">Character not found</p>
-                <Button variant="outline" onClick={() => router.push('/roster')} className="mt-4">
+                <Button
+                    variant="outline"
+                    onClick={() => router.push("/roster")}
+                    className="mt-4"
+                >
                     <ArrowLeft className="h-4 w-4 mr-2" /> Back to Roster
                 </Button>
             </div>
@@ -106,11 +119,11 @@ export default function CharacterPage() {
 
             {/* Character Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <InfoCard label="Realm" value={character.realm.replace(/-/g, ' ')} />
+                <InfoCard label="Realm" value={character.realm.replace(/-/g, " ")} />
                 <InfoCard label="Class" value={character.class} />
                 <InfoCard label="Role" value={character.role} />
-                <InfoCard label="Main" value={character.main ? 'Yes' : 'No'} />
-                <InfoCard label="Player" value={character.player?.name || 'Unknown'} />
+                <InfoCard label="Main" value={character.main ? "Yes" : "No"} />
+                <InfoCard label="Player" value={character.player?.name || "Unknown"} />
             </div>
 
             {/* Game Info Panel */}
@@ -129,7 +142,9 @@ export default function CharacterPage() {
                         {gameInfo.droptimizer ? (
                             <DroptimizerInfo droptimizer={gameInfo.droptimizer} />
                         ) : (
-                            <p className="text-sm text-muted-foreground">No droptimizer data available</p>
+                            <p className="text-sm text-muted-foreground">
+                                No droptimizer data available
+                            </p>
                         )}
                     </div>
 
@@ -142,28 +157,47 @@ export default function CharacterPage() {
                         {gameInfo.raiderio ? (
                             <div className="space-y-2">
                                 <div className="flex justify-between">
-                                    <span className="text-sm text-muted-foreground">Item Level</span>
-                                    <span className="font-medium">{gameInfo.raiderio.averageItemLevel}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-sm text-muted-foreground">Last Synced</span>
-                                    <span className="font-medium text-sm">
-                                        {formaUnixTimestampToItalianDate(gameInfo.raiderio.itemUpdateAt)}
+                                    <span className="text-sm text-muted-foreground">
+                                        Item Level
+                                    </span>
+                                    <span className="font-medium">
+                                        {gameInfo.raiderio.averageItemLevel}
                                     </span>
                                 </div>
-                                {gameInfo.raiderio.itemsEquipped && gameInfo.raiderio.itemsEquipped.length > 0 && (
-                                    <div className="pt-2">
-                                        <p className="text-sm text-muted-foreground mb-2">Equipped Gear</p>
-                                        <div className="flex flex-wrap gap-1">
-                                            {gameInfo.raiderio.itemsEquipped.slice(0, 8).map((item, idx) => (
-                                                <WowItemIcon key={idx} gearItem={item} size="sm" />
-                                            ))}
+                                <div className="flex justify-between">
+                                    <span className="text-sm text-muted-foreground">
+                                        Last Synced
+                                    </span>
+                                    <span className="font-medium text-sm">
+                                        {formaUnixTimestampToItalianDate(
+                                            gameInfo.raiderio.itemUpdateAt
+                                        )}
+                                    </span>
+                                </div>
+                                {gameInfo.raiderio.itemsEquipped &&
+                                    gameInfo.raiderio.itemsEquipped.length > 0 && (
+                                        <div className="pt-2">
+                                            <p className="text-sm text-muted-foreground mb-2">
+                                                Equipped Gear
+                                            </p>
+                                            <div className="flex flex-wrap gap-1">
+                                                {gameInfo.raiderio.itemsEquipped
+                                                    .slice(0, 8)
+                                                    .map((item, idx) => (
+                                                        <WowItemIcon
+                                                            key={idx}
+                                                            gearItem={item}
+                                                            size="sm"
+                                                        />
+                                                    ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
                             </div>
                         ) : (
-                            <p className="text-sm text-muted-foreground">No Raider.io data available</p>
+                            <p className="text-sm text-muted-foreground">
+                                No Raider.io data available
+                            </p>
                         )}
                     </div>
 
@@ -176,24 +210,38 @@ export default function CharacterPage() {
                         {gameInfo.wowaudit ? (
                             <div className="space-y-2">
                                 <div className="flex justify-between">
-                                    <span className="text-sm text-muted-foreground">Item Level</span>
-                                    <span className="font-medium">{gameInfo.wowaudit.averageIlvl ?? 'N/A'}</span>
+                                    <span className="text-sm text-muted-foreground">
+                                        Item Level
+                                    </span>
+                                    <span className="font-medium">
+                                        {gameInfo.wowaudit.averageIlvl ?? "N/A"}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-sm text-muted-foreground">Last Synced</span>
+                                    <span className="text-sm text-muted-foreground">
+                                        Last Synced
+                                    </span>
                                     <span className="font-medium text-sm">
-                                        {formaUnixTimestampToItalianDate(gameInfo.wowaudit.wowauditLastModifiedUnixTs)}
+                                        {formaUnixTimestampToItalianDate(
+                                            gameInfo.wowaudit.wowauditLastModifiedUnixTs
+                                        )}
                                     </span>
                                 </div>
                                 {gameInfo.wowaudit.hightestIlvlEverEquipped && (
                                     <div className="flex justify-between">
-                                        <span className="text-sm text-muted-foreground">Highest iLvl</span>
-                                        <span className="font-medium">{gameInfo.wowaudit.hightestIlvlEverEquipped}</span>
+                                        <span className="text-sm text-muted-foreground">
+                                            Highest iLvl
+                                        </span>
+                                        <span className="font-medium">
+                                            {gameInfo.wowaudit.hightestIlvlEverEquipped}
+                                        </span>
                                     </div>
                                 )}
                             </div>
                         ) : (
-                            <p className="text-sm text-muted-foreground">No WoW Audit data available</p>
+                            <p className="text-sm text-muted-foreground">
+                                No WoW Audit data available
+                            </p>
                         )}
                     </div>
                 </div>
@@ -238,7 +286,9 @@ function DroptimizerInfo({ droptimizer }: { droptimizer: Droptimizer }) {
         <div className="space-y-3">
             <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Difficulty</span>
-                <span className="font-medium capitalize">{droptimizer.raidInfo.difficulty}</span>
+                <span className="font-medium capitalize">
+                    {droptimizer.raidInfo.difficulty}
+                </span>
             </div>
             <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Date</span>
@@ -263,7 +313,9 @@ function DroptimizerInfo({ droptimizer }: { droptimizer: Droptimizer }) {
                                         alt={upgrade.item.name}
                                         className="h-6 w-6 rounded border border-background"
                                     />
-                                    <span className="truncate max-w-[120px]">{upgrade.item.name}</span>
+                                    <span className="truncate max-w-[120px]">
+                                        {upgrade.item.name}
+                                    </span>
                                 </div>
                                 <span className="text-green-500 font-medium">
                                     +{upgrade.dps.toLocaleString()} DPS

@@ -1,9 +1,9 @@
-'use server'
+"use server"
 
-import { getCharactersWithPlayerList } from '@/db/repositories/characters'
-import { getDroptimizerLatestList } from '@/db/repositories/droptimizer'
-import { getAllCharacterRaiderio } from '@/db/repositories/raiderio'
-import { getAllCharacterWowAudit } from '@/db/repositories/wowaudit'
+import { getCharactersWithPlayerList } from "@/db/repositories/characters"
+import { getDroptimizerLatestList } from "@/db/repositories/droptimizer"
+import { getAllCharacterRaiderio } from "@/db/repositories/raiderio"
+import { getAllCharacterWowAudit } from "@/db/repositories/wowaudit"
 import type {
     CharacterSummary,
     CharacterWowAudit,
@@ -11,9 +11,9 @@ import type {
     DroptimizerWarn,
     GearItem,
     RaiderioWarn,
-    WowAuditWarn
-} from '@/shared/types/types'
-import type { CharacterRaiderio } from '@/shared/schemas/raiderio.schemas'
+    WowAuditWarn,
+} from "@/shared/types/types"
+import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
 
 // Parse item level from various data sources
 function parseItemLevel(
@@ -34,7 +34,7 @@ function parseItemLevel(
     if (wowAudit?.averageIlvl) {
         return wowAudit.averageIlvl
     }
-    return '?'
+    return "?"
 }
 
 // Parse great vault from droptimizer data
@@ -61,7 +61,7 @@ function parseTiersetInfo(
         return wowAudit.tiersetInfo
     }
     if (raiderio?.itemsEquipped) {
-        return raiderio.itemsEquipped.filter(item => item.item.tierset)
+        return raiderio.itemsEquipped.filter((item) => item.item.tierset)
     }
     return []
 }
@@ -76,29 +76,29 @@ function parseCurrencies(droptimizers: Droptimizer[]) {
 
 // Parse droptimizer warning status
 function parseDroptimizerWarn(droptimizers: Droptimizer[]): DroptimizerWarn {
-    if (droptimizers.length === 0) return 'missing' as DroptimizerWarn
+    if (droptimizers.length === 0) return "missing" as DroptimizerWarn
 
     // Check if droptimizers are outdated (older than 7 days)
     const oneWeekAgo = Date.now() / 1000 - 7 * 24 * 60 * 60
-    const latestDate = Math.max(...droptimizers.map(d => d.simInfo.date))
+    const latestDate = Math.max(...droptimizers.map((d) => d.simInfo.date))
 
     if (latestDate < oneWeekAgo) {
-        return 'outdated' as DroptimizerWarn
+        return "outdated" as DroptimizerWarn
     }
 
-    return 'none' as DroptimizerWarn
+    return "none" as DroptimizerWarn
 }
 
 // Parse wowaudit warning status
 function parseWowAuditWarn(wowAudit: CharacterWowAudit | null): WowAuditWarn {
-    if (!wowAudit) return 'not-tracked' as WowAuditWarn
-    return 'none' as WowAuditWarn
+    if (!wowAudit) return "not-tracked" as WowAuditWarn
+    return "none" as WowAuditWarn
 }
 
 // Parse raiderio warning status
 function parseRaiderioWarn(raiderio: CharacterRaiderio | null): RaiderioWarn {
-    if (!raiderio) return 'not-tracked' as RaiderioWarn
-    return 'none' as RaiderioWarn
+    if (!raiderio) return "not-tracked" as RaiderioWarn
+    return "none" as RaiderioWarn
 }
 
 export async function getRosterSummaryAction(): Promise<CharacterSummary[]> {
@@ -106,23 +106,24 @@ export async function getRosterSummaryAction(): Promise<CharacterSummary[]> {
         getCharactersWithPlayerList(),
         getDroptimizerLatestList(),
         getAllCharacterWowAudit(),
-        getAllCharacterRaiderio()
+        getAllCharacterRaiderio(),
     ])
 
-    const res: CharacterSummary[] = roster.map(char => {
+    const res: CharacterSummary[] = roster.map((char) => {
         // Get latest droptimizers for a given char
         const charDroptimizers = latestDroptimizers.filter(
-            dropt => dropt.charInfo.name === char.name && dropt.charInfo.server === char.realm
+            (dropt) =>
+                dropt.charInfo.name === char.name && dropt.charInfo.server === char.realm
         )
 
         const charWowAudit: CharacterWowAudit | null =
             wowAuditData.find(
-                wowaudit => wowaudit.name === char.name && wowaudit.realm === char.realm
+                (wowaudit) => wowaudit.name === char.name && wowaudit.realm === char.realm
             ) ?? null
 
         const charRaiderio: CharacterRaiderio | null =
             raiderioData.find(
-                raiderio => raiderio.name === char.name && raiderio.realm === char.realm
+                (raiderio) => raiderio.name === char.name && raiderio.realm === char.realm
             ) ?? null
 
         return {
@@ -133,7 +134,7 @@ export async function getRosterSummaryAction(): Promise<CharacterSummary[]> {
             currencies: parseCurrencies(charDroptimizers),
             warnDroptimizer: parseDroptimizerWarn(charDroptimizers),
             warnWowAudit: parseWowAuditWarn(charWowAudit),
-            warnRaiderio: parseRaiderioWarn(charRaiderio)
+            warnRaiderio: parseRaiderioWarn(charRaiderio),
         }
     })
 

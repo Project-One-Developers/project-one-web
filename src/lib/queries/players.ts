@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import {
     addCharacterAction,
@@ -11,9 +11,9 @@ import {
     getCharacterListAction,
     getCharactersWithPlayerListAction,
     getPlayerWithCharactersListAction,
-    getPlayersWithoutCharactersAction
-} from '@/actions/characters'
-import { getRosterSummaryAction } from '@/actions/summary'
+    getPlayersWithoutCharactersAction,
+} from "@/actions/characters"
+import { getRosterSummaryAction } from "@/actions/summary"
 import {
     DroptimizerWarn,
     RaiderioWarn,
@@ -22,10 +22,10 @@ import {
     type EditCharacter,
     type EditPlayer,
     type NewCharacter,
-    type NewPlayer
-} from '@/shared/types/types'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { queryKeys } from './keys'
+    type NewPlayer,
+} from "@/shared/types/types"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { queryKeys } from "./keys"
 
 // Type for enriched player summary (used in roster page)
 export type PlayerWithCharactersSummary = {
@@ -39,28 +39,28 @@ export type PlayerWithCharactersSummary = {
 export function usePlayersWithCharacters() {
     return useQuery({
         queryKey: [queryKeys.playersWithCharacters],
-        queryFn: () => getPlayerWithCharactersListAction()
+        queryFn: () => getPlayerWithCharactersListAction(),
     })
 }
 
 export function usePlayersWithoutCharacters() {
     return useQuery({
         queryKey: [queryKeys.playersWithoutCharacters],
-        queryFn: () => getPlayersWithoutCharactersAction()
+        queryFn: () => getPlayersWithoutCharactersAction(),
     })
 }
 
 export function useCharacters() {
     return useQuery({
         queryKey: [queryKeys.characters],
-        queryFn: () => getCharacterListAction()
+        queryFn: () => getCharacterListAction(),
     })
 }
 
 export function useCharactersWithPlayer() {
     return useQuery({
-        queryKey: [queryKeys.characters, 'withPlayer'],
-        queryFn: () => getCharactersWithPlayerListAction()
+        queryKey: [queryKeys.characters, "withPlayer"],
+        queryFn: () => getCharactersWithPlayerListAction(),
     })
 }
 
@@ -68,10 +68,10 @@ export function useCharacter(id: string | undefined) {
     return useQuery({
         queryKey: [queryKeys.character, id],
         queryFn: () => {
-            if (!id) throw new Error('No character id provided')
+            if (!id) throw new Error("No character id provided")
             return getCharacterAction(id)
         },
-        enabled: !!id
+        enabled: !!id,
     })
 }
 
@@ -80,21 +80,24 @@ export function usePlayersSummary() {
     return useQuery({
         queryKey: [queryKeys.playersSummary],
         queryFn: async (): Promise<PlayerWithCharactersSummary[]> => {
-            const [playersWithChars, playersWithoutChars, rosterSummary] = await Promise.all([
-                getPlayerWithCharactersListAction(),
-                getPlayersWithoutCharactersAction(),
-                getRosterSummaryAction()
-            ])
+            const [playersWithChars, playersWithoutChars, rosterSummary] =
+                await Promise.all([
+                    getPlayerWithCharactersListAction(),
+                    getPlayersWithoutCharactersAction(),
+                    getRosterSummaryAction(),
+                ])
 
             // Map character summaries by character ID for quick lookup
-            const summaryByCharId = new Map(rosterSummary.map(cs => [cs.character.id, cs]))
+            const summaryByCharId = new Map(
+                rosterSummary.map((cs) => [cs.character.id, cs])
+            )
 
             // Build players with real character summaries
-            const playersWithCharacters: PlayerWithCharactersSummary[] = playersWithChars.map(
-                player => ({
+            const playersWithCharacters: PlayerWithCharactersSummary[] =
+                playersWithChars.map((player) => ({
                     id: player.id,
                     name: player.name,
-                    charsSummary: player.characters.map(char => {
+                    charsSummary: player.characters.map((char) => {
                         const summary = summaryByCharId.get(char.id)
                         if (summary) {
                             return summary
@@ -103,30 +106,29 @@ export function usePlayersSummary() {
                         return {
                             character: {
                                 ...char,
-                                player: { id: player.id, name: player.name }
+                                player: { id: player.id, name: player.name },
                             },
-                            itemLevel: '?',
+                            itemLevel: "?",
                             weeklyChest: [],
                             tierset: [],
                             currencies: [],
                             warnDroptimizer: DroptimizerWarn.NotImported,
                             warnWowAudit: WowAuditWarn.NotTracked,
-                            warnRaiderio: RaiderioWarn.NotTracked
+                            warnRaiderio: RaiderioWarn.NotTracked,
                         }
-                    })
-                })
-            )
+                    }),
+                }))
 
             // Players without characters
             const playersWithoutCharsFormatted: PlayerWithCharactersSummary[] =
-                playersWithoutChars.map(player => ({
+                playersWithoutChars.map((player) => ({
                     id: player.id,
                     name: player.name,
-                    charsSummary: []
+                    charsSummary: [],
                 }))
 
             return [...playersWithCharacters, ...playersWithoutCharsFormatted]
-        }
+        },
     })
 }
 
@@ -138,10 +140,14 @@ export function useAddPlayer() {
     return useMutation({
         mutationFn: (player: NewPlayer) => addPlayerAction(player),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.playersWithCharacters] })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.playersWithoutCharacters] })
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithCharacters],
+            })
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithoutCharacters],
+            })
             queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
-        }
+        },
     })
 }
 
@@ -151,9 +157,11 @@ export function useEditPlayer() {
     return useMutation({
         mutationFn: (player: EditPlayer) => editPlayerAction(player),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.playersWithCharacters] })
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithCharacters],
+            })
             queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
-        }
+        },
     })
 }
 
@@ -163,10 +171,14 @@ export function useDeletePlayer() {
     return useMutation({
         mutationFn: (id: string) => deletePlayerAction(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.playersWithCharacters] })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.playersWithoutCharacters] })
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithCharacters],
+            })
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithoutCharacters],
+            })
             queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
-        }
+        },
     })
 }
 
@@ -177,10 +189,14 @@ export function useAddCharacter() {
         mutationFn: (character: NewCharacter) => addCharacterAction(character),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.playersWithCharacters] })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.playersWithoutCharacters] })
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithCharacters],
+            })
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithoutCharacters],
+            })
             queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
-        }
+        },
     })
 }
 
@@ -191,9 +207,11 @@ export function useEditCharacter() {
         mutationFn: (character: EditCharacter) => editCharacterAction(character),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.playersWithCharacters] })
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithCharacters],
+            })
             queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
-        }
+        },
     })
 }
 
@@ -204,9 +222,13 @@ export function useDeleteCharacter() {
         mutationFn: (id: string) => deleteCharacterAction(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.playersWithCharacters] })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.playersWithoutCharacters] })
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithCharacters],
+            })
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithoutCharacters],
+            })
             queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
-        }
+        },
     })
 }

@@ -1,10 +1,10 @@
-'use client'
+"use client"
 
-import { DroptimizerCard } from '@/components/droptimizer-card'
-import { useLatestDroptimizers } from '@/lib/queries/droptimizers'
-import { useCharacters } from '@/lib/queries/players'
-import { LoaderCircle } from 'lucide-react'
-import { useMemo, type JSX } from 'react'
+import { DroptimizerCard } from "@/components/droptimizer-card"
+import { useLatestDroptimizers } from "@/lib/queries/droptimizers"
+import { useCharacters } from "@/lib/queries/players"
+import { LoaderCircle } from "lucide-react"
+import { useMemo, type JSX } from "react"
 
 export default function DroptimizerPage(): JSX.Element {
     const droptimizerQuery = useLatestDroptimizers()
@@ -30,11 +30,13 @@ export default function DroptimizerPage(): JSX.Element {
         <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-8 items-center p-8 relative">
             <div className="flex flex-wrap gap-4">
                 {droptimizers.length > 0 ? (
-                    droptimizers.map(dropt => (
+                    droptimizers.map((dropt) => (
                         <DroptimizerCard
                             key={dropt.url}
                             droptimizer={dropt}
-                            character={characters.find(c => c.name === dropt.charInfo.name)}
+                            character={characters.find(
+                                (c) => c.name === dropt.charInfo.name
+                            )}
                         />
                     ))
                 ) : (

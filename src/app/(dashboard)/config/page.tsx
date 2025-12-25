@@ -1,12 +1,18 @@
-'use client'
+"use client"
 
-import { syncAllCharactersRaiderioAction } from '@/actions/raiderio'
-import { syncCharacterWowAuditAction } from '@/actions/wowaudit'
-import { syncDroptimizersFromDiscordAction } from '@/actions/droptimizer'
-import { Button } from '@/components/ui/button'
-import { Database, ListRestart, Loader2, MessageSquare, RefreshCcwDot } from 'lucide-react'
-import { useState, type JSX } from 'react'
-import { toast } from 'sonner'
+import { syncAllCharactersRaiderioAction } from "@/actions/raiderio"
+import { syncCharacterWowAuditAction } from "@/actions/wowaudit"
+import { syncDroptimizersFromDiscordAction } from "@/actions/droptimizer"
+import { Button } from "@/components/ui/button"
+import {
+    Database,
+    ListRestart,
+    Loader2,
+    MessageSquare,
+    RefreshCcwDot,
+} from "lucide-react"
+import { useState, type JSX } from "react"
+import { toast } from "sonner"
 
 export default function SettingsPage(): JSX.Element {
     const [isSyncingWowAudit, setIsSyncingWowAudit] = useState(false)
@@ -17,9 +23,11 @@ export default function SettingsPage(): JSX.Element {
         setIsSyncingWowAudit(true)
         try {
             await syncCharacterWowAuditAction()
-            toast.success('WowAudit sync completed successfully')
+            toast.success("WowAudit sync completed successfully")
         } catch (error) {
-            toast.error(`WowAudit sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+            toast.error(
+                `WowAudit sync failed: ${error instanceof Error ? error.message : "Unknown error"}`
+            )
         } finally {
             setIsSyncingWowAudit(false)
         }
@@ -34,7 +42,9 @@ export default function SettingsPage(): JSX.Element {
                 toast.warning(`${result.errors.length} errors occurred during sync`)
             }
         } catch (error) {
-            toast.error(`Raider.io sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+            toast.error(
+                `Raider.io sync failed: ${error instanceof Error ? error.message : "Unknown error"}`
+            )
         } finally {
             setIsSyncingRaiderio(false)
         }
@@ -44,12 +54,16 @@ export default function SettingsPage(): JSX.Element {
         setIsSyncingDiscord(true)
         try {
             const result = await syncDroptimizersFromDiscordAction(168) // Last 7 days
-            toast.success(`Discord sync completed: ${result.imported} droptimizers imported`)
+            toast.success(
+                `Discord sync completed: ${result.imported} droptimizers imported`
+            )
             if (result.errors.length > 0) {
                 toast.warning(`${result.errors.length} errors occurred during import`)
             }
         } catch (error) {
-            toast.error(`Discord sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+            toast.error(
+                `Discord sync failed: ${error instanceof Error ? error.message : "Unknown error"}`
+            )
         } finally {
             setIsSyncingDiscord(false)
         }
@@ -119,8 +133,8 @@ export default function SettingsPage(): JSX.Element {
             {/* Info */}
             <section className="bg-muted/50 p-6 rounded-lg">
                 <p className="text-sm text-muted-foreground">
-                    Sync tasks also run automatically via cron jobs every few hours.
-                    Use the buttons above to trigger a manual sync when needed.
+                    Sync tasks also run automatically via cron jobs every few hours. Use
+                    the buttons above to trigger a manual sync when needed.
                 </p>
             </section>
         </div>

@@ -1,15 +1,15 @@
-'use client'
+"use client"
 
-import { cn } from '@/lib/utils'
+import { cn } from "@/lib/utils"
 import {
     gearhasSocket,
     gearTertiary,
-    parseItemTrackName
-} from '@/shared/libs/items/item-bonus-utils'
-import { formatWowSlotKey } from '@/shared/libs/items/item-slot-utils'
-import { trackNameToWowDiff } from '@/shared/libs/items/item-tracks'
-import { isHealerSpecs, isTankSpecs } from '@/shared/libs/spec-parser/spec-utils'
-import type { GearItem } from '@/shared/types/types'
+    parseItemTrackName,
+} from "@/shared/libs/items/item-bonus-utils"
+import { formatWowSlotKey } from "@/shared/libs/items/item-slot-utils"
+import { trackNameToWowDiff } from "@/shared/libs/items/item-tracks"
+import { isHealerSpecs, isTankSpecs } from "@/shared/libs/spec-parser/spec-utils"
+import type { GearItem } from "@/shared/types/types"
 
 type WowGearIconProps = {
     gearItem: GearItem
@@ -28,10 +28,10 @@ type WowGearIconProps = {
 }
 
 const TOKEN_CLASS_MAP = {
-    Venerated: 'Pal/Pri/Sha',
-    Dreadful: 'Lock/Dh/Dk',
-    Mystic: 'Hun/Mag/Dru',
-    Zenith: 'W/R/M/E'
+    Venerated: "Pal/Pri/Sha",
+    Dreadful: "Lock/Dh/Dk",
+    Mystic: "Hun/Mag/Dru",
+    Zenith: "W/R/M/E",
 } as const
 
 export function WowGearIcon({
@@ -47,7 +47,7 @@ export function WowGearIcon({
     showRoleIcons = false,
     className,
     iconClassName,
-    showSource = false
+    showSource = false,
 }: WowGearIconProps) {
     const { item, itemLevel, bonusIds, enchantIds, gemIds, itemTrack, source } = gearItem
     const { id, iconName, tierset, token, name, slotKey, armorType, specIds } = item
@@ -58,19 +58,21 @@ export function WowGearIcon({
 
     const hrefString =
         `https://www.wowhead.com/item=${id}&ilvl=${itemLevel}` +
-        (bonusIds?.length ? `&bonus=${bonusIds.join(':')}` : '') +
-        (enchantIds?.length ? `&ench=${enchantIds.join(':')}` : '') +
-        (gemIds?.length ? `&gems=${gemIds.join(':')}` : '')
+        (bonusIds?.length ? `&bonus=${bonusIds.join(":")}` : "") +
+        (enchantIds?.length ? `&ench=${enchantIds.join(":")}` : "") +
+        (gemIds?.length ? `&gems=${gemIds.join(":")}` : "")
 
     // role badges
     const healerItem = showRoleIcons ? isHealerSpecs(specIds) : undefined
     const tankItem = showRoleIcons ? isTankSpecs(specIds) : undefined
 
     const getItemTrackAbbr = () => {
-        if (!showItemTrackDiff) return ''
+        if (!showItemTrackDiff) return ""
 
         if (itemTrack) {
-            return convertItemTrackToRaidDiff ? trackNameToWowDiff(itemTrack.name) : itemTrack.name
+            return convertItemTrackToRaidDiff
+                ? trackNameToWowDiff(itemTrack.name)
+                : itemTrack.name
         }
 
         if (bonusIds) {
@@ -82,7 +84,7 @@ export function WowGearIcon({
             }
         }
 
-        return ''
+        return ""
     }
 
     const itemTrackAbbr = getItemTrackAbbr()
@@ -91,17 +93,22 @@ export function WowGearIcon({
     const ExtendedInfo = () => (
         <div
             id="item-info"
-            className={cn('flex flex-col space-y-1', flipExtendedInfo ? 'mr-3' : 'ml-3')}
+            className={cn("flex flex-col space-y-1", flipExtendedInfo ? "mr-3" : "ml-3")}
         >
             <p
                 className={cn(
-                    'font-semibold text-sm text-gray-100 leading-tight',
-                    flipExtendedInfo && 'text-right'
+                    "font-semibold text-sm text-gray-100 leading-tight",
+                    flipExtendedInfo && "text-right"
                 )}
             >
                 {name}
             </p>
-            <div className={cn('flex items-center space-x-2', flipExtendedInfo && 'justify-end')}>
+            <div
+                className={cn(
+                    "flex items-center space-x-2",
+                    flipExtendedInfo && "justify-end"
+                )}
+            >
                 {/* Item level and track - most important stats, medium emphasis */}
                 <div className="flex items-center space-x-1">
                     <span className="font-medium text-sm text-blue-300">{itemLevel}</span>
@@ -120,17 +127,21 @@ export function WowGearIcon({
                     )}
                     {showArmorType && (armorType || token) && (
                         <span className="bg-gray-700/50 px-1.5 py-0.5 rounded">
-                            {token ? 'Token' : armorType}
+                            {token ? "Token" : armorType}
                         </span>
                     )}
                     {token &&
                         (() => {
-                            const tokenType = Object.keys(TOKEN_CLASS_MAP).find(type =>
+                            const tokenType = Object.keys(TOKEN_CLASS_MAP).find((type) =>
                                 name.startsWith(type)
                             )
                             return tokenType ? (
                                 <span className="bg-gray-700/50 px-1.5 py-0.5 rounded">
-                                    {TOKEN_CLASS_MAP[tokenType as keyof typeof TOKEN_CLASS_MAP]}
+                                    {
+                                        TOKEN_CLASS_MAP[
+                                            tokenType as keyof typeof TOKEN_CLASS_MAP
+                                        ]
+                                    }
                                 </span>
                             ) : null
                         })()}
@@ -141,7 +152,7 @@ export function WowGearIcon({
 
     return (
         <a href={hrefString} rel="noreferrer" target="_blank">
-            <div className={cn('flex flex-row items-center', className)}>
+            <div className={cn("flex flex-row items-center", className)}>
                 {showExtendedInfo && flipExtendedInfo && <ExtendedInfo />}
 
                 <div className="flex flex-col items-center">
@@ -156,7 +167,7 @@ export function WowGearIcon({
                             src={iconUrl}
                             alt=""
                             className={cn(
-                                `object-cover object-top rounded-lg h-8 w-8 border border-background block ${hasSpecials ? 'border-white' : ''}`,
+                                `object-cover object-top rounded-lg h-8 w-8 border border-background block ${hasSpecials ? "border-white" : ""}`,
                                 iconClassName
                             )}
                         />
@@ -213,7 +224,9 @@ export function WowGearIcon({
                     </div>
                     {!showExtendedInfo && (
                         <div className="flex items-center mt-1">
-                            <span className="font-medium text-xs text-blue-300">{itemLevel}</span>
+                            <span className="font-medium text-xs text-blue-300">
+                                {itemLevel}
+                            </span>
                             {itemTrackAbbr && (
                                 <span className="font-medium text-xs text-blue-300">
                                     {itemTrackAbbr.charAt(0)}

@@ -1,0 +1,12 @@
+# Dependencies
+node_modules
+
+# Build outputs
+.next
+out
+build
+
+# Generated files
+next-env.d.ts
+*.tsbuildinfo
+pnpm-lock.yaml

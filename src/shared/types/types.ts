@@ -1,31 +1,31 @@
-import { bisListSchema } from '@/shared/schemas/bis-list.schemas'
-import { bossSchema, bossWithItemsSchema } from '@/shared/schemas/boss.schema'
-import { itemNoteSchema } from '@/shared/schemas/itemNote.schema'
+import { bisListSchema } from "@/shared/schemas/bis-list.schemas"
+import { bossSchema, bossWithItemsSchema } from "@/shared/schemas/boss.schema"
+import { itemNoteSchema } from "@/shared/schemas/itemNote.schema"
 import {
     gearItemSchema,
     itemSchema,
     itemToCatalystSchema,
     itemToTiersetSchema,
-    itemTrackSchema
-} from '@/shared/schemas/items.schema'
+    itemTrackSchema,
+} from "@/shared/schemas/items.schema"
 import {
     charAssignmentHighlightsSchema,
     lootSchema,
     lootWithAssignedSchema,
     lootWithItemSchema,
     newLootManualSchema,
-    newLootSchema
-} from '@/shared/schemas/loot.schema'
+    newLootSchema,
+} from "@/shared/schemas/loot.schema"
 import {
     editRaidSessionSchema,
     newRaidSessionSchema,
     raidSessionSchema,
     raidSessionWithRosterSchema,
-    raidSessionWithSummarySchema
-} from '@/shared/schemas/raid.schemas'
-import { appSettingsSchema } from '@/shared/schemas/store.schemas'
-import { charWowAuditSchema } from '@/shared/schemas/wowaudit.schemas'
-import { z } from 'zod'
+    raidSessionWithSummarySchema,
+} from "@/shared/schemas/raid.schemas"
+import { appSettingsSchema } from "@/shared/schemas/store.schemas"
+import { charWowAuditSchema } from "@/shared/schemas/wowaudit.schemas"
+import { z } from "zod"
 import {
     characterGameInfoSchema,
     characterSchema,
@@ -37,8 +37,8 @@ import {
     newCharacterSchema,
     newPlayerSchema,
     playerSchema,
-    playerWithCharacterSchema
-} from '../schemas/characters.schemas'
+    playerWithCharacterSchema,
+} from "../schemas/characters.schemas"
 import {
     droptimizerCurrencySchema,
     droptimizerSchema,
@@ -47,8 +47,8 @@ import {
     newDroptimizerUpgradeSchema,
     qeLiveURLSchema,
     raidbotsURLSchema,
-    simcSchema
-} from '../schemas/simulations.schemas'
+    simcSchema,
+} from "../schemas/simulations.schemas"
 import {
     tierSetBonusSchema,
     wowArmorTypeSchema,
@@ -61,8 +61,8 @@ import {
     wowRaidDiffSchema,
     wowRolePositionSchema,
     wowRolesSchema,
-    wowSpecNameSchema
-} from '../schemas/wow.schemas'
+    wowSpecNameSchema,
+} from "../schemas/wow.schemas"
 
 export type WowClassName = z.infer<typeof wowClassNameSchema>
 export type WowSpecName = z.infer<typeof wowSpecNameSchema>
@@ -147,25 +147,25 @@ export enum TierSetCompletion {
     TwoPiece = 2,
     ThreePiece = 3,
     FourPiece = 4,
-    FivePiece = 5
+    FivePiece = 5,
 }
 
 export enum DroptimizerWarn {
-    None = 'none',
-    Outdated = 'outdated',
-    NotImported = 'missing'
+    None = "none",
+    Outdated = "outdated",
+    NotImported = "missing",
 }
 
 export enum WowAuditWarn {
-    None = 'none',
-    Outdated = 'outdated',
-    NotTracked = 'not-tracked'
+    None = "none",
+    Outdated = "outdated",
+    NotTracked = "not-tracked",
 }
 
 export enum RaiderioWarn {
-    None = 'none',
-    Outdated = 'outdated',
-    NotTracked = 'not-tracked'
+    None = "none",
+    Outdated = "outdated",
+    NotTracked = "not-tracked",
 }
 
 export type CharacterSummary = {

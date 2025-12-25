@@ -1,34 +1,39 @@
-'use client'
+"use client"
 
-import { WowCharacterIcon } from '@/components/wow/wow-character-icon'
-import { Input } from '@/components/ui/input'
+import { WowCharacterIcon } from "@/components/wow/wow-character-icon"
+import { Input } from "@/components/ui/input"
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
-    SelectValue
-} from '@/components/ui/select'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { useBosses, useRosterProgression } from '@/lib/queries/bosses'
-import { encounterIcon } from '@/lib/wow-icon'
-import type { RaiderioEncounter } from '@/shared/schemas/raiderio.schemas'
-import type { Boss, Character, CharacterWithProgression, WowRaidDifficulty } from '@/shared/types/types'
-import { LoaderCircle } from 'lucide-react'
-import { useEffect, useMemo, useState, type JSX } from 'react'
+    SelectValue,
+} from "@/components/ui/select"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { useBosses, useRosterProgression } from "@/lib/queries/bosses"
+import { encounterIcon } from "@/lib/wow-icon"
+import type { RaiderioEncounter } from "@/shared/schemas/raiderio.schemas"
+import type {
+    Boss,
+    Character,
+    CharacterWithProgression,
+    WowRaidDifficulty,
+} from "@/shared/types/types"
+import { LoaderCircle } from "lucide-react"
+import { useEffect, useMemo, useState, type JSX } from "react"
 
 // Constants
 const ROLE_PRIORITIES = {
     tank: 1,
     healer: 2,
     dps: 3,
-    default: 4
+    default: 4,
 } as const
 
 const ROLE_COLORS = {
-    tanks: 'text-blue-400',
-    healers: 'text-green-400',
-    dps: 'text-red-400'
+    tanks: "text-blue-400",
+    healers: "text-green-400",
+    dps: "text-red-400",
 } as const
 
 // Types
@@ -52,7 +57,9 @@ const getRolePriority = (role: string): number => {
     )
 }
 
-const sortCharactersByRoleAndClass = <T extends { character: { role: string; class: string } }>(
+const sortCharactersByRoleAndClass = <
+    T extends { character: { role: string; class: string } },
+>(
     items: T[]
 ): T[] => {
     return [...items].sort((a, b) => {
@@ -73,9 +80,9 @@ const groupCharactersByRole = <T extends { character: { role: string; class: str
     const sorted = sortCharactersByRoleAndClass(characters)
 
     return {
-        tanks: sorted.filter(char => char.character.role === 'Tank'),
-        healers: sorted.filter(char => char.character.role === 'Healer'),
-        dps: sorted.filter(char => char.character.role === 'DPS')
+        tanks: sorted.filter((char) => char.character.role === "Tank"),
+        healers: sorted.filter((char) => char.character.role === "Healer"),
+        dps: sorted.filter((char) => char.character.role === "DPS"),
     }
 }
 
@@ -86,7 +93,7 @@ const filterCharactersByBossProgress = (
     filteredPlayerNames: string[]
 ): CharacterEncounterInfo[] => {
     return rosterProgression
-        .map(characterData => {
+        .map((characterData) => {
             const { p1Character, raiderIo } = characterData
 
             // Filter by player names if search is active
@@ -99,7 +106,7 @@ const filterCharactersByBossProgress = (
 
             // Find the current tier raid progress
             const currentRaidProgress = raiderIo?.progress.raidProgress.find(
-                raidProgress => raidProgress.raid === boss.raiderioRaidSlug
+                (raidProgress) => raidProgress.raid === boss.raiderioRaidSlug
             )
 
             if (!currentRaidProgress) {
@@ -113,7 +120,7 @@ const filterCharactersByBossProgress = (
 
             // Check if this boss was defeated
             const bossDefeated = encounters.find(
-                encounter => encounter.slug === boss.raiderioEncounterSlug
+                (encounter) => encounter.slug === boss.raiderioEncounterSlug
             )
 
             return { character: p1Character, encounter: bossDefeated || null }
@@ -124,20 +131,23 @@ const filterCharactersByBossProgress = (
 // Components
 const CharacterTooltip = ({
     character,
-    encounter
+    encounter,
 }: {
     character: Character
     encounter?: RaiderioEncounter | WowRaidDifficulty | null
 }) => (
     <div className="flex flex-col gap-1 p-2 bg-gray-800 rounded text-xs">
         <div className="font-medium text-white">{character.name}</div>
-        {encounter && typeof encounter === 'object' ? (
+        {encounter && typeof encounter === "object" ? (
             <>
                 <div className="text-green-400">Kills: {encounter.numKills}</div>
-                <div className="text-gray-300">First kill ilvl: {encounter.itemLevel}</div>
+                <div className="text-gray-300">
+                    First kill ilvl: {encounter.itemLevel}
+                </div>
                 {encounter.firstDefeated && (
                     <div className="text-gray-400">
-                        First Kill: {new Date(encounter.firstDefeated).toLocaleDateString()}
+                        First Kill:{" "}
+                        {new Date(encounter.firstDefeated).toLocaleDateString()}
                     </div>
                 )}
                 {encounter.lastDefeated && (
@@ -158,7 +168,7 @@ const CharacterGrid = ({
     color,
     selectedDifficulty,
     showRoleBadges = false,
-    hasDefeatedBoss = false
+    hasDefeatedBoss = false,
 }: {
     characters: CharacterEncounterInfo[]
     title: string
@@ -173,7 +183,7 @@ const CharacterGrid = ({
         <div>
             <h4 className={`text-xs font-semibold ${color} mb-2`}>{title}</h4>
             <div className="grid grid-cols-8 gap-2">
-                {characters.map(item => {
+                {characters.map((item) => {
                     const { character, encounter } = item
 
                     return (
@@ -185,7 +195,9 @@ const CharacterGrid = ({
                                         showName={false}
                                         showTooltip={false}
                                         showMainIndicator={false}
-                                        showRoleBadges={showRoleBadges && !hasDefeatedBoss}
+                                        showRoleBadges={
+                                            showRoleBadges && !hasDefeatedBoss
+                                        }
                                     />
                                 </div>
                             </TooltipTrigger>
@@ -207,7 +219,7 @@ const BossPanel = ({
     boss,
     rosterProgression,
     selectedDifficulty,
-    filteredPlayerNames
+    filteredPlayerNames,
 }: BossPanelProps) => {
     // Get all characters with their progress status
     const allCharactersWithProgress = useMemo(() => {
@@ -222,13 +234,13 @@ const BossPanel = ({
     // Separate characters with and without progress
     const charactersWithProgress = useMemo(() => {
         return sortCharactersByRoleAndClass(
-            allCharactersWithProgress.filter(item => item.encounter !== null)
+            allCharactersWithProgress.filter((item) => item.encounter !== null)
         )
     }, [allCharactersWithProgress])
 
     const charactersWithoutProgress = useMemo(() => {
         return sortCharactersByRoleAndClass(
-            allCharactersWithProgress.filter(item => item.encounter === null)
+            allCharactersWithProgress.filter((item) => item.encounter === null)
         )
     }, [allCharactersWithProgress])
 
@@ -253,7 +265,7 @@ const BossPanel = ({
             <div className="flex flex-col gap-y-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                    src={encounterIcon.get(boss.id) || ''}
+                    src={encounterIcon.get(boss.id) || ""}
                     alt={`${boss.name} icon`}
                     className="w-full h-32 object-scale-down"
                 />
@@ -296,9 +308,11 @@ const BossPanel = ({
                 {/* Characters who have NOT defeated the boss */}
                 {charactersWithoutProgress.length > 0 && (
                     <div className="flex flex-col gap-y-2 mt-4">
-                        <h3 className="text-xs font-semibold text-red-400">Not Defeated</h3>
+                        <h3 className="text-xs font-semibold text-red-400">
+                            Not Defeated
+                        </h3>
                         <div className="grid grid-cols-8 gap-2 opacity-60">
-                            {charactersWithoutProgress.map(item => (
+                            {charactersWithoutProgress.map((item) => (
                                 <Tooltip key={item.character.id}>
                                     <TooltipTrigger asChild>
                                         <div className="flex justify-center grayscale">
@@ -324,11 +338,12 @@ const BossPanel = ({
                 )}
 
                 {/* Empty state */}
-                {charactersWithProgress.length === 0 && charactersWithoutProgress.length === 0 && (
-                    <div className="text-center text-gray-500 text-sm py-4">
-                        No characters found
-                    </div>
-                )}
+                {charactersWithProgress.length === 0 &&
+                    charactersWithoutProgress.length === 0 && (
+                        <div className="text-center text-gray-500 text-sm py-4">
+                            No characters found
+                        </div>
+                    )}
             </div>
         </div>
     )
@@ -339,9 +354,9 @@ export default function RaidProgressionPage(): JSX.Element {
     // Local state for filters
     const [showMains, setShowMains] = useState(true)
     const [showAlts, setShowAlts] = useState(true)
-    const [selectedRaidDiff, setSelectedRaidDiff] = useState<WowRaidDifficulty>('Heroic')
-    const [searchQuery, setSearchQuery] = useState('')
-    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
+    const [selectedRaidDiff, setSelectedRaidDiff] = useState<WowRaidDifficulty>("Heroic")
+    const [searchQuery, setSearchQuery] = useState("")
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
 
     // Queries
     const bossesQuery = useBosses()
@@ -361,12 +376,14 @@ export default function RaidProgressionPage(): JSX.Element {
 
         return rosterProgressionQuery.data
             .map(({ p1Character }) => p1Character.name)
-            .filter(name => name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()))
+            .filter((name) =>
+                name.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
+            )
     }, [rosterProgressionQuery.data, debouncedSearchQuery])
 
     const orderedBosses = useMemo(() => {
         if (!bossesQuery.data) return []
-        return bossesQuery.data.filter(b => b.id > 0).sort((a, b) => a.order - b.order)
+        return bossesQuery.data.filter((b) => b.id > 0).sort((a, b) => a.order - b.order)
     }, [bossesQuery.data])
 
     if (bossesQuery.isLoading || rosterProgressionQuery.isLoading) {
@@ -383,11 +400,11 @@ export default function RaidProgressionPage(): JSX.Element {
             <div className="text-center mb-4">
                 <h1 className="text-2xl font-bold">Raid Progression</h1>
                 <p className="text-gray-400">
-                    Showing {selectedRaidDiff} difficulty progression for{' '}
+                    Showing {selectedRaidDiff} difficulty progression for{" "}
                     {(rosterProgressionQuery.data || []).length} characters
                     {debouncedSearchQuery && (
                         <span className="text-blue-400">
-                            {' '}
+                            {" "}
                             (filtered by &quot;{debouncedSearchQuery}&quot;)
                         </span>
                     )}
@@ -402,7 +419,7 @@ export default function RaidProgressionPage(): JSX.Element {
                         type="text"
                         placeholder="Search player names..."
                         value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full"
                     />
                 </div>
@@ -410,7 +427,9 @@ export default function RaidProgressionPage(): JSX.Element {
                 {/* Difficulty Select */}
                 <Select
                     value={selectedRaidDiff}
-                    onValueChange={value => setSelectedRaidDiff(value as WowRaidDifficulty)}
+                    onValueChange={(value) =>
+                        setSelectedRaidDiff(value as WowRaidDifficulty)
+                    }
                 >
                     <SelectTrigger className="w-[140px]">
                         <SelectValue placeholder="Difficulty" />
@@ -428,8 +447,8 @@ export default function RaidProgressionPage(): JSX.Element {
                         onClick={() => setShowMains(!showMains)}
                         className={`px-3 py-1 rounded text-sm ${
                             showMains
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-700 text-gray-400'
+                                ? "bg-blue-600 text-white"
+                                : "bg-gray-700 text-gray-400"
                         }`}
                     >
                         Mains
@@ -438,8 +457,8 @@ export default function RaidProgressionPage(): JSX.Element {
                         onClick={() => setShowAlts(!showAlts)}
                         className={`px-3 py-1 rounded text-sm ${
                             showAlts
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-700 text-gray-400'
+                                ? "bg-blue-600 text-white"
+                                : "bg-gray-700 text-gray-400"
                         }`}
                     >
                         Alts
@@ -449,7 +468,7 @@ export default function RaidProgressionPage(): JSX.Element {
 
             {/* Boss List */}
             <div className="flex flex-wrap gap-x-4 gap-y-4 justify-center">
-                {orderedBosses.map(boss => (
+                {orderedBosses.map((boss) => (
                     <BossPanel
                         key={boss.id}
                         boss={boss}

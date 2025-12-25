@@ -20,23 +20,23 @@ pnpm drizzle-kit push # Push database schema changes to PostgreSQL
 ### Directory Structure
 
 - `src/app/` - Next.js App Router pages and API routes
-  - `(auth)/` - Auth layout group (login page)
-  - `(dashboard)/` - Protected routes (roster, raid-session, droptimizer, loot-table, etc.)
-  - `api/cron/` - Scheduled sync endpoints for external data
+    - `(auth)/` - Auth layout group (login page)
+    - `(dashboard)/` - Protected routes (roster, raid-session, droptimizer, loot-table, etc.)
+    - `api/cron/` - Scheduled sync endpoints for external data
 - `src/actions/` - Server Actions for mutations (RPC-style handlers)
 - `src/db/` - Database layer
-  - `schema.ts` - Drizzle ORM schema definitions
-  - `repositories/` - Data access layer functions per entity
+    - `schema.ts` - Drizzle ORM schema definitions
+    - `repositories/` - Data access layer functions per entity
 - `src/components/` - React components
-  - `ui/` - shadcn/ui base components
-  - `wow/` - WoW-specific display components
+    - `ui/` - shadcn/ui base components
+    - `wow/` - WoW-specific display components
 - `src/lib/` - Utilities and integrations
-  - `queries/` - React Query hooks for data fetching
-  - `discord/`, `raiderio/`, `wowaudit/`, `droptimizer/` - External API clients
+    - `queries/` - React Query hooks for data fetching
+    - `discord/`, `raiderio/`, `wowaudit/`, `droptimizer/` - External API clients
 - `src/shared/` - Shared domain logic
-  - `schemas/` - Zod validation schemas
-  - `consts/wow.consts.ts` - WoW game constants
-  - `types/types.ts` - TypeScript type definitions
+    - `schemas/` - Zod validation schemas
+    - `consts/wow.consts.ts` - WoW game constants
+    - `types/types.ts` - TypeScript type definitions
 
 ### Key Patterns
 

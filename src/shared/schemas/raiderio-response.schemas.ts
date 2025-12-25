@@ -1,16 +1,16 @@
-import { raiderIoProgressSchema } from './raiderio.schemas'
-import z from 'zod'
+import { raiderIoProgressSchema } from "./raiderio.schemas"
+import z from "zod"
 
 const gemDetailSchema = z.object({
     id: z.number(),
     name: z.string(),
-    icon: z.string()
+    icon: z.string(),
 })
 
 const enchantDetailSchema = z.object({
     id: z.number(),
     name: z.string(),
-    icon: z.string()
+    icon: z.string(),
 })
 
 const itemSchema = z.object({
@@ -27,7 +27,7 @@ const itemSchema = z.object({
     gems_detail: z.array(gemDetailSchema),
     enchants: z.array(z.number()),
     enchants_detail: z.array(enchantDetailSchema),
-    bonuses: z.array(z.number())
+    bonuses: z.array(z.number()),
 })
 
 const itemsSchema = z.object({
@@ -46,35 +46,35 @@ const itemsSchema = z.object({
     trinket1: itemSchema.optional(),
     trinket2: itemSchema.optional(),
     mainhand: itemSchema.optional(),
-    offhand: itemSchema.optional()
+    offhand: itemSchema.optional(),
 })
 
 const itemDetailsSchema = z.object({
     created_at: z.string(), // ISO date string
     updated_at: z.string(), // ISO date string
     item_level_equipped: z.coerce.string(),
-    items: itemsSchema
+    items: itemsSchema,
 })
 
 const characterInfoRaiderioSchema = z.object({
     id: z.number(),
     race: z.object({
         id: z.number(),
-        name: z.string()
-    })
+        name: z.string(),
+    }),
 })
 
 const characterDetailsSchema = z.object({
     character: characterInfoRaiderioSchema,
     itemDetails: itemDetailsSchema,
     meta: z.object({
-        loggedOutAt: z.string() // ISO date string
-    })
+        loggedOutAt: z.string(), // ISO date string
+    }),
 })
 
 export const raiderioResponseSchema = z.object({
     characterRaidProgress: raiderIoProgressSchema,
-    characterDetails: characterDetailsSchema
+    characterDetails: characterDetailsSchema,
 })
 
 // types

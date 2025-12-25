@@ -1,40 +1,40 @@
-'use client'
+"use client"
 
-import type { JSX } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { Suspense, useState } from 'react'
-import { LoaderCircle, ExternalLink, Check, X, ArrowRightLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import type { JSX } from "react"
+import { useSearchParams } from "next/navigation"
+import { Suspense, useState } from "react"
+import { LoaderCircle, ExternalLink, Check, X, ArrowRightLeft } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
-    SelectValue
-} from '@/components/ui/select'
+    SelectValue,
+} from "@/components/ui/select"
 import {
     Table,
     TableBody,
     TableCell,
     TableHead,
     TableHeader,
-    TableRow
-} from '@/components/ui/table'
-import { WowClassIcon } from '@/components/wow/wow-class-icon'
-import { useRaidSessions, useRaidSession } from '@/lib/queries/raid-sessions'
+    TableRow,
+} from "@/components/ui/table"
+import { WowClassIcon } from "@/components/wow/wow-class-icon"
+import { useRaidSessions, useRaidSession } from "@/lib/queries/raid-sessions"
 import {
     useLootsBySessionWithAssigned,
     useAssignLoot,
     useUnassignLoot,
     useTradeLoot,
-    useUntradeLoot
-} from '@/lib/queries/loots'
-import type { LootWithAssigned, Character } from '@/shared/types/types'
-import { toast } from 'sonner'
+    useUntradeLoot,
+} from "@/lib/queries/loots"
+import type { LootWithAssigned, Character } from "@/shared/types/types"
+import { toast } from "sonner"
 
 function LootRow({
     loot,
-    rosterCharacters
+    rosterCharacters,
 }: {
     loot: LootWithAssigned
     rosterCharacters: Character[]
@@ -45,14 +45,14 @@ function LootRow({
     const untradeLoot = useUntradeLoot()
 
     const handleAssign = (charId: string) => {
-        if (charId === 'unassigned') {
+        if (charId === "unassigned") {
             unassignLoot.mutate(loot.id, {
-                onError: () => toast.error('Failed to unassign loot')
+                onError: () => toast.error("Failed to unassign loot"),
             })
         } else {
             assignLoot.mutate(
                 { charId, lootId: loot.id, highlights: null },
-                { onError: () => toast.error('Failed to assign loot') }
+                { onError: () => toast.error("Failed to assign loot") }
             )
         }
     }
@@ -60,11 +60,11 @@ function LootRow({
     const handleToggleTrade = () => {
         if (loot.tradedToAssigned) {
             untradeLoot.mutate(loot.id, {
-                onError: () => toast.error('Failed to update trade status')
+                onError: () => toast.error("Failed to update trade status"),
             })
         } else {
             tradeLoot.mutate(loot.id, {
-                onError: () => toast.error('Failed to update trade status')
+                onError: () => toast.error("Failed to update trade status"),
             })
         }
     }
@@ -91,7 +91,7 @@ function LootRow({
             </TableCell>
             <TableCell>
                 <Select
-                    value={loot.assignedCharacterId ?? 'unassigned'}
+                    value={loot.assignedCharacterId ?? "unassigned"}
                     onValueChange={handleAssign}
                 >
                     <SelectTrigger className="w-48">
@@ -101,10 +101,13 @@ function LootRow({
                         <SelectItem value="unassigned">
                             <span className="text-muted-foreground">Unassigned</span>
                         </SelectItem>
-                        {rosterCharacters.map(char => (
+                        {rosterCharacters.map((char) => (
                             <SelectItem key={char.id} value={char.id}>
                                 <div className="flex items-center gap-2">
-                                    <WowClassIcon wowClassName={char.class} className="w-4 h-4" />
+                                    <WowClassIcon
+                                        wowClassName={char.class}
+                                        className="w-4 h-4"
+                                    />
                                     <span>{char.name}</span>
                                 </div>
                             </SelectItem>
@@ -115,13 +118,13 @@ function LootRow({
             <TableCell>
                 {loot.assignedCharacter && (
                     <Button
-                        variant={loot.tradedToAssigned ? 'default' : 'outline'}
+                        variant={loot.tradedToAssigned ? "default" : "outline"}
                         size="sm"
                         onClick={handleToggleTrade}
                         disabled={tradeLoot.isPending || untradeLoot.isPending}
                     >
                         <ArrowRightLeft className="h-4 w-4 mr-1" />
-                        {loot.tradedToAssigned ? 'Traded' : 'Not Traded'}
+                        {loot.tradedToAssigned ? "Traded" : "Not Traded"}
                     </Button>
                 )}
             </TableCell>
@@ -145,23 +148,25 @@ function LootRow({
 
 function AssignContent() {
     const searchParams = useSearchParams()
-    const sessionIdParam = searchParams.get('sessionId')
+    const sessionIdParam = searchParams.get("sessionId")
     const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>(
         sessionIdParam ?? undefined
     )
 
     const { data: sessions, isLoading: sessionsLoading } = useRaidSessions()
     const { data: session, isLoading: sessionLoading } = useRaidSession(selectedSessionId)
-    const { data: loots, isLoading: lootsLoading } = useLootsBySessionWithAssigned(selectedSessionId)
+    const { data: loots, isLoading: lootsLoading } =
+        useLootsBySessionWithAssigned(selectedSessionId)
 
-    const isLoading = sessionsLoading || (selectedSessionId && (sessionLoading || lootsLoading))
+    const isLoading =
+        sessionsLoading || (selectedSessionId && (sessionLoading || lootsLoading))
 
     // Get roster characters from the session
     const rosterCharacters = session?.roster ?? []
 
     // Stats
-    const assignedCount = loots?.filter(l => l.assignedCharacterId).length ?? 0
-    const tradedCount = loots?.filter(l => l.tradedToAssigned).length ?? 0
+    const assignedCount = loots?.filter((l) => l.assignedCharacterId).length ?? 0
+    const tradedCount = loots?.filter((l) => l.tradedToAssigned).length ?? 0
     const totalCount = loots?.length ?? 0
 
     return (
@@ -170,16 +175,17 @@ function AssignContent() {
             <div className="flex items-center gap-4">
                 <label className="text-sm font-medium">Raid Session:</label>
                 <Select
-                    value={selectedSessionId ?? ''}
-                    onValueChange={v => setSelectedSessionId(v || undefined)}
+                    value={selectedSessionId ?? ""}
+                    onValueChange={(v) => setSelectedSessionId(v || undefined)}
                 >
                     <SelectTrigger className="w-64">
                         <SelectValue placeholder="Select a session" />
                     </SelectTrigger>
                     <SelectContent>
-                        {sessions?.map(s => (
+                        {sessions?.map((s) => (
                             <SelectItem key={s.id} value={s.id}>
-                                {s.name} - {new Date(s.raidDate * 1000).toLocaleDateString()}
+                                {s.name} -{" "}
+                                {new Date(s.raidDate * 1000).toLocaleDateString()}
                             </SelectItem>
                         ))}
                     </SelectContent>
@@ -202,11 +208,15 @@ function AssignContent() {
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">Assigned</p>
-                            <p className="text-2xl font-bold text-green-500">{assignedCount}</p>
+                            <p className="text-2xl font-bold text-green-500">
+                                {assignedCount}
+                            </p>
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">Traded</p>
-                            <p className="text-2xl font-bold text-blue-500">{tradedCount}</p>
+                            <p className="text-2xl font-bold text-blue-500">
+                                {tradedCount}
+                            </p>
                         </div>
                     </div>
 
@@ -224,7 +234,7 @@ function AssignContent() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {loots.map(loot => (
+                                    {loots.map((loot) => (
                                         <LootRow
                                             key={loot.id}
                                             loot={loot}
@@ -237,7 +247,8 @@ function AssignContent() {
                     ) : (
                         <div className="bg-muted p-8 rounded-lg text-center">
                             <p className="text-muted-foreground">
-                                No loot found for this session. Import loot to get started.
+                                No loot found for this session. Import loot to get
+                                started.
                             </p>
                         </div>
                     )}

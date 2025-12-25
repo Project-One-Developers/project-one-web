@@ -1,12 +1,18 @@
-'use client'
+"use client"
 
-import { useDeletePlayer } from '@/lib/queries/players'
-import type { Player } from '@/shared/types/types'
-import { Loader2 } from 'lucide-react'
-import { type JSX } from 'react'
-import { toast } from 'sonner'
-import { Button } from './ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog'
+import { useDeletePlayer } from "@/lib/queries/players"
+import type { Player } from "@/shared/types/types"
+import { Loader2 } from "lucide-react"
+import { type JSX } from "react"
+import { toast } from "sonner"
+import { Button } from "./ui/button"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "./ui/dialog"
 
 type PlayerDeleteDialogProps = {
     isOpen: boolean
@@ -17,7 +23,7 @@ type PlayerDeleteDialogProps = {
 export default function PlayerDeleteDialog({
     isOpen,
     setOpen,
-    player
+    player,
 }: PlayerDeleteDialogProps): JSX.Element {
     const deleteMutation = useDeletePlayer()
 
@@ -27,9 +33,9 @@ export default function PlayerDeleteDialog({
                 setOpen(false)
                 toast.success(`The player ${player.name} has been successfully deleted.`)
             },
-            onError: error => {
+            onError: (error) => {
                 toast.error(`Unable to delete the player. Error: ${error.message}`)
-            }
+            },
         })
     }
 
@@ -39,8 +45,8 @@ export default function PlayerDeleteDialog({
                 <DialogHeader>
                     <DialogTitle>Player Deletion</DialogTitle>
                     <DialogDescription>
-                        The player {player.name} and their associated characters will be permanently
-                        deleted from the database.
+                        The player {player.name} and their associated characters will be
+                        permanently deleted from the database.
                     </DialogDescription>
                 </DialogHeader>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -51,7 +57,11 @@ export default function PlayerDeleteDialog({
                     height={400}
                 />
                 <Button disabled={deleteMutation.isPending} onClick={handleDelete}>
-                    {deleteMutation.isPending ? <Loader2 className="animate-spin" /> : 'Confirm'}
+                    {deleteMutation.isPending ? (
+                        <Loader2 className="animate-spin" />
+                    ) : (
+                        "Confirm"
+                    )}
                 </Button>
             </DialogContent>
         </Dialog>

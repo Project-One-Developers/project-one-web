@@ -1,31 +1,31 @@
-import { z } from 'zod'
+import { z } from "zod"
 
 export const droptimizerEquippedItemSchema = z.object({
     itemLevel: z.number(),
     id: z.number(),
     name: z.string(),
     bonus_id: z
-        .preprocess(val => {
+        .preprocess((val) => {
             // Convert numbers to strings
-            if (typeof val === 'number') {
+            if (typeof val === "number") {
                 return val.toString()
             }
             return val
         }, z.string())
         .nullish(),
     enchant_id: z
-        .preprocess(val => {
+        .preprocess((val) => {
             // Convert numbers to strings
-            if (typeof val === 'number') {
+            if (typeof val === "number") {
                 return val.toString()
             }
             return val
         }, z.string())
         .nullish(),
     gem_id: z
-        .preprocess(val => {
+        .preprocess((val) => {
             // Convert numbers to strings
-            if (typeof val === 'number') {
+            if (typeof val === "number") {
                 return val.toString()
             }
             return val
@@ -35,9 +35,9 @@ export const droptimizerEquippedItemSchema = z.object({
         .object({
             level: z.number(),
             max: z.number(),
-            name: z.string()
+            name: z.string(),
         })
-        .nullish()
+        .nullish(),
 })
 
 export const droptimizerEquippedItemsSchema = z.object({
@@ -56,7 +56,7 @@ export const droptimizerEquippedItemsSchema = z.object({
     trinket1: droptimizerEquippedItemSchema.optional(),
     trinket2: droptimizerEquippedItemSchema.optional(),
     mainHand: droptimizerEquippedItemSchema.optional(),
-    offHand: droptimizerEquippedItemSchema.optional()
+    offHand: droptimizerEquippedItemSchema.optional(),
 })
 
 export type RaidbotJson = z.infer<typeof raidbotJsonSchema>
@@ -66,7 +66,7 @@ export const raidbotJsonSchema = z.object({
         options: z.object({
             fight_style: z.string(),
             desired_targets: z.number(),
-            max_time: z.number()
+            max_time: z.number(),
         }),
         players: z.array(
             z.object({
@@ -75,9 +75,9 @@ export const raidbotJsonSchema = z.object({
                 specialization: z.string(), //eg: 'Augmentation Evoker'
                 collected_data: z.object({
                     dps: z.object({
-                        mean: z.number()
-                    })
-                })
+                        mean: z.number(),
+                    }),
+                }),
             })
         ),
         profilesets: z.object({
@@ -86,20 +86,20 @@ export const raidbotJsonSchema = z.object({
             results: z.array(
                 z.object({
                     name: z.string(),
-                    mean: z.number()
+                    mean: z.number(),
                 })
-            )
+            ),
         }),
         statistics: z.object({
             raid_dps: z.object({
-                mean: z.number() // for evokers, this is the dps of the whole raid
-            })
-        })
+                mean: z.number(), // for evokers, this is the dps of the whole raid
+            }),
+        }),
     }),
     simbot: z.object({
         title: z.string(),
         publicTitle: z.string(),
-        simType: z.literal('droptimizer'), // At the moment, we only support droptimizer sims
+        simType: z.literal("droptimizer"), // At the moment, we only support droptimizer sims
         input: z.string(), // original raidbot input
         meta: z.object({
             rawFormData: z.object({
@@ -109,14 +109,14 @@ export const raidbotJsonSchema = z.object({
                     realm: z.string(),
                     items: z.object({
                         averageItemLevel: z.number().nullish(),
-                        averageItemLevelEquipped: z.number().nullish()
+                        averageItemLevelEquipped: z.number().nullish(),
                     }),
                     upgradeCurrencies: z
                         .array(
                             z.object({
                                 type: z.string(),
                                 id: z.number(),
-                                amount: z.number()
+                                amount: z.number(),
                             })
                         )
                         .nullish(),
@@ -126,17 +126,17 @@ export const raidbotJsonSchema = z.object({
                                 className: z.string(),
                                 classId: z.number(),
                                 specName: z.string(),
-                                specId: z.number()
-                            })
+                                specId: z.number(),
+                            }),
                         })
-                    )
+                    ),
                 }),
                 droptimizer: z.object({
                     upgradeEquipped: z.boolean(),
-                    equipped: droptimizerEquippedItemsSchema
-                })
-            })
-        })
+                    equipped: droptimizerEquippedItemsSchema,
+                }),
+            }),
+        }),
     }),
-    timestamp: z.number()
+    timestamp: z.number(),
 })

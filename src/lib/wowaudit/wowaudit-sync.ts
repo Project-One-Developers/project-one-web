@@ -1,12 +1,12 @@
-import { getItems } from '@/db/repositories/items'
-import type { NewCharacterWowAudit } from '@/db/repositories/wowaudit'
-import { CURRENT_SEASON } from '@/shared/consts/wow.consts'
+import { getItems } from "@/db/repositories/items"
+import type { NewCharacterWowAudit } from "@/db/repositories/wowaudit"
+import { CURRENT_SEASON } from "@/shared/consts/wow.consts"
 import {
     applyItemTrackByIlvlAndDelta,
     applyItemTrackByIlvlAndDiff,
-    evalRealSeason
-} from '@/shared/libs/items/item-bonus-utils'
-import { wowClassNameSchema } from '@/shared/schemas/wow.schemas'
+    evalRealSeason,
+} from "@/shared/libs/items/item-bonus-utils"
+import { wowClassNameSchema } from "@/shared/schemas/wow.schemas"
 import type {
     GearItem,
     Item,
@@ -14,11 +14,13 @@ import type {
     WowClassName,
     WowItemEquippedSlotKey,
     WowItemSlotKey,
-    WowRaidDifficulty
-} from '@/shared/types/types'
+    WowRaidDifficulty,
+} from "@/shared/types/types"
 
 export async function fetchWowAuditData(apiKey: string): Promise<unknown> {
-    const responseJson = await fetch(`https://data.wowaudit.com/dragonflight/${apiKey}.json`)
+    const responseJson = await fetch(
+        `https://data.wowaudit.com/dragonflight/${apiKey}.json`
+    )
     if (!responseJson.ok) {
         throw new Error(
             `Failed to fetch JSON data: ${responseJson.status} ${responseJson.statusText}`
@@ -29,15 +31,17 @@ export async function fetchWowAuditData(apiKey: string): Promise<unknown> {
 
 const getNullSafeValue = (data: unknown[], index: number): unknown => {
     const value = data[index]
-    return value === null || value === 0 || value === '' || value === '-' ? null : value
+    return value === null || value === 0 || value === "" || value === "-" ? null : value
 }
 
 let itemsInDb: Item[] | null = null
 
-export async function parseWowAuditData(jsonData: unknown): Promise<NewCharacterWowAudit[]> {
+export async function parseWowAuditData(
+    jsonData: unknown
+): Promise<NewCharacterWowAudit[]> {
     // Ensure jsonData is an array
     if (!Array.isArray(jsonData)) {
-        throw new Error('Input data is not an array')
+        throw new Error("Input data is not an array")
     }
 
     const wowAuditLastRefresh = jsonData[0][9] as string
@@ -45,12 +49,14 @@ export async function parseWowAuditData(jsonData: unknown): Promise<NewCharacter
     const wowAuditLastRefreshDate = new Date(wowAuditLastRefresh)
 
     // Get the Unix timestamp (in seconds)
-    const wowAuditLastRefreshunixTimestamp = Math.floor(wowAuditLastRefreshDate.getTime() / 1000)
+    const wowAuditLastRefreshunixTimestamp = Math.floor(
+        wowAuditLastRefreshDate.getTime() / 1000
+    )
 
     itemsInDb = await getItems()
 
     // we skip header
-    const res = jsonData.slice(1).map(charData => {
+    const res = jsonData.slice(1).map((charData) => {
         const className: WowClassName = wowClassNameSchema.parse(charData[1])
         const wowAuditChar: NewCharacterWowAudit = {
             wowauditLastModifiedUnixTs: wowAuditLastRefreshunixTimestamp, //  when wowaudit refreshed its internal data "2025-01-20 07:27:12 +0100"
@@ -106,7 +112,7 @@ export async function parseWowAuditData(jsonData: unknown): Promise<NewCharacter
             // Best Slot ever equipped
             bestItemsEquipped: createBestEquippedInfo(charData),
             // Tiersets info
-            tiersetInfo: createTiersetInfo(className, charData)
+            tiersetInfo: createTiersetInfo(className, charData),
         }
 
         return wowAuditChar
@@ -122,7 +128,7 @@ function createEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 7)),
         Number(getNullSafeValue(jsonData, 6)),
         getNullSafeValue(jsonData, 363) as string | null,
-        'head'
+        "head"
     )
     if (head != null) res.push(head)
 
@@ -130,7 +136,7 @@ function createEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 11)),
         Number(getNullSafeValue(jsonData, 10)),
         getNullSafeValue(jsonData, 364) as string | null,
-        'neck'
+        "neck"
     )
     if (neck != null) res.push(neck)
 
@@ -138,7 +144,7 @@ function createEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 15)),
         Number(getNullSafeValue(jsonData, 14)),
         getNullSafeValue(jsonData, 365) as string | null,
-        'shoulder'
+        "shoulder"
     )
     if (shoulder != null) res.push(shoulder)
 
@@ -146,7 +152,7 @@ function createEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 19)),
         Number(getNullSafeValue(jsonData, 18)),
         getNullSafeValue(jsonData, 366) as string | null,
-        'back'
+        "back"
     )
     if (back != null) res.push(back)
 
@@ -154,7 +160,7 @@ function createEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 23)),
         Number(getNullSafeValue(jsonData, 22)),
         getNullSafeValue(jsonData, 367) as string | null,
-        'chest'
+        "chest"
     )
     if (chest != null) res.push(chest)
 
@@ -162,7 +168,7 @@ function createEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 27)),
         Number(getNullSafeValue(jsonData, 26)),
         getNullSafeValue(jsonData, 368) as string | null,
-        'wrist'
+        "wrist"
     )
     if (wrist != null) res.push(wrist)
 
@@ -170,7 +176,7 @@ function createEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 31)),
         Number(getNullSafeValue(jsonData, 30)),
         getNullSafeValue(jsonData, 369) as string | null,
-        'hands'
+        "hands"
     )
     if (hands != null) res.push(hands)
 
@@ -178,7 +184,7 @@ function createEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 35)),
         Number(getNullSafeValue(jsonData, 34)),
         getNullSafeValue(jsonData, 370) as string | null,
-        'waist'
+        "waist"
     )
     if (waist != null) res.push(waist)
 
@@ -186,7 +192,7 @@ function createEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 39)),
         Number(getNullSafeValue(jsonData, 38)),
         getNullSafeValue(jsonData, 371) as string | null,
-        'legs'
+        "legs"
     )
     if (legs != null) res.push(legs)
 
@@ -194,7 +200,7 @@ function createEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 43)),
         Number(getNullSafeValue(jsonData, 42)),
         getNullSafeValue(jsonData, 372) as string | null,
-        'feet'
+        "feet"
     )
     if (feet != null) res.push(feet)
 
@@ -202,7 +208,7 @@ function createEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 47)),
         Number(getNullSafeValue(jsonData, 46)),
         getNullSafeValue(jsonData, 373) as string | null,
-        'finger1'
+        "finger1"
     )
     if (finger1 != null) res.push(finger1)
 
@@ -210,7 +216,7 @@ function createEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 51)),
         Number(getNullSafeValue(jsonData, 50)),
         getNullSafeValue(jsonData, 374) as string | null,
-        'finger2'
+        "finger2"
     )
     if (finger2 != null) res.push(finger2)
 
@@ -218,7 +224,7 @@ function createEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 55)),
         Number(getNullSafeValue(jsonData, 54)),
         getNullSafeValue(jsonData, 375) as string | null,
-        'trinket1'
+        "trinket1"
     )
     if (trinket1 != null) res.push(trinket1)
 
@@ -226,7 +232,7 @@ function createEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 59)),
         Number(getNullSafeValue(jsonData, 58)),
         getNullSafeValue(jsonData, 376) as string | null,
-        'trinket2'
+        "trinket2"
     )
     if (trinket2 != null) res.push(trinket2)
 
@@ -234,7 +240,7 @@ function createEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 63)),
         Number(getNullSafeValue(jsonData, 62)),
         getNullSafeValue(jsonData, 377) as string | null,
-        'main_hand'
+        "main_hand"
     )
     if (mainHand != null) res.push(mainHand)
 
@@ -242,7 +248,7 @@ function createEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 67)),
         Number(getNullSafeValue(jsonData, 66)),
         getNullSafeValue(jsonData, 378) as string | null,
-        'off_hand'
+        "off_hand"
     )
     if (offHand != null) res.push(offHand)
 
@@ -254,7 +260,7 @@ function createTiersetInfo(className: WowClassName, jsonData: unknown[]): GearIt
 
     const head = createTiersetGearPiece(
         className,
-        'head',
+        "head",
         Number(getNullSafeValue(jsonData, 265)),
         getNullSafeValue(jsonData, 270) as string | null
     )
@@ -262,7 +268,7 @@ function createTiersetInfo(className: WowClassName, jsonData: unknown[]): GearIt
 
     const shoulders = createTiersetGearPiece(
         className,
-        'shoulder',
+        "shoulder",
         Number(getNullSafeValue(jsonData, 266)),
         getNullSafeValue(jsonData, 271) as string | null
     )
@@ -270,7 +276,7 @@ function createTiersetInfo(className: WowClassName, jsonData: unknown[]): GearIt
 
     const chest = createTiersetGearPiece(
         className,
-        'chest',
+        "chest",
         Number(getNullSafeValue(jsonData, 267)),
         getNullSafeValue(jsonData, 272) as string | null
     )
@@ -278,7 +284,7 @@ function createTiersetInfo(className: WowClassName, jsonData: unknown[]): GearIt
 
     const hands = createTiersetGearPiece(
         className,
-        'hands',
+        "hands",
         Number(getNullSafeValue(jsonData, 268)),
         getNullSafeValue(jsonData, 273) as string | null
     )
@@ -286,7 +292,7 @@ function createTiersetInfo(className: WowClassName, jsonData: unknown[]): GearIt
 
     const legs = createTiersetGearPiece(
         className,
-        'legs',
+        "legs",
         Number(getNullSafeValue(jsonData, 269)),
         getNullSafeValue(jsonData, 274) as string | null
     )
@@ -302,7 +308,7 @@ function createBestEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 193)),
         Number(getNullSafeValue(jsonData, 192)),
         null,
-        'head'
+        "head"
     )
     if (head != null) res.push(head)
 
@@ -310,7 +316,7 @@ function createBestEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 197)),
         Number(getNullSafeValue(jsonData, 196)),
         null,
-        'neck'
+        "neck"
     )
     if (neck != null) res.push(neck)
 
@@ -318,7 +324,7 @@ function createBestEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 201)),
         Number(getNullSafeValue(jsonData, 200)),
         null,
-        'shoulder'
+        "shoulder"
     )
     if (shoulder != null) res.push(shoulder)
 
@@ -326,7 +332,7 @@ function createBestEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 205)),
         Number(getNullSafeValue(jsonData, 204)),
         null,
-        'back'
+        "back"
     )
     if (back != null) res.push(back)
 
@@ -334,7 +340,7 @@ function createBestEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 209)),
         Number(getNullSafeValue(jsonData, 208)),
         null,
-        'chest'
+        "chest"
     )
     if (chest != null) res.push(chest)
 
@@ -342,7 +348,7 @@ function createBestEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 213)),
         Number(getNullSafeValue(jsonData, 212)),
         null,
-        'wrist'
+        "wrist"
     )
     if (wrist != null) res.push(wrist)
 
@@ -350,7 +356,7 @@ function createBestEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 217)),
         Number(getNullSafeValue(jsonData, 216)),
         null,
-        'hands'
+        "hands"
     )
     if (hands != null) res.push(hands)
 
@@ -358,7 +364,7 @@ function createBestEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 221)),
         Number(getNullSafeValue(jsonData, 220)),
         null,
-        'waist'
+        "waist"
     )
     if (waist != null) res.push(waist)
 
@@ -366,7 +372,7 @@ function createBestEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 225)),
         Number(getNullSafeValue(jsonData, 224)),
         null,
-        'legs'
+        "legs"
     )
     if (legs != null) res.push(legs)
 
@@ -374,7 +380,7 @@ function createBestEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 229)),
         Number(getNullSafeValue(jsonData, 228)),
         null,
-        'feet'
+        "feet"
     )
     if (feet != null) res.push(feet)
 
@@ -382,7 +388,7 @@ function createBestEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 233)),
         Number(getNullSafeValue(jsonData, 232)),
         null,
-        'finger1'
+        "finger1"
     )
     if (finger1 != null) res.push(finger1)
 
@@ -390,7 +396,7 @@ function createBestEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 237)),
         Number(getNullSafeValue(jsonData, 236)),
         null,
-        'finger2'
+        "finger2"
     )
     if (finger2 != null) res.push(finger2)
 
@@ -398,7 +404,7 @@ function createBestEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 241)),
         Number(getNullSafeValue(jsonData, 240)),
         null,
-        'trinket1'
+        "trinket1"
     )
     if (trinket1 != null) res.push(trinket1)
 
@@ -406,7 +412,7 @@ function createBestEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 245)),
         Number(getNullSafeValue(jsonData, 244)),
         null,
-        'trinket2'
+        "trinket2"
     )
     if (trinket2 != null) res.push(trinket2)
 
@@ -414,7 +420,7 @@ function createBestEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 249)),
         Number(getNullSafeValue(jsonData, 248)),
         null,
-        'main_hand'
+        "main_hand"
     )
     if (mainHand != null) res.push(mainHand)
 
@@ -422,7 +428,7 @@ function createBestEquippedInfo(jsonData: unknown[]): GearItem[] {
         Number(getNullSafeValue(jsonData, 253)),
         Number(getNullSafeValue(jsonData, 252)),
         null,
-        'off_hand'
+        "off_hand"
     )
     if (offHand != null) res.push(offHand)
 
@@ -433,16 +439,16 @@ function wowAuditDiffToRealDiff(diff: string | null): WowRaidDifficulty | null {
     if (!diff) return null
 
     switch (diff) {
-        case 'H':
-            return 'Heroic'
-        case 'N':
-            return 'Normal'
-        case 'M':
-            return 'Mythic'
-        case 'R':
-            return 'LFR'
+        case "H":
+            return "Heroic"
+        case "N":
+            return "Normal"
+        case "M":
+            return "Mythic"
+        case "R":
+            return "LFR"
         default:
-            throw new Error('wowAuditDiffToRealDiff: diff not mapped - ' + diff)
+            throw new Error("wowAuditDiffToRealDiff: diff not mapped - " + diff)
     }
 }
 
@@ -455,7 +461,7 @@ function createTiersetGearPiece(
     if (!className || !ilvl || !itemsInDb || !slotKey || !diff) return null
 
     const wowItem = itemsInDb.find(
-        i =>
+        (i) =>
             i.tierset === true &&
             i.slotKey === slotKey &&
             i.classes?.includes(className) &&
@@ -463,9 +469,9 @@ function createTiersetGearPiece(
     )
     if (wowItem == null) {
         console.log(
-            'wowaudit.createTiersetGearPiece: skipping tierset not detectable for: ' +
+            "wowaudit.createTiersetGearPiece: skipping tierset not detectable for: " +
                 className +
-                ' - ' +
+                " - " +
                 slotKey
         )
         return null
@@ -473,7 +479,9 @@ function createTiersetGearPiece(
 
     const itemDiff = wowAuditDiffToRealDiff(diff)
     const bonusIds: number[] = []
-    const itemTrack = itemDiff ? applyItemTrackByIlvlAndDiff(bonusIds, ilvl, itemDiff) : null
+    const itemTrack = itemDiff
+        ? applyItemTrackByIlvlAndDiff(bonusIds, ilvl, itemDiff)
+        : null
 
     const res: GearItem = {
         item: {
@@ -487,14 +495,14 @@ function createTiersetGearPiece(
             veryRare: wowItem.veryRare,
             iconName: wowItem.iconName,
             season: evalRealSeason(wowItem, ilvl),
-            specIds: wowItem.specIds
+            specIds: wowItem.specIds,
         },
-        source: 'equipped',
+        source: "equipped",
         itemLevel: ilvl,
         bonusIds: bonusIds,
         itemTrack,
         gemIds: null,
-        enchantIds: null
+        enchantIds: null,
     }
     return res
 }
@@ -506,12 +514,12 @@ function createGearPiece(
     equippedInSlot: WowItemEquippedSlotKey | null
 ): GearItem | null {
     if (!itemId || !ilvl || !itemsInDb) return null
-    const wowItem = itemsInDb.find(i => i.id === itemId)
+    const wowItem = itemsInDb.find((i) => i.id === itemId)
     if (wowItem == null) {
         console.log(
-            'wowaudit.createGearPiece: skipping equipped item not in db: ' +
+            "wowaudit.createGearPiece: skipping equipped item not in db: " +
                 itemId +
-                ' https://www.wowhead.com/item=' +
+                " https://www.wowhead.com/item=" +
                 itemId
         )
         return null
@@ -522,8 +530,8 @@ function createGearPiece(
     if (deltaString) {
         // wow audit delta is like "4/6".
         // In this example delta is 2 and we need to deduce actual item track by ilvl and delta
-        const current = Number(deltaString.split('/')[0])
-        const total = Number(deltaString.split('/')[1])
+        const current = Number(deltaString.split("/")[0])
+        const total = Number(deltaString.split("/")[1])
         if (current && total) {
             itemTrack = applyItemTrackByIlvlAndDelta(bonusIds, ilvl, total - current)
         }
@@ -541,15 +549,15 @@ function createGearPiece(
             veryRare: wowItem.veryRare,
             iconName: wowItem.iconName,
             season: evalRealSeason(wowItem, ilvl),
-            specIds: wowItem.specIds
+            specIds: wowItem.specIds,
         },
-        source: 'equipped',
+        source: "equipped",
         equippedInSlot: equippedInSlot ?? undefined,
         itemLevel: ilvl,
         bonusIds: bonusIds,
         itemTrack: itemTrack,
         gemIds: null,
-        enchantIds: null
+        enchantIds: null,
     }
     return res
 }

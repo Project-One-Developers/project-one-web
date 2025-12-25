@@ -1,17 +1,17 @@
-import { CURRENT_RAID_ID } from '@/shared/consts/wow.consts'
-import { getUnixTimestamp } from '@/shared/libs/date/date-utils'
-import { evalRealSeason, parseItemTrack } from '@/shared/libs/items/item-bonus-utils'
-import { slotToEquippedSlot } from '@/shared/libs/items/item-slot-utils'
+import { CURRENT_RAID_ID } from "@/shared/consts/wow.consts"
+import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
+import { evalRealSeason, parseItemTrack } from "@/shared/libs/items/item-bonus-utils"
+import { slotToEquippedSlot } from "@/shared/libs/items/item-slot-utils"
 import {
     getWowClassFromIdOrName,
-    getWowSpecByClassNameAndSpecName
-} from '@/shared/libs/spec-parser/spec-utils'
-import { qeLiveURLSchema } from '@/shared/schemas/simulations.schemas'
+    getWowSpecByClassNameAndSpecName,
+} from "@/shared/libs/spec-parser/spec-utils"
+import { qeLiveURLSchema } from "@/shared/schemas/simulations.schemas"
 import {
     wowClassNameSchema,
     wowItemEquippedSlotKeySchema,
-    wowSpecNameSchema
-} from '@/shared/schemas/wow.schemas'
+    wowSpecNameSchema,
+} from "@/shared/schemas/wow.schemas"
 import type {
     GearItem,
     Item,
@@ -19,21 +19,23 @@ import type {
     NewDroptimizer,
     NewDroptimizerUpgrade,
     WowItemEquippedSlotKey,
-    WowRaidDifficulty
-} from '@/shared/types/types'
+    WowRaidDifficulty,
+} from "@/shared/types/types"
 import {
     getItems,
     getItemToCatalystMapping,
-    getItemToTiersetMapping
-} from '@/db/repositories/items'
-import { z } from 'zod'
-import { qeliveEquippedItemSchema, QELiveJson, qeliveJsonSchema } from './qelive.schemas'
+    getItemToTiersetMapping,
+} from "@/db/repositories/items"
+import { z } from "zod"
+import { qeliveEquippedItemSchema, QELiveJson, qeliveJsonSchema } from "./qelive.schemas"
 
-export const fetchDroptimizerFromQELiveURL = async (url: string): Promise<NewDroptimizer[]> => {
+export const fetchDroptimizerFromQELiveURL = async (
+    url: string
+): Promise<NewDroptimizer[]> => {
     const reportUrl = qeLiveURLSchema.parse(url)
-    const reportId = reportUrl.split('/').pop()
+    const reportId = reportUrl.split("/").pop()
     if (!reportId) {
-        throw new Error('Invalid QE Live URL: Unable to extract report ID')
+        throw new Error("Invalid QE Live URL: Unable to extract report ID")
     }
     const textRawData = await fetchQELiveData(reportId)
     const parsedJson = parseQELiveData(JSON.parse(textRawData))
@@ -73,14 +75,18 @@ const parseUpgrades = async (
 
     const upgradesMap = upgrades
         // filter out item without dps gain
-        .filter(item => item.dps > 0)
+        .filter((item) => item.dps > 0)
         // remap itemid to tierset & catalyst
-        .map(up => {
-            const tiersetMapping = itemToTiersetMapping?.find(i => i.itemId === up.itemId)
+        .map((up) => {
+            const tiersetMapping = itemToTiersetMapping?.find(
+                (i) => i.itemId === up.itemId
+            )
 
             const catalystMapping = !tiersetMapping
                 ? itemToCatalystMapping?.find(
-                      i => i.catalyzedItemId === up.itemId && i.encounterId === up.encounterId
+                      (i) =>
+                          i.catalyzedItemId === up.itemId &&
+                          i.encounterId === up.encounterId
                   )
                 : null
 
@@ -93,12 +99,12 @@ const parseUpgrades = async (
                 tiersetItemId: null,
                 ...(tiersetMapping && {
                     itemId: tiersetMapping.tokenId,
-                    tiersetItemId: tiersetMapping.itemId
+                    tiersetItemId: tiersetMapping.itemId,
                 }),
                 ...(catalystMapping && {
                     itemId: catalystMapping.itemId,
-                    catalyzedItemId: catalystMapping.catalyzedItemId
-                })
+                    catalyzedItemId: catalystMapping.catalyzedItemId,
+                }),
             }
 
             return res
@@ -123,32 +129,34 @@ const parseUpgrades = async (
 export function parseRaidDiff(id: number): WowRaidDifficulty {
     switch (id) {
         case 4:
-            return 'Heroic'
+            return "Heroic"
         case 5:
-            return 'Heroic' // Heroic (max)
+            return "Heroic" // Heroic (max)
         case 6:
-            return 'Mythic'
+            return "Mythic"
         case 7:
-            return 'Mythic' // Mythic (max)
+            return "Mythic" // Mythic (max)
         default:
-            throw new Error(`Invalid raid difficulty ID: ${id}. 4-5 (Heroic), or 6-7 (Mythic)`)
+            throw new Error(
+                `Invalid raid difficulty ID: ${id}. 4-5 (Heroic), or 6-7 (Mythic)`
+            )
     }
 }
 
 export function parseQELiveSlotToEquippedSlot(slot: string): WowItemEquippedSlotKey {
-    if (slot === '1H Weapon') {
-        return wowItemEquippedSlotKeySchema.parse('main_hand')
-    } else if (slot === 'Shield') {
-        return wowItemEquippedSlotKeySchema.parse('off_hand')
-    } else if (slot === 'Finger') {
-        return wowItemEquippedSlotKeySchema.parse('finger1')
-    } else if (slot === 'Trinket') {
-        return wowItemEquippedSlotKeySchema.parse('trinket1')
-    } else if (slot === 'Offhand') {
-        return wowItemEquippedSlotKeySchema.parse('off_hand')
+    if (slot === "1H Weapon") {
+        return wowItemEquippedSlotKeySchema.parse("main_hand")
+    } else if (slot === "Shield") {
+        return wowItemEquippedSlotKeySchema.parse("off_hand")
+    } else if (slot === "Finger") {
+        return wowItemEquippedSlotKeySchema.parse("finger1")
+    } else if (slot === "Trinket") {
+        return wowItemEquippedSlotKeySchema.parse("trinket1")
+    } else if (slot === "Offhand") {
+        return wowItemEquippedSlotKeySchema.parse("off_hand")
     }
     try {
-        return wowItemEquippedSlotKeySchema.parse(slot.toLowerCase().replace(' ', '_'))
+        return wowItemEquippedSlotKeySchema.parse(slot.toLowerCase().replace(" ", "_"))
     } catch {
         throw new Error(`Invalid slot name from QE Live: ${slot}`)
     }
@@ -161,8 +169,8 @@ export function parseQELiveSlotToEquippedSlot(slot: string): WowItemEquippedSlot
  */
 const parseDateToUnixTimestamp = (dateString: string): number => {
     // Remove spaces and split by '-'
-    const cleanDateString = dateString.replace(/\s/g, '')
-    const [year, month, day] = cleanDateString.split('-').map(Number)
+    const cleanDateString = dateString.replace(/\s/g, "")
+    const [year, month, day] = cleanDateString.split("-").map(Number)
 
     // Create date object (month is 0-indexed in JavaScript)
     const date = new Date(year, month - 1, day, 8) // set to 8 AM to avoid timezone issues
@@ -182,23 +190,23 @@ const convertJsonToDroptimizer = async (
 ): Promise<NewDroptimizer[]> => {
     const raidId = CURRENT_RAID_ID
 
-    const className = wowClassNameSchema.parse(data.spec.split(' ')[1])
+    const className = wowClassNameSchema.parse(data.spec.split(" ")[1])
     const wowClass = getWowClassFromIdOrName(className)
-    const specName = wowSpecNameSchema.parse(data.spec.split(' ')[0])
+    const specName = wowSpecNameSchema.parse(data.spec.split(" ")[0])
     const wowSpec = getWowSpecByClassNameAndSpecName(className, specName)
 
     const charInfo = {
         name: data.playername,
         server: data.realm
             .toLowerCase()
-            .replaceAll('_', '-')
-            .replaceAll(' ', '-')
-            .replaceAll("'", ''),
+            .replaceAll("_", "-")
+            .replaceAll(" ", "-")
+            .replaceAll("'", ""),
         class: className,
         classId: wowClass ? wowClass.id : -1,
         spec: specName,
         specId: wowSpec ? wowSpec.id : -1,
-        talents: 'qe_no_support'
+        talents: "qe_no_support",
     }
 
     const itemsInDb: Item[] = await getItems()
@@ -206,7 +214,7 @@ const convertJsonToDroptimizer = async (
     const itemsEquipped = await parseEquippedGear(itemsInDb, data.equippedItems, url)
 
     // Filter results with 0 score and raid only
-    const raidResults = data.results.filter(r => r.rawDiff > 0 && r.dropLoc === 'Raid')
+    const raidResults = data.results.filter((r) => r.rawDiff > 0 && r.dropLoc === "Raid")
 
     // Group by dropDifficulty
     const resultsByDifficulty = raidResults.reduce(
@@ -227,15 +235,15 @@ const convertJsonToDroptimizer = async (
         const raidDiff = parseRaidDiff(Number(difficultyId))
 
         // Transform results to the format expected by parseUpgrades
-        const transformedResults = difficultyResults.map(result => {
-            const item = itemsInDb.find(i => i.id === result.item)
+        const transformedResults = difficultyResults.map((result) => {
+            const item = itemsInDb.find((i) => i.id === result.item)
             if (!item) {
                 throw new Error(
-                    '[error] convertJsonToDroptimizer: item not found in db: ' +
+                    "[error] convertJsonToDroptimizer: item not found in db: " +
                         result.item +
-                        ' - https://www.wowhead.com/item=' +
+                        " - https://www.wowhead.com/item=" +
                         result.item +
-                        ' - URL: ' +
+                        " - URL: " +
                         url
                 )
             }
@@ -244,24 +252,24 @@ const convertJsonToDroptimizer = async (
                 encounterId: item.sourceId, // QE Live doesn't provide encounter ID
                 itemId: result.item,
                 ilvl: result.level,
-                slot: slotToEquippedSlot(item.slotKey)
+                slot: slotToEquippedSlot(item.slotKey),
             }
         })
 
         const droptimizer: NewDroptimizer = {
             ak: `${raidId},${raidDiff},${charInfo.name},${charInfo.server},${charInfo.spec},${charInfo.class}`,
-            url: url + '&diff=' + raidDiff, // in QE there are multiple report for the same url
+            url: url + "&diff=" + raidDiff, // in QE there are multiple report for the same url
             charInfo,
             raidInfo: {
                 id: raidId,
-                difficulty: raidDiff
+                difficulty: raidDiff,
             },
             simInfo: {
                 date: parseDateToUnixTimestamp(data.dateCreated),
-                fightstyle: 'Patchwerk', // QE Live does not have fightstyle
+                fightstyle: "Patchwerk", // QE Live does not have fightstyle
                 duration: 300,
                 nTargets: 1,
-                upgradeEquipped: false // QE Live does not have upgrade equipped
+                upgradeEquipped: false, // QE Live does not have upgrade equipped
             },
             dateImported: getUnixTimestamp(),
             upgrades: await parseUpgrades(transformedResults),
@@ -271,7 +279,7 @@ const convertJsonToDroptimizer = async (
             itemsAverageItemLevelEquipped: null,
             itemsEquipped,
             itemsInBag: [],
-            tiersetInfo: []
+            tiersetInfo: [],
         }
 
         droptimizers.push(droptimizer)
@@ -290,25 +298,25 @@ export const parseEquippedGear = async (
     for (const equippedItem of equipped) {
         if (!equippedItem.bonusIDS) {
             throw new Error(
-                '[error] parseEquippedGear: found equipped item without bonusIDS ' +
+                "[error] parseEquippedGear: found equipped item without bonusIDS " +
                     equippedItem.id +
-                    ' - https://www.wowhead.com/item=' +
+                    " - https://www.wowhead.com/item=" +
                     equippedItem.id +
-                    ' - URL: ' +
+                    " - URL: " +
                     url
             )
         }
-        const bonusIds = equippedItem.bonusIDS.split(':').map(Number)
-        const wowItem = itemsInDb.find(i => i.id === equippedItem.id)
+        const bonusIds = equippedItem.bonusIDS.split(":").map(Number)
+        const wowItem = itemsInDb.find((i) => i.id === equippedItem.id)
         if (wowItem == null) {
             console.log(
-                '[error] parseEquippedGear: skipping equipped item not in db: ' +
+                "[error] parseEquippedGear: skipping equipped item not in db: " +
                     equippedItem.id +
-                    ' - https://www.wowhead.com/item=' +
+                    " - https://www.wowhead.com/item=" +
                     equippedItem.id +
-                    '?bonus=' +
-                    bonusIds.join(':') +
-                    ' - URL: ' +
+                    "?bonus=" +
+                    bonusIds.join(":") +
+                    " - URL: " +
                     url
             )
             continue
@@ -316,19 +324,19 @@ export const parseEquippedGear = async (
 
         let itemTrack: ItemTrack | null = null
         if (
-            wowItem.sourceType !== 'profession593' &&
-            !wowItem.sourceType.startsWith('special')
+            wowItem.sourceType !== "profession593" &&
+            !wowItem.sourceType.startsWith("special")
         ) {
             itemTrack = parseItemTrack(bonusIds)
             if (!itemTrack) {
                 console.log(
-                    '[warn] parseEquippedGear: found equipped item without item track ' +
+                    "[warn] parseEquippedGear: found equipped item without item track " +
                         equippedItem.id +
-                        ' - https://www.wowhead.com/item=' +
+                        " - https://www.wowhead.com/item=" +
                         equippedItem.id +
-                        '?bonus=' +
-                        bonusIds.join(':') +
-                        ' - URL: ' +
+                        "?bonus=" +
+                        bonusIds.join(":") +
+                        " - URL: " +
                         url
                 )
             }
@@ -346,15 +354,17 @@ export const parseEquippedGear = async (
                 veryRare: wowItem.veryRare,
                 iconName: wowItem.iconName,
                 season: evalRealSeason(wowItem, equippedItem.level),
-                specIds: wowItem.specIds
+                specIds: wowItem.specIds,
             },
-            source: 'equipped',
+            source: "equipped",
             equippedInSlot: parseQELiveSlotToEquippedSlot(equippedItem.slot),
             itemLevel: equippedItem.level,
             bonusIds: equippedItem.bonusIDS ? bonusIds : null,
             enchantIds: null,
-            gemIds: equippedItem.gemString ? equippedItem.gemString.split(':').map(Number) : null,
-            itemTrack: itemTrack
+            gemIds: equippedItem.gemString
+                ? equippedItem.gemString.split(":").map(Number)
+                : null,
+            itemTrack: itemTrack,
         })
     }
     return res

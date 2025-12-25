@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from "zod"
 
 export const itemStringDataSchema = z.object({
     itemID: z.number(),
@@ -12,16 +12,16 @@ export const itemStringDataSchema = z.object({
     instanceDifficultyId: z.number(),
     numBonusIds: z.number(),
     bonusIds: z.array(z.number()),
-    upgradeValue: z.number().optional()
+    upgradeValue: z.number().optional(),
 })
 
 export type ItemStringData = z.infer<typeof itemStringDataSchema>
 
 export const parseItemString = (itemString: string): ItemStringData => {
-    const parts = itemString.split(':').map(Number)
+    const parts = itemString.split(":").map(Number)
 
     if (parts.length < 13) {
-        throw new Error('Invalid item string: insufficient parts')
+        throw new Error("Invalid item string: insufficient parts")
     }
 
     // First value is "item" prefix
@@ -60,7 +60,7 @@ export const parseItemString = (itemString: string): ItemStringData => {
         instanceDifficultyId,
         numBonusIds,
         bonusIds,
-        upgradeValue
+        upgradeValue,
     }
 
     // Parse and validate with Zod schema
@@ -68,4 +68,4 @@ export const parseItemString = (itemString: string): ItemStringData => {
 }
 
 export const getItemBonusString = (itemStringData: ItemStringData): string =>
-    itemStringData.bonusIds.join(':')
+    itemStringData.bonusIds.join(":")

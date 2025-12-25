@@ -1,7 +1,7 @@
-import { db } from '@/db'
-import { appConfigTable } from '@/db/schema'
-import { takeFirstResult } from '@/db/utils'
-import { eq } from 'drizzle-orm'
+import { db } from "@/db"
+import { appConfigTable } from "@/db/schema"
+import { takeFirstResult } from "@/db/utils"
+import { eq } from "drizzle-orm"
 
 export async function getConfig(key: string): Promise<string | null> {
     const result = await db
@@ -15,13 +15,10 @@ export async function getConfig(key: string): Promise<string | null> {
 }
 
 export async function setConfig(key: string, value: string): Promise<void> {
-    await db
-        .insert(appConfigTable)
-        .values({ key, value })
-        .onConflictDoUpdate({
-            target: appConfigTable.key,
-            set: { value }
-        })
+    await db.insert(appConfigTable).values({ key, value }).onConflictDoUpdate({
+        target: appConfigTable.key,
+        set: { value },
+    })
 }
 
 export async function deleteConfig(key: string): Promise<void> {
@@ -30,8 +27,11 @@ export async function deleteConfig(key: string): Promise<void> {
 
 export async function getAllConfig(): Promise<Record<string, string>> {
     const result = await db.select().from(appConfigTable)
-    return result.reduce((acc, { key, value }) => {
-        acc[key] = value
-        return acc
-    }, {} as Record<string, string>)
+    return result.reduce(
+        (acc, { key, value }) => {
+            acc[key] = value
+            return acc
+        },
+        {} as Record<string, string>
+    )
 }

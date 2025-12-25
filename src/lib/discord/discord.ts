@@ -1,4 +1,10 @@
-import { Client, FetchMessagesOptions, GatewayIntentBits, Message, TextChannel } from 'discord.js'
+import {
+    Client,
+    FetchMessagesOptions,
+    GatewayIntentBits,
+    Message,
+    TextChannel,
+} from "discord.js"
 
 export interface DiscordMessage {
     content: string
@@ -13,8 +19,8 @@ export async function readAllMessagesInDiscord(
         intents: [
             GatewayIntentBits.Guilds,
             GatewayIntentBits.GuildMessages,
-            GatewayIntentBits.MessageContent
-        ]
+            GatewayIntentBits.MessageContent,
+        ],
     })
 
     try {
@@ -22,7 +28,7 @@ export async function readAllMessagesInDiscord(
 
         const channel = (await client.channels.fetch(discordChannelId)) as TextChannel
         if (!channel || !channel.isTextBased()) {
-            throw new Error('Channel not found or not a text channel')
+            throw new Error("Channel not found or not a text channel")
         }
 
         let messages: Message[] = []
@@ -47,12 +53,12 @@ export async function readAllMessagesInDiscord(
         await client.destroy()
 
         // Transform to simpler type for serialization
-        return messages.map(msg => ({
+        return messages.map((msg) => ({
             content: msg.content,
-            createdAt: msg.createdAt
+            createdAt: msg.createdAt,
         }))
     } catch (error) {
-        console.error('Error syncing from Discord:', error)
+        console.error("Error syncing from Discord:", error)
         await client.destroy()
         return []
     }
@@ -65,13 +71,15 @@ export function extractUrlsFromMessages(
     messages: DiscordMessage[],
     lowerBoundDate: Date
 ): Set<string> {
-    const raidbotsUrlRegex = /https:\/\/www\.raidbots\.com\/simbot\/report\/([a-zA-Z0-9]+)/g
-    const qeLiveUrlRegex = /https:\/\/questionablyepic\.com\/live\/upgradereport\/([a-zA-Z0-9-_]+)/g
+    const raidbotsUrlRegex =
+        /https:\/\/www\.raidbots\.com\/simbot\/report\/([a-zA-Z0-9]+)/g
+    const qeLiveUrlRegex =
+        /https:\/\/questionablyepic\.com\/live\/upgradereport\/([a-zA-Z0-9-_]+)/g
 
     return new Set(
         messages
-            .filter(msg => msg.createdAt >= lowerBoundDate)
-            .flatMap(message => {
+            .filter((msg) => msg.createdAt >= lowerBoundDate)
+            .flatMap((message) => {
                 const raidbotsMatches = message.content.match(raidbotsUrlRegex) || []
                 const qeLiveMatches = message.content.match(qeLiveUrlRegex) || []
                 return [...raidbotsMatches, ...qeLiveMatches]

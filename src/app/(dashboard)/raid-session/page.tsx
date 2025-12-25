@@ -1,21 +1,21 @@
-'use client'
+"use client"
 
-import RaidSessionDialog from '@/components/raid-session-dialog'
-import SessionCard from '@/components/session-card'
-import { Input } from '@/components/ui/input'
-import { useRaidSessions } from '@/lib/queries/raid-sessions'
-import { unixTimestampToWowWeek } from '@/shared/libs/date/date-utils'
-import type { RaidSessionWithSummary } from '@/shared/types/types'
-import { LoaderCircle, PlusIcon, Search } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useMemo, useState, type JSX } from 'react'
+import RaidSessionDialog from "@/components/raid-session-dialog"
+import SessionCard from "@/components/session-card"
+import { Input } from "@/components/ui/input"
+import { useRaidSessions } from "@/lib/queries/raid-sessions"
+import { unixTimestampToWowWeek } from "@/shared/libs/date/date-utils"
+import type { RaidSessionWithSummary } from "@/shared/types/types"
+import { LoaderCircle, PlusIcon, Search } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useMemo, useState, type JSX } from "react"
 
 type GroupedSessions = {
     [wowWeek: number]: RaidSessionWithSummary[]
 }
 
 export default function RaidSessionListPage(): JSX.Element {
-    const [searchQuery, setSearchQuery] = useState('')
+    const [searchQuery, setSearchQuery] = useState("")
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
     const router = useRouter()
 
@@ -27,7 +27,7 @@ export default function RaidSessionListPage(): JSX.Element {
         let filteredSessions = data
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase()
-            filteredSessions = data.filter(session => {
+            filteredSessions = data.filter((session) => {
                 const nameMatch = session.name.toLowerCase().includes(query)
                 const wowWeek = unixTimestampToWowWeek(session.raidDate)
                 const weekMatch = wowWeek.toString().includes(query)
@@ -36,7 +36,7 @@ export default function RaidSessionListPage(): JSX.Element {
         }
 
         const grouped: GroupedSessions = {}
-        filteredSessions.forEach(session => {
+        filteredSessions.forEach((session) => {
             const wowWeek = unixTimestampToWowWeek(session.raidDate)
             if (!grouped[wowWeek]) {
                 grouped[wowWeek] = []
@@ -44,7 +44,7 @@ export default function RaidSessionListPage(): JSX.Element {
             grouped[wowWeek].push(session)
         })
 
-        Object.keys(grouped).forEach(week => {
+        Object.keys(grouped).forEach((week) => {
             grouped[Number(week)].sort((a, b) => b.raidDate - a.raidDate)
         })
 
@@ -77,7 +77,7 @@ export default function RaidSessionListPage(): JSX.Element {
                     <Input
                         placeholder="Search by session name or WoW week..."
                         value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-10"
                     />
                 </div>
@@ -86,27 +86,31 @@ export default function RaidSessionListPage(): JSX.Element {
             {/* Sessions Grouped by Week */}
             <div className="flex-1 overflow-y-auto">
                 <div className="space-y-8">
-                    {weekNumbers.map(weekNumber => (
+                    {weekNumbers.map((weekNumber) => (
                         <div key={weekNumber} className="space-y-4">
                             {/* Week Header */}
                             <div className="flex items-center gap-4">
                                 <div className="bg-primary/20 text-primary px-4 py-2 rounded-lg">
-                                    <span className="font-semibold">WoW Week {weekNumber}</span>
+                                    <span className="font-semibold">
+                                        WoW Week {weekNumber}
+                                    </span>
                                 </div>
                                 <div className="h-px bg-gray-700 flex-1"></div>
                                 <span className="text-sm text-gray-400">
                                     {groupedSessions[weekNumber].length} session
-                                    {groupedSessions[weekNumber].length !== 1 ? 's' : ''}
+                                    {groupedSessions[weekNumber].length !== 1 ? "s" : ""}
                                 </span>
                             </div>
 
                             {/* Sessions Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                                {groupedSessions[weekNumber].map(session => (
+                                {groupedSessions[weekNumber].map((session) => (
                                     <SessionCard
                                         key={session.id}
                                         session={session}
-                                        onClick={() => router.push(`/raid-session/${session.id}`)}
+                                        onClick={() =>
+                                            router.push(`/raid-session/${session.id}`)
+                                        }
                                     />
                                 ))}
                             </div>
@@ -120,11 +124,13 @@ export default function RaidSessionListPage(): JSX.Element {
                     </div>
                 )}
 
-                {weekNumbers.length === 0 && !searchQuery.trim() && data?.length === 0 && (
-                    <div className="text-center text-gray-400 mt-8">
-                        No raid sessions yet. Create your first session!
-                    </div>
-                )}
+                {weekNumbers.length === 0 &&
+                    !searchQuery.trim() &&
+                    data?.length === 0 && (
+                        <div className="text-center text-gray-400 mt-8">
+                            No raid sessions yet. Create your first session!
+                        </div>
+                    )}
 
                 <div className="pb-20"></div>
             </div>
