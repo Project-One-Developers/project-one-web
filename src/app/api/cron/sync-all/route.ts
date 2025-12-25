@@ -1,0 +1,76 @@
+import { syncDroptimizersFromDiscordAction, deleteSimulationsOlderThanHoursAction } from '@/actions/droptimizer'
+import { checkWowAuditUpdatesAction } from '@/actions/wowaudit'
+import { NextResponse } from 'next/server'
+
+// Verify this is a cron request from Vercel (optional but recommended)
+function verifyCronSecret(request: Request): boolean {
+    const authHeader = request.headers.get('authorization')
+    if (!process.env.CRON_SECRET) return true // No secret configured, allow
+    return authHeader === `Bearer ${process.env.CRON_SECRET}`
+}
+
+// Hours to look back for Discord messages
+const DISCORD_SYNC_HOURS = 48
+
+// Hours after which to delete old simulations
+const DELETE_OLD_SIMULATIONS_HOURS = 168 // 7 days
+
+export async function GET(request: Request) {
+    if (!verifyCronSecret(request)) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    try {
+        console.log('[Cron] Full sync started at', new Date().toISOString())
+
+        const results = {
+            wowaudit: { success: false, synced: false, message: '', error: null as string | null },
+            discord: { success: false, imported: 0, errors: [] as string[] },
+            cleanup: { success: false, error: null as string | null }
+        }
+
+        // WowAudit sync - syncs if data is older than 4 hours
+        try {
+            const wowauditResult = await checkWowAuditUpdatesAction()
+            results.wowaudit.success = true
+            results.wowaudit.synced = wowauditResult.synced
+            results.wowaudit.message = wowauditResult.message
+        } catch (error) {
+            results.wowaudit.error = error instanceof Error ? error.message : 'Unknown error'
+        }
+
+        // Discord droptimizer sync
+        try {
+            const discordResult = await syncDroptimizersFromDiscordAction(DISCORD_SYNC_HOURS)
+            results.discord.success = true
+            results.discord.imported = discordResult.imported
+            results.discord.errors = discordResult.errors
+        } catch (error) {
+            results.discord.success = false
+            results.discord.errors = [error instanceof Error ? error.message : 'Unknown error']
+        }
+
+        // Cleanup old simulations
+        try {
+            await deleteSimulationsOlderThanHoursAction(DELETE_OLD_SIMULATIONS_HOURS)
+            results.cleanup.success = true
+        } catch (error) {
+            results.cleanup.error = error instanceof Error ? error.message : 'Unknown error'
+        }
+
+        console.log('[Cron] Full sync completed:', JSON.stringify(results))
+
+        return NextResponse.json({
+            success: true,
+            message: 'Full sync completed',
+            results,
+            timestamp: new Date().toISOString()
+        })
+    } catch (error) {
+        console.error('[Cron] Full sync failed:', error)
+        return NextResponse.json(
+            { error: 'Sync failed', message: error instanceof Error ? error.message : 'Unknown error' },
+            { status: 500 }
+        )
+    }
+}

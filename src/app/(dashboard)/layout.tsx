@@ -1,0 +1,24 @@
+import { auth } from '@/auth'
+import AppSidebar from '@/components/app-sidebar'
+import { SidebarProvider } from '@/components/ui/sidebar'
+import { redirect } from 'next/navigation'
+
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+    let session
+    try {
+        session = await auth()
+    } catch {
+        redirect('/login')
+    }
+
+    if (!session?.user) {
+        redirect('/login')
+    }
+
+    return (
+        <SidebarProvider defaultOpen={true}>
+            <AppSidebar />
+            <main className="flex-1 overflow-auto">{children}</main>
+        </SidebarProvider>
+    )
+}
