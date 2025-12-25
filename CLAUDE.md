@@ -1,0 +1,68 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+Next.js 16 + React 19 TypeScript web application for World of Warcraft guild management and loot distribution. Uses pnpm as package manager.
+
+## Common Commands
+
+```bash
+pnpm dev              # Start development server
+pnpm build            # Production build
+pnpm lint             # Run ESLint
+pnpm drizzle-kit push # Push database schema changes to PostgreSQL
+```
+
+## Architecture
+
+### Directory Structure
+
+- `src/app/` - Next.js App Router pages and API routes
+  - `(auth)/` - Auth layout group (login page)
+  - `(dashboard)/` - Protected routes (roster, raid-session, droptimizer, loot-table, etc.)
+  - `api/cron/` - Scheduled sync endpoints for external data
+- `src/actions/` - Server Actions for mutations (RPC-style handlers)
+- `src/db/` - Database layer
+  - `schema.ts` - Drizzle ORM schema definitions
+  - `repositories/` - Data access layer functions per entity
+- `src/components/` - React components
+  - `ui/` - shadcn/ui base components
+  - `wow/` - WoW-specific display components
+- `src/lib/` - Utilities and integrations
+  - `queries/` - React Query hooks for data fetching
+  - `discord/`, `raiderio/`, `wowaudit/`, `droptimizer/` - External API clients
+- `src/shared/` - Shared domain logic
+  - `schemas/` - Zod validation schemas
+  - `consts/wow.consts.ts` - WoW game constants
+  - `types/types.ts` - TypeScript type definitions
+
+### Key Patterns
+
+**Data Flow**: Server Actions (`/actions`) for mutations + React Query hooks (`/lib/queries`) for fetching
+
+**Repository Pattern**: Each entity has a repository in `/db/repositories` with functions like `getCharactersList()`, `addCharacter()`
+
+**Validation**: Zod schemas in `/shared/schemas` for both DB response and form validation
+
+**Authentication**: Auth.js with Discord OAuth, role-based access via Discord server roles
+
+**UI**: shadcn/ui components with Tailwind CSS 4, `cn()` utility for class merging, CVA for variants
+
+**Database**: Drizzle ORM with PostgreSQL, lazy connection via Proxy pattern, pgEnum for WoW constants
+
+### Naming Conventions
+
+- Components: PascalCase (`CharacterDialog.tsx`)
+- Actions: camelCase with suffix (`addCharacterAction`)
+- Schemas: camelCase + `Schema` suffix (`characterSchema`)
+- Hooks: `use` prefix (`usePlayersSummary()`)
+- Constants: SCREAMING_SNAKE_CASE (`CURRENT_RAID_ID`)
+
+## External Integrations
+
+- **RaidBots**: Droptimizer parsing for DPS upgrade calculations
+- **Raider.io**: Player progression and M+ data
+- **WowAudit**: Guild roster and character data sync
+- **Discord**: Bot integration for notifications and OAuth
