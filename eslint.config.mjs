@@ -1,5 +1,7 @@
 import nextVitals from "eslint-config-next/core-web-vitals"
 import nextTs from "eslint-config-next/typescript"
+import react from "eslint-plugin-react"
+import reactHooks from "eslint-plugin-react-hooks"
 import { defineConfig, globalIgnores } from "eslint/config"
 import tseslint from "typescript-eslint"
 
@@ -9,6 +11,15 @@ const eslintConfig = defineConfig([
     ...tseslint.configs.strictTypeChecked,
     ...tseslint.configs.stylisticTypeChecked,
     {
+        settings: {
+            react: {
+                version: "detect",
+            },
+        },
+        plugins: {
+            react,
+            "react-hooks": reactHooks,
+        },
         languageOptions: {
             parserOptions: {
                 projectService: true,
@@ -16,6 +27,15 @@ const eslintConfig = defineConfig([
             },
         },
         rules: {
+            // React Hooks
+            ...reactHooks.configs.recommended.rules,
+            "react-hooks/exhaustive-deps": "error",
+
+            // React
+            ...react.configs.recommended.rules,
+            "react/react-in-jsx-scope": "off",
+            "react/prop-types": "off",
+
             // Core ESLint rules
             "no-console": "error",
             curly: "error",
