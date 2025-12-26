@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
             {
                 protocol: "https",
                 hostname: "www.raidbots.com",
-                pathname: "/frontend/**",
+                pathname: "/**",
             },
             {
                 protocol: "https",
