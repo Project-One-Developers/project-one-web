@@ -2,13 +2,15 @@
 
 import { useUpdateItemBisSpecs } from "@/lib/queries/bis-list"
 import { useItemNote, useSetItemNote } from "@/lib/queries/items"
+import { useCharactersWithLootsByItemId } from "@/lib/queries/loots"
 import { WOW_CLASS_WITH_SPECS } from "@/shared/libs/spec-parser/spec-utils.schemas"
-import type { Item } from "@/shared/types/types"
+import type { CharacterWithGears, Item } from "@/shared/types/types"
 import * as ToggleGroup from "@radix-ui/react-toggle-group"
-import { Loader2, StickyNote } from "lucide-react"
-import { useState, type JSX } from "react"
+import { Loader2, Search, StickyNote, Users } from "lucide-react"
+import { useState, useMemo, type JSX } from "react"
 import { toast } from "sonner"
 import { Button } from "./ui/button"
+import { Checkbox } from "./ui/checkbox"
 import {
     Dialog,
     DialogContent,
@@ -16,9 +18,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from "./ui/dialog"
+import { Input } from "./ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Textarea } from "./ui/textarea"
+import { WowCharacterIcon } from "./wow/wow-character-icon"
 import { WowClassIcon } from "./wow/wow-class-icon"
+import { WowGearIcon } from "./wow/wow-gear-icon"
 import { WowItemIcon } from "./wow/wow-item-icon"
 import { WowSpecIcon } from "./wow/wow-spec-icon"
 
@@ -109,15 +114,23 @@ export default function ItemManagementDialog({
                                 {itemAndSpecs.item.name}
                             </DialogTitle>
                             <DialogDescription>
-                                Manage BiS specs and add notes for this item
+                                Manage BiS specs, view character inventory, and add notes
+                                for this item
                             </DialogDescription>
                         </div>
                     </div>
                 </DialogHeader>
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 mb-4">
+                    <TabsList className="grid w-full grid-cols-3 mb-4">
                         <TabsTrigger value="bis-specs">BiS Specs</TabsTrigger>
+                        <TabsTrigger
+                            value="inventory"
+                            className="flex items-center gap-2"
+                        >
+                            <Users size={16} />
+                            Inventory
+                        </TabsTrigger>
                         <TabsTrigger value="notes" className="flex items-center gap-2">
                             <StickyNote size={16} />
                             Notes
@@ -192,7 +205,12 @@ export default function ItemManagementDialog({
                         </Button>
                     </TabsContent>
 
-                    {/* Tab 2: Notes */}
+                    {/* Tab 2: Character Inventory */}
+                    <TabsContent value="inventory" className="mt-4">
+                        <CharacterInventoryContent itemId={itemAndSpecs.item.id} />
+                    </TabsContent>
+
+                    {/* Tab 3: Notes */}
                     <TabsContent value="notes" className="mt-4">
                         <div className="flex flex-col gap-4">
                             <div>
@@ -224,5 +242,183 @@ export default function ItemManagementDialog({
                 </Tabs>
             </DialogContent>
         </Dialog>
+    )
+}
+
+// Character Inventory Content Component
+function CharacterInventoryContent({ itemId }: { itemId: number }) {
+    const [searchFilter, setSearchFilter] = useState("")
+    const [includeAlts, setIncludeAlts] = useState(false)
+
+    const { data, isLoading, error } = useCharactersWithLootsByItemId(itemId)
+
+    const filteredCharacters = useMemo(() => {
+        if (!data) {
+            return { withItem: [], withoutItem: [] }
+        }
+
+        const charactersWithGears: CharacterWithGears[] = data
+
+        // Apply search filter and main/alt filter
+        const filterByNameAndMain = (char: CharacterWithGears) => {
+            const matchesName = char.name
+                .toLowerCase()
+                .includes(searchFilter.toLowerCase())
+            const matchesMainFilter = includeAlts ? true : char.main
+            return matchesName && matchesMainFilter
+        }
+
+        // Split characters into two groups
+        const charactersWithMatchingItem = charactersWithGears
+            .filter((char) => char.gears.some((gear) => gear.item.id === itemId))
+            .filter(filterByNameAndMain)
+
+        const charactersWithoutMatchingItem = charactersWithGears
+            .filter((char) => !char.gears.some((gear) => gear.item.id === itemId))
+            .filter(filterByNameAndMain)
+            .sort((a, b) => Number(b.main) - Number(a.main))
+
+        return {
+            withItem: charactersWithMatchingItem,
+            withoutItem: charactersWithoutMatchingItem,
+        }
+    }, [data, itemId, searchFilter, includeAlts])
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-[200px]">
+                <Loader2 className="animate-spin h-8 w-8" />
+                <span className="ml-2">Loading character inventory...</span>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center h-[200px] text-red-500">
+                Error loading character inventory
+            </div>
+        )
+    }
+
+    if (!data) {
+        return (
+            <div className="flex items-center justify-center h-[200px]">
+                No inventory data available
+            </div>
+        )
+    }
+
+    return (
+        <div className="flex flex-col gap-4 max-h-[450px] overflow-y-auto">
+            {/* Search Bar with Include Alts Checkbox */}
+            <div className="sticky top-0 bg-background z-10 pb-2 border-b">
+                <div className="flex gap-3 items-center mr-3">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                        <Input
+                            placeholder="Search characters by name..."
+                            value={searchFilter}
+                            onChange={(e) => {
+                                setSearchFilter(e.target.value)
+                            }}
+                            className="pl-10"
+                        />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            id="include-alts"
+                            checked={includeAlts}
+                            onCheckedChange={(checked) => {
+                                setIncludeAlts(checked === true)
+                            }}
+                        />
+                        <label
+                            htmlFor="include-alts"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                            Include Alts
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            {/* Characters WITH the item - Compact Grid Layout */}
+            <div className="flex flex-col gap-3">
+                <h3 className="text-lg font-semibold text-green-400">
+                    Characters with this item ({filteredCharacters.withItem.length})
+                </h3>
+                {filteredCharacters.withItem.length === 0 ? (
+                    <p className="text-muted-foreground">
+                        {searchFilter || !includeAlts
+                            ? "No matching characters have this item."
+                            : "No characters currently have this item."}
+                    </p>
+                ) : (
+                    <div className="grid grid-cols-4 gap-2">
+                        {filteredCharacters.withItem.map((character) => {
+                            // Get all gears that match the item ID
+                            const matchingGears = character.gears.filter(
+                                (gear) => gear.item.id === itemId
+                            )
+
+                            return (
+                                <div
+                                    key={character.id}
+                                    className="flex items-center gap-3 p-2 bg-green-900/20 rounded-lg hover:bg-green-900/30 transition-colors"
+                                >
+                                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                                        <WowCharacterIcon
+                                            character={character}
+                                            showMainIndicator={includeAlts}
+                                            showName={false}
+                                        />
+                                        <span className="text-sm font-medium truncate">
+                                            {character.name}
+                                        </span>
+                                    </div>
+                                    <div className="flex gap-1 flex-shrink-0">
+                                        {matchingGears.map((gear, index) => (
+                                            <div
+                                                key={index}
+                                                className="relative"
+                                                title={`${gear.item.name} - ${gear.source}`}
+                                            >
+                                                <WowGearIcon
+                                                    gearItem={gear}
+                                                    showTiersetLine={true}
+                                                    showItemTrackDiff={true}
+                                                    showSource={true}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
+            </div>
+
+            {/* Separator */}
+            <div className="border-t border-muted-foreground/20 my-2"></div>
+
+            {/* Characters WITHOUT the item */}
+            <div className="flex flex-col gap-3">
+                <h3 className="text-lg font-semibold text-muted-foreground">
+                    Characters without this item ({filteredCharacters.withoutItem.length})
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                    {filteredCharacters.withoutItem.map((character) => (
+                        <div key={character.id} className="flex-shrink-0">
+                            <WowCharacterIcon
+                                character={character}
+                                showMainIndicator={includeAlts}
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
     )
 }
