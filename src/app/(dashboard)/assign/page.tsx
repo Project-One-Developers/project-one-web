@@ -118,13 +118,16 @@ function AssignContent(): JSX.Element {
         downloadCSV(convertToCSV(data), filename)
     }
 
-    if (raidSessionsQuery.isLoading || lootsQuery.isLoading) {
+    // Only show full-page loader for initial sessions load
+    if (raidSessionsQuery.isLoading) {
         return (
             <div className="flex flex-col items-center w-full justify-center mt-10 mb-10">
                 <LoaderCircle className="animate-spin text-5xl" />
             </div>
         )
     }
+
+    const isLootsLoading = lootsQuery.isLoading || lootsQuery.isFetching
 
     return (
         <div className="w-full h-full flex flex-col gap-y-8 p-8 relative">
@@ -227,28 +230,34 @@ function AssignContent(): JSX.Element {
             </div>
 
             {selectedSessions.size > 0 ? (
-                <div className="flex w-full">
-                    <div className="flex flex-col flex-grow max-w-[450px] pr-5">
-                        <LootsTabs
-                            loots={loots}
-                            selectedLoot={selectedLoot}
-                            setSelectedLoot={setSelectedLoot}
-                        />
+                isLootsLoading ? (
+                    <div className="flex flex-col items-center w-full justify-center py-20">
+                        <LoaderCircle className="animate-spin text-4xl" />
                     </div>
-                    <div className="flex flex-col flex-grow bg-muted p-4 rounded-lg">
-                        {selectedLoot ? (
-                            <LootsEligibleChars
-                                allLoots={loots}
+                ) : (
+                    <div className="flex w-full">
+                        <div className="flex flex-col flex-grow max-w-[450px] pr-5">
+                            <LootsTabs
+                                loots={loots}
                                 selectedLoot={selectedLoot}
                                 setSelectedLoot={setSelectedLoot}
                             />
-                        ) : (
-                            <p className="text-gray-400">
-                                Select a loot to start assigning
-                            </p>
-                        )}
+                        </div>
+                        <div className="flex flex-col flex-grow bg-muted p-4 rounded-lg">
+                            {selectedLoot ? (
+                                <LootsEligibleChars
+                                    allLoots={loots}
+                                    selectedLoot={selectedLoot}
+                                    setSelectedLoot={setSelectedLoot}
+                                />
+                            ) : (
+                                <p className="text-gray-400">
+                                    Select a loot to start assigning
+                                </p>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )
             ) : (
                 <div className="flex flex-col w-full bg-muted p-4 rounded-lg">
                     <p className="text-gray-400">
