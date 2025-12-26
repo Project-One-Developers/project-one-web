@@ -1,3 +1,4 @@
+import { and, eq, or } from "drizzle-orm"
 import { z } from "zod"
 
 import { db } from "@/db"
@@ -51,4 +52,24 @@ export async function getAllCharacterRaiderio(): Promise<CharacterRaiderio[]> {
 
 export async function deleteAllCharacterRaiderio(): Promise<void> {
     await db.delete(charRaiderioTable)
+}
+
+export async function getRaiderioByChars(
+    chars: { name: string; realm: string }[]
+): Promise<CharacterRaiderio[]> {
+    if (chars.length === 0) {
+        return []
+    }
+
+    const result = await db.query.charRaiderioTable.findMany({
+        where: or(
+            ...chars.map((c) =>
+                and(
+                    eq(charRaiderioTable.name, c.name),
+                    eq(charRaiderioTable.realm, c.realm)
+                )
+            )
+        ),
+    })
+    return z.array(charRaiderioSchema).parse(result)
 }

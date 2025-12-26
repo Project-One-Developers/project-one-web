@@ -127,7 +127,10 @@ export function SessionLootsPanel({ raidSessionId }: SessionLootsPanelProps) {
                                                             type="button"
                                                             onClick={() => {
                                                                 deleteLootMutation.mutate(
-                                                                    loot.id
+                                                                    {
+                                                                        lootId: loot.id,
+                                                                        raidSessionId,
+                                                                    }
                                                                 )
                                                             }}
                                                             className="absolute -top-2 -right-2 hidden group-hover:flex items-center justify-center w-5 h-5 bg-red-500 text-white rounded-full hover:bg-red-600"

@@ -1,8 +1,13 @@
 "use server"
 
+import { groupBy, keyBy } from "es-toolkit"
+
 import { getBisList } from "@/db/repositories/bis-list"
-import { getCharactersList } from "@/db/repositories/characters"
-import { getDroptimizerLatestList } from "@/db/repositories/droptimizer"
+import { getCharactersByIds, getCharactersList } from "@/db/repositories/characters"
+import {
+    getDroptimizerLatestByChars,
+    getDroptimizerLatestList,
+} from "@/db/repositories/droptimizer"
 import { getItem, getItems, getItemToTiersetMapping } from "@/db/repositories/items"
 import {
     addLoots,
@@ -19,9 +24,9 @@ import {
     untradeLoot,
 } from "@/db/repositories/loots"
 import { getRaidSession, getRaidSessionRoster } from "@/db/repositories/raid-sessions"
-import { getAllCharacterRaiderio } from "@/db/repositories/raiderio"
-import { getAllSimC } from "@/db/repositories/simc"
-import { getAllCharacterWowAudit } from "@/db/repositories/wowaudit"
+import { getAllCharacterRaiderio, getRaiderioByChars } from "@/db/repositories/raiderio"
+import { getAllSimC, getSimcByChars } from "@/db/repositories/simc"
+import { getAllCharacterWowAudit, getWowAuditByChars } from "@/db/repositories/wowaudit"
 import {
     evalHighlightsAndScore,
     getLatestSyncDate,
@@ -321,67 +326,69 @@ export async function addManualLootAction(
 export async function getLootAssignmentInfoAction(
     lootId: string
 ): Promise<LootAssignmentInfo> {
+    // Step 1: Get loot first to access eligibility
+    const loot = await getLootWithItemById(lootId)
+
+    // Step 2: Get eligible characters (~25 instead of ~200)
+    const eligibleChars = await getCharactersByIds(loot.charsEligibility)
+
+    // Filter by class eligibility
+    const filteredRoster = eligibleChars.filter(
+        (character) =>
+            loot.item.classes === null || loot.item.classes.includes(character.class)
+    )
+
+    // Build char lookup for scoped queries
+    const charLookups = filteredRoster.map((c) => ({ name: c.name, realm: c.realm }))
+
+    // Step 3: Fetch only data for eligible characters + session loots (not all historical)
     const [
-        loot,
-        roster,
-        latestDroptimizer,
-        bisList,
-        allAssignedLoots,
+        droptimizers,
         wowAuditData,
         raiderioData,
         simcData,
+        sessionLoots,
+        bisList,
         itemToTiersetMapping,
     ] = await Promise.all([
-        getLootWithItemById(lootId),
-        getCharactersList(),
-        getDroptimizerLatestList(),
+        getDroptimizerLatestByChars(charLookups),
+        getWowAuditByChars(charLookups),
+        getRaiderioByChars(charLookups),
+        getSimcByChars(charLookups),
+        getLootsByRaidSessionIdWithAssigned(loot.raidSessionId),
         getBisList(),
-        getLootAssigned(),
-        getAllCharacterWowAudit(),
-        getAllCharacterRaiderio(),
-        getAllSimC(),
         getItemToTiersetMapping(),
     ])
 
-    const filteredRoster = roster.filter(
-        (character) =>
-            loot.charsEligibility.includes(character.id) &&
-            (loot.item.classes === null || loot.item.classes.includes(character.class))
+    // Step 4: Build lookup objects O(n) once instead of O(n²) filtering
+    const droptimizerByChar = groupBy(
+        droptimizers,
+        (d) => `${d.charInfo.name}-${d.charInfo.server}`
     )
+    const wowAuditByChar = keyBy(wowAuditData, (w) => `${w.name}-${w.realm}`)
+    const raiderioByChar = keyBy(raiderioData, (r) => `${r.name}-${r.realm}`)
+    const simcByChar = keyBy(simcData, (s) => `${s.charName}-${s.charRealm}`)
 
     const maxGainFromAllDroptimizers = Math.max(
-        ...latestDroptimizer.flatMap((item) =>
-            item.upgrades.map((upgrade) => upgrade.dps)
-        ),
+        ...droptimizers.flatMap((item) => item.upgrades.map((upgrade) => upgrade.dps)),
         1 // fallback to avoid -Infinity
     )
 
     const charAssignmentInfo: CharAssignmentInfo[] = filteredRoster.map((char) => {
-        const charDroptimizers = latestDroptimizer.filter(
-            (dropt) =>
-                dropt.charInfo.name === char.name && dropt.charInfo.server === char.realm
-        )
+        const charKey: `${string}-${string}` = `${char.name}-${char.realm}`
 
-        const charWowAudit: CharacterWowAudit | null =
-            wowAuditData.find(
-                (wowaudit) => wowaudit.name === char.name && wowaudit.realm === char.realm
-            ) ?? null
-
-        const charRaiderio: CharacterRaiderio | null =
-            raiderioData.find(
-                (raiderio) => raiderio.name === char.name && raiderio.realm === char.realm
-            ) ?? null
-
-        const charSimc: SimC | null =
-            simcData.find(
-                (simc) => simc.charName === char.name && simc.charRealm === char.realm
-            ) ?? null
+        // O(1) lookups instead of O(n) filtering
+        const charDroptimizers = droptimizerByChar[charKey] ?? []
+        const charWowAudit = wowAuditByChar[charKey] ?? null
+        const charRaiderio = raiderioByChar[charKey] ?? null
+        const charSimc = simcByChar[charKey] ?? null
 
         const lowerBound = getLatestSyncDate(charDroptimizers, null, null, charSimc)
 
+        // Filter session loots for this character (much smaller dataset)
         const charAssignedLoots = !lowerBound
             ? []
-            : allAssignedLoots.filter(
+            : sessionLoots.filter(
                   (l) =>
                       l.id !== loot.id &&
                       l.assignedCharacterId === char.id &&

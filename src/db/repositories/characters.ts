@@ -1,4 +1,4 @@
-import { eq, isNull } from "drizzle-orm"
+import { eq, inArray, isNull } from "drizzle-orm"
 import { z } from "zod"
 
 import { db } from "@/db"
@@ -177,4 +177,15 @@ export async function editCharacter(edited: EditCharacter): Promise<void> {
 
 export async function deleteCharacter(id: string): Promise<void> {
     await db.delete(charTable).where(eq(charTable.id, id))
+}
+
+export async function getCharactersByIds(ids: string[]): Promise<CharacterWithPlayer[]> {
+    if (ids.length === 0) {
+        return []
+    }
+    const result = await db.query.charTable.findMany({
+        where: inArray(charTable.id, ids),
+        with: { player: true },
+    })
+    return z.array(characterWithPlayerSchema).parse(result)
 }

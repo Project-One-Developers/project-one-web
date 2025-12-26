@@ -1,4 +1,4 @@
-import { count, eq, InferInsertModel } from "drizzle-orm"
+import { count, desc, eq, InferInsertModel, sql } from "drizzle-orm"
 import { z } from "zod"
 
 import { db } from "@/db"
@@ -72,39 +72,40 @@ export async function getRaidSessions(): Promise<RaidSession[]> {
     return z.array(raidSessionSchema).parse(result)
 }
 
-async function countLoot(id: string): Promise<number> {
-    const res = await db
-        .select({ count: count() })
-        .from(lootTable)
-        .where(eq(lootTable.raidSessionId, id))
-    return res.at(0)?.count ?? 0
-}
-
-async function countRoster(id: string): Promise<number> {
-    const res = await db
-        .select({ count: count() })
-        .from(raidSessionRosterTable)
-        .where(eq(raidSessionRosterTable.raidSessionId, id))
-    return res.at(0)?.count ?? 0
-}
-
 export async function getRaidSessionWithSummaryList(): Promise<RaidSessionWithSummary[]> {
-    const sessions = await getRaidSessions()
+    // Single query with correlated subqueries instead of N+1
+    const lootCountSq = db
+        .select({ value: count() })
+        .from(lootTable)
+        .where(eq(lootTable.raidSessionId, raidSessionTable.id))
 
-    const allPromise = sessions.map(async (s) => {
-        const [lootCount, rosterCount] = await Promise.all([
-            countLoot(s.id),
-            countRoster(s.id),
-        ])
-        return {
-            ...s,
-            rosterCount: rosterCount,
-            lootCount: lootCount,
-        }
-    })
+    const rosterCountSq = db
+        .select({ value: count() })
+        .from(raidSessionRosterTable)
+        .where(eq(raidSessionRosterTable.raidSessionId, raidSessionTable.id))
 
-    const result = await Promise.all(allPromise)
-    return z.array(raidSessionWithSummarySchema).parse(result)
+    const results = await db
+        .select({
+            id: raidSessionTable.id,
+            name: raidSessionTable.name,
+            raidDate: raidSessionTable.raidDate,
+            lootCount: sql<number>`(${lootCountSq})`,
+            rosterCount: sql<number>`(${rosterCountSq})`,
+        })
+        .from(raidSessionTable)
+        .orderBy(desc(raidSessionTable.raidDate))
+
+    const parsed = results.map((r) => ({
+        id: r.id,
+        name: r.name,
+        raidDate: r.raidDate,
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion -- PostgreSQL bigint comes as string
+        lootCount: Number(r.lootCount),
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion -- PostgreSQL bigint comes as string
+        rosterCount: Number(r.rosterCount),
+    }))
+
+    return z.array(raidSessionWithSummarySchema).parse(parsed)
 }
 
 export async function editRaidSession(

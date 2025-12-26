@@ -1,4 +1,4 @@
-import { eq, InferInsertModel, lte, sql } from "drizzle-orm"
+import { and, desc, eq, InferInsertModel, lte, or } from "drizzle-orm"
 import { z } from "zod"
 
 import { db } from "@/db"
@@ -129,16 +129,15 @@ export async function getDroptimizerByIdsList(ids: string[]): Promise<Droptimize
 }
 
 export async function getDroptimizerLatestList(): Promise<Droptimizer[]> {
-    const latestDroptimizers = await db.execute(
-        sql`
-            SELECT DISTINCT ON (${droptimizerTable.ak}) url
-            FROM ${droptimizerTable}
-            ORDER BY ${droptimizerTable.ak}, ${droptimizerTable.simDate} DESC
-        `
-    )
+    // Use Drizzle's selectDistinctOn for PostgreSQL DISTINCT ON
+    const latestDroptimizers = await db
+        .selectDistinctOn([droptimizerTable.ak], {
+            url: droptimizerTable.url,
+        })
+        .from(droptimizerTable)
+        .orderBy(droptimizerTable.ak, desc(droptimizerTable.simDate))
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Raw SQL returns known structure
-    const urls = (latestDroptimizers.rows as { url: string }[]).map((row) => row.url)
+    const urls = latestDroptimizers.map((row) => row.url)
     return getDroptimizerByIdsList(urls)
 }
 
@@ -277,4 +276,34 @@ export async function getDroptimizerLastByChar(
         },
     })
     return result ? droptimizerStorageToSchema.parse(result) : null
+}
+
+export async function getDroptimizerLatestByChars(
+    chars: { name: string; realm: string }[]
+): Promise<Droptimizer[]> {
+    if (chars.length === 0) {
+        return []
+    }
+
+    // Build OR conditions for each character using Drizzle
+    const charCondition = or(
+        ...chars.map((c) =>
+            and(
+                eq(droptimizerTable.characterName, c.name),
+                eq(droptimizerTable.characterServer, c.realm)
+            )
+        )
+    )
+
+    // Use Drizzle's selectDistinctOn for PostgreSQL DISTINCT ON
+    const latestDroptimizers = await db
+        .selectDistinctOn([droptimizerTable.ak], {
+            url: droptimizerTable.url,
+        })
+        .from(droptimizerTable)
+        .where(charCondition)
+        .orderBy(droptimizerTable.ak, desc(droptimizerTable.simDate))
+
+    const urls = latestDroptimizers.map((row) => row.url)
+    return getDroptimizerByIdsList(urls)
 }

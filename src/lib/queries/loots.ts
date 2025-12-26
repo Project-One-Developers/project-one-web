@@ -40,6 +40,8 @@ export function useLootsBySession(raidSessionId: string | undefined) {
             return getLootsBySessionIdAction(raidSessionId)
         },
         enabled: !!raidSessionId,
+        refetchInterval: 5000,
+        refetchOnWindowFocus: true,
     })
 }
 
@@ -53,6 +55,8 @@ export function useLootsBySessionWithItem(raidSessionId: string | undefined) {
             return getLootsBySessionIdWithItemAction(raidSessionId)
         },
         enabled: !!raidSessionId,
+        refetchInterval: 5000,
+        refetchOnWindowFocus: true,
     })
 }
 
@@ -66,6 +70,8 @@ export function useLootsBySessionWithAssigned(raidSessionId: string | undefined)
             return getLootsBySessionIdWithAssignedAction(raidSessionId)
         },
         enabled: !!raidSessionId,
+        refetchInterval: 5000,
+        refetchOnWindowFocus: true,
     })
 }
 
@@ -74,7 +80,8 @@ export function useLootsBySessionsWithAssigned(raidSessionIds: string[]) {
         queryKey: [queryKeys.loots, "sessions", raidSessionIds, "withAssigned"],
         queryFn: () => getLootsBySessionIdsWithAssignedAction(raidSessionIds),
         enabled: raidSessionIds.length > 0,
-        refetchInterval: 60000, // Refetch every minute
+        refetchInterval: 5000,
+        refetchOnWindowFocus: true,
     })
 }
 
@@ -127,9 +134,19 @@ export function useAssignLoot() {
             charId: string
             lootId: string
             highlights: CharAssignmentHighlights | null
+            raidSessionId?: string
         }) => assignLootAction(charId, lootId, highlights),
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
+        onSuccess: (_, vars) => {
+            if (vars.raidSessionId) {
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.loots, "session", vars.raidSessionId],
+                })
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.loots, "sessions"],
+                })
+            } else {
+                void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
+            }
         },
     })
 }
@@ -138,9 +155,19 @@ export function useUnassignLoot() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (lootId: string) => unassignLootAction(lootId),
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
+        mutationFn: ({ lootId }: { lootId: string; raidSessionId?: string }) =>
+            unassignLootAction(lootId),
+        onSuccess: (_, vars) => {
+            if (vars.raidSessionId) {
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.loots, "session", vars.raidSessionId],
+                })
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.loots, "sessions"],
+                })
+            } else {
+                void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
+            }
         },
     })
 }
@@ -149,9 +176,19 @@ export function useTradeLoot() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (lootId: string) => tradeLootAction(lootId),
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
+        mutationFn: ({ lootId }: { lootId: string; raidSessionId?: string }) =>
+            tradeLootAction(lootId),
+        onSuccess: (_, vars) => {
+            if (vars.raidSessionId) {
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.loots, "session", vars.raidSessionId],
+                })
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.loots, "sessions"],
+                })
+            } else {
+                void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
+            }
         },
     })
 }
@@ -160,9 +197,19 @@ export function useUntradeLoot() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (lootId: string) => untradeLootAction(lootId),
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
+        mutationFn: ({ lootId }: { lootId: string; raidSessionId?: string }) =>
+            untradeLootAction(lootId),
+        onSuccess: (_, vars) => {
+            if (vars.raidSessionId) {
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.loots, "session", vars.raidSessionId],
+                })
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.loots, "sessions"],
+                })
+            } else {
+                void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
+            }
         },
     })
 }
@@ -171,9 +218,19 @@ export function useDeleteLoot() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (lootId: string) => deleteLootAction(lootId),
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
+        mutationFn: ({ lootId }: { lootId: string; raidSessionId?: string }) =>
+            deleteLootAction(lootId),
+        onSuccess: (_, vars) => {
+            if (vars.raidSessionId) {
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.loots, "session", vars.raidSessionId],
+                })
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.loots, "sessions"],
+                })
+            } else {
+                void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
+            }
         },
     })
 }
@@ -188,6 +245,8 @@ export function useLootAssignmentInfo(lootId: string | undefined) {
             return getLootAssignmentInfoAction(lootId)
         },
         enabled: !!lootId,
+        refetchInterval: 10000,
+        refetchOnWindowFocus: true,
     })
 }
 

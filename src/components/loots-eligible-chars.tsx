@@ -91,6 +91,7 @@ export default function LootsEligibleChars({
                 charId: charInfo.character.id,
                 lootId: selectedLoot.id,
                 highlights: charInfo.highlights,
+                raidSessionId: selectedLoot.raidSessionId,
             },
             {
                 onError: (error) => {
@@ -109,12 +110,15 @@ export default function LootsEligibleChars({
             assignedCharacterId: null,
         })
 
-        unassignLootMutation.mutate(selectedLoot.id, {
-            onError: (error) => {
-                setSelectedLoot(previousSelectedLoot)
-                toast.error(`Unable to unassign loot. Error: ${error.message}`)
-            },
-        })
+        unassignLootMutation.mutate(
+            { lootId: selectedLoot.id, raidSessionId: selectedLoot.raidSessionId },
+            {
+                onError: (error) => {
+                    setSelectedLoot(previousSelectedLoot)
+                    toast.error(`Unable to unassign loot. Error: ${error.message}`)
+                },
+            }
+        )
     }
 
     if (lootAssignmentInfoQuery.isLoading) {

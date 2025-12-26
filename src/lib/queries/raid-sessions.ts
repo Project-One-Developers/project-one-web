@@ -18,6 +18,8 @@ export function useRaidSessions() {
     return useQuery({
         queryKey: [queryKeys.raidSessions],
         queryFn: () => getRaidSessionWithSummaryListAction(),
+        refetchInterval: 10000,
+        refetchOnWindowFocus: true,
     })
 }
 
@@ -31,6 +33,8 @@ export function useRaidSession(id: string | undefined) {
             return getRaidSessionWithRosterAction(id)
         },
         enabled: !!id,
+        refetchInterval: 10000,
+        refetchOnWindowFocus: true,
     })
 }
 

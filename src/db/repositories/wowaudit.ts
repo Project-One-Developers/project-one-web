@@ -1,3 +1,4 @@
+import { and, eq, or } from "drizzle-orm"
 import { z } from "zod"
 
 import { db } from "@/db"
@@ -154,4 +155,24 @@ export async function getAllCharacterWowAudit(): Promise<CharacterWowAudit[]> {
 
 export async function deleteAllCharacterWowAudit(): Promise<void> {
     await db.delete(charWowAuditTable)
+}
+
+export async function getWowAuditByChars(
+    chars: { name: string; realm: string }[]
+): Promise<CharacterWowAudit[]> {
+    if (chars.length === 0) {
+        return []
+    }
+
+    const result = await db.query.charWowAuditTable.findMany({
+        where: or(
+            ...chars.map((c) =>
+                and(
+                    eq(charWowAuditTable.name, c.name),
+                    eq(charWowAuditTable.realm, c.realm)
+                )
+            )
+        ),
+    })
+    return z.array(charWowAuditStorageToCharacterWowAudit).parse(result)
 }
