@@ -2,15 +2,9 @@ import { getTableColumns, sql, SQL } from "drizzle-orm"
 import { PgTable } from "drizzle-orm/pg-core"
 import { z } from "zod"
 
-export const defined = <T>(value: T | null | undefined): value is T =>
-    value !== null && value !== undefined
-
 export const identity = <T>(value: T): T => value
 
 export const newUUID = (): string => crypto.randomUUID()
-
-export const takeFirstResult = <T>(results: T[]): T | null =>
-    results.length > 0 && defined(results[0]) ? results[0] : null
 
 // https://orm.drizzle.team/docs/guides/upsert#postgresql-and-sqlite
 export const buildConflictUpdateColumns = <

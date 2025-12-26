@@ -5,7 +5,7 @@ import {
     raidSessionRosterTable,
     raidSessionTable,
 } from "@/db/schema"
-import { newUUID, takeFirstResult } from "@/db/utils"
+import { newUUID } from "@/db/utils"
 import { characterSchema } from "@/shared/schemas/characters.schemas"
 import {
     raidSessionSchema,
@@ -146,7 +146,7 @@ export async function addRaidSession(newRaidSession: NewRaidSession): Promise<st
             raidDate: newRaidSession.raidDate,
         })
         .returning({ id: raidSessionTable.id })
-        .then(takeFirstResult)
+        .then((r) => r.at(0))
 
     if (!res) {
         throw new Error(

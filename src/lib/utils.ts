@@ -3,6 +3,9 @@ import type { WowClassName } from "@/shared/types/types"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
+export const defined = <T>(value: T | null | undefined): value is T =>
+    value !== null && value !== undefined
+
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
 }

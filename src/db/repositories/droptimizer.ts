@@ -1,6 +1,6 @@
 import { db } from "@/db"
 import { droptimizerTable, droptimizerUpgradesTable } from "@/db/schema"
-import { newUUID, takeFirstResult } from "@/db/utils"
+import { newUUID } from "@/db/utils"
 import { logger } from "@/lib/logger"
 import { gearItemSchema } from "@/shared/schemas/items.schema"
 import {
@@ -216,7 +216,7 @@ export async function addDroptimizer(droptimizer: NewDroptimizer): Promise<Dropt
             tiersetInfo: droptimizer.tiersetInfo,
         })
         .returning({ url: droptimizerTable.url })
-        .then(takeFirstResult)
+        .then((r) => r.at(0))
 
     if (!droptimizerRes) {
         throw new Error(`Failed to insert droptimizer: ${JSON.stringify(droptimizer)}`)

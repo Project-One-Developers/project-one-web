@@ -1,6 +1,5 @@
 import { db } from "@/db"
 import { appConfigTable } from "@/db/schema"
-import { takeFirstResult } from "@/db/utils"
 import { eq } from "drizzle-orm"
 
 export async function getConfig(key: string): Promise<string | null> {
@@ -8,7 +7,7 @@ export async function getConfig(key: string): Promise<string | null> {
         .select()
         .from(appConfigTable)
         .where(eq(appConfigTable.key, key))
-        .then(takeFirstResult)
+        .then((r) => r.at(0))
 
     if (!result) {
         return null

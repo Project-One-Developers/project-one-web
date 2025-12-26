@@ -1,6 +1,6 @@
 import { db } from "@/db"
 import { charTable, playerTable } from "@/db/schema"
-import { newUUID, takeFirstResult } from "@/db/utils"
+import { newUUID } from "@/db/utils"
 import {
     characterSchema,
     characterWithPlayerSchema,
@@ -78,7 +78,7 @@ export async function getPlayerById(id: string): Promise<Player | null> {
         .select()
         .from(playerTable)
         .where(eq(playerTable.id, id))
-        .then(takeFirstResult)
+        .then((r) => r.at(0))
 
     if (!result) {
         return null
