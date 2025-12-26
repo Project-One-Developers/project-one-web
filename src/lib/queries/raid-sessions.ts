@@ -24,7 +24,9 @@ export function useRaidSession(id: string | undefined) {
     return useQuery({
         queryKey: [queryKeys.raidSession, id],
         queryFn: () => {
-            if (!id) throw new Error("No raid session id provided")
+            if (!id) {
+                throw new Error("No raid session id provided")
+            }
             return getRaidSessionWithRosterAction(id)
         },
         enabled: !!id,
@@ -37,7 +39,7 @@ export function useAddRaidSession() {
     return useMutation({
         mutationFn: (session: NewRaidSession) => addRaidSessionAction(session),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
         },
     })
 }
@@ -48,8 +50,8 @@ export function useEditRaidSession() {
     return useMutation({
         mutationFn: (session: EditRaidSession) => editRaidSessionAction(session),
         onSuccess: (_, vars) => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
+            void queryClient.invalidateQueries({
                 queryKey: [queryKeys.raidSession, vars.id],
             })
         },
@@ -62,7 +64,7 @@ export function useDeleteRaidSession() {
     return useMutation({
         mutationFn: (id: string) => deleteRaidSessionAction(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
         },
     })
 }
@@ -73,7 +75,7 @@ export function useCloneRaidSession() {
     return useMutation({
         mutationFn: (id: string) => cloneRaidSessionAction(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
         },
     })
 }
@@ -85,8 +87,8 @@ export function useImportRosterInRaidSession() {
         mutationFn: ({ raidSessionId, csv }: { raidSessionId: string; csv: string }) =>
             importRosterInRaidSessionAction(raidSessionId, csv),
         onSuccess: (_, vars) => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
+            void queryClient.invalidateQueries({
                 queryKey: [queryKeys.raidSession, vars.raidSessionId],
             })
         },

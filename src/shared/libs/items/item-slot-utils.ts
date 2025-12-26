@@ -51,7 +51,7 @@ export function formatWowSlotKey(slot: WowItemSlotKey): string {
         case "omni":
             return "Omni"
         default:
-            throw new Error(`Unknown slot: ${slot}`)
+            throw new Error(`Unknown slot: ${slot as string}`)
     }
 }
 

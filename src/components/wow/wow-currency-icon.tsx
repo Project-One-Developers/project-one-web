@@ -1,19 +1,27 @@
 "use client"
 
+import Image from "next/image"
+import { s } from "@/lib/safe-stringify"
 import { currencyIcon } from "@/lib/wow-icon"
 import type { DroptimizerCurrency } from "@/shared/types/types"
+import { cn } from "@/lib/utils"
 
 type WowCurrencyIconProps = {
     currency: DroptimizerCurrency
     iconClassName?: string
+    size?: number
 }
 
-export function WowCurrencyIcon({ currency, iconClassName }: WowCurrencyIconProps) {
-    const currencyHref = `https://www.wowhead.com/${currency.type}=${currency.id}`
+export function WowCurrencyIcon({
+    currency,
+    iconClassName,
+    size = 32,
+}: WowCurrencyIconProps) {
+    const currencyHref = `https://www.wowhead.com/${currency.type}=${s(currency.id)}`
     const currencyInfo = currencyIcon.get(currency.id)
 
     if (!currencyInfo) {
-        console.log("Skipping currency icon because it doesn't exist: " + currencyHref)
+        // Currency icon not found - silently skip rendering
         return null
     }
 
@@ -25,11 +33,15 @@ export function WowCurrencyIcon({ currency, iconClassName }: WowCurrencyIconProp
             target="_blank"
         >
             <div className="flex flex-col items-center justify-center relative group">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                    src={currencyInfo?.url}
-                    alt={currencyInfo?.name}
-                    className={`${iconClassName || "object-cover object-top rounded-lg h-8 w-8 border border-background"} block`}
+                <Image
+                    src={currencyInfo.url}
+                    alt={currencyInfo.name}
+                    width={size}
+                    height={size}
+                    className={cn(
+                        "object-cover object-top rounded-lg border border-background",
+                        iconClassName
+                    )}
                 />
                 <p className="text-bold text-[11px]">{currency.amount}</p>
             </div>

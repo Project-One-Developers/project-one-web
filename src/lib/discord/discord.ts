@@ -5,8 +5,10 @@ import {
     Message,
     TextChannel,
 } from "discord.js"
+import { logger } from "@/lib/logger"
+import { s } from "@/lib/safe-stringify"
 
-export interface DiscordMessage {
+export type DiscordMessage = {
     content: string
     createdAt: Date
 }
@@ -26,14 +28,16 @@ export async function readAllMessagesInDiscord(
     try {
         await client.login(discordBotToken)
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Discord.js channel type
         const channel = (await client.channels.fetch(discordChannelId)) as TextChannel
-        if (!channel || !channel.isTextBased()) {
+        if (!channel.isTextBased()) {
             throw new Error("Channel not found or not a text channel")
         }
 
         let messages: Message[] = []
         let lastId: string | undefined
 
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- intentional infinite loop with break
         while (true) {
             const options: FetchMessagesOptions = { limit: 100 }
             if (lastId) {
@@ -42,13 +46,15 @@ export async function readAllMessagesInDiscord(
 
             const fetchedMessages = await channel.messages.fetch(options)
 
-            if (fetchedMessages.size === 0) break
+            if (fetchedMessages.size === 0) {
+                break
+            }
 
             messages = [...messages, ...fetchedMessages.values()]
             lastId = fetchedMessages.last()?.id
         }
 
-        console.log(`Fetched ${messages.length} messages`)
+        logger.info("Discord", `Fetched ${s(messages.length)} messages`)
 
         await client.destroy()
 
@@ -58,7 +64,7 @@ export async function readAllMessagesInDiscord(
             createdAt: msg.createdAt,
         }))
     } catch (error) {
-        console.error("Error syncing from Discord:", error)
+        logger.error("Discord", `Error syncing from Discord: ${s(error)}`)
         await client.destroy()
         return []
     }
@@ -80,8 +86,8 @@ export function extractUrlsFromMessages(
         messages
             .filter((msg) => msg.createdAt >= lowerBoundDate)
             .flatMap((message) => {
-                const raidbotsMatches = message.content.match(raidbotsUrlRegex) || []
-                const qeLiveMatches = message.content.match(qeLiveUrlRegex) || []
+                const raidbotsMatches = message.content.match(raidbotsUrlRegex) ?? []
+                const qeLiveMatches = message.content.match(qeLiveUrlRegex) ?? []
                 return [...raidbotsMatches, ...qeLiveMatches]
             })
     )

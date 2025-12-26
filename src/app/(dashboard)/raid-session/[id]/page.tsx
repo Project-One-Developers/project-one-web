@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { LootImportDialog } from "@/components/loot-import-dialog"
 import { WowClassIcon } from "@/components/wow/wow-class-icon"
@@ -47,7 +48,9 @@ export default function RaidSessionPage() {
                 <p className="text-muted-foreground">Raid session not found</p>
                 <Button
                     variant="outline"
-                    onClick={() => router.push("/raid-session")}
+                    onClick={() => {
+                        router.push("/raid-session")
+                    }}
                     className="mt-4"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" /> Back to Sessions
@@ -101,7 +104,9 @@ export default function RaidSessionPage() {
                 <div className="flex items-center gap-4">
                     <Button
                         variant="ghost"
-                        onClick={() => router.back()}
+                        onClick={() => {
+                            router.back()
+                        }}
                         className="hover:bg-gray-800 p-2"
                     >
                         <ArrowLeft className="h-4 w-4" />
@@ -161,9 +166,9 @@ export default function RaidSessionPage() {
                                     <div
                                         key={character.id}
                                         className="flex items-center gap-2 bg-background/50 px-2 py-1 rounded cursor-pointer hover:bg-background"
-                                        onClick={() =>
+                                        onClick={() => {
                                             router.push(`/roster/${character.id}`)
-                                        }
+                                        }}
                                     >
                                         <WowClassIcon
                                             wowClassName={character.class}
@@ -196,9 +201,9 @@ export default function RaidSessionPage() {
                         <LootImportDialog raidSessionId={raidSession.id} />
                         <Button
                             variant="secondary"
-                            onClick={() =>
+                            onClick={() => {
                                 router.push(`/assign?sessionId=${raidSession.id}`)
-                            }
+                            }}
                         >
                             <LucideMedal className="mr-2 h-4 w-4" /> Assign
                         </Button>
@@ -211,19 +216,19 @@ export default function RaidSessionPage() {
                                 key={loot.id}
                                 className="flex items-center gap-2 bg-background/50 p-2 rounded"
                             >
-                                {loot.gearItem && (
-                                    <img
-                                        src={`https://wow.zamimg.com/images/wow/icons/medium/${loot.gearItem.item.iconName}.jpg`}
-                                        alt={loot.gearItem.item.name}
-                                        className="w-8 h-8 rounded"
-                                    />
-                                )}
+                                <Image
+                                    src={`https://wow.zamimg.com/images/wow/icons/medium/${loot.gearItem.item.iconName}.jpg`}
+                                    alt={loot.gearItem.item.name}
+                                    width={32}
+                                    height={32}
+                                    className="rounded"
+                                />
                                 <div className="flex flex-col overflow-hidden">
                                     <span className="text-xs truncate">
-                                        {loot.gearItem?.item.name ?? "Unknown"}
+                                        {loot.gearItem.item.name}
                                     </span>
                                     <span className="text-xs text-muted-foreground">
-                                        {loot.gearItem?.itemLevel} {loot.raidDifficulty}
+                                        {loot.gearItem.itemLevel} {loot.raidDifficulty}
                                     </span>
                                 </div>
                             </div>

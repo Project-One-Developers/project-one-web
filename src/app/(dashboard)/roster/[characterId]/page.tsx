@@ -1,27 +1,26 @@
 "use client"
 
-import { getCharLatestGameInfoAction } from "@/actions/characters"
+import Image from "next/image"
 import CharacterDeleteDialog from "@/components/character-delete-dialog"
 import CharacterDialog from "@/components/character-dialog"
 import { Button } from "@/components/ui/button"
 import { WowCharacterLink } from "@/components/wow/wow-character-links"
 import { WowClassIcon } from "@/components/wow/wow-class-icon"
 import { WowItemIcon } from "@/components/wow/wow-item-icon"
-import { useCharacter } from "@/lib/queries/players"
+import { useCharacter, useCharacterGameInfo } from "@/lib/queries/players"
 import { formaUnixTimestampToItalianDate } from "@/shared/libs/date/date-utils"
-import type { CharacterGameInfo, Droptimizer } from "@/shared/types/types"
+import type { Droptimizer } from "@/shared/types/types"
 import {
     ArrowLeft,
     Edit,
     LoaderCircle,
     Trash2,
     TrendingUp,
-    Calendar,
     Shield,
     Swords,
 } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 
 export default function CharacterPage() {
     const params = useParams<{ characterId: string }>()
@@ -30,22 +29,14 @@ export default function CharacterPage() {
 
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-    const [gameInfo, setGameInfo] = useState<CharacterGameInfo | null>(null)
-    const [isLoadingGameInfo, setIsLoadingGameInfo] = useState(false)
 
     const characterQuery = useCharacter(characterId)
     const character = characterQuery.data
 
-    // Fetch game info when character is loaded
-    useEffect(() => {
-        if (character) {
-            setIsLoadingGameInfo(true)
-            getCharLatestGameInfoAction(character.name, character.realm)
-                .then(setGameInfo)
-                .catch(console.error)
-                .finally(() => setIsLoadingGameInfo(false))
-        }
-    }, [character])
+    // Use React Query for game info
+    const gameInfoQuery = useCharacterGameInfo(character?.name, character?.realm)
+    const gameInfo = gameInfoQuery.data
+    const isLoadingGameInfo = gameInfoQuery.isLoading
 
     if (characterQuery.isLoading) {
         return (
@@ -61,7 +52,9 @@ export default function CharacterPage() {
                 <p className="text-muted-foreground">Character not found</p>
                 <Button
                     variant="outline"
-                    onClick={() => router.push("/roster")}
+                    onClick={() => {
+                        router.push("/roster")
+                    }}
                     className="mt-4"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" /> Back to Roster
@@ -77,7 +70,9 @@ export default function CharacterPage() {
                 <div className="flex items-center gap-4">
                     <Button
                         variant="ghost"
-                        onClick={() => router.back()}
+                        onClick={() => {
+                            router.back()
+                        }}
                         className="hover:bg-gray-800 p-2"
                     >
                         <ArrowLeft className="h-4 w-4" />
@@ -103,14 +98,18 @@ export default function CharacterPage() {
                     <Button
                         variant="secondary"
                         className="hover:bg-blue-700"
-                        onClick={() => setIsEditDialogOpen(true)}
+                        onClick={() => {
+                            setIsEditDialogOpen(true)
+                        }}
                     >
                         <Edit className="mr-2 h-4 w-4" /> Edit
                     </Button>
                     <Button
                         variant="destructive"
                         className="hover:bg-red-700"
-                        onClick={() => setIsDeleteDialogOpen(true)}
+                        onClick={() => {
+                            setIsDeleteDialogOpen(true)
+                        }}
                     >
                         <Trash2 className="h-4 w-4" />
                     </Button>
@@ -123,7 +122,7 @@ export default function CharacterPage() {
                 <InfoCard label="Class" value={character.class} />
                 <InfoCard label="Role" value={character.role} />
                 <InfoCard label="Main" value={character.main ? "Yes" : "No"} />
-                <InfoCard label="Player" value={character.player?.name || "Unknown"} />
+                <InfoCard label="Player" value={character.player.name} />
             </div>
 
             {/* Game Info Panel */}
@@ -174,25 +173,24 @@ export default function CharacterPage() {
                                         )}
                                     </span>
                                 </div>
-                                {gameInfo.raiderio.itemsEquipped &&
-                                    gameInfo.raiderio.itemsEquipped.length > 0 && (
-                                        <div className="pt-2">
-                                            <p className="text-sm text-muted-foreground mb-2">
-                                                Equipped Gear
-                                            </p>
-                                            <div className="flex flex-wrap gap-1">
-                                                {gameInfo.raiderio.itemsEquipped
-                                                    .slice(0, 8)
-                                                    .map((item, idx) => (
-                                                        <WowItemIcon
-                                                            key={idx}
-                                                            gearItem={item}
-                                                            size="sm"
-                                                        />
-                                                    ))}
-                                            </div>
+                                {gameInfo.raiderio.itemsEquipped.length > 0 && (
+                                    <div className="pt-2">
+                                        <p className="text-sm text-muted-foreground mb-2">
+                                            Equipped Gear
+                                        </p>
+                                        <div className="flex flex-wrap gap-1">
+                                            {gameInfo.raiderio.itemsEquipped
+                                                .slice(0, 8)
+                                                .map((item, idx) => (
+                                                    <WowItemIcon
+                                                        key={idx}
+                                                        gearItem={item}
+                                                        size="sm"
+                                                    />
+                                                ))}
                                         </div>
-                                    )}
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <p className="text-sm text-muted-foreground">
@@ -252,15 +250,13 @@ export default function CharacterPage() {
             )}
 
             {/* Dialogs */}
-            {character.player && (
-                <CharacterDialog
-                    isOpen={isEditDialogOpen}
-                    setOpen={setIsEditDialogOpen}
-                    mode="edit"
-                    player={character.player}
-                    existingCharacter={character}
-                />
-            )}
+            <CharacterDialog
+                isOpen={isEditDialogOpen}
+                setOpen={setIsEditDialogOpen}
+                mode="edit"
+                player={character.player}
+                existingCharacter={character}
+            />
             <CharacterDeleteDialog
                 isOpen={isDeleteDialogOpen}
                 setOpen={setIsDeleteDialogOpen}
@@ -307,11 +303,12 @@ function DroptimizerInfo({ droptimizer }: { droptimizer: Droptimizer }) {
                                 className="flex items-center justify-between text-sm bg-background/50 rounded p-2"
                             >
                                 <div className="flex items-center gap-2">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img
+                                    <Image
                                         src={`https://wow.zamimg.com/images/wow/icons/small/${upgrade.item.iconName}.jpg`}
                                         alt={upgrade.item.name}
-                                        className="h-6 w-6 rounded border border-background"
+                                        width={24}
+                                        height={24}
+                                        className="rounded border border-background"
                                     />
                                     <span className="truncate max-w-[120px]">
                                         {upgrade.item.name}

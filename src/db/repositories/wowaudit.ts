@@ -56,7 +56,9 @@ function createEnchantPiece(
     name: string | null,
     quality: number | null
 ): { name: string; quality: number } | null {
-    if (!name || !quality) return null
+    if (!name || !quality) {
+        return null
+    }
     return { name, quality }
 }
 
@@ -116,7 +118,9 @@ const charWowAuditStorageToCharacterWowAudit = newCharacterWowAuditSchema.transf
 export async function addCharacterWowAudit(
     characters: NewCharacterWowAudit[]
 ): Promise<void> {
-    if (characters.length === 0) return
+    if (characters.length === 0) {
+        return
+    }
     await db.insert(charWowAuditTable).values(characters)
 }
 

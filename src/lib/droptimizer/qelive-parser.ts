@@ -1,3 +1,5 @@
+import { logger } from "@/lib/logger"
+import { s } from "@/lib/safe-stringify"
 import { CURRENT_RAID_ID } from "@/shared/consts/wow.consts"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import { evalRealSeason, parseItemTrack } from "@/shared/libs/items/item-bonus-utils"
@@ -51,13 +53,14 @@ const fetchQELiveData = async (id: string): Promise<string> => {
     )
     if (!responseJson.ok) {
         throw new Error(
-            `Failed to fetch JSON data: ${responseJson.status} ${responseJson.statusText}`
+            `Failed to fetch JSON data: ${s(responseJson.status)} ${responseJson.statusText}`
         )
     }
-    return await responseJson.json()
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- QE Live API returns string
+    return (await responseJson.json()) as string
 }
 
-const parseQELiveData = (jsonData: any): QELiveJson => {
+const parseQELiveData = (jsonData: unknown): QELiveJson => {
     return qeliveJsonSchema.parse(jsonData)
 }
 
@@ -78,12 +81,12 @@ const parseUpgrades = async (
         .filter((item) => item.dps > 0)
         // remap itemid to tierset & catalyst
         .map((up) => {
-            const tiersetMapping = itemToTiersetMapping?.find(
+            const tiersetMapping = itemToTiersetMapping.find(
                 (i) => i.itemId === up.itemId
             )
 
             const catalystMapping = !tiersetMapping
-                ? itemToCatalystMapping?.find(
+                ? itemToCatalystMapping.find(
                       (i) =>
                           i.catalyzedItemId === up.itemId &&
                           i.encounterId === up.encounterId
@@ -138,7 +141,7 @@ export function parseRaidDiff(id: number): WowRaidDifficulty {
             return "Mythic" // Mythic (max)
         default:
             throw new Error(
-                `Invalid raid difficulty ID: ${id}. 4-5 (Heroic), or 6-7 (Mythic)`
+                `Invalid raid difficulty ID: ${s(id)}. 4-5 (Heroic), or 6-7 (Mythic)`
             )
     }
 }
@@ -170,7 +173,14 @@ export function parseQELiveSlotToEquippedSlot(slot: string): WowItemEquippedSlot
 const parseDateToUnixTimestamp = (dateString: string): number => {
     // Remove spaces and split by '-'
     const cleanDateString = dateString.replace(/\s/g, "")
-    const [year, month, day] = cleanDateString.split("-").map(Number)
+    const parts = cleanDateString.split("-").map(Number)
+    const year = parts[0]
+    const month = parts[1]
+    const day = parts[2]
+
+    if (year === undefined || month === undefined || day === undefined) {
+        throw new Error(`Invalid date string format: ${dateString}`)
+    }
 
     // Create date object (month is 0-indexed in JavaScript)
     const date = new Date(year, month - 1, day, 8) // set to 8 AM to avoid timezone issues
@@ -195,6 +205,10 @@ const convertJsonToDroptimizer = async (
     const specName = wowSpecNameSchema.parse(data.spec.split(" ")[0])
     const wowSpec = getWowSpecByClassNameAndSpecName(className, specName)
 
+    if (!wowSpec) {
+        throw new Error(`Unknown spec: ${specName} for class ${className}`)
+    }
+
     const charInfo = {
         name: data.playername,
         server: data.realm
@@ -203,29 +217,27 @@ const convertJsonToDroptimizer = async (
             .replaceAll(" ", "-")
             .replaceAll("'", ""),
         class: className,
-        classId: wowClass ? wowClass.id : -1,
+        classId: wowClass.id,
         spec: specName,
-        specId: wowSpec ? wowSpec.id : -1,
+        specId: wowSpec.id,
         talents: "qe_no_support",
     }
 
     const itemsInDb: Item[] = await getItems()
 
-    const itemsEquipped = await parseEquippedGear(itemsInDb, data.equippedItems, url)
+    const itemsEquipped = parseEquippedGear(itemsInDb, data.equippedItems, url)
 
     // Filter results with 0 score and raid only
     const raidResults = data.results.filter((r) => r.rawDiff > 0 && r.dropLoc === "Raid")
 
     // Group by dropDifficulty
-    const resultsByDifficulty = raidResults.reduce(
+    const resultsByDifficulty = raidResults.reduce<Record<number, typeof raidResults>>(
         (acc, result) => {
-            if (!acc[result.dropDifficulty]) {
-                acc[result.dropDifficulty] = []
-            }
-            acc[result.dropDifficulty].push(result)
+            const arr = (acc[result.dropDifficulty] ??= [])
+            arr.push(result)
             return acc
         },
-        {} as Record<number, typeof raidResults>
+        {}
     )
 
     // Generate one NewDroptimizer per difficulty group
@@ -239,12 +251,9 @@ const convertJsonToDroptimizer = async (
             const item = itemsInDb.find((i) => i.id === result.item)
             if (!item) {
                 throw new Error(
-                    "[error] convertJsonToDroptimizer: item not found in db: " +
-                        result.item +
-                        " - https://www.wowhead.com/item=" +
-                        result.item +
-                        " - URL: " +
-                        url
+                    `[error] convertJsonToDroptimizer: item not found in db: ${s(
+                        result.item
+                    )} - https://www.wowhead.com/item=${s(result.item)} - URL: ${url}`
                 )
             }
             return {
@@ -257,8 +266,8 @@ const convertJsonToDroptimizer = async (
         })
 
         const droptimizer: NewDroptimizer = {
-            ak: `${raidId},${raidDiff},${charInfo.name},${charInfo.server},${charInfo.spec},${charInfo.class}`,
-            url: url + "&diff=" + raidDiff, // in QE there are multiple report for the same url
+            ak: `${s(raidId)},${raidDiff},${charInfo.name},${charInfo.server},${charInfo.spec},${charInfo.class}`,
+            url: `${url}&diff=${raidDiff}`, // in QE there are multiple report for the same url
             charInfo,
             raidInfo: {
                 id: raidId,
@@ -288,36 +297,31 @@ const convertJsonToDroptimizer = async (
     return droptimizers
 }
 
-export const parseEquippedGear = async (
+export const parseEquippedGear = (
     itemsInDb: Item[],
     equipped: z.infer<typeof qeliveEquippedItemSchema>[],
     url: string
-): Promise<GearItem[]> => {
+): GearItem[] => {
     const res: GearItem[] = []
 
     for (const equippedItem of equipped) {
         if (!equippedItem.bonusIDS) {
             throw new Error(
-                "[error] parseEquippedGear: found equipped item without bonusIDS " +
-                    equippedItem.id +
-                    " - https://www.wowhead.com/item=" +
-                    equippedItem.id +
-                    " - URL: " +
-                    url
+                `[error] parseEquippedGear: found equipped item without bonusIDS ${s(
+                    equippedItem.id
+                )} - https://www.wowhead.com/item=${s(equippedItem.id)} - URL: ${url}`
             )
         }
         const bonusIds = equippedItem.bonusIDS.split(":").map(Number)
         const wowItem = itemsInDb.find((i) => i.id === equippedItem.id)
-        if (wowItem == null) {
-            console.log(
-                "[error] parseEquippedGear: skipping equipped item not in db: " +
-                    equippedItem.id +
-                    " - https://www.wowhead.com/item=" +
-                    equippedItem.id +
-                    "?bonus=" +
-                    bonusIds.join(":") +
-                    " - URL: " +
-                    url
+        if (!wowItem) {
+            logger.debug(
+                "QELiveParser",
+                `parseEquippedGear: skipping equipped item not in db: ${s(
+                    equippedItem.id
+                )} - https://www.wowhead.com/item=${s(equippedItem.id)}?bonus=${bonusIds.join(
+                    ":"
+                )} - URL: ${url}`
             )
             continue
         }
@@ -329,15 +333,13 @@ export const parseEquippedGear = async (
         ) {
             itemTrack = parseItemTrack(bonusIds)
             if (!itemTrack) {
-                console.log(
-                    "[warn] parseEquippedGear: found equipped item without item track " +
-                        equippedItem.id +
-                        " - https://www.wowhead.com/item=" +
-                        equippedItem.id +
-                        "?bonus=" +
-                        bonusIds.join(":") +
-                        " - URL: " +
-                        url
+                logger.warn(
+                    "QELiveParser",
+                    `parseEquippedGear: found equipped item without item track ${s(
+                        equippedItem.id
+                    )} - https://www.wowhead.com/item=${s(
+                        equippedItem.id
+                    )}?bonus=${bonusIds.join(":")} - URL: ${url}`
                 )
             }
         }

@@ -5,6 +5,7 @@ export const queryKeys = {
     playersSummary: "playersSummary",
     characters: "characters",
     character: "character",
+    characterGameInfo: "characterGameInfo",
     rosterSummary: "rosterSummary",
     raidProgression: "raidProgression",
     droptimizers: "droptimizers",

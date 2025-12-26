@@ -1,24 +1,23 @@
+import { logger } from "@/lib/logger"
+import { s } from "@/lib/safe-stringify"
 import { CURRENT_CATALYST_CHARGE_ID } from "@/shared/consts/wow.consts"
 import {
     evalRealSeason,
     parseItemLevelFromBonusIds,
     parseItemTrack,
 } from "@/shared/libs/items/item-bonus-utils"
-import { wowItemEquippedSlotKeySchema } from "@/shared/schemas/wow.schemas"
 import type { DroptimizerCurrency, GearItem, Item } from "@/shared/types/types"
 import { getItems, getTiersetAndTokenList } from "@/db/repositories/items"
 
-export const parseCatalystFromSimc = async (
-    simc: string
-): Promise<DroptimizerCurrency[]> => {
+export const parseCatalystFromSimc = (simc: string): DroptimizerCurrency[] => {
     const catalystRegex = /# catalyst_currencies=([^\n]+)/
-    const match = simc.match(catalystRegex)
+    const match = catalystRegex.exec(simc)
 
-    if (!match) {
+    const catalystData = match?.[1]
+    if (!catalystData) {
         return []
     }
 
-    const catalystData = match[1]
     const currencies: DroptimizerCurrency[] = []
 
     // Split by '/' to get individual currency entries
@@ -54,9 +53,12 @@ export const parseCatalystFromSimc = async (
 export const parseGreatVaultFromSimc = async (simc: string): Promise<GearItem[]> => {
     const rewardSectionRegex =
         /### Weekly Reward Choices\n([\s\S]*?)\n### End of Weekly Reward Choices/
-    const match = simc.match(rewardSectionRegex)
+    const match = rewardSectionRegex.exec(simc)
+    const matchContent = match?.[1]
 
-    if (!match) return []
+    if (!matchContent) {
+        return []
+    }
 
     const items: GearItem[] = []
     const itemsInDb: Item[] = await getItems()
@@ -68,15 +70,22 @@ export const parseGreatVaultFromSimc = async (simc: string): Promise<GearItem[]>
     const gearRegex = /^#.*?id=(\d+),bonus_id=([\d/]+)/gm
     let gearMatch: RegExpExecArray | null
 
-    while ((gearMatch = gearRegex.exec(match[1])) !== null) {
-        const itemId = parseInt(gearMatch[1], 10)
-        const bonusIds = gearMatch[2].split("/").map(Number)
+    while ((gearMatch = gearRegex.exec(matchContent)) !== null) {
+        const itemIdStr = gearMatch[1]
+        const bonusIdsStr = gearMatch[2]
+        if (!itemIdStr || !bonusIdsStr) {
+            continue
+        }
+
+        const itemId = parseInt(itemIdStr, 10)
+        const bonusIds = bonusIdsStr.split("/").map(Number)
 
         const wowItem = itemsMap.get(itemId)
 
         if (!wowItem) {
-            console.log(
-                `[warn] parseGreatVaultFromSimc: Skipping weekly reward for item ${itemId} - https://www.wowhead.com/item=${itemId}?bonus=${bonusIds.join(":")}`
+            logger.warn(
+                "SimcParser",
+                `parseGreatVaultFromSimc: Skipping weekly reward for item ${s(itemId)} - https://www.wowhead.com/item=${s(itemId)}?bonus=${bonusIds.join(":")}`
             )
             continue
         }
@@ -84,7 +93,7 @@ export const parseGreatVaultFromSimc = async (simc: string): Promise<GearItem[]>
         const itemTrack = parseItemTrack(bonusIds)
         if (!itemTrack) {
             throw new Error(
-                `parseGreatVaultFromSimc: Detected Vault item without item track... check import ${itemId} - https://www.wowhead.com/item=${itemId}?bonus=${bonusIds.join(":")}`
+                `parseGreatVaultFromSimc: Detected Vault item without item track... check import ${s(itemId)} - https://www.wowhead.com/item=${s(itemId)}?bonus=${bonusIds.join(":")}`
             )
         }
 
@@ -132,9 +141,9 @@ export const parseTiersets = async (
 
 export async function parseBagGearsFromSimc(simc: string): Promise<GearItem[]> {
     // Extract "Gear from Bags" section
-    const gearSectionMatch = simc.match(/Gear from Bags[\s\S]*?(?=\n\n|$)/)
+    const gearSectionMatch = /Gear from Bags[\s\S]*?(?=\n\n|$)/.exec(simc)
     if (!gearSectionMatch) {
-        console.log("Unable to find 'Gear from Bags' section.")
+        logger.debug("SimcParser", "Unable to find 'Gear from Bags' section.")
         return []
     }
 
@@ -145,25 +154,27 @@ export async function parseBagGearsFromSimc(simc: string): Promise<GearItem[]> {
     const items: GearItem[] = []
 
     for (const line of itemLines) {
-        const slotMatch = line.match(/^# ([a-zA-Z_]+\d?)=/)
-        const itemIdMatch = line.match(/,id=(\d+)/)
-        const bonusIdMatch = line.match(/bonus_id=([\d/]+)/)
-        const enchantIdMatch = line.match(/enchant_id=([\d/]+)/)
-        const gemIdMatch = line.match(/gem_id=([\d/]+)/)
-        const craftedStatsMatch = line.match(/crafted_stats=([\d/]+)/)
-        const craftingQualityMatch = line.match(/crafting_quality=([\d/]+)/)
+        const slotMatch = /^# ([a-zA-Z_]+\d?)=/.exec(line)
+        const itemIdMatch = /,id=(\d+)/.exec(line)
+        const bonusIdMatch = /bonus_id=([\d/]+)/.exec(line)
+        const enchantIdMatch = /enchant_id=([\d/]+)/.exec(line)
+        const gemIdMatch = /gem_id=([\d/]+)/.exec(line)
+        const craftedStatsMatch = /crafted_stats=([\d/]+)/.exec(line)
+        const craftingQualityMatch = /crafting_quality=([\d/]+)/.exec(line)
 
-        if (slotMatch && itemIdMatch && bonusIdMatch) {
-            const itemId = parseInt(itemIdMatch[1], 10)
-            const bonusIds = bonusIdMatch[1].split("/").map(Number)
+        const itemIdStr = itemIdMatch?.[1]
+        const bonusIdStr = bonusIdMatch?.[1]
+        if (slotMatch && itemIdStr && bonusIdStr) {
+            const itemId = parseInt(itemIdStr, 10)
+            const bonusIds = bonusIdStr.split("/").map(Number)
             const wowItem = itemsInDb.find((i) => i.id === itemId)
 
-            if (wowItem == null) {
-                console.log(
-                    "parseBagGearsFromSimc: skipping bag item not in db: " +
-                        itemId +
-                        " https://www.wowhead.com/item=" +
+            if (!wowItem) {
+                logger.debug(
+                    "SimcParser",
+                    `parseBagGearsFromSimc: skipping bag item not in db: ${s(
                         itemId
+                    )} https://www.wowhead.com/item=${s(itemId)}`
                 )
                 continue
             }
@@ -171,23 +182,28 @@ export async function parseBagGearsFromSimc(simc: string): Promise<GearItem[]> {
             const itemTrack = parseItemTrack(bonusIds)
 
             let itemLevel: number | null = null
-            if (itemTrack != null) {
+            if (itemTrack !== null) {
                 itemLevel = itemTrack.itemLevel
             } else {
                 itemLevel = parseItemLevelFromBonusIds(wowItem, bonusIds)
             }
 
-            if (itemLevel == null) {
-                console.log(
-                    "parseBagGearsFromSimc: skipping bag item without ilvl: " +
-                        itemId +
-                        " - https://www.wowhead.com/item=" +
-                        itemId +
-                        "?bonus=" +
-                        bonusIds.join(":")
+            if (itemLevel === null) {
+                logger.debug(
+                    "SimcParser",
+                    `parseBagGearsFromSimc: skipping bag item without ilvl: ${s(
+                        itemId
+                    )} - https://www.wowhead.com/item=${s(itemId)}?bonus=${bonusIds.join(
+                        ":"
+                    )}`
                 )
                 continue
             }
+
+            const gemIdStr = gemIdMatch?.[1]
+            const enchantIdStr = enchantIdMatch?.[1]
+            const craftedStatsStr = craftedStatsMatch?.[1]
+            const craftingQualityStr = craftingQualityMatch?.[1]
 
             const item: GearItem = {
                 item: {
@@ -207,13 +223,15 @@ export async function parseBagGearsFromSimc(simc: string): Promise<GearItem[]> {
                 itemLevel: itemLevel,
                 bonusIds: bonusIds,
                 itemTrack: itemTrack,
-                gemIds: gemIdMatch ? gemIdMatch[1].split("/").map(Number) : null,
-                enchantIds: enchantIdMatch
-                    ? enchantIdMatch[1].split("/").map(Number)
-                    : null,
+                gemIds: gemIdStr ? gemIdStr.split("/").map(Number) : null,
+                enchantIds: enchantIdStr ? enchantIdStr.split("/").map(Number) : null,
             }
-            if (craftedStatsMatch) item.craftedStats = craftedStatsMatch[1]
-            if (craftingQualityMatch) item.craftingQuality = craftingQualityMatch[1]
+            if (craftedStatsStr) {
+                item.craftedStats = craftedStatsStr
+            }
+            if (craftingQualityStr) {
+                item.craftingQuality = craftingQualityStr
+            }
 
             items.push(item)
         }

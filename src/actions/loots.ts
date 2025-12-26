@@ -1,6 +1,7 @@
 "use server"
 
 import { getBisList } from "@/db/repositories/bis-list"
+import { s } from "@/lib/safe-stringify"
 import { getCharactersList } from "@/db/repositories/characters"
 import { getDroptimizerLatestList } from "@/db/repositories/droptimizer"
 import { getItem, getItems, getItemToTiersetMapping } from "@/db/repositories/items"
@@ -115,7 +116,6 @@ export async function importRcLootCsvAction(
     importAssignedCharacter: boolean
 ): Promise<{ imported: number; errors: string[] }> {
     const session = await getRaidSession(raidSessionId)
-    if (!session) throw new Error("Raid session not found")
 
     // Date bounds: session date ± 12 hours
     const dateLowerBound = session.raidDate - 12 * 60 * 60
@@ -146,8 +146,12 @@ const bonusIdsMatch = (
     lootBonusIds: number[] | null,
     targetBonusIds: number[]
 ): boolean => {
-    if (!lootBonusIds && targetBonusIds.length === 0) return true
-    if (!lootBonusIds || lootBonusIds.length !== targetBonusIds.length) return false
+    if (!lootBonusIds && targetBonusIds.length === 0) {
+        return true
+    }
+    if (!lootBonusIds || lootBonusIds.length !== targetBonusIds.length) {
+        return false
+    }
 
     // Sort both arrays and compare element by element
     const sortedLootBonusIds = [...lootBonusIds].sort((a, b) => a - b)
@@ -165,7 +169,6 @@ export async function importRcLootAssignmentsAction(
     csv: string
 ): Promise<{ assigned: number; warnings: string[] }> {
     const session = await getRaidSession(raidSessionId)
-    if (!session) throw new Error("Raid session not found")
 
     const RAID_SESSION_UPPER_BOUND_DELTA = 12 * 60 * 60
 
@@ -193,14 +196,21 @@ export async function importRcLootAssignmentsAction(
     const assignmentMap = new Map<string, number>()
     for (const rcLoot of rcLootData) {
         if (rcLoot.assignedTo) {
-            const assignmentKey = `${rcLoot.assignedTo}#${rcLoot.gearItem.item.id}#${rcLoot.gearItem.bonusIds?.join(",") ?? ""}`
+            const assignmentKey = `${rcLoot.assignedTo}#${s(rcLoot.gearItem.item.id)}#${rcLoot.gearItem.bonusIds?.join(",") ?? ""}`
             assignmentMap.set(assignmentKey, (assignmentMap.get(assignmentKey) || 0) + 1)
         }
     }
 
     // Process each assignment
     for (const [assignmentKey, requiredAmount] of assignmentMap.entries()) {
-        const [charId, itemIdString, bonusIdsString] = assignmentKey.split("#")
+        const parts = assignmentKey.split("#")
+        const charId = parts[0]
+        const itemIdString = parts[1]
+        const bonusIdsString = parts[2]
+
+        if (!charId || !itemIdString) {
+            continue
+        }
 
         // Parse itemId as number and bonusIds as array
         const itemId = parseInt(itemIdString, 10)
@@ -212,7 +222,7 @@ export async function importRcLootAssignmentsAction(
         const eligibleLoots = sessionLoots.filter(
             (loot) =>
                 loot.itemId === itemId &&
-                bonusIdsMatch(loot.gearItem?.bonusIds ?? null, bonusIds) &&
+                bonusIdsMatch(loot.gearItem.bonusIds, bonusIds) &&
                 loot.charsEligibility.includes(charId)
         )
 
@@ -228,20 +238,22 @@ export async function importRcLootAssignmentsAction(
         // Warn if we can't fulfill the full request
         if (remainingNeeded > availableCount) {
             warnings.push(
-                `Insufficient unassigned loots for charId ${charId} and itemId ${itemId}. ` +
-                    `Required: ${remainingNeeded}, Available: ${availableCount}. Assigning ${actualAssignCount} loots.`
+                `Insufficient unassigned loots for charId ${s(charId)} and itemId ${s(itemId)}. ` +
+                    `Required: ${s(remainingNeeded)}, Available: ${s(availableCount)}. Assigning ${s(actualAssignCount)} loots.`
             )
         }
 
         // Assign available loots
-        for (let i = 0; i < actualAssignCount; i++) {
-            await assignLoot(charId, unassignedLoots[i].id, null)
+        const lootsToAssign = unassignedLoots.slice(0, actualAssignCount)
+        for (const loot of lootsToAssign) {
+            await assignLoot(charId, loot.id, null)
             // Update the loot in sessionLoots to reflect the assignment (so next filters are up to date)
-            const lootIndex = sessionLoots.findIndex(
-                (loot) => loot.id === unassignedLoots[i].id
-            )
+            const lootIndex = sessionLoots.findIndex((l) => l.id === loot.id)
             if (lootIndex !== -1) {
-                sessionLoots[lootIndex].assignedCharacterId = charId
+                const sessionLoot = sessionLoots[lootIndex]
+                if (sessionLoot) {
+                    sessionLoot.assignedCharacterId = charId
+                }
             }
             assignedCount++
         }
@@ -258,7 +270,6 @@ export async function importMrtLootAction(
     data: string
 ): Promise<{ imported: number; errors: string[] }> {
     const session = await getRaidSession(raidSessionId)
-    if (!session) throw new Error("Raid session not found")
 
     // Date bounds: session date ± 12 hours
     const dateLowerBound = session.raidDate - 12 * 60 * 60
@@ -328,7 +339,7 @@ export async function getLootAssignmentInfoAction(
     const filteredRoster = roster.filter(
         (character) =>
             loot.charsEligibility.includes(character.id) &&
-            (loot.item.classes == null || loot.item.classes.includes(character.class))
+            (loot.item.classes === null || loot.item.classes.includes(character.class))
     )
 
     const maxGainFromAllDroptimizers = Math.max(
@@ -338,89 +349,81 @@ export async function getLootAssignmentInfoAction(
         1 // fallback to avoid -Infinity
     )
 
-    const charAssignmentInfo: CharAssignmentInfo[] = await Promise.all(
-        filteredRoster.map(async (char) => {
-            const charDroptimizers = latestDroptimizer.filter(
-                (dropt) =>
-                    dropt.charInfo.name === char.name &&
-                    dropt.charInfo.server === char.realm
-            )
+    const charAssignmentInfo: CharAssignmentInfo[] = filteredRoster.map((char) => {
+        const charDroptimizers = latestDroptimizer.filter(
+            (dropt) =>
+                dropt.charInfo.name === char.name && dropt.charInfo.server === char.realm
+        )
 
-            const charWowAudit: CharacterWowAudit | null =
-                wowAuditData.find(
-                    (wowaudit) =>
-                        wowaudit.name === char.name && wowaudit.realm === char.realm
-                ) ?? null
+        const charWowAudit: CharacterWowAudit | null =
+            wowAuditData.find(
+                (wowaudit) => wowaudit.name === char.name && wowaudit.realm === char.realm
+            ) ?? null
 
-            const charRaiderio: CharacterRaiderio | null =
-                raiderioData.find(
-                    (raiderio) =>
-                        raiderio.name === char.name && raiderio.realm === char.realm
-                ) ?? null
+        const charRaiderio: CharacterRaiderio | null =
+            raiderioData.find(
+                (raiderio) => raiderio.name === char.name && raiderio.realm === char.realm
+            ) ?? null
 
-            const charSimc: SimC | null =
-                simcData.find(
-                    (simc) => simc.charName === char.name && simc.charRealm === char.realm
-                ) ?? null
+        const charSimc: SimC | null =
+            simcData.find(
+                (simc) => simc.charName === char.name && simc.charRealm === char.realm
+            ) ?? null
 
-            const lowerBound = getLatestSyncDate(charDroptimizers, null, null, charSimc)
+        const lowerBound = getLatestSyncDate(charDroptimizers, null, null, charSimc)
 
-            const charAssignedLoots = !lowerBound
-                ? []
-                : allAssignedLoots.filter(
-                      (l) =>
-                          l.id !== loot.id &&
-                          l.assignedCharacterId === char.id &&
-                          l.dropDate > lowerBound
-                  )
+        const charAssignedLoots = !lowerBound
+            ? []
+            : allAssignedLoots.filter(
+                  (l) =>
+                      l.id !== loot.id &&
+                      l.assignedCharacterId === char.id &&
+                      l.dropDate > lowerBound
+              )
 
-            const res: Omit<CharAssignmentInfo, "highlights"> = {
-                character: char,
-                droptimizers: parseDroptimizersInfo(
-                    loot.item,
-                    loot.raidDifficulty,
-                    charDroptimizers
-                ),
-                weeklyChest: parseGreatVault(charDroptimizers, charSimc),
-                tierset: parseTiersetInfo(
-                    charDroptimizers,
-                    charAssignedLoots,
-                    charWowAudit,
-                    charRaiderio,
-                    charSimc
-                ),
-                catalystCharge: parseCatalystCharge(charDroptimizers),
-                bestItemsInSlot: parseBestItemInSlot(
-                    loot.item.slotKey,
-                    charDroptimizers,
-                    charAssignedLoots,
-                    charWowAudit,
-                    charRaiderio
-                ),
-                alreadyGotIt: await parseLootAlreadyGotIt(
-                    loot,
-                    getWowClassFromIdOrName(char.class),
-                    charDroptimizers,
-                    charAssignedLoots,
-                    charWowAudit,
-                    charRaiderio,
-                    itemToTiersetMapping
-                ),
-                bisForSpec: parseLootBisSpecForChar(bisList, loot.item.id, char),
-                warnDroptimizer: parseDroptimizerWarn(
-                    charDroptimizers,
-                    charAssignedLoots
-                ),
-                warnWowAudit: parseWowAuditWarn(charWowAudit),
-                warnRaiderio: parseRaiderioWarn(charRaiderio),
-            }
+        const res: Omit<CharAssignmentInfo, "highlights"> = {
+            character: char,
+            droptimizers: parseDroptimizersInfo(
+                loot.item,
+                loot.raidDifficulty,
+                charDroptimizers
+            ),
+            weeklyChest: parseGreatVault(charDroptimizers, charSimc),
+            tierset: parseTiersetInfo(
+                charDroptimizers,
+                charAssignedLoots,
+                charWowAudit,
+                charRaiderio,
+                charSimc
+            ),
+            catalystCharge: parseCatalystCharge(charDroptimizers),
+            bestItemsInSlot: parseBestItemInSlot(
+                loot.item.slotKey,
+                charDroptimizers,
+                charAssignedLoots,
+                charWowAudit,
+                charRaiderio
+            ),
+            alreadyGotIt: parseLootAlreadyGotIt(
+                loot,
+                getWowClassFromIdOrName(char.class),
+                charDroptimizers,
+                charAssignedLoots,
+                charWowAudit,
+                charRaiderio,
+                itemToTiersetMapping
+            ),
+            bisForSpec: parseLootBisSpecForChar(bisList, loot.item.id, char),
+            warnDroptimizer: parseDroptimizerWarn(charDroptimizers, charAssignedLoots),
+            warnWowAudit: parseWowAuditWarn(charWowAudit),
+            warnRaiderio: parseRaiderioWarn(charRaiderio),
+        }
 
-            return {
-                ...res,
-                highlights: evalHighlightsAndScore(loot, res, maxGainFromAllDroptimizers),
-            }
-        })
-    )
+        return {
+            ...res,
+            highlights: evalHighlightsAndScore(loot, res, maxGainFromAllDroptimizers),
+        }
+    })
 
     return {
         loot,
@@ -456,104 +459,90 @@ export async function getCharactersWithLootsByItemIdAction(
         getAllSimC(),
     ])
 
-    if (item == null) {
+    if (item === null) {
         throw new Error("Item not found")
     }
 
     const filteredRoster = roster.filter(
-        (character) => item.classes == null || item.classes.includes(character.class)
+        (character) => item.classes === null || item.classes.includes(character.class)
     )
 
-    const res = await Promise.all(
-        filteredRoster.map(async (char) => {
-            const charDroptimizers = latestDroptimizer.filter(
-                (dropt) =>
-                    dropt.charInfo.name === char.name &&
-                    dropt.charInfo.server === char.realm
+    const res = filteredRoster.map((char) => {
+        const charDroptimizers = latestDroptimizer.filter(
+            (dropt) =>
+                dropt.charInfo.name === char.name && dropt.charInfo.server === char.realm
+        )
+
+        const charWowAudit: CharacterWowAudit | null =
+            wowAuditData.find(
+                (wowaudit) => wowaudit.name === char.name && wowaudit.realm === char.realm
+            ) ?? null
+
+        const charRaiderio: CharacterRaiderio | null =
+            raiderioData.find(
+                (raiderio) => raiderio.name === char.name && raiderio.realm === char.realm
+            ) ?? null
+
+        const charSimc: SimC | null =
+            simcData.find(
+                (simc) => simc.charName === char.name && simc.charRealm === char.realm
+            ) ?? null
+
+        const lowerBound = getLatestSyncDate(charDroptimizers, null, null, charSimc)
+
+        const charAssignedLoots = !lowerBound
+            ? []
+            : allAssignedLoots.filter(
+                  (l) =>
+                      l.itemId === item.id &&
+                      l.assignedCharacterId === char.id &&
+                      l.dropDate > lowerBound
+              )
+
+        // Get all loots by item ID
+        const lastDroptWithTierInfo = charDroptimizers
+            .filter((c) => c.itemsInBag.length > 0)
+            .sort((a, b) => b.simInfo.date - a.simInfo.date)
+            .at(0)
+
+        const lastDroptWithWeeklyChestInfo = charDroptimizers
+            .filter((c) => isInCurrentWowWeek(c.simInfo.date) && c.weeklyChest.length > 0)
+            .sort((a, b) => b.simInfo.date - a.simInfo.date)
+            .at(0)
+
+        const availableGear = [
+            ...(lastDroptWithTierInfo?.itemsEquipped ?? []).filter(
+                (gi) => gi.item.id === item.id
+            ),
+            ...(lastDroptWithTierInfo?.itemsInBag ?? []).filter(
+                (gi) => gi.item.id === item.id
+            ),
+            ...(lastDroptWithWeeklyChestInfo?.weeklyChest ?? []).filter(
+                (gi) => gi.item.id === item.id
+            ),
+            ...charAssignedLoots.flatMap((l) =>
+                l.gearItem.item.id === item.id ? [l.gearItem] : []
+            ),
+            ...(charWowAudit?.itemsEquipped ?? []).filter((gi) => gi.item.id === item.id),
+            ...(charRaiderio?.itemsEquipped ?? []).filter((gi) => gi.item.id === item.id),
+        ]
+
+        // Remove duplicate items
+        const uniqueGear: typeof availableGear = []
+        for (const gear of availableGear) {
+            const isDuplicate = uniqueGear.some((existingGear) =>
+                gearAreTheSame(gear, existingGear)
             )
-
-            const charWowAudit: CharacterWowAudit | null =
-                wowAuditData.find(
-                    (wowaudit) =>
-                        wowaudit.name === char.name && wowaudit.realm === char.realm
-                ) ?? null
-
-            const charRaiderio: CharacterRaiderio | null =
-                raiderioData.find(
-                    (raiderio) =>
-                        raiderio.name === char.name && raiderio.realm === char.realm
-                ) ?? null
-
-            const charSimc: SimC | null =
-                simcData.find(
-                    (simc) => simc.charName === char.name && simc.charRealm === char.realm
-                ) ?? null
-
-            const lowerBound = getLatestSyncDate(charDroptimizers, null, null, charSimc)
-
-            const charAssignedLoots = !lowerBound
-                ? []
-                : allAssignedLoots.filter(
-                      (l) =>
-                          l.itemId === item.id &&
-                          l.assignedCharacterId === char.id &&
-                          l.dropDate > lowerBound
-                  )
-
-            // Get all loots by item ID
-            const lastDroptWithTierInfo = charDroptimizers
-                .filter((c) => c.itemsInBag.length > 0)
-                .sort((a, b) => b.simInfo.date - a.simInfo.date)
-                .at(0)
-
-            const lastDroptWithWeeklyChestInfo = charDroptimizers
-                .filter(
-                    (c) =>
-                        isInCurrentWowWeek(c.simInfo.date) &&
-                        c.weeklyChest &&
-                        c.weeklyChest.length > 0
-                )
-                .sort((a, b) => b.simInfo.date - a.simInfo.date)
-                .at(0)
-
-            const availableGear = [
-                ...(lastDroptWithTierInfo?.itemsEquipped ?? []).filter(
-                    (gi) => gi.item.id === item.id
-                ),
-                ...(lastDroptWithTierInfo?.itemsInBag ?? []).filter(
-                    (gi) => gi.item.id === item.id
-                ),
-                ...(lastDroptWithWeeklyChestInfo?.weeklyChest ?? []).filter(
-                    (gi) => gi.item.id === item.id
-                ),
-                ...charAssignedLoots.flatMap((l) =>
-                    l.gearItem.item.id === item.id ? [l.gearItem] : []
-                ),
-                ...(charWowAudit?.itemsEquipped ?? []).filter(
-                    (gi) => gi.item.id === item.id
-                ),
-                ...(charRaiderio?.itemsEquipped ?? []).filter(
-                    (gi) => gi.item.id === item.id
-                ),
-            ]
-
-            // Remove duplicate items
-            const uniqueGear: typeof availableGear = []
-            for (const gear of availableGear) {
-                const isDuplicate = uniqueGear.some((existingGear) =>
-                    gearAreTheSame(gear, existingGear)
-                )
-                if (!isDuplicate) {
-                    uniqueGear.push(gear)
-                }
+            if (!isDuplicate) {
+                uniqueGear.push(gear)
             }
+        }
 
-            return {
-                ...char,
-                gears: uniqueGear.sort((a, b) => compareGearItem(b, a)),
-            }
-        })
-    )
+        return {
+            ...char,
+            gears: uniqueGear.sort((a, b) => compareGearItem(b, a)),
+        }
+    })
 
     return res
 }

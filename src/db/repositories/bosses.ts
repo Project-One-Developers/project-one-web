@@ -6,7 +6,9 @@ import type { Boss, BossWithItems } from "@/shared/types/types"
 import { z } from "zod"
 
 export async function upsertBosses(bosses: Boss[]): Promise<void> {
-    if (bosses.length === 0) return
+    if (bosses.length === 0) {
+        return
+    }
 
     for (const boss of bosses) {
         await db

@@ -4,14 +4,14 @@ import { getCharactersWithPlayerList } from "@/db/repositories/characters"
 import { getDroptimizerLatestList } from "@/db/repositories/droptimizer"
 import { getAllCharacterRaiderio } from "@/db/repositories/raiderio"
 import { getAllCharacterWowAudit } from "@/db/repositories/wowaudit"
-import type {
-    CharacterSummary,
-    CharacterWowAudit,
-    Droptimizer,
+import {
     DroptimizerWarn,
-    GearItem,
     RaiderioWarn,
     WowAuditWarn,
+    type CharacterSummary,
+    type CharacterWowAudit,
+    type Droptimizer,
+    type GearItem,
 } from "@/shared/types/types"
 import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
 
@@ -25,8 +25,11 @@ function parseItemLevel(
     if (droptimizers.length > 0) {
         // Get the most recent droptimizer's ilvl
         const sorted = [...droptimizers].sort((a, b) => b.simInfo.date - a.simInfo.date)
-        const ilvl = sorted[0].itemsAverageItemLevelEquipped
-        if (ilvl) return ilvl.toFixed(1)
+        const mostRecent = sorted[0]
+        const ilvl = mostRecent?.itemsAverageItemLevelEquipped
+        if (ilvl) {
+            return ilvl.toFixed(1)
+        }
     }
     if (raiderio?.averageItemLevel) {
         return raiderio.averageItemLevel
@@ -39,11 +42,14 @@ function parseItemLevel(
 
 // Parse great vault from droptimizer data
 function parseGreatVault(droptimizers: Droptimizer[]): GearItem[] {
-    if (droptimizers.length === 0) return []
+    if (droptimizers.length === 0) {
+        return []
+    }
 
     // Get the most recent droptimizer with weekly chest data
     const sorted = [...droptimizers].sort((a, b) => b.simInfo.date - a.simInfo.date)
-    return sorted[0].weeklyChest || []
+    const mostRecent = sorted[0]
+    return mostRecent?.weeklyChest ?? []
 }
 
 // Parse tierset info from various sources
@@ -55,7 +61,8 @@ function parseTiersetInfo(
     // Prefer droptimizer, then wowaudit, then raiderio
     if (droptimizers.length > 0) {
         const sorted = [...droptimizers].sort((a, b) => b.simInfo.date - a.simInfo.date)
-        return sorted[0].tiersetInfo || []
+        const mostRecent = sorted[0]
+        return mostRecent?.tiersetInfo ?? []
     }
     if (wowAudit?.tiersetInfo) {
         return wowAudit.tiersetInfo
@@ -68,37 +75,46 @@ function parseTiersetInfo(
 
 // Parse currencies from droptimizer data
 function parseCurrencies(droptimizers: Droptimizer[]) {
-    if (droptimizers.length === 0) return []
+    if (droptimizers.length === 0) {
+        return []
+    }
 
     const sorted = [...droptimizers].sort((a, b) => b.simInfo.date - a.simInfo.date)
-    return sorted[0].currencies || []
+    const mostRecent = sorted[0]
+    return mostRecent?.currencies ?? []
 }
 
 // Parse droptimizer warning status
 function parseDroptimizerWarn(droptimizers: Droptimizer[]): DroptimizerWarn {
-    if (droptimizers.length === 0) return "missing" as DroptimizerWarn
+    if (droptimizers.length === 0) {
+        return DroptimizerWarn.NotImported
+    }
 
     // Check if droptimizers are outdated (older than 7 days)
     const oneWeekAgo = Date.now() / 1000 - 7 * 24 * 60 * 60
     const latestDate = Math.max(...droptimizers.map((d) => d.simInfo.date))
 
     if (latestDate < oneWeekAgo) {
-        return "outdated" as DroptimizerWarn
+        return DroptimizerWarn.Outdated
     }
 
-    return "none" as DroptimizerWarn
+    return DroptimizerWarn.None
 }
 
 // Parse wowaudit warning status
 function parseWowAuditWarn(wowAudit: CharacterWowAudit | null): WowAuditWarn {
-    if (!wowAudit) return "not-tracked" as WowAuditWarn
-    return "none" as WowAuditWarn
+    if (!wowAudit) {
+        return WowAuditWarn.NotTracked
+    }
+    return WowAuditWarn.None
 }
 
 // Parse raiderio warning status
 function parseRaiderioWarn(raiderio: CharacterRaiderio | null): RaiderioWarn {
-    if (!raiderio) return "not-tracked" as RaiderioWarn
-    return "none" as RaiderioWarn
+    if (!raiderio) {
+        return RaiderioWarn.NotTracked
+    }
+    return RaiderioWarn.None
 }
 
 export async function getRosterSummaryAction(): Promise<CharacterSummary[]> {

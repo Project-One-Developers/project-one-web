@@ -1,3 +1,4 @@
+import Image from "next/image"
 import type { Character } from "@/shared/types/types"
 
 type WowCharacterLinkProps = {
@@ -40,8 +41,13 @@ export const WowCharacterLink = ({ character, site }: WowCharacterLinkProps) => 
 
     return (
         <a href={href} rel="noreferrer" target="_blank">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="cursor-pointer h-5 w-5" src={iconSrc} alt={site} />
+            <Image
+                src={iconSrc}
+                alt={site}
+                width={20}
+                height={20}
+                className="cursor-pointer"
+            />
         </a>
     )
 }

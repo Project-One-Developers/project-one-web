@@ -34,7 +34,7 @@ export function useDeleteDroptimizer() {
     return useMutation({
         mutationFn: (url: string) => deleteDroptimizerAction(url),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
         },
     })
 }
@@ -53,8 +53,9 @@ export function useDroptimizerLastByCharAndDiff(
             raidDiff,
         ],
         queryFn: () => {
-            if (!charName || !charRealm || !raidDiff)
+            if (!charName || !charRealm || !raidDiff) {
                 throw new Error("Missing parameters")
+            }
             return getDroptimizerLastByCharAndDiffAction(charName, charRealm, raidDiff)
         },
         enabled: !!charName && !!charRealm && !!raidDiff,
@@ -67,7 +68,7 @@ export function useAddSimC() {
     return useMutation({
         mutationFn: (simcData: string) => addSimCAction(simcData),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
         },
     })
 }
@@ -78,7 +79,7 @@ export function useAddSimulationFromUrl() {
     return useMutation({
         mutationFn: (url: string) => addSimulationFromUrlAction(url),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
         },
     })
 }
@@ -89,7 +90,7 @@ export function useSyncDroptimizersFromDiscord() {
     return useMutation({
         mutationFn: (hours: number) => syncDroptimizersFromDiscordAction(hours),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
         },
     })
 }
@@ -100,7 +101,7 @@ export function useDeleteSimulationsOlderThanHours() {
     return useMutation({
         mutationFn: (hours: number) => deleteSimulationsOlderThanHoursAction(hours),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
         },
     })
 }

@@ -1,7 +1,7 @@
 "use client"
 
-import type { JSX } from "react"
-import { useState, useMemo } from "react"
+import Image from "next/image"
+import { useState, useMemo, type JSX } from "react"
 import { LoaderCircle, ExternalLink, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import {
@@ -28,10 +28,12 @@ function groupItemsByBoss(items: Item[]): Map<string, Item[]> {
     const groups = new Map<string, Item[]>()
     for (const item of items) {
         const boss = item.bossName
-        if (!groups.has(boss)) {
-            groups.set(boss, [])
+        const existing = groups.get(boss)
+        if (existing) {
+            existing.push(item)
+        } else {
+            groups.set(boss, [item])
         }
-        groups.get(boss)!.push(item)
     }
     return groups
 }
@@ -40,7 +42,13 @@ function ItemRow({ item }: { item: Item }) {
     return (
         <TableRow>
             <TableCell className="w-12">
-                <img src={item.iconUrl} alt={item.name} className="w-8 h-8 rounded" />
+                <Image
+                    src={item.iconUrl}
+                    alt={item.name}
+                    width={32}
+                    height={32}
+                    className="rounded"
+                />
             </TableCell>
             <TableCell>
                 <a
@@ -89,7 +97,9 @@ export default function LootTablePage(): JSX.Element {
     const [armorFilter, setArmorFilter] = useState<string>("all")
 
     const filteredItems = useMemo(() => {
-        if (!items) return []
+        if (!items) {
+            return []
+        }
         return items.filter((item) => {
             // Search filter
             if (
@@ -149,7 +159,9 @@ export default function LootTablePage(): JSX.Element {
                     <Input
                         placeholder="Search items..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value)
+                        }}
                         className="pl-9 w-64"
                     />
                 </div>

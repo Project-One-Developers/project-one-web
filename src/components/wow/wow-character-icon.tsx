@@ -4,7 +4,7 @@ import type { Character } from "@/shared/types/types"
 import { useRouter } from "next/navigation"
 import { WowClassIcon } from "./wow-class-icon"
 
-export interface WowCharacterIconProps {
+export type WowCharacterIconProps = {
     character: Character
     className?: string
     showTooltip?: boolean

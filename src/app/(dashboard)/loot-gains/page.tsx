@@ -1,7 +1,8 @@
 "use client"
 
-import type { JSX } from "react"
-import { useState, useMemo } from "react"
+import Image from "next/image"
+import { useState, useMemo, type JSX } from "react"
+import { s } from "@/lib/safe-stringify"
 import { LoaderCircle, ExternalLink, Search, TrendingUp } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import {
@@ -55,15 +56,24 @@ function groupUpgradesByBoss(
 
         for (const upgrade of droptimizer.upgrades) {
             const bossName = upgrade.item.bossName
-            if (!groups.has(bossName)) {
-                groups.set(bossName, [])
+            const existing = groups.get(bossName)
+            if (existing) {
+                existing.push({
+                    upgrade,
+                    charName: droptimizer.charInfo.name,
+                    charSpec: droptimizer.charInfo.spec,
+                    charClass: droptimizer.charInfo.class,
+                })
+            } else {
+                groups.set(bossName, [
+                    {
+                        upgrade,
+                        charName: droptimizer.charInfo.name,
+                        charSpec: droptimizer.charInfo.spec,
+                        charClass: droptimizer.charInfo.class,
+                    },
+                ])
             }
-            groups.get(bossName)!.push({
-                upgrade,
-                charName: droptimizer.charInfo.name,
-                charSpec: droptimizer.charInfo.spec,
-                charClass: droptimizer.charInfo.class,
-            })
         }
     }
 
@@ -86,10 +96,12 @@ function UpgradeRow({ data }: { data: UpgradeWithChar }) {
     return (
         <TableRow>
             <TableCell className="w-12">
-                <img
+                <Image
                     src={upgrade.item.iconUrl}
                     alt={upgrade.item.name}
-                    className="w-8 h-8 rounded"
+                    width={32}
+                    height={32}
+                    className="rounded"
                 />
             </TableCell>
             <TableCell>
@@ -129,13 +141,17 @@ export default function LootGainsPage(): JSX.Element {
     )
 
     const groupedUpgrades = useMemo((): Map<string, UpgradeWithChar[]> => {
-        if (!droptimizers) return new Map()
+        if (!droptimizers) {
+            return new Map()
+        }
         return groupUpgradesByBoss(droptimizers, difficultyFilter)
     }, [droptimizers, difficultyFilter])
 
     // Apply search filter
     const filteredGroups = useMemo((): Map<string, UpgradeWithChar[]> => {
-        if (!searchTerm) return groupedUpgrades
+        if (!searchTerm) {
+            return groupedUpgrades
+        }
 
         const filtered = new Map<string, UpgradeWithChar[]>()
         for (const [bossName, upgrades] of groupedUpgrades) {
@@ -213,15 +229,18 @@ export default function LootGainsPage(): JSX.Element {
                     <Input
                         placeholder="Search items, characters, bosses..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value)
+                        }}
                         className="pl-9 w-80"
                     />
                 </div>
                 <Select
                     value={difficultyFilter}
-                    onValueChange={(v) =>
+                    onValueChange={(v) => {
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Select options match type
                         setDifficultyFilter(v as WowRaidDifficulty | "all")
-                    }
+                    }}
                 >
                     <SelectTrigger className="w-40">
                         <SelectValue placeholder="All Difficulties" />
@@ -287,7 +306,7 @@ export default function LootGainsPage(): JSX.Element {
                                 <TableBody>
                                     {upgrades.map((data, idx) => (
                                         <UpgradeRow
-                                            key={`${data.upgrade.id}-${data.charName}-${idx}`}
+                                            key={`${s(data.upgrade.id)}-${data.charName}-${s(idx)}`}
                                             data={data}
                                         />
                                     ))}

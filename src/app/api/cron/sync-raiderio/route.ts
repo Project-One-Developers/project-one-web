@@ -1,10 +1,14 @@
 import { checkRaiderioUpdatesAction } from "@/actions/raiderio"
+import { logger } from "@/lib/logger"
+import { s } from "@/lib/safe-stringify"
 import { NextResponse } from "next/server"
 
 // Verify this is a cron request from Vercel (optional but recommended)
 function verifyCronSecret(request: Request): boolean {
     const authHeader = request.headers.get("authorization")
-    if (!process.env.CRON_SECRET) return true // No secret configured, allow
+    if (!process.env.CRON_SECRET) {
+        return true
+    } // No secret configured, allow
     return authHeader === `Bearer ${process.env.CRON_SECRET}`
 }
 
@@ -14,11 +18,11 @@ export async function GET(request: Request) {
     }
 
     try {
-        console.log("[Cron] Raider.io sync started at", new Date().toISOString())
+        logger.info("Cron", `Raider.io sync started at ${new Date().toISOString()}`)
 
         const result = await checkRaiderioUpdatesAction()
 
-        console.log("[Cron] Raider.io sync completed:", result.message)
+        logger.info("Cron", `Raider.io sync completed: ${result.message}`)
 
         return NextResponse.json({
             success: true,
@@ -26,7 +30,7 @@ export async function GET(request: Request) {
             timestamp: new Date().toISOString(),
         })
     } catch (error) {
-        console.error("[Cron] Raider.io sync failed:", error)
+        logger.error("Cron", `Raider.io sync failed: ${s(error)}`)
         return NextResponse.json(
             {
                 error: "Sync failed",

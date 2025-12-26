@@ -10,9 +10,7 @@ import { LoaderCircle, PlusIcon, Search } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useMemo, useState, type JSX } from "react"
 
-type GroupedSessions = {
-    [wowWeek: number]: RaidSessionWithSummary[]
-}
+type GroupedSessions = Record<number, RaidSessionWithSummary[]>
 
 export default function RaidSessionListPage(): JSX.Element {
     const [searchQuery, setSearchQuery] = useState("")
@@ -22,7 +20,9 @@ export default function RaidSessionListPage(): JSX.Element {
     const { data, isLoading } = useRaidSessions()
 
     const { groupedSessions, weekNumbers } = useMemo(() => {
-        if (!data) return { groupedSessions: {}, weekNumbers: [] }
+        if (!data) {
+            return { groupedSessions: {}, weekNumbers: [] }
+        }
 
         let filteredSessions = data
         if (searchQuery.trim()) {
@@ -38,14 +38,15 @@ export default function RaidSessionListPage(): JSX.Element {
         const grouped: GroupedSessions = {}
         filteredSessions.forEach((session) => {
             const wowWeek = unixTimestampToWowWeek(session.raidDate)
-            if (!grouped[wowWeek]) {
-                grouped[wowWeek] = []
-            }
+            grouped[wowWeek] ??= []
             grouped[wowWeek].push(session)
         })
 
         Object.keys(grouped).forEach((week) => {
-            grouped[Number(week)].sort((a, b) => b.raidDate - a.raidDate)
+            const weekSessions = grouped[Number(week)]
+            if (weekSessions) {
+                weekSessions.sort((a, b) => b.raidDate - a.raidDate)
+            }
         })
 
         const weeks = Object.keys(grouped)
@@ -77,7 +78,9 @@ export default function RaidSessionListPage(): JSX.Element {
                     <Input
                         placeholder="Search by session name or WoW week..."
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => {
+                            setSearchQuery(e.target.value)
+                        }}
                         className="pl-10"
                     />
                 </div>
@@ -86,36 +89,39 @@ export default function RaidSessionListPage(): JSX.Element {
             {/* Sessions Grouped by Week */}
             <div className="flex-1 overflow-y-auto">
                 <div className="space-y-8">
-                    {weekNumbers.map((weekNumber) => (
-                        <div key={weekNumber} className="space-y-4">
-                            {/* Week Header */}
-                            <div className="flex items-center gap-4">
-                                <div className="bg-primary/20 text-primary px-4 py-2 rounded-lg">
-                                    <span className="font-semibold">
-                                        WoW Week {weekNumber}
+                    {weekNumbers.map((weekNumber) => {
+                        const sessions = groupedSessions[weekNumber] ?? []
+                        return (
+                            <div key={weekNumber} className="space-y-4">
+                                {/* Week Header */}
+                                <div className="flex items-center gap-4">
+                                    <div className="bg-primary/20 text-primary px-4 py-2 rounded-lg">
+                                        <span className="font-semibold">
+                                            WoW Week {weekNumber}
+                                        </span>
+                                    </div>
+                                    <div className="h-px bg-gray-700 flex-1"></div>
+                                    <span className="text-sm text-gray-400">
+                                        {sessions.length} session
+                                        {sessions.length !== 1 ? "s" : ""}
                                     </span>
                                 </div>
-                                <div className="h-px bg-gray-700 flex-1"></div>
-                                <span className="text-sm text-gray-400">
-                                    {groupedSessions[weekNumber].length} session
-                                    {groupedSessions[weekNumber].length !== 1 ? "s" : ""}
-                                </span>
-                            </div>
 
-                            {/* Sessions Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                                {groupedSessions[weekNumber].map((session) => (
-                                    <SessionCard
-                                        key={session.id}
-                                        session={session}
-                                        onClick={() =>
-                                            router.push(`/raid-session/${session.id}`)
-                                        }
-                                    />
-                                ))}
+                                {/* Sessions Grid */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                                    {sessions.map((session) => (
+                                        <SessionCard
+                                            key={session.id}
+                                            session={session}
+                                            onClick={() => {
+                                                router.push(`/raid-session/${session.id}`)
+                                            }}
+                                        />
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        )
+                    })}
                 </div>
 
                 {weekNumbers.length === 0 && searchQuery.trim() && (
@@ -138,7 +144,9 @@ export default function RaidSessionListPage(): JSX.Element {
             {/* Add Session Button */}
             <div className="fixed bottom-6 right-6 z-10">
                 <button
-                    onClick={() => setIsAddDialogOpen(true)}
+                    onClick={() => {
+                        setIsAddDialogOpen(true)
+                    }}
                     className="rounded-full bg-primary text-background hover:bg-primary/80 w-14 h-14 flex items-center justify-center cursor-pointer shadow-lg transition-all duration-200"
                     title="Add new raid session"
                 >

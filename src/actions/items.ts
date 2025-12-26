@@ -57,5 +57,5 @@ export async function setItemNoteAction(id: number, note: string): Promise<ItemN
 }
 
 export async function deleteItemNoteAction(id: number): Promise<void> {
-    return await deleteItemNote(id)
+    await deleteItemNote(id)
 }

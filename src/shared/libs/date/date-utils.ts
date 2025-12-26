@@ -1,3 +1,4 @@
+import { s } from "@/lib/safe-stringify"
 import { match } from "ts-pattern"
 
 /**
@@ -12,7 +13,7 @@ export function formatUnixTimestampToRelativeDays(unixTimestamp: number): string
     return match(diffDays)
         .with(0, () => "Today")
         .with(1, () => "Yesterday")
-        .otherwise((days) => `${days} days ago`)
+        .otherwise((days) => `${s(days)} days ago`)
 }
 
 /**
@@ -92,9 +93,7 @@ export function formaUnixTimestampToItalianDate(unixTimestamp: number): string {
  * @returns A string representing the date range of the given WoW week (e.g., "24/11/2004 - 30/11/2004").
  */
 export function formatWowWeek(wowWeek?: number): string {
-    if (wowWeek == null) {
-        wowWeek = currentWowWeek()
-    }
+    wowWeek ??= currentWowWeek()
 
     const WOW_START_DATE = new Date("2004-11-24T00:00:00Z") // WoW start date (Wednesday)
 
@@ -124,7 +123,7 @@ export function formatWowWeek(wowWeek?: number): string {
  */
 export const formatUnixTimestampForDisplay = (unixTimestamp: number): string => {
     const date = new Date(unixTimestamp * 1000)
-    return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getFullYear()} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`
+    return `${s(date.getDate()).padStart(2, "0")}/${s(date.getMonth() + 1).padStart(2, "0")}/${s(date.getFullYear())} ${s(date.getHours()).padStart(2, "0")}:${s(date.getMinutes()).padStart(2, "0")}`
 }
 
 /**
@@ -135,8 +134,25 @@ export const formatUnixTimestampForDisplay = (unixTimestamp: number): string => 
  */
 export const parseStringToUnixTimestamp = (dateString: string): number => {
     const [datePart, timePart] = dateString.split(" ")
-    const [day, month, year] = datePart.split("/").map(Number)
-    const [hours, minutes] = timePart.split(":").map(Number)
+    if (!datePart || !timePart) {
+        throw new Error(`Invalid date string format: ${dateString}`)
+    }
+    const dateParts = datePart.split("/").map(Number)
+    const timeParts = timePart.split(":").map(Number)
+    const day = dateParts[0]
+    const month = dateParts[1]
+    const year = dateParts[2]
+    const hours = timeParts[0]
+    const minutes = timeParts[1]
+    if (
+        day === undefined ||
+        month === undefined ||
+        year === undefined ||
+        hours === undefined ||
+        minutes === undefined
+    ) {
+        throw new Error(`Invalid date string format: ${dateString}`)
+    }
     const date = new Date(year, month - 1, day, hours, minutes)
     return Math.floor(date.getTime() / 1000)
 }

@@ -16,38 +16,38 @@ export const buildConflictUpdateColumns = <
 >(
     table: T,
     columns: Q[]
-): Record<Q, SQL<unknown>> => {
+): Record<Q, SQL> => {
     const cls = getTableColumns(table)
 
     return columns.reduce(
         (acc, column) => {
-            const colName = cls[column].name
-            acc[column] = sql.raw(`excluded.${colName}`)
+            const col = cls[column]
+            if (col) {
+                acc[column] = sql.raw(`excluded.${col.name}`)
+            }
             return acc
         },
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Generic record builder
         {} as Record<Q, SQL>
     )
 }
 
 // Build conflict update set for all columns except the specified ones
-export const conflictUpdateAllExcept = <
-    T extends PgTable,
-    Q extends keyof T["_"]["columns"],
->(
+export const conflictUpdateAllExcept = <T extends PgTable>(
     table: T,
-    excludeColumns: Q[]
-): Record<string, SQL<unknown>> => {
+    excludeColumns: (keyof T["_"]["columns"])[]
+): Record<string, SQL> => {
     const cls = getTableColumns(table)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Generic column keys to string
     const excludeSet = new Set(excludeColumns as string[])
 
-    return Object.keys(cls).reduce(
-        (acc, column) => {
-            if (!excludeSet.has(column)) {
-                const colName = cls[column].name
-                acc[column] = sql.raw(`excluded.${colName}`)
+    return Object.keys(cls).reduce<Record<string, SQL>>((acc, column) => {
+        if (!excludeSet.has(column)) {
+            const col = cls[column]
+            if (col) {
+                acc[column] = sql.raw(`excluded.${col.name}`)
             }
-            return acc
-        },
-        {} as Record<string, SQL>
-    )
+        }
+        return acc
+    }, {})
 }

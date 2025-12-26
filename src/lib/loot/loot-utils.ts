@@ -4,7 +4,6 @@ import {
     compareGearItem,
     gearAreTheSame,
     getItemTrack,
-    parseItemTrackName,
 } from "@/shared/libs/items/item-bonus-utils"
 import { equippedSlotToSlot } from "@/shared/libs/items/item-slot-utils"
 import { getClassSpecsForRole } from "@/shared/libs/spec-parser/spec-utils"
@@ -64,7 +63,9 @@ export const parseDroptimizerWarn = (
     charDroptimizers: Droptimizer[],
     charAssignedLoots: Loot[]
 ): DroptimizerWarn => {
-    if (charDroptimizers.length === 0) return DroptimizerWarn.NotImported
+    if (charDroptimizers.length === 0) {
+        return DroptimizerWarn.NotImported
+    }
 
     const lastSimUnixTs = Math.max(...charDroptimizers.map((c) => c.simInfo.date))
     const dayInSeconds = 24 * 60 * 60
@@ -80,7 +81,9 @@ export const parseDroptimizerWarn = (
 export const parseWowAuditWarn = (
     wowAuditData: CharacterWowAudit | null
 ): WowAuditWarn => {
-    if (!wowAuditData) return WowAuditWarn.NotTracked
+    if (!wowAuditData) {
+        return WowAuditWarn.NotTracked
+    }
 
     const lastSyncUnixTs = wowAuditData.wowauditLastModifiedUnixTs
     const dayInSeconds = 24 * 60 * 60
@@ -96,7 +99,9 @@ export const parseWowAuditWarn = (
 export const parseRaiderioWarn = (
     raiderioData: CharacterRaiderio | null
 ): RaiderioWarn => {
-    if (!raiderioData) return RaiderioWarn.NotTracked
+    if (!raiderioData) {
+        return RaiderioWarn.NotTracked
+    }
 
     const lastSyncUnixTs = raiderioData.p1SyncAt
     const dayInSeconds = 24 * 60 * 60
@@ -192,7 +197,9 @@ export const parseBestItemInSlot = (
                 uniqueItems.push(item)
                 seenItemIds.add(item.item.id)
             }
-            if (uniqueItems.length === 2) break
+            if (uniqueItems.length === 2) {
+                break
+            }
         }
         return uniqueItems
     }
@@ -252,16 +259,16 @@ export const parseTiersetInfo = (
     }
     if (simc && simcDate >= lastDroptimizerDate) {
         tiersetsInfo.push(
-            ...(simc.itemsEquipped?.filter(
+            ...simc.itemsEquipped.filter(
                 (gi) => gi.item.tierset && gi.item.season === CURRENT_SEASON
-            ) ?? [])
+            )
         )
         tiersetsInBag.push(
-            ...(simc.itemsInBag?.filter(
+            ...simc.itemsInBag.filter(
                 (gi) =>
                     gi.item.season === CURRENT_SEASON &&
                     (gi.item.tierset || gi.item.token)
-            ) ?? [])
+            )
         )
     }
 
@@ -276,7 +283,7 @@ export const parseTiersetInfo = (
                 maxItemLevelBySlot.set(gear.item.slotKey, gear)
             } else {
                 const compareRes = compareGearItem(gear, existingGear)
-                const ilvlDiff = gear.itemLevel - (existingGear.itemLevel ?? 0)
+                const ilvlDiff = gear.itemLevel - existingGear.itemLevel
                 if (compareRes > 0 || (compareRes === 0 && ilvlDiff > 0)) {
                     maxItemLevelBySlot.set(gear.item.slotKey, gear)
                 }
@@ -312,7 +319,7 @@ export const parseGreatVault = (
     const lastSimcDate = simc?.dateGenerated ?? -1
 
     if (simc && lastSimcDate > (lastDroptimizer?.simInfo.date ?? -1)) {
-        return simc.weeklyChest ?? []
+        return simc.weeklyChest
     }
 
     return lastDroptimizer?.weeklyChest ?? []
@@ -328,7 +335,7 @@ export const parseCurrencies = (
     const lastSimcDate = simc?.dateGenerated ?? -1
 
     if (simc && lastSimcDate > (lastDroptimizer?.simInfo.date ?? -1)) {
-        return simc.currencies ?? []
+        return simc.currencies
     }
 
     return lastDroptimizer?.currencies ?? []
@@ -342,14 +349,13 @@ export const parseLootBisSpecForChar = (
     const roleSpecIds = new Set(
         getClassSpecsForRole(char.class, char.role).map((s) => s.id)
     )
+    const specs = getClassSpecsForRole(char.class, char.role)
     return bisList
         .filter((b) => b.itemId === itemId)
         .flatMap((b) => b.specIds)
         .filter((specId) => roleSpecIds.has(specId))
-        .map(
-            (specId) =>
-                getClassSpecsForRole(char.class, char.role).find((s) => s.id === specId)!
-        )
+        .map((specId) => specs.find((s) => s.id === specId))
+        .filter((spec): spec is WowSpec => spec !== undefined)
 }
 
 export const parseDroptimizersInfo = (
@@ -369,44 +375,63 @@ export const parseDroptimizersInfo = (
                 const upgrades = droptimizer.upgrades
                     .filter((up) => up.tiersetItemId)
                     .sort((a, b) => b.dps - a.dps)
-                if (upgrades.length > 0) {
+                const bestUpgrade = upgrades[0]
+                if (bestUpgrade) {
                     const itemEquipped = droptimizer.itemsEquipped.find(
-                        (gearItem) => gearItem.equippedInSlot === upgrades[0].slot
-                    )!
-                    return { upgrade: upgrades[0], itemEquipped, droptimizer }
-                } else {
-                    return {
-                        upgrade: null,
-                        itemEquipped: null as unknown as GearItem,
-                        droptimizer,
+                        (gearItem) => gearItem.equippedInSlot === bestUpgrade.slot
+                    )
+                    if (itemEquipped) {
+                        return { upgrade: bestUpgrade, itemEquipped, droptimizer }
                     }
                 }
+                return null
             })
-            .filter((dropt) => dropt.itemEquipped != null)
-            .sort((a, b) => (b.upgrade?.dps || 0) - (a.upgrade?.dps || 0))
+            .filter(
+                (
+                    dropt
+                ): dropt is {
+                    upgrade: DroptimizerUpgrade
+                    itemEquipped: GearItem
+                    droptimizer: Droptimizer
+                } => dropt !== null
+            )
+            .sort((a, b) => b.upgrade.dps - a.upgrade.dps)
     }
 
     return filteredDropt
         .map((droptimizer) => {
             const upgrade =
-                droptimizer.upgrades.find(({ item }) => item.id === lootItem.id) || null
+                droptimizer.upgrades.find(({ item }) => item.id === lootItem.id) ?? null
 
             const itemEquipped = upgrade
                 ? droptimizer.itemsEquipped.find(
                       (gearItem) => gearItem.equippedInSlot === upgrade.slot
-                  )!
+                  )
                 : droptimizer.itemsEquipped.find(
                       (gearItem) =>
-                          equippedSlotToSlot(gearItem.equippedInSlot!) ===
-                          lootItem.slotKey
-                  )!
+                          gearItem.equippedInSlot &&
+                          equippedSlotToSlot(gearItem.equippedInSlot) === lootItem.slotKey
+                  )
+
+            if (!itemEquipped) {
+                return null
+            }
 
             return { upgrade, itemEquipped, droptimizer }
         })
-        .sort((a, b) => (b.upgrade?.dps || 0) - (a.upgrade?.dps || 0))
+        .filter(
+            (
+                entry
+            ): entry is {
+                upgrade: DroptimizerUpgrade | null
+                itemEquipped: GearItem
+                droptimizer: Droptimizer
+            } => entry !== null
+        )
+        .sort((a, b) => (b.upgrade?.dps ?? 0) - (a.upgrade?.dps ?? 0))
 }
 
-export const parseLootAlreadyGotIt = async (
+export const parseLootAlreadyGotIt = (
     loot: LootWithItem,
     wowClass: WowClass,
     charDroptimizers: Droptimizer[],
@@ -414,8 +439,10 @@ export const parseLootAlreadyGotIt = async (
     charAuditData: CharacterWowAudit | null,
     charRaiderio: CharacterRaiderio | null,
     itemToTiersetMapping: { itemId: number; classId: number; tokenId: number }[]
-): Promise<boolean> => {
-    if (loot.gearItem.item.slotKey === "omni") return false
+): boolean => {
+    if (loot.gearItem.item.slotKey === "omni") {
+        return false
+    }
 
     const lastDroptWithTierInfo = charDroptimizers
         .filter((c) => c.itemsInBag.length > 0)
@@ -487,13 +514,17 @@ const calculateTiersetCompletion = (
     loot: LootWithItem,
     currentTierset: GearItem[]
 ): TierSetBonus => {
-    if (!loot.item.token) return tierSetBonusSchema.enum.none
+    if (!loot.item.token) {
+        return tierSetBonusSchema.enum.none
+    }
 
     const isValidSlot =
         loot.item.slotKey === "omni" ||
         !currentTierset.some((t) => t.item.slotKey === loot.item.slotKey)
 
-    if (!isValidSlot) return tierSetBonusSchema.enum.none
+    if (!isValidSlot) {
+        return tierSetBonusSchema.enum.none
+    }
 
     return match<number, TierSetBonus>(currentTierset.length)
         .with(1, () => tierSetBonusSchema.enum["2p"])
@@ -534,10 +565,9 @@ export const evalHighlightsAndScore = (
         ? loot.gearItem.itemLevel - bestItemInSlot.itemLevel
         : -999
 
-    let isTrackUpgrade = false
-    if (bestItemInSlot != null) {
-        isTrackUpgrade = compareGearItem(loot.gearItem, bestItemInSlot) > 0 ? true : false
-    }
+    const isTrackUpgrade = bestItemInSlot
+        ? compareGearItem(loot.gearItem, bestItemInSlot) > 0
+        : false
 
     const res: Omit<CharAssignmentHighlights, "score"> = {
         isMain,
@@ -559,7 +589,9 @@ export const evalScore = (
     const { dpsGain, gearIsBis, lootEnableTiersetBonus, isTrackUpgrade, alreadyGotIt } =
         highlights
 
-    if (alreadyGotIt) return 0
+    if (alreadyGotIt) {
+        return 0
+    }
 
     const normalizedDps = dpsGain > 0 ? dpsGain / maxDdpsGain : 0.01
     const bonusBisScore = gearIsBis ? 0 : 0

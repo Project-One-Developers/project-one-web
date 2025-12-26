@@ -83,14 +83,18 @@ function SidebarProvider({
             }
 
             // This sets the cookie to keep the sidebar state.
-            document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+            document.cookie = `${SIDEBAR_COOKIE_NAME}=${String(openState)}; path=/; max-age=${String(SIDEBAR_COOKIE_MAX_AGE)}`
         },
         [setOpenProp, open]
     )
 
     // Helper to toggle the sidebar.
     const toggleSidebar = React.useCallback(() => {
-        return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open)
+        if (isMobile) {
+            setOpenMobile((open) => !open)
+        } else {
+            setOpen((open) => !open)
+        }
     }, [isMobile, setOpen, setOpenMobile])
 
     // Adds a keyboard shortcut to toggle the sidebar.
@@ -106,7 +110,9 @@ function SidebarProvider({
         }
 
         window.addEventListener("keydown", handleKeyDown)
-        return () => window.removeEventListener("keydown", handleKeyDown)
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown)
+        }
     }, [toggleSidebar])
 
     // We add a state so that we can do data-state="expanded" or "collapsed".
@@ -189,9 +195,8 @@ function Sidebar({
                     data-mobile="true"
                     className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
                     style={
-                        {
-                            "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-                        } as React.CSSProperties
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- CSS custom properties
+                        { "--sidebar-width": SIDEBAR_WIDTH_MOBILE } as React.CSSProperties
                     }
                     side={side}
                 >
@@ -597,11 +602,6 @@ function SidebarMenuSkeleton({
 }: React.ComponentProps<"div"> & {
     showIcon?: boolean
 }) {
-    // Random width between 50 to 90%.
-    const width = React.useMemo(() => {
-        return `${Math.floor(Math.random() * 40) + 50}%`
-    }, [])
-
     return (
         <div
             data-slot="sidebar-menu-skeleton"
@@ -616,13 +616,14 @@ function SidebarMenuSkeleton({
                 />
             )}
             <Skeleton
-                className="h-4 max-w-(--skeleton-width) flex-1"
+                className={cn(
+                    "h-4 flex-1",
+                    // Varied widths via CSS nth-child for visual variety
+                    "[&:nth-child(3n+1)]:max-w-[70%]",
+                    "[&:nth-child(3n+2)]:max-w-[85%]",
+                    "[&:nth-child(3n)]:max-w-[60%]"
+                )}
                 data-sidebar="menu-skeleton-text"
-                style={
-                    {
-                        "--skeleton-width": width,
-                    } as React.CSSProperties
-                }
             />
         </div>
     )

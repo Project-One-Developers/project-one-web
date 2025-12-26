@@ -1,3 +1,5 @@
+import { logger } from "@/lib/logger"
+import { s } from "@/lib/safe-stringify"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import { evalRealSeason, parseItemTrack } from "@/shared/libs/items/item-bonus-utils"
 import { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
@@ -18,22 +20,19 @@ export async function fetchCharacterRaidProgress(
     const response = await fetch(url)
 
     if (!response.ok) {
-        const errorMessage = `Failed to fetch ${characterName} from ${realm}: ${response.status} ${response.statusText}`
-        console.log(
-            {
-                url,
-                character: characterName,
-                realm,
-                status: response.status,
-                statusText: response.statusText,
-            },
-            errorMessage
-        )
+        const errorMessage = `Failed to fetch ${characterName} from ${realm}: ${s(response.status)} ${response.statusText}`
+        logger.error("Raiderio", errorMessage, {
+            url,
+            character: characterName,
+            realm,
+            status: response.status,
+            statusText: response.statusText,
+        })
 
         throw new Error(errorMessage)
     }
 
-    const data = await response.json()
+    const data: unknown = await response.json()
 
     return raiderioResponseSchema.parse(data)
 }
@@ -45,9 +44,7 @@ export async function parseRaiderioData(
     realm: string,
     raiderioCharData: RaiderioResponse
 ): Promise<CharacterRaiderio> {
-    if (!itemsInDb) {
-        itemsInDb = await getItems()
-    }
+    itemsInDb ??= await getItems()
 
     const res: CharacterRaiderio = {
         name: name,
@@ -106,7 +103,9 @@ function createEquippedInfo(itemsEquipped: RaiderioItems): GearItem[] {
                 item.enchants,
                 slotKey
             )
-            if (gearPiece) res.push(gearPiece)
+            if (gearPiece) {
+                res.push(gearPiece)
+            }
         }
     }
 
@@ -121,14 +120,16 @@ function createGearPiece(
     enchantIds: number[] | undefined,
     equippedInSlot: WowItemEquippedSlotKey
 ): GearItem | null {
-    if (!itemId || !ilvl || !itemsInDb) return null
+    if (!itemId || !ilvl || !itemsInDb) {
+        return null
+    }
     const wowItem = itemsInDb.find((i) => i.id === itemId)
-    if (wowItem == null) {
-        console.log(
-            `raiderio.createGearPiece: skipping equipped item in ${equippedInSlot} not in db: ` +
-                itemId +
-                " https://www.wowhead.com/item=" +
+    if (!wowItem) {
+        logger.debug(
+            "Raiderio",
+            `createGearPiece: skipping equipped item in ${equippedInSlot} not in db: ${s(
                 itemId
+            )} https://www.wowhead.com/item=${s(itemId)}`
         )
         return null
     }

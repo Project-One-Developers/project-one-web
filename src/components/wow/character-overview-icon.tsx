@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { classIcon } from "@/lib/wow-icon"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -55,7 +56,7 @@ export const CharacterOverviewIcon = ({
             return "border-red-500"
         }
 
-        if (isLowItemLevel && isLowItemLevel(char.itemLevel)) {
+        if (isLowItemLevel?.(char.itemLevel)) {
             return "border-orange-500"
         }
 
@@ -63,7 +64,7 @@ export const CharacterOverviewIcon = ({
     }
 
     const getItemLevelTextColor = (char: CharacterSummary): string => {
-        if (isLowItemLevel && isLowItemLevel(char.itemLevel)) {
+        if (isLowItemLevel?.(char.itemLevel)) {
             return "text-orange-400"
         }
         return "text-foreground"
@@ -81,18 +82,19 @@ export const CharacterOverviewIcon = ({
                                 <TooltipTrigger asChild>
                                     <div
                                         className="cursor-pointer flex flex-col items-center"
-                                        onClick={() =>
+                                        onClick={() => {
                                             router.push(`/roster/${item.character.id}`)
-                                        }
+                                        }}
                                     >
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img
-                                            height={50}
-                                            width={50}
-                                            src={classIcon.get(item.character.class)}
+                                        <Image
+                                            height={48}
+                                            width={48}
+                                            src={
+                                                classIcon.get(item.character.class) ?? ""
+                                            }
                                             alt={item.character.class}
                                             className={cn(
-                                                "object-cover !m-0 !p-0 object-top rounded-full h-12 w-12 border group-hover:scale-105 group-hover:z-30 relative transition duration-500",
+                                                "object-cover !m-0 !p-0 object-top rounded-full border group-hover:scale-105 group-hover:z-30 relative transition duration-500",
                                                 getBorderColor(item),
                                                 isLow &&
                                                     "ring-2 ring-orange-300 ring-opacity-50"

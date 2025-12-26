@@ -4,7 +4,7 @@
 
 import { WowItemTrackName, WowRaidDifficulty } from "@/shared/types/types"
 
-interface BonusItemTrack {
+type BonusItemTrack = {
     level: number
     max: number
     maxItemLevel: number
@@ -55,7 +55,7 @@ export function trackNameToNumber(
         case "Myth":
             return 6
         default:
-            throw new Error("trackNameToNumber: track not supported " + name)
+            throw new Error(`trackNameToNumber: track not supported ${name as string}`)
     }
 }
 
@@ -91,12 +91,12 @@ export function trackNameToWowDiff(name: WowItemTrackName): WowRaidDifficulty {
         case "Myth":
             return "Mythic"
         default:
-            console.log("trackNameToWowDiff: track not supported " + name)
+            // For non-raid tracks like Explorer/Adventurer, default to LFR
             return "LFR"
     }
 }
 
-export const bonusItemTracks: { [key: string]: BonusItemTrack } = {
+export const bonusItemTracks: Record<string, BonusItemTrack> = {
     "10256": {
         level: 6,
         max: 6,

@@ -38,7 +38,7 @@ const DEFAULT_TIER_COMPLETION_FILTER = {
 }
 
 // Types
-type TierCompletionFilterType = { [key in TierSetCompletion]: boolean }
+type TierCompletionFilterType = Record<TierSetCompletion, boolean>
 
 // Utility functions
 const hasVaultTierPieces = (weeklyChest: { item: { tierset?: boolean } }[]): boolean => {
@@ -46,7 +46,7 @@ const hasVaultTierPieces = (weeklyChest: { item: { tierset?: boolean } }[]): boo
 }
 
 const formatTierCompletion = (completion: TierSetCompletion): string => {
-    return `${completion}/5 pieces`
+    return `${String(completion)}/5 pieces`
 }
 
 const getTierCompletionStyle = (tierCompletion: TierSetCompletion): string => {
@@ -183,7 +183,9 @@ const SearchBar = ({
         type="text"
         placeholder="Search players or characters..."
         value={searchQuery}
-        onChange={(e) => onSearchChange(e.target.value)}
+        onChange={(e) => {
+            onSearchChange(e.target.value)
+        }}
         className="w-full p-3 border border-gray-300 rounded-md"
     />
 )
@@ -216,7 +218,9 @@ const FilterControls = ({
                         key={completion}
                         completion={completion as TierSetCompletion}
                         checked={tierCompletionFilter[completion as TierSetCompletion]}
-                        onChange={() => onTierToggle(completion as TierSetCompletion)}
+                        onChange={() => {
+                            onTierToggle(completion as TierSetCompletion)
+                        }}
                     />
                 ))}
         </div>
@@ -224,7 +228,9 @@ const FilterControls = ({
         <div className="flex items-center space-x-2">
             <Checkbox
                 checked={showOnlyWithVaultTier}
-                onCheckedChange={(checked) => onVaultFilterChange(checked === true)}
+                onCheckedChange={(checked) => {
+                    onVaultFilterChange(checked === true)
+                }}
             />
             <span className="text-sm text-gray-300">Tierset in vault</span>
         </div>
@@ -233,14 +239,18 @@ const FilterControls = ({
             <label className="flex items-center space-x-1 cursor-pointer">
                 <Checkbox
                     checked={showMains}
-                    onCheckedChange={(checked) => onMainsChange(checked === true)}
+                    onCheckedChange={(checked) => {
+                        onMainsChange(checked === true)
+                    }}
                 />
                 <span className="text-sm text-gray-300">Mains</span>
             </label>
             <label className="flex items-center space-x-1 cursor-pointer">
                 <Checkbox
                     checked={showAlts}
-                    onCheckedChange={(checked) => onAltsChange(checked === true)}
+                    onCheckedChange={(checked) => {
+                        onAltsChange(checked === true)
+                    }}
                 />
                 <span className="text-sm text-gray-300">Alts</span>
             </label>
@@ -258,7 +268,9 @@ const PlayerRow = ({ summary }: { summary: CharacterSummary }) => {
                 <div className="flex space-x-10">
                     <div
                         className="flex items-center space-x-3 cursor-pointer"
-                        onClick={() => router.push(`/roster/${summary.character.id}`)}
+                        onClick={() => {
+                            router.push(`/roster/${summary.character.id}`)
+                        }}
                     >
                         <WowClassIcon
                             wowClassName={summary.character.class}
@@ -359,7 +371,9 @@ export default function SummaryPage(): JSX.Element {
     }
 
     const filteredPlayers = useMemo(() => {
-        if (!characterQuery.data) return []
+        if (!characterQuery.data) {
+            return []
+        }
 
         return characterQuery.data
             .filter((summary) => {

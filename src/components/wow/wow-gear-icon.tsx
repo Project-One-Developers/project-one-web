@@ -1,5 +1,7 @@
 "use client"
 
+import Image from "next/image"
+import { s } from "@/lib/safe-stringify"
 import { cn } from "@/lib/utils"
 import {
     gearhasSocket,
@@ -56,18 +58,20 @@ export function WowGearIcon({
     const hasSpecials = hasSocket || gearTertiary(bonusIds)
     const iconUrl = `https://wow.zamimg.com/images/wow/icons/large/${iconName}.jpg`
 
-    const hrefString =
-        `https://www.wowhead.com/item=${id}&ilvl=${itemLevel}` +
-        (bonusIds?.length ? `&bonus=${bonusIds.join(":")}` : "") +
-        (enchantIds?.length ? `&ench=${enchantIds.join(":")}` : "") +
-        (gemIds?.length ? `&gems=${gemIds.join(":")}` : "")
+    const hrefString = `https://www.wowhead.com/item=${s(id)}&ilvl=${s(itemLevel)}${
+        bonusIds?.length ? `&bonus=${bonusIds.join(":")}` : ""
+    }${
+        enchantIds?.length ? `&ench=${enchantIds.join(":")}` : ""
+    }${gemIds?.length ? `&gems=${gemIds.join(":")}` : ""}`
 
     // role badges
     const healerItem = showRoleIcons ? isHealerSpecs(specIds) : undefined
     const tankItem = showRoleIcons ? isTankSpecs(specIds) : undefined
 
     const getItemTrackAbbr = () => {
-        if (!showItemTrackDiff) return ""
+        if (!showItemTrackDiff) {
+            return ""
+        }
 
         if (itemTrack) {
             return convertItemTrackToRaidDiff
@@ -89,8 +93,8 @@ export function WowGearIcon({
 
     const itemTrackAbbr = getItemTrackAbbr()
 
-    // Extended info component
-    const ExtendedInfo = () => (
+    // Extended info JSX
+    const extendedInfoElement = showExtendedInfo ? (
         <div
             id="item-info"
             className={cn("flex flex-col space-y-1", flipExtendedInfo ? "mr-3" : "ml-3")}
@@ -135,25 +139,26 @@ export function WowGearIcon({
                             const tokenType = Object.keys(TOKEN_CLASS_MAP).find((type) =>
                                 name.startsWith(type)
                             )
-                            return tokenType ? (
+                            if (!tokenType) {
+                                return null
+                            }
+                            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Validated by find
+                            const key = tokenType as keyof typeof TOKEN_CLASS_MAP
+                            return (
                                 <span className="bg-gray-700/50 px-1.5 py-0.5 rounded">
-                                    {
-                                        TOKEN_CLASS_MAP[
-                                            tokenType as keyof typeof TOKEN_CLASS_MAP
-                                        ]
-                                    }
+                                    {TOKEN_CLASS_MAP[key]}
                                 </span>
-                            ) : null
+                            )
                         })()}
                 </div>
             </div>
         </div>
-    )
+    ) : null
 
     return (
         <a href={hrefString} rel="noreferrer" target="_blank">
             <div className={cn("flex flex-row items-center", className)}>
-                {showExtendedInfo && flipExtendedInfo && <ExtendedInfo />}
+                {flipExtendedInfo && extendedInfoElement}
 
                 <div className="flex flex-col items-center">
                     {showSource && (
@@ -162,12 +167,14 @@ export function WowGearIcon({
                         </span>
                     )}
                     <div className="relative inline-block">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                             src={iconUrl}
                             alt=""
+                            width={32}
+                            height={32}
                             className={cn(
-                                `object-cover object-top rounded-lg h-8 w-8 border border-background block ${hasSpecials ? "border-white" : ""}`,
+                                "object-cover object-top rounded-lg border border-background",
+                                hasSpecials && "border-white",
                                 iconClassName
                             )}
                         />
@@ -183,11 +190,12 @@ export function WowGearIcon({
                         )}
                         {hasSocket && (
                             <div className="absolute bottom-0 right-0">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                    className="w-3 h-3 border"
+                                <Image
                                     src="https://www.raidbots.com/frontend/c6217d2ee6dd7647cbfa.png"
                                     alt="socket"
+                                    width={12}
+                                    height={12}
+                                    className="border"
                                 />
                             </div>
                         )}
@@ -236,7 +244,7 @@ export function WowGearIcon({
                     )}
                 </div>
 
-                {showExtendedInfo && !flipExtendedInfo && <ExtendedInfo />}
+                {!flipExtendedInfo && extendedInfoElement}
             </div>
         </a>
     )

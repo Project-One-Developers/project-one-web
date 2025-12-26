@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { DroptimizerCard } from "@/components/droptimizer-card"
 import { useLatestDroptimizers } from "@/lib/queries/droptimizers"
 import { useCharacters } from "@/lib/queries/players"
@@ -41,13 +42,13 @@ export default function DroptimizerPage(): JSX.Element {
                     ))
                 ) : (
                     <div className="flex flex-col items-center gap-4">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                             src="https://media1.tenor.com/m/md1_j1SnRSkAAAAd/brian-david-gilbert-nothing-here.gif"
                             alt="Empty"
                             width={400}
                             height={400}
                             className="rounded-lg"
+                            unoptimized
                         />
                         <p className="text-muted-foreground">No droptimizers found</p>
                     </div>

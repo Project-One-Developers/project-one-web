@@ -1,3 +1,4 @@
+import { s } from "@/lib/safe-stringify"
 import {
     Item,
     WowClass,
@@ -17,7 +18,7 @@ export const getWowClassFromIdOrName = (wowClass: number | WowClassName): WowCla
     )
 
     if (!matchingClass) {
-        throw new Error(`No wow class found for ${wowClass}`)
+        throw new Error(`No wow class found for ${s(wowClass)}`)
     }
 
     return matchingClass
@@ -37,13 +38,15 @@ export const getWowSpecByClassNameAndSpecName = (
         (cls) => cls.name.toLowerCase() === className.toLowerCase()
     )
 
-    if (!wowClass) return null
+    if (!wowClass) {
+        return null
+    }
 
     const spec = wowClass.specs.find(
         (spec) => spec.name.toLowerCase() === specName.toLowerCase()
     )
 
-    return spec ? spec : null
+    return spec ?? null
 }
 
 export const getClassSpecs = (wowClass: number | WowClassName): WowSpec[] => {
@@ -61,13 +64,17 @@ export const getClassSpecsForRole = (
 
 export const getSpecById = (id: number): WowSpec => {
     const res = WOW_CLASS_WITH_SPECS.flatMap((c) => c.specs).find((s) => s.id === id)
-    if (!res) throw Error("getSpec(): spec " + id + "not mapped")
+    if (!res) {
+        throw Error(`getSpec(): spec ${s(id)} not mapped`)
+    }
     return res
 }
 
 export const getWowClassBySpecId = (id: number): WowClass => {
     const res = WOW_CLASS_WITH_SPECS.find((s) => s.specs.some((s) => s.id === id))
-    if (!res) throw Error("getWowClassBySpecId(): spec " + id + "not mapped")
+    if (!res) {
+        throw Error(`getWowClassBySpecId(): spec ${s(id)} not mapped`)
+    }
     return res
 }
 
@@ -88,7 +95,7 @@ export const isHealerItem = (item: Item): boolean => {
 
 export const isHealerSpecs = (specIds: number[] | null): boolean => {
     return (
-        specIds != null &&
+        specIds !== null &&
         specIds.length === healerSpecIds.length &&
         specIds.every((id) => isHealerSpec(id))
     )
@@ -96,7 +103,7 @@ export const isHealerSpecs = (specIds: number[] | null): boolean => {
 
 export const isTankSpecs = (specIds: number[] | null): boolean => {
     return (
-        specIds != null &&
+        specIds !== null &&
         specIds.length === tankSpecIds.length &&
         specIds.every((id) => isTankSpec(id))
     )

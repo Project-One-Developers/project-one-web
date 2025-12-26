@@ -18,7 +18,7 @@ export function useUpdateItemBisSpecs() {
         mutationFn: ({ itemId, specIds }: { itemId: number; specIds: number[] }) =>
             updateItemBisSpecAction(itemId, specIds),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.bisList] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.bisList] })
         },
     })
 }

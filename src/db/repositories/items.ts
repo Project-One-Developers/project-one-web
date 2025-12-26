@@ -67,7 +67,7 @@ export async function searchItems(searchTerm: string, limit: number): Promise<It
             and(
                 eq(itemTable.season, CURRENT_SEASON),
                 eq(itemTable.sourceType, "raid"),
-                ilike(itemTable.name, "%" + searchTerm + "%")
+                ilike(itemTable.name, `%${searchTerm}%`)
             )
         )
         .limit(limit)
@@ -75,7 +75,9 @@ export async function searchItems(searchTerm: string, limit: number): Promise<It
 }
 
 export async function upsertItems(items: Item[]): Promise<void> {
-    if (items.length === 0) return
+    if (items.length === 0) {
+        return
+    }
 
     // For upsert, we need to handle each item individually to get proper conflict handling
     for (const item of items) {
@@ -131,7 +133,9 @@ export async function deleteItemById(id: number): Promise<void> {
 export async function upsertItemsToTierset(
     itemsToTierset: ItemToTierset[]
 ): Promise<void> {
-    if (itemsToTierset.length === 0) return
+    if (itemsToTierset.length === 0) {
+        return
+    }
     await db.delete(itemToTiersetTable)
     await db.insert(itemToTiersetTable).values(itemsToTierset)
 }
@@ -139,7 +143,9 @@ export async function upsertItemsToTierset(
 export async function upsertItemsToCatalyst(
     itemsToCatalyst: ItemToCatalyst[]
 ): Promise<void> {
-    if (itemsToCatalyst.length === 0) return
+    if (itemsToCatalyst.length === 0) {
+        return
+    }
     await db.insert(itemToCatalystTable).values(itemsToCatalyst).onConflictDoNothing()
 }
 

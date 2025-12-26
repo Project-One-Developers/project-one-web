@@ -23,10 +23,16 @@ import type {
 import { count, eq, InferInsertModel } from "drizzle-orm"
 import { z } from "zod"
 
-function flattenRaidPartecipation(result: any): RaidSessionWithRoster {
+type RaidSessionWithCharPartecipation = RaidSession & {
+    charPartecipation?: { character: Character }[]
+}
+
+function flattenRaidPartecipation(
+    result: RaidSessionWithCharPartecipation
+): RaidSessionWithRoster {
     return {
         ...result,
-        roster: result?.charPartecipation?.map((cp: any) => cp.character) ?? [],
+        roster: result.charPartecipation?.map((cp) => cp.character) ?? [],
     }
 }
 
@@ -46,6 +52,9 @@ export async function getRaidSessionWithRoster(
         },
     })
 
+    if (!result) {
+        throw new Error(`Raid session not found: ${id}`)
+    }
     const processedResult = flattenRaidPartecipation(result)
     return raidSessionWithRosterSchema.parse(processedResult)
 }

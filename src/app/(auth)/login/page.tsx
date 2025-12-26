@@ -34,7 +34,7 @@ async function LoginForm({
     searchParams: Promise<{ error?: string }>
 }) {
     const params = await searchParams
-    const error = params?.error
+    const error = params.error
 
     return (
         <div className="grid gap-4">

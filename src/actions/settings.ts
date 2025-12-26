@@ -12,11 +12,11 @@ export async function getConfigAction(key: string): Promise<string | null> {
 }
 
 export async function setConfigAction(key: string, value: string): Promise<void> {
-    return await setConfig(key, value)
+    await setConfig(key, value)
 }
 
 export async function deleteConfigAction(key: string): Promise<void> {
-    return await deleteConfig(key)
+    await deleteConfig(key)
 }
 
 export async function getAllConfigAction(): Promise<Record<string, string>> {

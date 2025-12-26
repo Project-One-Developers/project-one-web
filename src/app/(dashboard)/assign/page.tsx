@@ -1,9 +1,9 @@
 "use client"
 
-import type { JSX } from "react"
+import Image from "next/image"
 import { useSearchParams } from "next/navigation"
-import { Suspense, useState } from "react"
-import { LoaderCircle, ExternalLink, Check, X, ArrowRightLeft } from "lucide-react"
+import { Suspense, useState, type JSX } from "react"
+import { LoaderCircle, ArrowRightLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     Select,
@@ -70,15 +70,16 @@ function LootRow({
     }
 
     const gearItem = loot.gearItem
-    if (!gearItem) return null
 
     return (
         <TableRow>
             <TableCell className="w-12">
-                <img
+                <Image
                     src={`https://wow.zamimg.com/images/wow/icons/large/${gearItem.item.iconName}.jpg`}
                     alt={gearItem.item.name}
-                    className="w-8 h-8 rounded"
+                    width={32}
+                    height={32}
+                    className="rounded"
                 />
             </TableCell>
             <TableCell>
@@ -176,7 +177,9 @@ function AssignContent() {
                 <label className="text-sm font-medium">Raid Session:</label>
                 <Select
                     value={selectedSessionId ?? ""}
-                    onValueChange={(v) => setSelectedSessionId(v || undefined)}
+                    onValueChange={(v) => {
+                        setSelectedSessionId(v || undefined)
+                    }}
                 >
                     <SelectTrigger className="w-64">
                         <SelectValue placeholder="Select a session" />

@@ -34,6 +34,7 @@ function ToggleGroup({
             data-variant={variant}
             data-size={size}
             data-spacing={spacing}
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- CSS custom properties
             style={{ "--gap": spacing } as React.CSSProperties}
             className={cn(
                 "group/toggle-group flex w-fit items-center gap-[--spacing(var(--gap))] rounded-md data-[spacing=default]:data-[variant=outline]:shadow-xs",

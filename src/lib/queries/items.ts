@@ -33,14 +33,16 @@ export function useItem(id: number | undefined) {
     return useQuery({
         queryKey: [queryKeys.items, id],
         queryFn: () => {
-            if (!id) throw new Error("No item id provided")
+            if (!id) {
+                throw new Error("No item id provided")
+            }
             return getItemByIdAction(id)
         },
         enabled: !!id,
     })
 }
 
-export function useSearchItems(searchTerm: string, limit: number = 20) {
+export function useSearchItems(searchTerm: string, limit = 20) {
     return useQuery({
         queryKey: [queryKeys.items, "search", searchTerm, limit],
         queryFn: () => searchItemsAction(searchTerm, limit),
@@ -59,7 +61,9 @@ export function useItemNote(id: number | undefined) {
     return useQuery({
         queryKey: [queryKeys.items, "notes", id],
         queryFn: () => {
-            if (!id) throw new Error("No item id provided")
+            if (!id) {
+                throw new Error("No item id provided")
+            }
             return getItemNoteAction(id)
         },
         enabled: !!id,
@@ -75,8 +79,8 @@ export function useSetItemNote() {
         mutationFn: ({ id, note }: { id: number; note: string }) =>
             setItemNoteAction(id, note),
         onSuccess: (_, vars) => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.items, "notes"] })
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.items, "notes"] })
+            void queryClient.invalidateQueries({
                 queryKey: [queryKeys.items, "notes", vars.id],
             })
         },
@@ -89,8 +93,8 @@ export function useDeleteItemNote() {
     return useMutation({
         mutationFn: (id: number) => deleteItemNoteAction(id),
         onSuccess: (_, id) => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.items, "notes"] })
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.items, "notes"] })
+            void queryClient.invalidateQueries({
                 queryKey: [queryKeys.items, "notes", id],
             })
         },

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { s } from "@/lib/safe-stringify"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -20,7 +21,7 @@ import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/queries/keys"
 
-interface LootImportDialogProps {
+type LootImportDialogProps = {
     raidSessionId: string
 }
 
@@ -45,9 +46,9 @@ export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
                 rcCsvData,
                 importAssigned
             )
-            toast.success(`Imported ${result.imported} loot items`)
-            queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
-            queryClient.invalidateQueries({
+            toast.success(`Imported ${s(result.imported)} loot items`)
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
+            void queryClient.invalidateQueries({
                 queryKey: [queryKeys.raidSession, raidSessionId],
             })
             setRcCsvData("")
@@ -68,9 +69,9 @@ export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
         setIsLoading(true)
         try {
             const result = await importMrtLootAction(raidSessionId, mrtData)
-            toast.success(`Imported ${result.imported} loot items`)
-            queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
-            queryClient.invalidateQueries({
+            toast.success(`Imported ${s(result.imported)} loot items`)
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
+            void queryClient.invalidateQueries({
                 queryKey: [queryKeys.raidSession, raidSessionId],
             })
             setMrtData("")
@@ -112,7 +113,9 @@ export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
                                 id="rc-csv"
                                 placeholder="player,date,time,id,item,itemID,itemString,response,..."
                                 value={rcCsvData}
-                                onChange={(e) => setRcCsvData(e.target.value)}
+                                onChange={(e) => {
+                                    setRcCsvData(e.target.value)
+                                }}
                                 className="mt-2 h-48 font-mono text-xs"
                             />
                         </div>
@@ -120,16 +123,16 @@ export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
                             <Checkbox
                                 id="import-assigned"
                                 checked={importAssigned}
-                                onCheckedChange={(checked) =>
+                                onCheckedChange={(checked) => {
                                     setImportAssigned(checked === true)
-                                }
+                                }}
                             />
                             <Label htmlFor="import-assigned" className="text-sm">
                                 Import assigned character from CSV
                             </Label>
                         </div>
                         <Button
-                            onClick={handleRcImport}
+                            onClick={() => void handleRcImport()}
                             disabled={isLoading}
                             className="w-full"
                         >
@@ -149,12 +152,14 @@ export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
                                 id="mrt-data"
                                 placeholder="timeRec#encounterID#instanceID#difficulty#playerName#classID#quantity#itemLink#rollType"
                                 value={mrtData}
-                                onChange={(e) => setMrtData(e.target.value)}
+                                onChange={(e) => {
+                                    setMrtData(e.target.value)
+                                }}
                                 className="mt-2 h-48 font-mono text-xs"
                             />
                         </div>
                         <Button
-                            onClick={handleMrtImport}
+                            onClick={() => void handleMrtImport()}
                             disabled={isLoading}
                             className="w-full"
                         >

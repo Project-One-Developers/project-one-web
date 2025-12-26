@@ -3,7 +3,7 @@
 import { useAddPlayer, useEditPlayer } from "@/lib/queries/players"
 import type { NewPlayer, Player } from "@/shared/types/types"
 import { Loader2 } from "lucide-react"
-import { useState, useEffect, type JSX } from "react"
+import { useState, useMemo, type JSX } from "react"
 import { toast } from "sonner"
 import { Button } from "./ui/button"
 import {
@@ -22,27 +22,21 @@ type PlayerDialogProps = {
     existingPlayer?: Player
 }
 
-export default function PlayerDialog({
-    isOpen,
+function PlayerDialogContent({
     setOpen,
     existingPlayer,
-}: PlayerDialogProps): JSX.Element {
-    const isEditing = existingPlayer != null
+}: Omit<PlayerDialogProps, "isOpen">): JSX.Element {
+    const isEditing = existingPlayer !== undefined
 
-    const [playerName, setPlayerName] = useState("")
+    const initialName = useMemo(
+        () => (existingPlayer ? existingPlayer.name : ""),
+        [existingPlayer]
+    )
+    const [playerName, setPlayerName] = useState(initialName)
     const [nameError, setNameError] = useState("")
 
     const addMutation = useAddPlayer()
     const editMutation = useEditPlayer()
-
-    useEffect(() => {
-        if (isEditing && existingPlayer) {
-            setPlayerName(existingPlayer.name)
-        } else {
-            setPlayerName("")
-        }
-        setNameError("")
-    }, [isEditing, existingPlayer, isOpen])
 
     const resetForm = () => {
         setPlayerName("")
@@ -72,7 +66,7 @@ export default function PlayerDialog({
             name: playerName.trim(),
         }
 
-        if (isEditing && existingPlayer) {
+        if (existingPlayer) {
             editMutation.mutate(
                 { id: existingPlayer.id, ...playerData },
                 {
@@ -111,33 +105,52 @@ export default function PlayerDialog({
     const isLoading = addMutation.isPending || editMutation.isPending
 
     return (
+        <>
+            <DialogHeader>
+                <DialogTitle>{isEditing ? "Edit" : "New"} player</DialogTitle>
+                <DialogDescription>
+                    Enter only the player&apos;s nickname. Characters played should be
+                    added later and must be named as they are in the game.
+                </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                        id="name"
+                        value={playerName}
+                        onChange={handleNameChange}
+                        className={nameError ? "border-red-500" : ""}
+                        placeholder="Enter player name"
+                    />
+                    {nameError && <p className="text-sm text-red-500">{nameError}</p>}
+                </div>
+
+                <Button disabled={isLoading} type="submit">
+                    {isLoading ? <Loader2 className="animate-spin" /> : "Confirm"}
+                </Button>
+            </form>
+        </>
+    )
+}
+
+export default function PlayerDialog({
+    isOpen,
+    setOpen,
+    existingPlayer,
+}: PlayerDialogProps): JSX.Element {
+    // Key forces content remount when dialog opens or player changes, resetting form state
+    const contentKey = `${String(isOpen)}-${existingPlayer?.id ?? "new"}`
+
+    return (
         <Dialog open={isOpen} onOpenChange={setOpen}>
             <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>{isEditing ? "Edit" : "New"} player</DialogTitle>
-                    <DialogDescription>
-                        Enter only the player&apos;s nickname. Characters played should be
-                        added later and must be named as they are in the game.
-                    </DialogDescription>
-                </DialogHeader>
-
-                <form onSubmit={handleSubmit} className="flex flex-col gap-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Name</Label>
-                        <Input
-                            id="name"
-                            value={playerName}
-                            onChange={handleNameChange}
-                            className={nameError ? "border-red-500" : ""}
-                            placeholder="Enter player name"
-                        />
-                        {nameError && <p className="text-sm text-red-500">{nameError}</p>}
-                    </div>
-
-                    <Button disabled={isLoading} type="submit">
-                        {isLoading ? <Loader2 className="animate-spin" /> : "Confirm"}
-                    </Button>
-                </form>
+                <PlayerDialogContent
+                    key={contentKey}
+                    setOpen={setOpen}
+                    existingPlayer={existingPlayer}
+                />
             </DialogContent>
         </Dialog>
     )

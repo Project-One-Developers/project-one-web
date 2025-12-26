@@ -1,6 +1,7 @@
 "use client"
 
 import { useDeleteDroptimizer } from "@/lib/queries/droptimizers"
+import { s } from "@/lib/safe-stringify"
 import { getDpsHumanReadable } from "@/lib/utils"
 import { formatUnixTimestampToRelativeDays } from "@/shared/libs/date/date-utils"
 import type { Character, Droptimizer } from "@/shared/types/types"
@@ -68,7 +69,9 @@ export const DroptimizerCard = ({
                 {character?.id ? (
                     <div
                         className="font-black cursor-pointer hover:text-primary"
-                        onClick={() => router.push(`/roster/${character.id}`)}
+                        onClick={() => {
+                            router.push(`/roster/${character.id}`)
+                        }}
                     >
                         {dropt.charInfo.name}
                     </div>
@@ -105,9 +108,9 @@ export const DroptimizerCard = ({
                     .slice(0, 5)
                     .map((upgrade, i) => (
                         <div
-                            key={`${upgrade.item.id}-${i}`}
+                            key={`${s(upgrade.item.id)}-${s(i)}`}
                             className="bg-background/50 px-2 py-1 rounded text-center"
-                            title={`Item ${upgrade.item.id} - ${upgrade.slot}`}
+                            title={`Item ${s(upgrade.item.id)} - ${upgrade.slot}`}
                         >
                             <span className="font-medium">
                                 {getDpsHumanReadable(upgrade.dps)}

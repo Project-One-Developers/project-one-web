@@ -10,6 +10,7 @@ import {
     getCharacterAction,
     getCharacterListAction,
     getCharactersWithPlayerListAction,
+    getCharLatestGameInfoAction,
     getPlayerWithCharactersListAction,
     getPlayersWithoutCharactersAction,
 } from "@/actions/characters"
@@ -68,10 +69,25 @@ export function useCharacter(id: string | undefined) {
     return useQuery({
         queryKey: [queryKeys.character, id],
         queryFn: () => {
-            if (!id) throw new Error("No character id provided")
+            if (!id) {
+                throw new Error("No character id provided")
+            }
             return getCharacterAction(id)
         },
         enabled: !!id,
+    })
+}
+
+export function useCharacterGameInfo(name?: string, realm?: string) {
+    return useQuery({
+        queryKey: [queryKeys.characterGameInfo, name, realm],
+        queryFn: () => {
+            if (!name || !realm) {
+                throw new Error("Name and realm are required")
+            }
+            return getCharLatestGameInfoAction(name, realm)
+        },
+        enabled: !!name && !!realm,
     })
 }
 
@@ -140,13 +156,13 @@ export function useAddPlayer() {
     return useMutation({
         mutationFn: (player: NewPlayer) => addPlayerAction(player),
         onSuccess: () => {
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithCharacters],
             })
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithoutCharacters],
             })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
         },
     })
 }
@@ -157,10 +173,10 @@ export function useEditPlayer() {
     return useMutation({
         mutationFn: (player: EditPlayer) => editPlayerAction(player),
         onSuccess: () => {
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithCharacters],
             })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
         },
     })
 }
@@ -171,13 +187,13 @@ export function useDeletePlayer() {
     return useMutation({
         mutationFn: (id: string) => deletePlayerAction(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithCharacters],
             })
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithoutCharacters],
             })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
         },
     })
 }
@@ -188,14 +204,14 @@ export function useAddCharacter() {
     return useMutation({
         mutationFn: (character: NewCharacter) => addCharacterAction(character),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
+            void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithCharacters],
             })
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithoutCharacters],
             })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
         },
     })
 }
@@ -206,11 +222,11 @@ export function useEditCharacter() {
     return useMutation({
         mutationFn: (character: EditCharacter) => editCharacterAction(character),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
+            void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithCharacters],
             })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
         },
     })
 }
@@ -221,14 +237,14 @@ export function useDeleteCharacter() {
     return useMutation({
         mutationFn: (id: string) => deleteCharacterAction(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
+            void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithCharacters],
             })
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithoutCharacters],
             })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
         },
     })
 }

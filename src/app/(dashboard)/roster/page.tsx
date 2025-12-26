@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import CharacterDialog from "@/components/character-dialog"
 import PlayerDeleteDialog from "@/components/player-delete-dialog"
 import PlayerDialog from "@/components/player-dialog"
@@ -76,13 +77,19 @@ export default function RosterPage(): JSX.Element {
     }, [players])
 
     const handleExportCsv = () => {
-        if (csvData.length === 0) return
+        const firstRow = csvData[0]
+        if (!firstRow) {
+            return
+        }
 
-        const headers = Object.keys(csvData[0])
+        const headers = Object.keys(firstRow)
         const csvContent = [
             headers.join(","),
             ...csvData.map((row) =>
-                headers.map((header) => `"${row[header as keyof typeof row]}"`).join(",")
+                headers
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Dynamic CSV row access
+                    .map((header) => `"${String(row[header as keyof typeof row])}"`)
+                    .join(",")
             ),
         ].join("\n")
 
@@ -107,7 +114,7 @@ export default function RosterPage(): JSX.Element {
             return (
                 player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 player.charsSummary
-                    ?.map((cs) => cs.character)
+                    .map((cs) => cs.character)
                     .some((character) =>
                         character.name.toLowerCase().includes(searchQuery.toLowerCase())
                     )
@@ -132,7 +139,9 @@ export default function RosterPage(): JSX.Element {
                     type="text"
                     placeholder="Search players or characters..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value)
+                    }}
                     className="flex-1 p-3 border border-gray-300 rounded-md"
                 />
 
@@ -145,11 +154,12 @@ export default function RosterPage(): JSX.Element {
                         target="_blank"
                         className="rounded-full bg-primary text-background hover:bg-primary/80 w-10 h-10 flex items-center justify-center cursor-pointer"
                     >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                             src="https://cdn.raiderio.net/images/mstile-150x150.png"
                             title="ProjectOne Raider.io"
                             alt="Raider.io"
+                            width={40}
+                            height={40}
                             className="hover:scale-125 ease-linear transition-transform"
                         />
                     </a>
@@ -161,11 +171,12 @@ export default function RosterPage(): JSX.Element {
                         target="_blank"
                         className="rounded-full bg-primary text-background hover:bg-primary/80 w-10 h-10 flex items-center justify-center cursor-pointer"
                     >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                             src="https://assets.rpglogs.com/img/warcraft/favicon.png?v=4"
                             title="WoW Progress Guild Page"
                             alt="WarcraftLogs"
+                            width={40}
+                            height={40}
                             className="hover:scale-125 ease-linear transition-transform"
                         />
                     </a>
@@ -177,11 +188,12 @@ export default function RosterPage(): JSX.Element {
                         target="_blank"
                         className="rounded-full bg-primary text-background hover:bg-primary/80 w-10 h-10 flex items-center justify-center cursor-pointer"
                     >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                             src="https://data.wowaudit.com/img/new-logo-icon.svg"
                             title="WoW Audit Guild Page"
                             alt="WoW Audit"
+                            width={40}
+                            height={40}
                             className="hover:scale-125 ease-linear transition-transform"
                         />
                     </a>
@@ -199,14 +211,16 @@ export default function RosterPage(): JSX.Element {
                             variant="ghost"
                             size="icon"
                             className="absolute top-3 right-2"
-                            onClick={() => handleDeleteClick(player)}
+                            onClick={() => {
+                                handleDeleteClick(player)
+                            }}
                         >
                             <X className="h-4 w-4" />
                         </Button>
 
                         <h2 className="font-black text-2xl mb-2">{player.name}</h2>
                         <div className="flex flex-row items-center">
-                            {player.charsSummary && player.charsSummary.length > 0 ? (
+                            {player.charsSummary.length > 0 ? (
                                 <CharacterOverviewIcon
                                     charsWithSummary={player.charsSummary}
                                     isLowItemLevel={isLowItemLevel}
@@ -223,7 +237,9 @@ export default function RosterPage(): JSX.Element {
                             )}
                             <div
                                 className="ml-5 mb-3"
-                                onClick={() => handleNewCharClick(player)}
+                                onClick={() => {
+                                    handleNewCharClick(player)
+                                }}
                             >
                                 <PlusIcon className="w-5 h-5 cursor-pointer hover:text-primary transition-colors" />
                             </div>
@@ -245,7 +261,9 @@ export default function RosterPage(): JSX.Element {
 
                 {/* Add Player Button */}
                 <button
-                    onClick={() => setIsAddDialogOpen(true)}
+                    onClick={() => {
+                        setIsAddDialogOpen(true)
+                    }}
                     className="w-14 h-14 rounded-full bg-primary text-background hover:bg-primary/80 shadow-lg transition-all duration-200 flex items-center justify-center"
                     title="Add Player"
                 >

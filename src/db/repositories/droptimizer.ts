@@ -1,6 +1,7 @@
 import { db } from "@/db"
 import { droptimizerTable, droptimizerUpgradesTable } from "@/db/schema"
 import { newUUID, takeFirstResult } from "@/db/utils"
+import { logger } from "@/lib/logger"
 import { gearItemSchema } from "@/shared/schemas/items.schema"
 import {
     droptimizerCurrencySchema,
@@ -13,7 +14,7 @@ import { z } from "zod"
 
 // Schema for parsing droptimizer storage results
 const droptimizerStorageSchema = z.object({
-    url: z.string().url(),
+    url: z.url(),
     ak: z.string(),
     dateImported: z.number(),
     simDate: z.number(),
@@ -95,7 +96,9 @@ export async function getDroptimizer(url: string): Promise<Droptimizer | null> {
         },
     })
 
-    if (!result) return null
+    if (!result) {
+        return null
+    }
     return droptimizerStorageToSchema.parse(result)
 }
 
@@ -133,6 +136,7 @@ export async function getDroptimizerLatestList(): Promise<Droptimizer[]> {
         `
     )
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Raw SQL returns known structure
     const urls = (latestDroptimizers.rows as { url: string }[]).map((row) => row.url)
     return getDroptimizerByIdsList(urls)
 }
@@ -168,12 +172,14 @@ export async function addDroptimizer(droptimizer: NewDroptimizer): Promise<Dropt
 
     if (alreadyPresent) {
         if (alreadyPresent.simDate >= droptimizer.simInfo.date) {
-            console.log(
-                "addDroptimizer: not importing - not newer than existing - ak: " +
-                    droptimizer.ak
+            logger.debug(
+                "Droptimizer",
+                `addDroptimizer: not importing - not newer than existing - ak: ${droptimizer.ak}`
             )
             const existing = await getDroptimizer(alreadyPresent.url)
-            if (!existing) throw new Error("Failed to get existing droptimizer")
+            if (!existing) {
+                throw new Error("Failed to get existing droptimizer")
+            }
             return existing
         }
         // Delete older version
@@ -230,7 +236,9 @@ export async function addDroptimizer(droptimizer: NewDroptimizer): Promise<Dropt
     }
 
     const result = await getDroptimizer(droptimizerRes.url)
-    if (!result) throw new Error("Failed to get newly inserted droptimizer")
+    if (!result) {
+        throw new Error("Failed to get newly inserted droptimizer")
+    }
     return result
 }
 

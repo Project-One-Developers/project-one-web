@@ -1,6 +1,7 @@
-export const CURRENT_SEASON: number = 3 // todo: to be updated "manually" at the start of each season
+export const CURRENT_SEASON = 3 // todo: to be updated "manually" at the start of each season
+
 export const CURRENT_RAID_ID = (() => {
-    switch (CURRENT_SEASON) {
+    switch (CURRENT_SEASON as number) {
         case 1:
             return 1273 // 1273: S1 Nerubar
         case 2:
@@ -13,7 +14,7 @@ export const CURRENT_RAID_ID = (() => {
 })()
 
 export const CURRENT_CATALYST_CHARGE_ID = (() => {
-    switch (CURRENT_SEASON) {
+    switch (CURRENT_SEASON as number) {
         case 1:
             return 3116 // https://www.wowhead.com/currency=3116/essence-of-kajamite
         case 2:

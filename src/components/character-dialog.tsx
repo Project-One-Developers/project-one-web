@@ -12,7 +12,7 @@ import type {
     WoWRole,
 } from "@/shared/types/types"
 import { Loader2 } from "lucide-react"
-import React, { useState, useEffect, type JSX } from "react"
+import React, { useState, useMemo, type JSX } from "react"
 import { toast } from "sonner"
 import { Button } from "./ui/button"
 import { Checkbox } from "./ui/checkbox"
@@ -70,39 +70,42 @@ export default function CharacterDialog({
         throw new Error("Cannot add a character without a player")
     }
 
-    const [formData, setFormData] = useState<FormData>({
-        name: "",
-        realm: "pozzo-delleternità",
-        class: "Death Knight",
-        role: "DPS",
-        main: false,
-    })
-
-    const [errors, setErrors] = useState<FormErrors>({})
-
-    const addMutation = useAddCharacter()
-    const editMutation = useEditCharacter()
-
-    useEffect(() => {
+    // Derive initial form data from props
+    const initialFormData = useMemo((): FormData => {
         if (mode === "edit" && existingCharacter) {
-            setFormData({
+            return {
                 name: existingCharacter.name,
                 realm: existingCharacter.realm,
                 class: existingCharacter.class,
                 role: existingCharacter.role,
                 main: existingCharacter.main,
-            })
-        } else {
-            setFormData({
-                name: "",
-                realm: "pozzo-delleternità",
-                class: "Death Knight",
-                role: "DPS",
-                main: false,
-            })
+            }
         }
+        return {
+            name: "",
+            realm: "pozzo-delleternità",
+            class: "Death Knight",
+            role: "DPS",
+            main: false,
+        }
+    }, [mode, existingCharacter])
+
+    const [formData, setFormData] = useState<FormData>(initialFormData)
+    const [errors, setErrors] = useState<FormErrors>({})
+    // Track the last open state to reset form when dialog opens
+    const [lastOpen, setLastOpen] = useState(isOpen)
+
+    const addMutation = useAddCharacter()
+    const editMutation = useEditCharacter()
+
+    // Reset form when dialog opens (transition from closed to open)
+    if (isOpen && !lastOpen) {
+        setFormData(initialFormData)
         setErrors({})
-    }, [mode, existingCharacter, isOpen])
+        setLastOpen(true)
+    } else if (!isOpen && lastOpen) {
+        setLastOpen(false)
+    }
 
     const resetForm = () => {
         setFormData({
@@ -197,13 +200,15 @@ export default function CharacterDialog({
 
     const handleRoleChange = (value: string) => {
         handleInputChange("role", value)
-        const availableClasses = ROLES_CLASSES_MAP[value as WoWRole] || []
-        if (availableClasses.length > 0) {
-            handleInputChange("class", availableClasses[0])
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Select options match WoWRole
+        const availableClasses = ROLES_CLASSES_MAP[value as WoWRole]
+        const firstClass = availableClasses[0]
+        if (firstClass) {
+            handleInputChange("class", firstClass)
         }
     }
 
-    const filteredClasses = ROLES_CLASSES_MAP[formData.role] || []
+    const filteredClasses = ROLES_CLASSES_MAP[formData.role]
     const isLoading = addMutation.isPending || editMutation.isPending
 
     return (
@@ -224,7 +229,9 @@ export default function CharacterDialog({
                         <Input
                             id="name"
                             value={formData.name}
-                            onChange={(e) => handleInputChange("name", e.target.value)}
+                            onChange={(e) => {
+                                handleInputChange("name", e.target.value)
+                            }}
                             className={errors.name ? "border-red-500" : ""}
                         />
                         {errors.name && (
@@ -236,7 +243,9 @@ export default function CharacterDialog({
                         <Label htmlFor="realm">Realm</Label>
                         <Select
                             value={formData.realm}
-                            onValueChange={(value) => handleInputChange("realm", value)}
+                            onValueChange={(value) => {
+                                handleInputChange("realm", value)
+                            }}
                         >
                             <SelectTrigger
                                 className={errors.realm ? "border-red-500" : ""}
@@ -281,7 +290,9 @@ export default function CharacterDialog({
                         <Label htmlFor="class">Class</Label>
                         <Select
                             value={formData.class}
-                            onValueChange={(value) => handleInputChange("class", value)}
+                            onValueChange={(value) => {
+                                handleInputChange("class", value)
+                            }}
                         >
                             <SelectTrigger
                                 className={errors.class ? "border-red-500" : ""}
@@ -305,9 +316,9 @@ export default function CharacterDialog({
                         <Checkbox
                             id="main"
                             checked={formData.main as CheckedState}
-                            onCheckedChange={(checked) =>
+                            onCheckedChange={(checked) => {
                                 handleInputChange("main", checked === true)
-                            }
+                            }}
                             className="h-5 w-5"
                         />
                         <div className="space-y-1 leading-none">

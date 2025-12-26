@@ -43,6 +43,25 @@ export const parseItemString = (itemString: string): ItemStringData => {
         ...rest
     ] = parts
 
+    // Validate required fields exist (TypeScript's noUncheckedIndexedAccess makes destructured values possibly undefined)
+    if (
+        itemID === undefined ||
+        enchantID === undefined ||
+        gemId1 === undefined ||
+        gemId2 === undefined ||
+        gemId3 === undefined ||
+        gemId4 === undefined ||
+        suffixID === undefined ||
+        uniqueID === undefined ||
+        linkLevel === undefined ||
+        specializationID === undefined ||
+        upgradeId === undefined ||
+        instanceDifficultyId === undefined ||
+        numBonusIds === undefined
+    ) {
+        throw new Error("Invalid item string: missing required fields")
+    }
+
     // Extract bonus IDs based on the numBonusIds value
     const bonusIds = rest.slice(0, numBonusIds)
     const upgradeValue = rest[numBonusIds]

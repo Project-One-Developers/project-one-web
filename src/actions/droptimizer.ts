@@ -8,6 +8,8 @@ import {
     getDroptimizerLatestList,
     getDroptimizerList,
 } from "@/db/repositories/droptimizer"
+import { logger } from "@/lib/logger"
+import { s } from "@/lib/safe-stringify"
 import { getConfig } from "@/db/repositories/settings"
 import { addSimC } from "@/db/repositories/simc"
 import { fetchDroptimizerFromQELiveURL } from "@/lib/droptimizer/qelive-parser"
@@ -30,7 +32,7 @@ export async function getDroptimizerLatestListAction(): Promise<Droptimizer[]> {
 }
 
 export async function deleteDroptimizerAction(url: string): Promise<void> {
-    return await deleteDroptimizer(url)
+    await deleteDroptimizer(url)
 }
 
 export async function getDroptimizerLastByCharAndDiffAction(
@@ -68,7 +70,7 @@ export async function addSimCAction(simcData: string): Promise<SimC> {
  * Add a simulation from a URL (Raidbots or QE Live)
  */
 export async function addSimulationFromUrlAction(url: string): Promise<Droptimizer[]> {
-    console.log("Adding simulation from url", url)
+    logger.info("Droptimizer", `Adding simulation from url ${url}`)
     const results: Droptimizer[] = []
 
     if (url.startsWith("https://questionablyepic.com/live/upgradereport/")) {
@@ -94,6 +96,7 @@ export async function getDiscordBotToken(): Promise<string | null> {
     return await getConfig("DISCORD_BOT_TOKEN")
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function getDiscordChannelId(): Promise<string> {
     // Hardcoded for now, can be moved to config
     return "1283383693695778878"
@@ -123,7 +126,10 @@ export async function syncDroptimizersFromDiscordAction(
 
     const uniqueUrls = extractUrlsFromMessages(messages, lowerBoundDate)
 
-    console.log(`Found ${uniqueUrls.size} unique valid URLs since ${lowerBoundDate}`)
+    logger.info(
+        "Droptimizer",
+        `Found ${s(uniqueUrls.size)} unique valid URLs since ${s(lowerBoundDate)}`
+    )
 
     const errors: string[] = []
     let importedCount = 0
@@ -140,15 +146,16 @@ export async function syncDroptimizersFromDiscordAction(
                     importedCount++
                 } catch (error) {
                     const errorMsg = `Failed to import ${url}: ${error instanceof Error ? error.message : "Unknown error"}`
-                    console.error(errorMsg)
+                    logger.error("Droptimizer", errorMsg)
                     errors.push(errorMsg)
                 }
             })
         )
     )
 
-    console.log(
-        `Discord sync completed: ${importedCount} imported, ${errors.length} errors`
+    logger.info(
+        "Droptimizer",
+        `Discord sync completed: ${s(importedCount)} imported, ${s(errors.length)} errors`
     )
 
     return { imported: importedCount, errors }

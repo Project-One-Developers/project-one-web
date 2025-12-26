@@ -10,7 +10,9 @@ export async function getConfig(key: string): Promise<string | null> {
         .where(eq(appConfigTable.key, key))
         .then(takeFirstResult)
 
-    if (!result) return null
+    if (!result) {
+        return null
+    }
     return result.value
 }
 
@@ -27,11 +29,8 @@ export async function deleteConfig(key: string): Promise<void> {
 
 export async function getAllConfig(): Promise<Record<string, string>> {
     const result = await db.select().from(appConfigTable)
-    return result.reduce(
-        (acc, { key, value }) => {
-            acc[key] = value
-            return acc
-        },
-        {} as Record<string, string>
-    )
+    return result.reduce<Record<string, string>>((acc, { key, value }) => {
+        acc[key] = value
+        return acc
+    }, {})
 }

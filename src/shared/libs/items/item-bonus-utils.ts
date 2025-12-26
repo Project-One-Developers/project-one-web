@@ -25,8 +25,12 @@ export function parseItemTrackName(
 ): WowItemTrackName | null {
     const itemTrack = parseItemTrack(bonusIds)
 
-    if (itemTrack) return itemTrack.name
-    if (!itemTrack && bonusIds.length == 0) return null
+    if (itemTrack) {
+        return itemTrack.name
+    }
+    if (bonusIds.length === 0) {
+        return null
+    }
 
     if (bonusIds.includes(10356)) {
         // bonus id for Mythic
@@ -99,7 +103,7 @@ export function gearAreTheSame(a: GearItem, b: GearItem): boolean {
 export function compareGearItem(a: GearItem, b: GearItem): number {
     const delta = a.itemLevel - b.itemLevel
 
-    if (a.item.season != b.item.season) {
+    if (a.item.season !== b.item.season) {
         // a is item from new season
         return a.item.season > b.item.season ? 1 : -1
     }
@@ -119,10 +123,18 @@ export function compareGearItem(a: GearItem, b: GearItem): number {
         )
 
         // The item with a track wins over one without a track
-        if (aDiff && !bDiff) return 1
-        if (!aDiff && bDiff) return -1
+        if (aDiff !== null && bDiff === null) {
+            return 1
+        }
+        if (aDiff === null && bDiff !== null) {
+            return -1
+        }
+        if (aDiff === null || bDiff === null) {
+            // Both null - treat as equal
+            return 0
+        }
 
-        return Math.sign(aDiff! - bDiff!)
+        return Math.sign(aDiff - bDiff)
     }
 
     // If difference is above 9, we use item level difference directly
@@ -135,7 +147,7 @@ export function parseItemLevelFromBonusIds(
 ): number | null {
     const diff = parseItemTrackName(bonusIds, item.token, item.tierset)
 
-    if (diff != null) {
+    if (diff !== null) {
         switch (diff) {
             case "Veteran":
                 return item.ilvlBase + 22
@@ -146,7 +158,7 @@ export function parseItemLevelFromBonusIds(
             case "Myth":
                 return item.ilvlMythic
             default:
-                throw Error("parseItemLevelFromBonusIds: " + diff + " not mapped")
+                throw Error(`parseItemLevelFromBonusIds: ${diff} not mapped`)
         }
     }
 
@@ -208,12 +220,19 @@ export function parseItemLevelFromBonusIds(
 export function evalRealSeason(item: Item, ilvl: number) {
     if (item.sourceType === "profession593") {
         // crafted item
-        if (ilvl <= 636) return 1
-        if (ilvl > 636 && ilvl <= 681) return 2
-        if (ilvl > 681 && ilvl <= 720) return 3
+        if (ilvl <= 636) {
+            return 1
+        }
+        if (ilvl > 636 && ilvl <= 681) {
+            return 2
+        }
+        if (ilvl > 681 && ilvl <= 720) {
+            return 3
+        }
         throw new Error(
-            "evalRealSeason: impossible to detect real season for crafted item - " +
-                JSON.stringify(item)
+            `evalRealSeason: impossible to detect real season for crafted item - ${JSON.stringify(
+                item
+            )}`
         )
     }
     return item.season
@@ -238,10 +257,14 @@ export function parseItemLevelFromRaidDiff(
 }
 
 export function parseItemTrack(input: number[]): ItemTrack | null {
-    const matchingBonus = input.find((bonus) => bonus in bonusItemTracks) ?? null
+    const matchingBonus = input.find((bonus) => bonus in bonusItemTracks)
+
+    if (matchingBonus === undefined) {
+        return null
+    }
 
     // Return the matching track or null if none found
-    return matchingBonus ? bonusItemTracks[matchingBonus] : null
+    return bonusItemTracks[matchingBonus] ?? null
 }
 
 export const gearHasAvoidance = (input: number[] | null): boolean =>
@@ -264,7 +287,7 @@ export const gearTertiary = (input: number[] | null): boolean =>
 export function getItemTrack(ilvl: number, diff: WowRaidDifficulty): ItemTrack | null {
     const diffName: WowItemTrackName = wowRaidDiffToTrackName(diff)
     const res = queryByItemLevelAndName(ilvl, diffName)
-    if (res != null) {
+    if (res !== null) {
         return res.track
     }
     return null
@@ -278,12 +301,17 @@ export function applyDiffBonusId(input: number[], diff: WowRaidDifficulty): void
         case "LFR":
             input.push(10353)
             break
+        case "Normal":
+            // Normal has no bonus id modifier
+            break
         case "Heroic":
             input.push(10355)
             break
         case "Mythic":
             input.push(10356)
             break
+        default:
+            diff satisfies never
     }
 }
 
@@ -299,7 +327,7 @@ export function applyItemTrackByIlvlAndDelta(
     delta: number
 ): ItemTrack | null {
     const res = queryByItemLevelAndDelta(ilvl, delta)
-    if (res == null) {
+    if (res === null) {
         return null
     }
     input.push(Number(res.key))
@@ -324,7 +352,7 @@ export function applyItemTrackByIlvlAndDiff(
     applyDiffBonusId(input, diff)
     const diffName: WowItemTrackName = wowRaidDiffToTrackName(diff)
     const res = queryByItemLevelAndName(ilvl, diffName)
-    if (res != null) {
+    if (res !== null) {
         input.push(Number(res.key))
         return res.track
     }

@@ -3,6 +3,7 @@
 import { syncAllCharactersRaiderioAction } from "@/actions/raiderio"
 import { syncCharacterWowAuditAction } from "@/actions/wowaudit"
 import { syncDroptimizersFromDiscordAction } from "@/actions/droptimizer"
+import { s } from "@/lib/safe-stringify"
 import { Button } from "@/components/ui/button"
 import {
     Database,
@@ -37,9 +38,11 @@ export default function SettingsPage(): JSX.Element {
         setIsSyncingRaiderio(true)
         try {
             const result = await syncAllCharactersRaiderioAction()
-            toast.success(`Raider.io sync completed: ${result.synced} characters synced`)
+            toast.success(
+                `Raider.io sync completed: ${s(result.synced)} characters synced`
+            )
             if (result.errors.length > 0) {
-                toast.warning(`${result.errors.length} errors occurred during sync`)
+                toast.warning(`${s(result.errors.length)} errors occurred during sync`)
             }
         } catch (error) {
             toast.error(
@@ -55,10 +58,10 @@ export default function SettingsPage(): JSX.Element {
         try {
             const result = await syncDroptimizersFromDiscordAction(168) // Last 7 days
             toast.success(
-                `Discord sync completed: ${result.imported} droptimizers imported`
+                `Discord sync completed: ${s(result.imported)} droptimizers imported`
             )
             if (result.errors.length > 0) {
-                toast.warning(`${result.errors.length} errors occurred during import`)
+                toast.warning(`${s(result.errors.length)} errors occurred during import`)
             }
         } catch (error) {
             toast.error(
@@ -93,7 +96,7 @@ export default function SettingsPage(): JSX.Element {
                 <div className="grid gap-4">
                     <Button
                         variant="secondary"
-                        onClick={handleSyncWowAudit}
+                        onClick={() => void handleSyncWowAudit()}
                         disabled={isSyncingWowAudit}
                     >
                         {isSyncingWowAudit ? (
@@ -105,7 +108,7 @@ export default function SettingsPage(): JSX.Element {
                     </Button>
                     <Button
                         variant="secondary"
-                        onClick={handleSyncRaiderio}
+                        onClick={() => void handleSyncRaiderio()}
                         disabled={isSyncingRaiderio}
                     >
                         {isSyncingRaiderio ? (
@@ -117,7 +120,7 @@ export default function SettingsPage(): JSX.Element {
                     </Button>
                     <Button
                         variant="secondary"
-                        onClick={handleSyncDiscord}
+                        onClick={() => void handleSyncDiscord()}
                         disabled={isSyncingDiscord}
                     >
                         {isSyncingDiscord ? (

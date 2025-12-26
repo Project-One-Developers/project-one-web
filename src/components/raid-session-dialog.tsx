@@ -5,7 +5,7 @@ import { useCharacters } from "@/lib/queries/players"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import type { Character, NewRaidSession } from "@/shared/types/types"
 import { Loader2 } from "lucide-react"
-import { useState, useEffect, type JSX, useMemo } from "react"
+import { useState, type JSX, useMemo } from "react"
 import { toast } from "sonner"
 import { Button } from "./ui/button"
 import { Checkbox } from "./ui/checkbox"
@@ -25,36 +25,34 @@ type RaidSessionDialogProps = {
     setOpen: (open: boolean) => void
 }
 
-export default function RaidSessionDialog({
-    isOpen,
+function RaidSessionDialogContent({
     setOpen,
-}: RaidSessionDialogProps): JSX.Element {
-    const [sessionName, setSessionName] = useState("")
-    const [nameError, setNameError] = useState("")
-    const [selectedCharacters, setSelectedCharacters] = useState<Set<string>>(new Set())
-
-    const addMutation = useAddRaidSession()
+}: Pick<RaidSessionDialogProps, "setOpen">): JSX.Element {
     const { data: characters } = useCharacters()
 
     // Group characters by main/alt status
     const { mains, alts } = useMemo(() => {
-        if (!characters) return { mains: [], alts: [] }
+        if (!characters) {
+            return { mains: [], alts: [] }
+        }
         const mainChars = characters.filter((c) => c.main)
         const altChars = characters.filter((c) => !c.main)
         return { mains: mainChars, alts: altChars }
     }, [characters])
 
-    useEffect(() => {
-        if (isOpen) {
-            // Reset form when opening
-            setSessionName("")
-            setNameError("")
-            // Pre-select all mains by default
-            if (mains.length > 0) {
-                setSelectedCharacters(new Set(mains.map((c) => c.id)))
-            }
-        }
-    }, [isOpen, mains])
+    // Initialize with all mains selected
+    const initialSelectedCharacters = useMemo(
+        () => new Set(mains.map((c) => c.id)),
+        [mains]
+    )
+
+    const [sessionName, setSessionName] = useState("")
+    const [nameError, setNameError] = useState("")
+    const [selectedCharacters, setSelectedCharacters] = useState<Set<string>>(
+        initialSelectedCharacters
+    )
+
+    const addMutation = useAddRaidSession()
 
     const resetForm = () => {
         setSessionName("")
@@ -129,106 +127,120 @@ export default function RaidSessionDialog({
     const isLoading = addMutation.isPending
 
     return (
+        <>
+            <DialogHeader>
+                <DialogTitle>New Raid Session</DialogTitle>
+                <DialogDescription>
+                    Create a new raid session and select the characters that will
+                    participate.
+                </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="name">Session Name</Label>
+                    <Input
+                        id="name"
+                        value={sessionName}
+                        onChange={handleNameChange}
+                        className={nameError ? "border-red-500" : ""}
+                        placeholder="e.g., Mythic Progression - Week 15"
+                    />
+                    {nameError && <p className="text-sm text-red-500">{nameError}</p>}
+                </div>
+
+                <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                        <Label>Roster ({selectedCharacters.size} selected)</Label>
+                        <div className="flex gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={selectAllMains}
+                            >
+                                Select Mains
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={selectNone}
+                            >
+                                Clear
+                            </Button>
+                        </div>
+                    </div>
+
+                    <ScrollArea className="h-[250px] border rounded-md p-3">
+                        {mains.length > 0 && (
+                            <div className="mb-4">
+                                <h4 className="text-sm font-semibold text-muted-foreground mb-2">
+                                    Mains
+                                </h4>
+                                <div className="space-y-2">
+                                    {mains.map((char) => (
+                                        <CharacterCheckbox
+                                            key={char.id}
+                                            character={char}
+                                            checked={selectedCharacters.has(char.id)}
+                                            onToggle={() => {
+                                                toggleCharacter(char.id)
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {alts.length > 0 && (
+                            <div>
+                                <h4 className="text-sm font-semibold text-muted-foreground mb-2">
+                                    Alts
+                                </h4>
+                                <div className="space-y-2">
+                                    {alts.map((char) => (
+                                        <CharacterCheckbox
+                                            key={char.id}
+                                            character={char}
+                                            checked={selectedCharacters.has(char.id)}
+                                            onToggle={() => {
+                                                toggleCharacter(char.id)
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {mains.length === 0 && alts.length === 0 && (
+                            <p className="text-sm text-muted-foreground text-center py-4">
+                                No characters found. Add characters in the Roster page
+                                first.
+                            </p>
+                        )}
+                    </ScrollArea>
+                </div>
+
+                <Button disabled={isLoading} type="submit">
+                    {isLoading ? <Loader2 className="animate-spin" /> : "Create Session"}
+                </Button>
+            </form>
+        </>
+    )
+}
+
+export default function RaidSessionDialog({
+    isOpen,
+    setOpen,
+}: RaidSessionDialogProps): JSX.Element {
+    // Key forces content remount when dialog opens, resetting form state
+    const contentKey = `session-dialog-${String(isOpen)}`
+
+    return (
         <Dialog open={isOpen} onOpenChange={setOpen}>
             <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                    <DialogTitle>New Raid Session</DialogTitle>
-                    <DialogDescription>
-                        Create a new raid session and select the characters that will
-                        participate.
-                    </DialogDescription>
-                </DialogHeader>
-
-                <form onSubmit={handleSubmit} className="flex flex-col gap-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Session Name</Label>
-                        <Input
-                            id="name"
-                            value={sessionName}
-                            onChange={handleNameChange}
-                            className={nameError ? "border-red-500" : ""}
-                            placeholder="e.g., Mythic Progression - Week 15"
-                        />
-                        {nameError && <p className="text-sm text-red-500">{nameError}</p>}
-                    </div>
-
-                    <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                            <Label>Roster ({selectedCharacters.size} selected)</Label>
-                            <div className="flex gap-2">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={selectAllMains}
-                                >
-                                    Select Mains
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={selectNone}
-                                >
-                                    Clear
-                                </Button>
-                            </div>
-                        </div>
-
-                        <ScrollArea className="h-[250px] border rounded-md p-3">
-                            {mains.length > 0 && (
-                                <div className="mb-4">
-                                    <h4 className="text-sm font-semibold text-muted-foreground mb-2">
-                                        Mains
-                                    </h4>
-                                    <div className="space-y-2">
-                                        {mains.map((char) => (
-                                            <CharacterCheckbox
-                                                key={char.id}
-                                                character={char}
-                                                checked={selectedCharacters.has(char.id)}
-                                                onToggle={() => toggleCharacter(char.id)}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {alts.length > 0 && (
-                                <div>
-                                    <h4 className="text-sm font-semibold text-muted-foreground mb-2">
-                                        Alts
-                                    </h4>
-                                    <div className="space-y-2">
-                                        {alts.map((char) => (
-                                            <CharacterCheckbox
-                                                key={char.id}
-                                                character={char}
-                                                checked={selectedCharacters.has(char.id)}
-                                                onToggle={() => toggleCharacter(char.id)}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {mains.length === 0 && alts.length === 0 && (
-                                <p className="text-sm text-muted-foreground text-center py-4">
-                                    No characters found. Add characters in the Roster page
-                                    first.
-                                </p>
-                            )}
-                        </ScrollArea>
-                    </div>
-
-                    <Button disabled={isLoading} type="submit">
-                        {isLoading ? (
-                            <Loader2 className="animate-spin" />
-                        ) : (
-                            "Create Session"
-                        )}
-                    </Button>
-                </form>
+                <RaidSessionDialogContent key={contentKey} setOpen={setOpen} />
             </DialogContent>
         </Dialog>
     )

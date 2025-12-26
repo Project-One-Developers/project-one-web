@@ -7,7 +7,9 @@ let _db: NodePgDatabase<typeof schema> | null = null
 let _pool: Pool | null = null
 
 function getDb(): NodePgDatabase<typeof schema> {
-    if (_db) return _db
+    if (_db) {
+        return _db
+    }
 
     const databaseUrl = process.env.DATABASE_URL
     if (!databaseUrl) {
@@ -27,9 +29,11 @@ function getDb(): NodePgDatabase<typeof schema> {
 }
 
 // Proxy to lazily initialize the database connection
+// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Deliberate proxy pattern for lazy DB initialization
 export const db = new Proxy({} as NodePgDatabase<typeof schema>, {
     get(_, prop) {
         const database = getDb()
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Dynamic property access
         const value = database[prop as keyof typeof database]
         if (typeof value === "function") {
             return value.bind(database)

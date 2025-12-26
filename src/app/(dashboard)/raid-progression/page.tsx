@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { WowCharacterIcon } from "@/components/wow/wow-character-icon"
 import { Input } from "@/components/ui/input"
 import {
@@ -51,10 +52,12 @@ type BossPanelProps = {
 
 // Utility functions
 const getRolePriority = (role: string): number => {
-    return (
-        ROLE_PRIORITIES[role.toLowerCase() as keyof typeof ROLE_PRIORITIES] ||
-        ROLE_PRIORITIES.default
-    )
+    const key = role.toLowerCase()
+    if (key in ROLE_PRIORITIES) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Validated by in check
+        return ROLE_PRIORITIES[key as keyof typeof ROLE_PRIORITIES]
+    }
+    return ROLE_PRIORITIES.default
 }
 
 const sortCharactersByRoleAndClass = <
@@ -98,7 +101,7 @@ const filterCharactersByBossProgress = (
 
             // Filter by player names if search is active
             if (
-                filteredPlayerNames?.length > 0 &&
+                filteredPlayerNames.length > 0 &&
                 !filteredPlayerNames.includes(p1Character.name)
             ) {
                 return null
@@ -115,15 +118,16 @@ const filterCharactersByBossProgress = (
 
             // Get encounters for the selected difficulty
             const difficultyKey =
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Difficulty matches object keys
                 selectedDifficulty.toLowerCase() as keyof typeof currentRaidProgress.encountersDefeated
-            const encounters = currentRaidProgress.encountersDefeated[difficultyKey] || []
+            const encounters = currentRaidProgress.encountersDefeated[difficultyKey] ?? []
 
             // Check if this boss was defeated
             const bossDefeated = encounters.find(
                 (encounter) => encounter.slug === boss.raiderioEncounterSlug
             )
 
-            return { character: p1Character, encounter: bossDefeated || null }
+            return { character: p1Character, encounter: bossDefeated ?? null }
         })
         .filter((item): item is CharacterEncounterInfo => item !== null)
 }
@@ -177,7 +181,9 @@ const CharacterGrid = ({
     showRoleBadges?: boolean
     hasDefeatedBoss?: boolean
 }) => {
-    if (characters.length === 0) return null
+    if (characters.length === 0) {
+        return null
+    }
 
     return (
         <div>
@@ -204,7 +210,7 @@ const CharacterGrid = ({
                             <TooltipContent sideOffset={5}>
                                 <CharacterTooltip
                                     character={character}
-                                    encounter={encounter || selectedDifficulty}
+                                    encounter={encounter ?? selectedDifficulty}
                                 />
                             </TooltipContent>
                         </Tooltip>
@@ -251,7 +257,7 @@ const BossPanel = ({
 
     // Calculate total roster size
     const totalRosterSize = useMemo(() => {
-        if (filteredPlayerNames?.length > 0) {
+        if (filteredPlayerNames.length > 0) {
             return rosterProgression.filter(({ p1Character }) =>
                 filteredPlayerNames.includes(p1Character.name)
             ).length
@@ -263,10 +269,11 @@ const BossPanel = ({
         <div className="flex flex-col bg-muted rounded-lg overflow-hidden min-w-[280px]">
             {/* Boss header */}
             <div className="flex flex-col gap-y-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                     src={encounterIcon.get(boss.id) || ""}
                     alt={`${boss.name} icon`}
+                    width={280}
+                    height={128}
                     className="w-full h-32 object-scale-down"
                 />
                 <h2 className="text-center text-xs font-bold">{boss.name}</h2>
@@ -368,11 +375,15 @@ export default function RaidProgressionPage(): JSX.Element {
             setDebouncedSearchQuery(searchQuery.trim())
         }, 300)
 
-        return () => clearTimeout(handler)
+        return () => {
+            clearTimeout(handler)
+        }
     }, [searchQuery])
 
     const filteredPlayerNames = useMemo(() => {
-        if (!debouncedSearchQuery || !rosterProgressionQuery.data) return []
+        if (!debouncedSearchQuery || !rosterProgressionQuery.data) {
+            return []
+        }
 
         return rosterProgressionQuery.data
             .map(({ p1Character }) => p1Character.name)
@@ -382,7 +393,9 @@ export default function RaidProgressionPage(): JSX.Element {
     }, [rosterProgressionQuery.data, debouncedSearchQuery])
 
     const orderedBosses = useMemo(() => {
-        if (!bossesQuery.data) return []
+        if (!bossesQuery.data) {
+            return []
+        }
         return bossesQuery.data.filter((b) => b.id > 0).sort((a, b) => a.order - b.order)
     }, [bossesQuery.data])
 
@@ -401,7 +414,7 @@ export default function RaidProgressionPage(): JSX.Element {
                 <h1 className="text-2xl font-bold">Raid Progression</h1>
                 <p className="text-gray-400">
                     Showing {selectedRaidDiff} difficulty progression for{" "}
-                    {(rosterProgressionQuery.data || []).length} characters
+                    {(rosterProgressionQuery.data ?? []).length} characters
                     {debouncedSearchQuery && (
                         <span className="text-blue-400">
                             {" "}
@@ -419,7 +432,9 @@ export default function RaidProgressionPage(): JSX.Element {
                         type="text"
                         placeholder="Search player names..."
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => {
+                            setSearchQuery(e.target.value)
+                        }}
                         className="w-full"
                     />
                 </div>
@@ -427,9 +442,10 @@ export default function RaidProgressionPage(): JSX.Element {
                 {/* Difficulty Select */}
                 <Select
                     value={selectedRaidDiff}
-                    onValueChange={(value) =>
+                    onValueChange={(value) => {
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Select options match type
                         setSelectedRaidDiff(value as WowRaidDifficulty)
-                    }
+                    }}
                 >
                     <SelectTrigger className="w-[140px]">
                         <SelectValue placeholder="Difficulty" />
@@ -444,7 +460,9 @@ export default function RaidProgressionPage(): JSX.Element {
                 {/* Mains/Alts filter */}
                 <div className="flex gap-2">
                     <button
-                        onClick={() => setShowMains(!showMains)}
+                        onClick={() => {
+                            setShowMains(!showMains)
+                        }}
                         className={`px-3 py-1 rounded text-sm ${
                             showMains
                                 ? "bg-blue-600 text-white"
@@ -454,7 +472,9 @@ export default function RaidProgressionPage(): JSX.Element {
                         Mains
                     </button>
                     <button
-                        onClick={() => setShowAlts(!showAlts)}
+                        onClick={() => {
+                            setShowAlts(!showAlts)
+                        }}
                         className={`px-3 py-1 rounded text-sm ${
                             showAlts
                                 ? "bg-blue-600 text-white"
@@ -472,7 +492,7 @@ export default function RaidProgressionPage(): JSX.Element {
                     <BossPanel
                         key={boss.id}
                         boss={boss}
-                        rosterProgression={rosterProgressionQuery.data || []}
+                        rosterProgression={rosterProgressionQuery.data ?? []}
                         selectedDifficulty={selectedRaidDiff}
                         filteredPlayerNames={filteredPlayerNames}
                     />

@@ -1,3 +1,5 @@
+import { logger } from "@/lib/logger"
+import { s } from "@/lib/safe-stringify"
 import { CURRENT_SEASON } from "@/shared/consts/wow.consts"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import {
@@ -55,16 +57,28 @@ export const fetchRaidbotsData = async (url: RaidbotsURL): Promise<unknown> => {
     const responseJson = await fetch(`${url}/data.json`)
     if (!responseJson.ok) {
         throw new Error(
-            `Failed to fetch JSON data: ${responseJson.status} ${responseJson.statusText}`
+            `Failed to fetch JSON data: ${s(responseJson.status)} ${responseJson.statusText}`
         )
     }
-    return await responseJson.json()
+    return (await responseJson.json()) as unknown
 }
 
-export const parseRaidbotsData = (jsonData: any): RaidbotJson => {
-    if (jsonData?.simbot?.publicTitle === "Top Gear") {
+export const parseRaidbotsData = (jsonData: unknown): RaidbotJson => {
+    // Type guard to check for Top Gear simulations
+    if (
+        typeof jsonData === "object" &&
+        jsonData !== null &&
+        "simbot" in jsonData &&
+        typeof (jsonData as { simbot?: unknown }).simbot === "object" &&
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Type narrowing for validation
+        (jsonData as { simbot?: { publicTitle?: string } }).simbot?.publicTitle ===
+            "Top Gear"
+    ) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Validated above
+        const simbot = (jsonData as { simbot: { player?: string; parentSimId?: string } })
+            .simbot
         throw new Error(
-            `Skipping invalid droptimizer for ${jsonData.simbot.player} (Top Gear): ${jsonData.simbot.parentSimId}`
+            `Skipping invalid droptimizer for ${s(simbot.player)} (Top Gear): ${s(simbot.parentSimId)}`
         )
     }
     return raidbotJsonSchema.parse(jsonData)
@@ -89,9 +103,10 @@ const parseUpgrades = async (
     const bestInSlotUpgrades = upgrades.find(
         (up) => up.itemId === 232526 || up.itemId === 232805
     )
-    if (bestInSlotUpgrades != null) {
-        console.log(
-            "parseUpgrades: applying workaround for Best-in-Slots item id 232526 or 232805"
+    if (bestInSlotUpgrades) {
+        logger.debug(
+            "RaidbotsParser",
+            `parseUpgrades: applying workaround for Best-in-Slots item id ${s(bestInSlotUpgrades.itemId)}`
         )
         const otherId = bestInSlotUpgrades.itemId === 232526 ? 232805 : 232526
         const newUprade = { ...bestInSlotUpgrades, itemId: otherId }
@@ -132,12 +147,12 @@ const parseUpgrades = async (
         })
         // remap itemid to tierset & catalyst
         .map((up) => {
-            const tiersetMapping = itemToTiersetMapping?.find(
+            const tiersetMapping = itemToTiersetMapping.find(
                 (i) => i.itemId === up.itemId
             )
 
             const catalystMapping = !tiersetMapping
-                ? itemToCatalystMapping?.find(
+                ? itemToCatalystMapping.find(
                       (i) =>
                           i.catalyzedItemId === up.itemId &&
                           i.encounterId === up.encounterId
@@ -180,14 +195,28 @@ export const convertJsonToDroptimizer = async (
     data: RaidbotJson
 ): Promise<NewDroptimizer> => {
     // transform
-    const raidId = Number(data.sim.profilesets.results[0].name.split("/")[0])
+    const firstResult = data.sim.profilesets.results[0]
+    if (!firstResult) {
+        throw new Error("No profileset results found in raidbots data")
+    }
+    const raidId = Number(firstResult.name.split("/")[0])
+
+    const titleParts = data.simbot.publicTitle.split("•")
+    const diffPart = titleParts[2]
+    if (!diffPart) {
+        throw new Error("Could not parse raid difficulty from title")
+    }
     const raidDiff: WowRaidDifficulty = wowRaidDiffSchema.parse(
-        data.simbot.publicTitle.split("•")[2].replaceAll(" ", "")
+        diffPart.replaceAll(" ", "")
     )
 
+    const firstPlayer = data.sim.players[0]
+    if (!firstPlayer) {
+        throw new Error("No player data found in raidbots data")
+    }
     const dpsMean =
-        data.sim.players[0].specialization.toLowerCase() !== "augmentation evoker"
-            ? data.sim.players[0].collected_data.dps.mean
+        firstPlayer.specialization.toLowerCase() !== "augmentation evoker"
+            ? firstPlayer.collected_data.dps.mean
             : data.sim.statistics.raid_dps.mean // augmentation evoker dps mean is the whole raid dps
 
     const upgrades = data.sim.profilesets.results.map((item) => ({
@@ -197,6 +226,10 @@ export const convertJsonToDroptimizer = async (
         ilvl: Number(item.name.split("/")[4]),
         slot: wowItemEquippedSlotKeySchema.parse(item.name.split("/")[6]),
     }))
+    const firstTalentLoadout = data.simbot.meta.rawFormData.character.talentLoadouts[0]
+    if (!firstTalentLoadout) {
+        throw new Error("No talent loadout found in raidbots data")
+    }
     const charInfo = {
         name: data.simbot.meta.rawFormData.character.name,
         server: data.simbot.meta.rawFormData.character.realm
@@ -204,12 +237,12 @@ export const convertJsonToDroptimizer = async (
             .replaceAll("_", "-")
             .replaceAll(" ", "-")
             .replaceAll("'", ""),
-        class: data.simbot.meta.rawFormData.character.talentLoadouts[0].talents
-            .className as WowClassName,
-        classId: data.simbot.meta.rawFormData.character.talentLoadouts[0].talents.classId,
-        spec: data.simbot.meta.rawFormData.character.talentLoadouts[0].talents.specName,
-        specId: data.simbot.meta.rawFormData.character.talentLoadouts[0].talents.specId,
-        talents: data.sim.players[0].talents,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Raidbots data matches WoW class names
+        class: firstTalentLoadout.talents.className as WowClassName,
+        classId: firstTalentLoadout.talents.classId,
+        spec: firstTalentLoadout.talents.specName,
+        specId: firstTalentLoadout.talents.specId,
+        talents: firstPlayer.talents,
     }
 
     const itemsEquipped = await parseEquippedGear(
@@ -218,19 +251,17 @@ export const convertJsonToDroptimizer = async (
     const itemsInBag = await parseBagGearsFromSimc(data.simbot.meta.rawFormData.text)
 
     if (itemsInBag.length === 0) {
-        throw new Error("No items found in bags: " + url)
+        throw new Error(`No items found in bags: ${url}`)
     }
 
     // Merge currencies from rawFormData and parseCatalystFromSimc
     const upgradeCurrencies =
         data.simbot.meta.rawFormData.character.upgradeCurrencies ?? []
-    const catalystCurrencies = await parseCatalystFromSimc(
-        data.simbot.meta.rawFormData.text
-    )
+    const catalystCurrencies = parseCatalystFromSimc(data.simbot.meta.rawFormData.text)
     const mergedCurrencies = [...upgradeCurrencies, ...catalystCurrencies]
 
     return {
-        ak: `${raidId},${raidDiff},${charInfo.name},${charInfo.server},${charInfo.spec},${charInfo.class}`,
+        ak: `${s(raidId)},${raidDiff},${charInfo.name},${charInfo.server},${charInfo.spec},${charInfo.class}`,
         url,
         charInfo,
         raidInfo: {
@@ -267,22 +298,21 @@ export const parseEquippedGear = async (
     for (const [slot, droptGearItem] of Object.entries(droptEquipped)) {
         if (!droptGearItem.bonus_id) {
             throw new Error(
-                "[error] parseEquippedGear: found equipped item without bonus_id " +
-                    droptGearItem.id +
-                    " - https://www.wowhead.com/item=" +
+                `[error] parseEquippedGear: found equipped item without bonus_id ${s(
                     droptGearItem.id
+                )} - https://www.wowhead.com/item=${s(droptGearItem.id)}`
             )
         }
         const bonusIds = droptGearItem.bonus_id.split("/").map(Number)
         const wowItem = itemsInDb.find((i) => i.id === droptGearItem.id)
-        if (wowItem == null) {
-            console.log(
-                "[error] parseEquippedGear: skipping equipped item not in db: " +
-                    droptGearItem.id +
-                    " - https://www.wowhead.com/item=" +
-                    droptGearItem.id +
-                    "?bonus=" +
-                    bonusIds.join(":")
+        if (!wowItem) {
+            logger.debug(
+                "RaidbotsParser",
+                `parseEquippedGear: skipping equipped item not in db: ${s(
+                    droptGearItem.id
+                )} - https://www.wowhead.com/item=${s(
+                    droptGearItem.id
+                )}?bonus=${bonusIds.join(":")}`
             )
             continue
         }
@@ -294,20 +324,23 @@ export const parseEquippedGear = async (
         ) {
             itemTrack = parseItemTrack(bonusIds)
             if (!itemTrack) {
-                console.log(
-                    "[warn] parseEquippedGear: found equipped item without item track " +
-                        droptGearItem.id +
-                        " - https://www.wowhead.com/item=" +
-                        droptGearItem.id +
-                        "?bonus=" +
-                        bonusIds.join(":")
+                logger.warn(
+                    "RaidbotsParser",
+                    `parseEquippedGear: found equipped item without item track ${s(
+                        droptGearItem.id
+                    )} - https://www.wowhead.com/item=${s(
+                        droptGearItem.id
+                    )}?bonus=${bonusIds.join(":")}`
                 )
             }
         }
 
         let realSlot = slot
-        if (slot === "mainHand") realSlot = "main_hand"
-        else if (slot === "offHand") realSlot = "off_hand"
+        if (slot === "mainHand") {
+            realSlot = "main_hand"
+        } else if (slot === "offHand") {
+            realSlot = "off_hand"
+        }
 
         res.push({
             item: {

@@ -30,10 +30,10 @@ export function useSetConfig() {
         mutationFn: ({ key, value }: { key: string; value: string }) =>
             setConfigAction(key, value),
         onSuccess: (_, vars) => {
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
                 queryKey: [queryKeys.settings, vars.key],
             })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.settings, "all"] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.settings, "all"] })
         },
     })
 }
@@ -44,8 +44,8 @@ export function useDeleteConfig() {
     return useMutation({
         mutationFn: (key: string) => deleteConfigAction(key),
         onSuccess: (_, key) => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.settings, key] })
-            queryClient.invalidateQueries({ queryKey: [queryKeys.settings, "all"] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.settings, key] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.settings, "all"] })
         },
     })
 }

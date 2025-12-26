@@ -48,13 +48,13 @@ export async function editRaidSessionAction(
 }
 
 export async function deleteRaidSessionAction(id: string): Promise<void> {
-    return await deleteRaidSession(id)
+    await deleteRaidSession(id)
 }
 
 export async function cloneRaidSessionAction(id: string): Promise<RaidSession> {
     const source = await getRaidSessionWithRoster(id)
     const cloned: NewRaidSession = {
-        name: source.name + "-" + newUUID().slice(0, 6),
+        name: `${source.name}-${newUUID().slice(0, 6)}`,
         raidDate: getUnixTimestamp(),
         roster: source.roster.map((r) => r.id),
     }

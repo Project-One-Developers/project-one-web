@@ -55,7 +55,7 @@ export async function getCharactersWithPlayerListAction(): Promise<
 }
 
 export async function deleteCharacterAction(id: string): Promise<void> {
-    return await deleteCharacter(id)
+    await deleteCharacter(id)
 }
 
 export async function editCharacterAction(
@@ -73,7 +73,7 @@ export async function addPlayerAction(player: NewPlayer): Promise<Player | null>
 }
 
 export async function deletePlayerAction(playerId: string): Promise<void> {
-    return await deletePlayer(playerId)
+    await deletePlayer(playerId)
 }
 
 export async function editPlayerAction(edited: EditPlayer): Promise<Player | null> {

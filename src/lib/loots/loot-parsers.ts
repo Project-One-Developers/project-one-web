@@ -1,3 +1,5 @@
+import { logger } from "@/lib/logger"
+import { s } from "@/lib/safe-stringify"
 import { PROFESSION_TYPES } from "@/shared/consts/wow.consts"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import {
@@ -50,7 +52,7 @@ const parseDateTime = (dateStr: string, timeStr: string): number => {
     const [year, month, day] = dateStr.split("/")
 
     // Create ISO format date string (yyyy-mm-ddTHH:mm:ss)
-    const isoDateTime = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T${timeStr}`
+    const isoDateTime = `${s(year)}-${month?.padStart(2, "0") ?? ""}-${day?.padStart(2, "0") ?? ""}T${s(timeStr)}`
 
     const dateTime = new Date(isoDateTime)
 
@@ -107,9 +109,9 @@ export const parseMrtLoots = (
 
             const parsedItem = parseItemString(itemLink)
             if (timeRec < dateLowerBound || timeRec > dateUpperBound) {
-                console.log(
-                    "parseMrtLoots: skipping loot item outside raid session date time " +
-                        JSON.stringify(record)
+                logger.debug(
+                    "LootParser",
+                    `parseMrtLoots: skipping loot item outside raid session date time ${s(record)}`
                 )
                 continue
             }
@@ -118,20 +120,20 @@ export const parseMrtLoots = (
                 parsedItem.instanceDifficultyId < 3 ||
                 parsedItem.instanceDifficultyId > 6
             ) {
-                console.log(
-                    "parseMrtLoots: skipping loot with unwanted instanceDifficultyId # " +
-                        parsedItem.instanceDifficultyId +
-                        ": " +
-                        JSON.stringify(record)
+                logger.debug(
+                    "LootParser",
+                    `parseMrtLoots: skipping loot with unwanted instanceDifficultyId # ${s(
+                        parsedItem.instanceDifficultyId
+                    )}: ${s(record)}`
                 )
                 continue
             }
             if (quantity > 1) {
-                console.log(
-                    "parseMrtLoots: encounter loot with quantity =" +
-                        quantity +
-                        "source: " +
-                        JSON.stringify(record)
+                logger.debug(
+                    "LootParser",
+                    `parseMrtLoots: encounter loot with quantity =${s(
+                        quantity
+                    )}source: ${s(record)}`
                 )
             }
 
@@ -142,56 +144,40 @@ export const parseMrtLoots = (
             const raidDiff = parseWowDiff(difficulty)
 
             if (!wowItem) {
-                console.log(
-                    "parseMrtLoots: skipping loot item not in db: " +
-                        itemId +
-                        " https://www.wowhead.com/item=" +
-                        itemId +
-                        "?bonus=" +
-                        bonusIds
+                logger.debug(
+                    "LootParser",
+                    `parseMrtLoots: skipping loot item not in db: ${s(
+                        itemId
+                    )} https://www.wowhead.com/item=${s(itemId)}?bonus=${s(bonusIds)}`
                 )
                 continue
             }
 
             if (wowItem.sourceType !== "raid") {
-                console.log(
-                    "parseMrtLoots: skipping non raid loot: " +
-                        itemId +
-                        " - https://www.wowhead.com/item=" +
-                        itemId +
-                        "?bonus=" +
-                        bonusIds
+                logger.debug(
+                    "LootParser",
+                    `parseMrtLoots: skipping non raid loot: ${s(
+                        itemId
+                    )} - https://www.wowhead.com/item=${s(itemId)}?bonus=${s(bonusIds)}`
                 )
                 continue
             }
 
             const itemTrack = parseItemTrack(bonusIds)
-            let itemLevel: number = 0
+            let itemLevel = 0
 
-            if (itemTrack != null) {
+            if (itemTrack !== null) {
                 itemLevel = itemTrack.itemLevel
             } else {
                 // we are dealing with raid items only
                 itemLevel = parseItemLevelFromRaidDiff(wowItem, raidDiff)
             }
 
-            if (itemLevel == null) {
-                console.log(
-                    "parseMrtLoots: skipping loot item without ilvl: " +
-                        itemId +
-                        " - https://www.wowhead.com/item=" +
-                        itemId +
-                        "?bonus=" +
-                        bonusIds
-                )
-                continue
-            }
-
-            const key = `${timeRec}-${encounterID}-${difficulty}-${itemId}`
+            const key = `${s(timeRec)}-${s(encounterID)}-${s(difficulty)}-${s(itemId)}`
             const itemIndex = recordMap.get(key) || 0
             recordMap.set(key, itemIndex + 1)
 
-            const id = `${key}-${itemIndex}`
+            const id = `${key}-${s(itemIndex)}`
 
             const gearItem: GearItem = {
                 item: {
@@ -225,7 +211,10 @@ export const parseMrtLoots = (
 
             res.push(newLootSchema.parse(loot))
         } catch (error) {
-            console.log("Error processing MRT record:", record, error)
+            logger.error(
+                "LootParser",
+                `Error processing MRT record: ${s(record)} - ${s(error)}`
+            )
         }
     }
 
@@ -249,15 +238,22 @@ export const parseRcLoots = (
         skipEmptyLines: true,
     })
 
-    if (!parsedData.data || parsedData.errors.length > 0) {
-        console.log(parsedData.errors)
-        throw new Error("Error during parsing RCLoot CSV:" + parsedData.errors[0])
+    if (parsedData.errors.length > 0) {
+        logger.error("LootParser", `parseRcLoots errors: ${s(parsedData.errors)}`)
+        throw new Error(
+            `Error during parsing RCLoot CSV:${s(parsedData.errors[0]?.message)}`
+        )
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- CSV data parsed as records
     const filteredData = (parsedData.data as Record<string, unknown>[]).filter(
         (record) =>
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- CSV field types
             !PROFESSION_TYPES.has(record.subType as string) &&
-            !(record.response as string)?.toLowerCase().includes("personal loot")
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- CSV field types
+            !(record.response as string | undefined)
+                ?.toLowerCase()
+                .includes("personal loot")
     )
 
     const rawRecords = z.array(rawLootRecordSchema).parse(filteredData)
@@ -271,9 +267,9 @@ export const parseRcLoots = (
 
             const lootUnixTs = parseDateTime(date, time)
             if (lootUnixTs < dateLowerBound || lootUnixTs > dateUpperBound) {
-                console.log(
-                    "parseRcLoots: skipping loot item outside raid session date time " +
-                        JSON.stringify(record)
+                logger.debug(
+                    "LootParser",
+                    `parseRcLoots: skipping loot item outside raid session date time ${s(record)}`
                 )
                 continue
             }
@@ -282,11 +278,11 @@ export const parseRcLoots = (
                 parsedItem.instanceDifficultyId < 3 ||
                 parsedItem.instanceDifficultyId > 6
             ) {
-                console.log(
-                    "parseRcLoots: skipping loot with unwanted instanceDifficultyId # " +
-                        parsedItem.instanceDifficultyId +
-                        ": " +
-                        JSON.stringify(record)
+                logger.debug(
+                    "LootParser",
+                    `parseRcLoots: skipping loot with unwanted instanceDifficultyId # ${s(
+                        parsedItem.instanceDifficultyId
+                    )}: ${s(record)}`
                 )
                 continue
             }
@@ -297,55 +293,39 @@ export const parseRcLoots = (
             const raidDiff = parseWowDiff(difficultyID)
 
             if (!wowItem) {
-                console.log(
-                    "parseRcLoots: skipping loot item not in db: " +
-                        itemId +
-                        " https://www.wowhead.com/item=" +
-                        itemId +
-                        "?bonus=" +
-                        bonusIds
+                logger.debug(
+                    "LootParser",
+                    `parseRcLoots: skipping loot item not in db: ${s(
+                        itemId
+                    )} https://www.wowhead.com/item=${s(itemId)}?bonus=${s(bonusIds)}`
                 )
                 continue
             }
             if (wowItem.sourceType !== "raid") {
-                console.log(
-                    "parseRcLoots: skipping non raid loot: " +
-                        itemId +
-                        " - https://www.wowhead.com/item=" +
-                        itemId +
-                        "?bonus=" +
-                        bonusIds
+                logger.debug(
+                    "LootParser",
+                    `parseRcLoots: skipping non raid loot: ${s(
+                        itemId
+                    )} - https://www.wowhead.com/item=${s(itemId)}?bonus=${s(bonusIds)}`
                 )
                 continue
             }
 
             const itemTrack = parseItemTrack(bonusIds)
-            let itemLevel: number = 0
+            let itemLevel = 0
 
-            if (itemTrack != null) {
+            if (itemTrack !== null) {
                 itemLevel = itemTrack.itemLevel
             } else {
                 // we are dealing with raid items only
                 itemLevel = parseItemLevelFromRaidDiff(wowItem, raidDiff)
             }
 
-            if (itemLevel == null) {
-                console.log(
-                    "parseRcLoots: skipping loot item without ilvl: " +
-                        itemId +
-                        " - https://www.wowhead.com/item=" +
-                        itemId +
-                        "?bonus=" +
-                        bonusIds
-                )
-                continue
-            }
-
-            const key = `${lootUnixTs}-${boss}-${difficultyID}-${wowItem.id}`
+            const key = `${s(lootUnixTs)}-${s(boss)}-${s(difficultyID)}-${s(wowItem.id)}`
             const itemIndex = recordMap.get(key) || 0
             recordMap.set(key, itemIndex + 1)
 
-            const id = `${key}-${itemIndex}`
+            const id = `${key}-${s(itemIndex)}`
 
             const gearItem: GearItem = {
                 item: {
@@ -373,13 +353,11 @@ export const parseRcLoots = (
 
             if (importAssignedCharacter) {
                 if (!record.player) {
-                    console.log(
-                        "parseRcLoots: importAssignedCharacter is true but item not assigned to any character: " +
-                            itemId +
-                            " - https://www.wowhead.com/item=" +
-                            itemId +
-                            "?bonus=" +
-                            bonusIds
+                    logger.debug(
+                        "LootParser",
+                        `parseRcLoots: importAssignedCharacter is true but item not assigned to any character: ${s(
+                            itemId
+                        )} - https://www.wowhead.com/item=${s(itemId)}?bonus=${s(bonusIds)}`
                     )
                 } else {
                     const charnameRealm = record.player
@@ -394,15 +372,13 @@ export const parseRcLoots = (
                                     .toLowerCase()
                                     .replace("'", "")
                                     .replace("-", "") === charnameRealm[1]
-                        ) || null
+                        ) ?? null
                     if (!charAssignment) {
-                        console.log(
-                            "parseRcLoots: importAssignedCharacter is true but assigned character is not in the roster: " +
-                                record.player +
-                                " - https://www.wowhead.com/item=" +
-                                itemId +
-                                "?bonus=" +
-                                bonusIds
+                        logger.debug(
+                            "LootParser",
+                            `parseRcLoots: importAssignedCharacter is true but assigned character is not in the roster: ${s(
+                                record.player
+                            )} - https://www.wowhead.com/item=${s(itemId)}?bonus=${s(bonusIds)}`
                         )
                     }
                 }
@@ -419,7 +395,10 @@ export const parseRcLoots = (
 
             res.push(newLootSchema.parse(loot))
         } catch (error) {
-            console.log("Error processing RC record:", record, error)
+            logger.error(
+                "LootParser",
+                `Error processing RC record: ${s(record)} - ${s(error)}`
+            )
         }
     }
 
@@ -440,11 +419,11 @@ export const parseManualLoots = (
             const wowItem = allItemsInDb.find((i) => i.id === loot.itemId)
 
             if (!wowItem) {
-                console.log(
-                    "parseManualLoots: skipping loot item not in db: " +
-                        loot.itemId +
-                        " https://www.wowhead.com/item=" +
+                logger.debug(
+                    "LootParser",
+                    `parseManualLoots: skipping loot item not in db: ${s(
                         loot.itemId
+                    )} https://www.wowhead.com/item=${s(loot.itemId)}`
                 )
                 continue
             }
@@ -467,10 +446,18 @@ export const parseManualLoots = (
 
             const bonusIds: number[] = []
 
-            if (loot.hasSocket) applySocket(bonusIds)
-            if (loot.hasAvoidance) applyAvoidance(bonusIds)
-            if (loot.hasLeech) applyLeech(bonusIds)
-            if (loot.hasSpeed) applySpeed(bonusIds)
+            if (loot.hasSocket) {
+                applySocket(bonusIds)
+            }
+            if (loot.hasAvoidance) {
+                applyAvoidance(bonusIds)
+            }
+            if (loot.hasLeech) {
+                applyLeech(bonusIds)
+            }
+            if (loot.hasSpeed) {
+                applySpeed(bonusIds)
+            }
 
             let itemTrack: ItemTrack | null = null
             if (wowItem.token) {
@@ -478,16 +465,6 @@ export const parseManualLoots = (
                 applyDiffBonusId(bonusIds, loot.raidDifficulty)
             } else {
                 itemTrack = getItemTrack(itemLevel, loot.raidDifficulty)
-            }
-
-            if (itemLevel == null) {
-                console.log(
-                    "parseManualLoots: skipping loot item without ilvl: " +
-                        loot.itemId +
-                        " - https://www.wowhead.com/item=" +
-                        loot.itemId
-                )
-                continue
             }
 
             const gearItem: GearItem = {
@@ -522,7 +499,10 @@ export const parseManualLoots = (
 
             res.push(newLootSchema.parse(nl))
         } catch (error) {
-            console.log("Error processing manual loot:", loot, error)
+            logger.error(
+                "LootParser",
+                `Error processing manual loot: ${s(loot)} - ${s(error)}`
+            )
         }
     }
 
