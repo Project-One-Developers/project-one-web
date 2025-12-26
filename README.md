@@ -64,15 +64,6 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 pnpm build
 ```
 
-## Deployment
-
-The easiest way to deploy is with [Vercel](https://vercel.com):
-
-1. Push your code to GitHub
-2. Import the repository in Vercel
-3. Add your environment variables
-4. Deploy
-
 ## Tech Stack
 
 - **Next.js 15**: React framework with App Router
