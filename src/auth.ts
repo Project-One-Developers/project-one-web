@@ -1,3 +1,4 @@
+import { env } from "@/env"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
 import NextAuth from "next-auth"
@@ -19,16 +20,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 return false
             }
 
-            const guildId = process.env.DISCORD_GUILD_ID
-            const allowedRoles = process.env.DISCORD_ALLOWED_ROLES?.split(",") ?? []
-
-            if (!guildId || allowedRoles.length === 0) {
-                logger.error(
-                    "Auth",
-                    "Missing DISCORD_GUILD_ID or DISCORD_ALLOWED_ROLES env variables"
-                )
-                return false
-            }
+            const guildId = env.DISCORD_GUILD_ID
+            const allowedRoles = env.DISCORD_ALLOWED_ROLES
 
             try {
                 // Fetch user's membership in the guild

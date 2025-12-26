@@ -2,18 +2,17 @@ import {
     syncDroptimizersFromDiscordAction,
     deleteSimulationsOlderThanHoursAction,
 } from "@/actions/droptimizer"
+import { env } from "@/env"
 import { checkWowAuditUpdatesAction } from "@/actions/wowaudit"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
 import { NextResponse } from "next/server"
 
-// Verify this is a cron request from Vercel (optional but recommended)
+// Verify this is a cron request from Vercel
 function verifyCronSecret(request: Request): boolean {
+    if (!env.CRON_SECRET) {return false} // No secret configured, block
     const authHeader = request.headers.get("authorization")
-    if (!process.env.CRON_SECRET) {
-        return true
-    } // No secret configured, allow
-    return authHeader === `Bearer ${process.env.CRON_SECRET}`
+    return authHeader === `Bearer ${env.CRON_SECRET}`
 }
 
 // Hours to look back for Discord messages
