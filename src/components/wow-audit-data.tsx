@@ -1,6 +1,7 @@
 "use client"
 
 import type { CharacterWowAudit, WowItemEquippedSlotKey } from "@/shared/types/types"
+
 import CharacterPaperdoll from "./wow/character-paperdoll"
 import BaseGearSlot from "./wow/character-paperdoll-gearslot"
 import { WowGearIcon } from "./wow/wow-gear-icon"

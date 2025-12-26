@@ -1,12 +1,14 @@
 "use client"
 
+import Image from "next/image"
+import { useState } from "react"
+
 import { itemSlotIcon } from "@/lib/wow-icon"
 import { ITEM_SLOTS_KEY } from "@/shared/consts/wow.consts"
 import { formatWowSlotKey } from "@/shared/libs/items/item-slot-utils"
 import { wowItemSlotKeySchema } from "@/shared/schemas/wow.schemas"
 import type { LootWithAssigned, WowItemSlotKey } from "@/shared/types/types"
-import Image from "next/image"
-import { useState } from "react"
+
 import { WowClassIcon } from "./wow/wow-class-icon"
 import { WowGearIcon } from "./wow/wow-gear-icon"
 

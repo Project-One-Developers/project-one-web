@@ -1,3 +1,5 @@
+import { z } from "zod"
+
 import { bisListSchema } from "@/shared/schemas/bis-list.schemas"
 import { bossSchema, bossWithItemsSchema } from "@/shared/schemas/boss.schema"
 import { itemNoteSchema } from "@/shared/schemas/itemNote.schema"
@@ -25,7 +27,7 @@ import {
 } from "@/shared/schemas/raid.schemas"
 import { appSettingsSchema } from "@/shared/schemas/store.schemas"
 import { charWowAuditSchema } from "@/shared/schemas/wowaudit.schemas"
-import { z } from "zod"
+
 import {
     characterGameInfoSchema,
     characterSchema,

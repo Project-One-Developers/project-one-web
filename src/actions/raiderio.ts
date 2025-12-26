@@ -1,8 +1,6 @@
 "use server"
 
 import { getCharactersList } from "@/db/repositories/characters"
-import { logger } from "@/lib/logger"
-import { s } from "@/lib/safe-stringify"
 import {
     addCharacterRaiderio,
     deleteAllCharacterRaiderio,
@@ -10,11 +8,13 @@ import {
     getLastTimeSyncedRaiderio,
     upsertCharacterRaiderio,
 } from "@/db/repositories/raiderio"
+import { logger } from "@/lib/logger"
 import {
     fetchCharacterRaidProgress,
     parseRaiderioData,
     resetItemsCache,
 } from "@/lib/raiderio/raiderio-sync"
+import { s } from "@/lib/safe-stringify"
 import {
     formaUnixTimestampToItalianDate,
     getUnixTimestamp,

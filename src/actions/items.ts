@@ -1,7 +1,9 @@
 "use server"
 
+import { and, eq } from "drizzle-orm"
+import { z } from "zod"
+
 import { db } from "@/db"
-import { itemTable } from "@/db/schema"
 import {
     deleteItemNote,
     getAllItemNotes,
@@ -11,11 +13,10 @@ import {
     searchItems,
     setItemNote,
 } from "@/db/repositories/items"
+import { itemTable } from "@/db/schema"
 import { CURRENT_SEASON } from "@/shared/consts/wow.consts"
 import { itemSchema } from "@/shared/schemas/items.schema"
 import type { Item, ItemNote } from "@/shared/types/types"
-import { and, eq } from "drizzle-orm"
-import { z } from "zod"
 
 export async function getItemsAction(): Promise<Item[]> {
     return await getItems()

@@ -1,23 +1,25 @@
 "use client"
 
+import { LoaderCircle, Edit, Search } from "lucide-react"
+
 import Image from "next/image"
 import { useState, useMemo, useEffect, type JSX } from "react"
-import { LoaderCircle, Edit, Search } from "lucide-react"
-import { cn, defined } from "@/lib/utils"
+
+import { GlobalFilterUI } from "@/components/global-filter-ui"
+import ItemManagementDialog from "@/components/item-management-dialog"
 import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { GlobalFilterUI } from "@/components/global-filter-ui"
-import { FilterProvider, useFilterContext } from "@/lib/filter-context"
-import ItemManagementDialog from "@/components/item-management-dialog"
 import { WowItemIcon } from "@/components/wow/wow-item-icon"
 import { WowSpecIcon } from "@/components/wow/wow-spec-icon"
-import { useRaidLootTable } from "@/lib/queries/bosses"
+import { FilterProvider, useFilterContext } from "@/lib/filter-context"
+import type { LootFilter } from "@/lib/filters"
 import { useBisList } from "@/lib/queries/bis-list"
+import { useRaidLootTable } from "@/lib/queries/bosses"
 import { useItemNotes } from "@/lib/queries/items"
+import { cn, defined } from "@/lib/utils"
 import { encounterIcon } from "@/lib/wow-icon"
 import { getWowClassBySpecId } from "@/shared/libs/spec-parser/spec-utils"
 import type { BisList, BossWithItems, Item, ItemNote } from "@/shared/types/types"
-import type { LootFilter } from "@/lib/filters"
 
 // Boss Panel Component
 type BossPanelProps = {

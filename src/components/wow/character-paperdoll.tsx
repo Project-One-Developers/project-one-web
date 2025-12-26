@@ -1,7 +1,8 @@
 "use client"
 
-import type { WowItemEquippedSlotKey } from "@/shared/types/types"
 import type { ReactNode } from "react"
+
+import type { WowItemEquippedSlotKey } from "@/shared/types/types"
 
 type CharacterPaperdollProps = {
     renderGearSlot: (

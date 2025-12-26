@@ -1,8 +1,9 @@
+import { eq, sql } from "drizzle-orm"
+
 import { db } from "@/db"
 import { bisListTable } from "@/db/schema"
 import { newUUID } from "@/db/utils"
 import type { BisList } from "@/shared/types/types"
-import { eq, sql } from "drizzle-orm"
 
 export async function getBisList(): Promise<BisList[]> {
     const results = await db

@@ -7,6 +7,7 @@ import {
     setConfigAction,
 } from "@/actions/settings"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+
 import { queryKeys } from "./keys"
 
 export function useConfig(key: string) {

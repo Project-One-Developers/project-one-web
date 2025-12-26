@@ -1,26 +1,29 @@
 "use client"
 
+import { LoaderCircle, PanelLeftClose, PanelLeftOpen } from "lucide-react"
+
 import Image from "next/image"
-import { defined } from "@/lib/utils"
-import { useCharacterGameInfo } from "@/lib/queries/players"
-import { formatUnixTimestampForDisplay } from "@/shared/libs/date/date-utils"
-import {
-    isCurrencyBlacklisted,
-    isRelevantCurrency,
-} from "@/shared/libs/currency/currency-utils"
-import type { Character, CharacterWowAudit, Droptimizer } from "@/shared/types/types"
-import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
+import { useMemo, useState } from "react"
+
 import {
     Collapsible,
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LoaderCircle, PanelLeftClose, PanelLeftOpen } from "lucide-react"
-import { useMemo, useState } from "react"
+import { useCharacterGameInfo } from "@/lib/queries/players"
+import { defined } from "@/lib/utils"
+import {
+    isCurrencyBlacklisted,
+    isRelevantCurrency,
+} from "@/shared/libs/currency/currency-utils"
+import { formatUnixTimestampForDisplay } from "@/shared/libs/date/date-utils"
+import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
+import type { Character, CharacterWowAudit, Droptimizer } from "@/shared/types/types"
+
+import DroptimizerData from "./droptimizer-data"
 import { CurrentGreatVaultPanel } from "./greatvault-current-panel"
 import { NextGreatVaultPanel } from "./greatvault-next-panel"
-import DroptimizerData from "./droptimizer-data"
 import RaiderioData from "./raiderio-data"
 import WowAuditData from "./wow-audit-data"
 import { WowCurrencyIcon } from "./wow/wow-currency-icon"

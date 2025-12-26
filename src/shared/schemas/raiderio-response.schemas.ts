@@ -1,5 +1,6 @@
-import { raiderIoProgressSchema } from "./raiderio.schemas"
 import z from "zod"
+
+import { raiderIoProgressSchema } from "./raiderio.schemas"
 
 const gemDetailSchema = z.object({
     id: z.number(),

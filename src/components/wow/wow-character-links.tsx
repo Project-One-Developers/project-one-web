@@ -1,4 +1,5 @@
 import Image from "next/image"
+
 import type { Character } from "@/shared/types/types"
 
 type WowCharacterLinkProps = {

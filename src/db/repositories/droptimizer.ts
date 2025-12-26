@@ -1,3 +1,6 @@
+import { eq, InferInsertModel, lte, sql } from "drizzle-orm"
+import { z } from "zod"
+
 import { db } from "@/db"
 import { droptimizerTable, droptimizerUpgradesTable } from "@/db/schema"
 import { newUUID } from "@/db/utils"
@@ -9,8 +12,6 @@ import {
 } from "@/shared/schemas/simulations.schemas"
 import { wowClassNameSchema, wowRaidDiffSchema } from "@/shared/schemas/wow.schemas"
 import type { Droptimizer, NewDroptimizer, WowRaidDifficulty } from "@/shared/types/types"
-import { eq, InferInsertModel, lte, sql } from "drizzle-orm"
-import { z } from "zod"
 
 // Schema for parsing droptimizer storage results
 const droptimizerStorageSchema = z.object({

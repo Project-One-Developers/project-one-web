@@ -1,10 +1,5 @@
 "use client"
 
-import { syncAllCharactersRaiderioAction } from "@/actions/raiderio"
-import { syncCharacterWowAuditAction } from "@/actions/wowaudit"
-import { syncDroptimizersFromDiscordAction } from "@/actions/droptimizer"
-import { s } from "@/lib/safe-stringify"
-import { Button } from "@/components/ui/button"
 import {
     Database,
     ListRestart,
@@ -12,8 +7,15 @@ import {
     MessageSquare,
     RefreshCcwDot,
 } from "lucide-react"
-import { useState, type JSX } from "react"
 import { toast } from "sonner"
+
+import { useState, type JSX } from "react"
+
+import { syncDroptimizersFromDiscordAction } from "@/actions/droptimizer"
+import { syncAllCharactersRaiderioAction } from "@/actions/raiderio"
+import { syncCharacterWowAuditAction } from "@/actions/wowaudit"
+import { Button } from "@/components/ui/button"
+import { s } from "@/lib/safe-stringify"
 
 export default function SettingsPage(): JSX.Element {
     const [isSyncingWowAudit, setIsSyncingWowAudit] = useState(false)

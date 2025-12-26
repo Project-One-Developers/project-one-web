@@ -1,7 +1,9 @@
 "use client"
 
-import type { Character } from "@/shared/types/types"
 import { useRouter } from "next/navigation"
+
+import type { Character } from "@/shared/types/types"
+
 import { WowClassIcon } from "./wow-class-icon"
 
 export type WowCharacterIconProps = {

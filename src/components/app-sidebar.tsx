@@ -13,8 +13,11 @@ import {
     LucideSwords,
     Settings,
 } from "lucide-react"
+
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import type { JSX } from "react"
+
 import {
     Sidebar,
     SidebarContent,
@@ -27,8 +30,6 @@ import {
     SidebarTrigger,
     useSidebar,
 } from "./ui/sidebar"
-
-import type { JSX } from "react"
 
 const preparationItems = [
     {

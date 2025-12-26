@@ -1,15 +1,15 @@
+import { getItems } from "@/db/repositories/items"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import { evalRealSeason, parseItemTrack } from "@/shared/libs/items/item-bonus-utils"
-import { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
 import {
     raiderioResponseSchema,
     type RaiderioItems,
     type RaiderioResponse,
 } from "@/shared/schemas/raiderio-response.schemas"
+import { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
 import type { GearItem, Item, WowItemEquippedSlotKey } from "@/shared/types/types"
-import { getItems } from "@/db/repositories/items"
 
 export async function fetchCharacterRaidProgress(
     characterName: string,

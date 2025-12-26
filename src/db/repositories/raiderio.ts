@@ -1,8 +1,9 @@
+import { z } from "zod"
+
 import { db } from "@/db"
 import { charRaiderioTable } from "@/db/schema"
-import { CharacterRaiderio, charRaiderioSchema } from "@/shared/schemas/raiderio.schemas"
 import { conflictUpdateAllExcept } from "@/db/utils"
-import { z } from "zod"
+import { CharacterRaiderio, charRaiderioSchema } from "@/shared/schemas/raiderio.schemas"
 
 export async function addCharacterRaiderio(
     characters: CharacterRaiderio[]

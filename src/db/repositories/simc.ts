@@ -1,9 +1,10 @@
+import { z } from "zod"
+
 import { db } from "@/db"
 import { simcTable } from "@/db/schema"
 import { conflictUpdateAllExcept } from "@/db/utils"
 import { simcSchema } from "@/shared/schemas/simulations.schemas"
 import type { SimC } from "@/shared/types/types"
-import { z } from "zod"
 
 export async function getAllSimC(): Promise<SimC[]> {
     const result = await db.query.simcTable.findMany()

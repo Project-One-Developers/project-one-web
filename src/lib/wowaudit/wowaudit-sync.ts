@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- External API parsing with known data structure */
 import { getItems } from "@/db/repositories/items"
+import type { NewCharacterWowAudit } from "@/db/repositories/wowaudit"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
-import type { NewCharacterWowAudit } from "@/db/repositories/wowaudit"
 import { CURRENT_SEASON } from "@/shared/consts/wow.consts"
 import {
     applyItemTrackByIlvlAndDelta,

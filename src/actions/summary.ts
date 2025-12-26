@@ -4,6 +4,7 @@ import { getCharactersWithPlayerList } from "@/db/repositories/characters"
 import { getDroptimizerLatestList } from "@/db/repositories/droptimizer"
 import { getAllCharacterRaiderio } from "@/db/repositories/raiderio"
 import { getAllCharacterWowAudit } from "@/db/repositories/wowaudit"
+import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
 import {
     DroptimizerWarn,
     RaiderioWarn,
@@ -13,7 +14,6 @@ import {
     type Droptimizer,
     type GearItem,
 } from "@/shared/types/types"
-import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
 
 // Parse item level from various data sources
 function parseItemLevel(

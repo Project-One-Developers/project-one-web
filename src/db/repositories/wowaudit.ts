@@ -1,8 +1,9 @@
+import { z } from "zod"
+
 import { db } from "@/db"
 import { charWowAuditTable } from "@/db/schema"
 import { gearItemSchema } from "@/shared/schemas/items.schema"
 import type { CharacterWowAudit } from "@/shared/types/types"
-import { z } from "zod"
 
 // Schema for new WowAudit character data (matches DB table)
 export const newCharacterWowAuditSchema = z.object({

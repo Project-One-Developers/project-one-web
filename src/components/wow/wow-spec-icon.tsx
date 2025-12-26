@@ -1,10 +1,11 @@
 "use client"
 
 import Image from "next/image"
-import { s } from "@/lib/safe-stringify"
-import { specIcon } from "@/lib/wow-icon"
+
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { s } from "@/lib/safe-stringify"
 import { cn } from "@/lib/utils"
+import { specIcon } from "@/lib/wow-icon"
 
 type WowSpecIconProps = {
     specId: number

@@ -1,6 +1,10 @@
 "use client"
 
+import { LoaderCircle } from "lucide-react"
+
 import Image from "next/image"
+import { useMemo, type JSX } from "react"
+
 import { DroptimizerCard } from "@/components/droptimizer-card"
 import DroptimizerNewDialog from "@/components/droptimizer-new-dialog"
 import { GlobalFilterUI } from "@/components/global-filter-ui"
@@ -8,8 +12,6 @@ import { FilterProvider, useFilterContext } from "@/lib/filter-context"
 import { filterDroptimizer } from "@/lib/filters"
 import { useLatestDroptimizers } from "@/lib/queries/droptimizers"
 import { useCharacters } from "@/lib/queries/players"
-import { LoaderCircle } from "lucide-react"
-import { useMemo, type JSX } from "react"
 
 function DroptimizerPageContent(): JSX.Element {
     const { filter } = useFilterContext()

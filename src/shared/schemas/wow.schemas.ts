@@ -1,3 +1,5 @@
+import { z } from "zod"
+
 import {
     ARMOR_TYPES,
     CLASSES_NAME as CLASSES_NAME_VALUES,
@@ -7,7 +9,6 @@ import {
     ROLES,
     SPECS_NAME,
 } from "@/shared/consts/wow.consts"
-import { z } from "zod"
 
 export const wowClassNameSchema = z.enum(CLASSES_NAME_VALUES)
 

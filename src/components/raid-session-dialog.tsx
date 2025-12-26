@@ -1,18 +1,22 @@
 "use client"
 
-import { useAddRaidSession, useEditRaidSession } from "@/lib/queries/raid-sessions"
+import { Loader2 } from "lucide-react"
+import { toast } from "sonner"
+
+import { useState, type JSX, useMemo } from "react"
+
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { useCharacters } from "@/lib/queries/players"
-import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
+import { useAddRaidSession, useEditRaidSession } from "@/lib/queries/raid-sessions"
 import { defined } from "@/lib/utils"
+import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import type {
     Character,
     EditRaidSession,
     NewRaidSession,
     RaidSessionWithRoster,
 } from "@/shared/types/types"
-import { Loader2 } from "lucide-react"
-import { useState, type JSX, useMemo } from "react"
-import { toast } from "sonner"
+
 import { Button } from "./ui/button"
 import { Checkbox } from "./ui/checkbox"
 import {
@@ -24,7 +28,6 @@ import {
 } from "./ui/dialog"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
 
 type RaidSessionDialogProps = {
     isOpen: boolean

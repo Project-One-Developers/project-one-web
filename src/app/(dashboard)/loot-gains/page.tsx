@@ -1,16 +1,18 @@
 "use client"
 
+import { LoaderCircle } from "lucide-react"
+
 import Image from "next/image"
 import { useMemo, type JSX } from "react"
-import { LoaderCircle } from "lucide-react"
-import { GlobalFilterUI } from "@/components/global-filter-ui"
+
 import { DroptimizersForItem } from "@/components/droptimizers-for-item"
+import { GlobalFilterUI } from "@/components/global-filter-ui"
 import { WowItemIcon } from "@/components/wow/wow-item-icon"
 import { FilterProvider, useFilterContext } from "@/lib/filter-context"
 import { filterDroptimizer } from "@/lib/filters"
+import { useRaidLootTable } from "@/lib/queries/bosses"
 import { useLatestDroptimizers } from "@/lib/queries/droptimizers"
 import { useCharacters } from "@/lib/queries/players"
-import { useRaidLootTable } from "@/lib/queries/bosses"
 import { encounterIcon } from "@/lib/wow-icon"
 import type {
     BossWithItems,

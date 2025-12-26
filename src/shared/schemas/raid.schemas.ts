@@ -1,4 +1,5 @@
 import { z } from "zod"
+
 import { characterSchema } from "./characters.schemas"
 
 export const raidSessionSchema = z.object({

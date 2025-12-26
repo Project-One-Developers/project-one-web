@@ -1,10 +1,11 @@
 "use client"
 
 import Image from "next/image"
-import { classIcon } from "@/lib/wow-icon"
-import type { WowClassName } from "@/shared/types/types"
+
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { classIcon } from "@/lib/wow-icon"
+import type { WowClassName } from "@/shared/types/types"
 
 type WowClassIconProps = {
     wowClassName: WowClassName

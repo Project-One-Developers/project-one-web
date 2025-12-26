@@ -1,11 +1,14 @@
 "use client"
 
+import { Loader2 } from "lucide-react"
+import { toast } from "sonner"
+
 import Image from "next/image"
+import { type JSX } from "react"
+
 import { useDeletePlayer } from "@/lib/queries/players"
 import type { Player } from "@/shared/types/types"
-import { Loader2 } from "lucide-react"
-import { type JSX } from "react"
-import { toast } from "sonner"
+
 import { Button } from "./ui/button"
 import {
     Dialog,

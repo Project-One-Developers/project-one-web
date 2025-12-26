@@ -1,10 +1,13 @@
 "use client"
 
+import { LoaderCircle, X } from "lucide-react"
+
+import { useMemo } from "react"
+
 import { useBosses } from "@/lib/queries/bosses"
 import { useDeleteLoot, useLootsBySessionWithItem } from "@/lib/queries/loots"
 import type { LootWithItem, WowRaidDifficulty } from "@/shared/types/types"
-import { LoaderCircle, X } from "lucide-react"
-import { useMemo } from "react"
+
 import { WowGearIcon } from "./wow/wow-gear-icon"
 
 type SessionLootsPanelProps = {

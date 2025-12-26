@@ -1,19 +1,5 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import RaidSessionDialog from "@/components/raid-session-dialog"
-import SessionRosterImportDialog from "@/components/session-roster-dialog"
-import SessionLootNewDialog from "@/components/session-loot-new-dialog"
-import { SessionLootsPanel } from "@/components/session-loots-panel"
-import { WowClassIcon } from "@/components/wow/wow-class-icon"
-import {
-    useCloneRaidSession,
-    useDeleteRaidSession,
-    useRaidSession,
-} from "@/lib/queries/raid-sessions"
-import { useLootsBySessionWithItem } from "@/lib/queries/loots"
-import { formaUnixTimestampToItalianDate } from "@/shared/libs/date/date-utils"
 import {
     ArrowLeft,
     Calendar,
@@ -26,8 +12,24 @@ import {
     Trash2,
     Users,
 } from "lucide-react"
-import { useParams, useRouter } from "next/navigation"
 import { toast } from "sonner"
+
+import { useParams, useRouter } from "next/navigation"
+import { useState } from "react"
+
+import RaidSessionDialog from "@/components/raid-session-dialog"
+import SessionLootNewDialog from "@/components/session-loot-new-dialog"
+import { SessionLootsPanel } from "@/components/session-loots-panel"
+import SessionRosterImportDialog from "@/components/session-roster-dialog"
+import { Button } from "@/components/ui/button"
+import { WowClassIcon } from "@/components/wow/wow-class-icon"
+import { useLootsBySessionWithItem } from "@/lib/queries/loots"
+import {
+    useCloneRaidSession,
+    useDeleteRaidSession,
+    useRaidSession,
+} from "@/lib/queries/raid-sessions"
+import { formaUnixTimestampToItalianDate } from "@/shared/libs/date/date-utils"
 
 export default function RaidSessionPage() {
     const params = useParams<{ id: string }>()

@@ -1,7 +1,10 @@
 "use client"
 
+import Image from "next/image"
+
 import { Checkbox } from "@/components/ui/checkbox"
 import type { LootFilter } from "@/lib/filters"
+import { cn } from "@/lib/utils"
 import { armorTypesIcon, classIcon, itemSlotIcon, raidDiffIcon } from "@/lib/wow-icon"
 import { formatWowSlotKey } from "@/shared/libs/items/item-slot-utils"
 import {
@@ -15,8 +18,6 @@ import type {
     WowItemSlotKey,
     WowRaidDifficulty,
 } from "@/shared/types/types"
-import { cn } from "@/lib/utils"
-import Image from "next/image"
 
 type FiltersPanelProps = {
     filter: LootFilter

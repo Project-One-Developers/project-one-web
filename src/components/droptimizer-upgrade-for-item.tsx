@@ -1,9 +1,11 @@
 "use client"
 
+import { ArrowRight } from "lucide-react"
+
 import { getDpsHumanReadable } from "@/lib/utils"
 import { formatUnixTimestampToRelativeDays } from "@/shared/libs/date/date-utils"
 import type { GearItem } from "@/shared/types/types"
-import { ArrowRight } from "lucide-react"
+
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 import { WowGearIcon } from "./wow/wow-gear-icon"
 import { WowSpecIcon } from "./wow/wow-spec-icon"

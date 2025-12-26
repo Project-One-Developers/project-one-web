@@ -1,3 +1,6 @@
+import { eq, inArray, type InferInsertModel } from "drizzle-orm"
+import { z } from "zod"
+
 import { db } from "@/db"
 import { lootTable } from "@/db/schema"
 import { newUUID } from "@/db/utils"
@@ -14,8 +17,6 @@ import type {
     LootWithItem,
     NewLoot,
 } from "@/shared/types/types"
-import { eq, inArray, type InferInsertModel } from "drizzle-orm"
-import { z } from "zod"
 
 export async function getLootById(lootId: string): Promise<Loot> {
     const result = await db.query.lootTable.findFirst({

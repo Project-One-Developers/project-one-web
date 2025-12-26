@@ -1,5 +1,10 @@
 "use client"
 
+import { ArrowLeft, Edit, LoaderCircle, Trash2 } from "lucide-react"
+
+import { useParams, useRouter } from "next/navigation"
+import { useState } from "react"
+
 import CharacterDeleteDialog from "@/components/character-delete-dialog"
 import CharacterDialog from "@/components/character-dialog"
 import { CharGameInfoPanel } from "@/components/character-game-info-panel"
@@ -7,9 +12,6 @@ import { Button } from "@/components/ui/button"
 import { WowCharacterLink } from "@/components/wow/wow-character-links"
 import { WowClassIcon } from "@/components/wow/wow-class-icon"
 import { useCharacter } from "@/lib/queries/players"
-import { ArrowLeft, Edit, LoaderCircle, Trash2 } from "lucide-react"
-import { useParams, useRouter } from "next/navigation"
-import { useState } from "react"
 
 export default function CharacterPage() {
     const params = useParams<{ characterId: string }>()

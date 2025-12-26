@@ -1,3 +1,4 @@
+import { getItems, getTiersetAndTokenList } from "@/db/repositories/items"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
 import { CURRENT_CATALYST_CHARGE_ID } from "@/shared/consts/wow.consts"
@@ -7,7 +8,6 @@ import {
     parseItemTrack,
 } from "@/shared/libs/items/item-bonus-utils"
 import type { DroptimizerCurrency, GearItem, Item } from "@/shared/types/types"
-import { getItems, getTiersetAndTokenList } from "@/db/repositories/items"
 
 export const parseCatalystFromSimc = (simc: string): DroptimizerCurrency[] => {
     const catalystRegex = /# catalyst_currencies=([^\n]+)/

@@ -4,5 +4,9 @@
     "tabWidth": 4,
     "arrowParens": "always",
     "trailingComma": "es5",
-    "printWidth": 90
+    "printWidth": 90,
+    "plugins": ["@trivago/prettier-plugin-sort-imports"],
+    "importOrder": ["^(react|next)", "^@", "^[./]"],
+    "importOrderSeparation": true,
+    "importOrderCaseInsensitive": true
 }

@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+
 import { s } from "@/lib/safe-stringify"
 import { cn } from "@/lib/utils"
 import {
@@ -12,6 +13,7 @@ import { formatWowSlotKey } from "@/shared/libs/items/item-slot-utils"
 import { trackNameToWowDiff } from "@/shared/libs/items/item-tracks"
 import { isHealerSpecs, isTankSpecs } from "@/shared/libs/spec-parser/spec-utils"
 import type { GearItem } from "@/shared/types/types"
+
 import { useRefreshWowheadTooltips } from "./wowhead-tooltips"
 
 type WowGearIconProps = {

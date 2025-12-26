@@ -2,6 +2,7 @@
 
 import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
 import type { WowItemEquippedSlotKey } from "@/shared/types/types"
+
 import CharacterPaperdoll from "./wow/character-paperdoll"
 import BaseGearSlot, { createGearSlotMapping } from "./wow/character-paperdoll-gearslot"
 

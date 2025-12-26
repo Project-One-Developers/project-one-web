@@ -1,3 +1,6 @@
+import { eq, isNull } from "drizzle-orm"
+import { z } from "zod"
+
 import { db } from "@/db"
 import { charTable, playerTable } from "@/db/schema"
 import { newUUID } from "@/db/utils"
@@ -17,8 +20,6 @@ import type {
     Player,
     PlayerWithCharacters,
 } from "@/shared/types/types"
-import { eq, isNull } from "drizzle-orm"
-import { z } from "zod"
 
 // Player storage schema for parsing DB results
 const playerStorageSchema = z

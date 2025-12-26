@@ -1,13 +1,3 @@
-import {
-    ARMOR_TYPES,
-    CLASSES_NAME,
-    ITEM_SLOTS_DESC,
-    ITEM_SLOTS_KEY,
-    RAID_DIFF,
-    ROLES,
-} from "@/shared/consts/wow.consts"
-import { RaiderioProgress } from "@/shared/schemas/raiderio.schemas"
-import { CharAssignmentHighlights, GearItem } from "@/shared/types/types"
 import { relations } from "drizzle-orm"
 import {
     boolean,
@@ -22,6 +12,17 @@ import {
     unique,
     varchar,
 } from "drizzle-orm/pg-core"
+
+import {
+    ARMOR_TYPES,
+    CLASSES_NAME,
+    ITEM_SLOTS_DESC,
+    ITEM_SLOTS_KEY,
+    RAID_DIFF,
+    ROLES,
+} from "@/shared/consts/wow.consts"
+import { RaiderioProgress } from "@/shared/schemas/raiderio.schemas"
+import { CharAssignmentHighlights, GearItem } from "@/shared/types/types"
 
 //////////////////////////////////////////////////////////
 //                      ENUMS                           //

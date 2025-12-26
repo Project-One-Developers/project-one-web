@@ -1,5 +1,10 @@
 "use client"
 
+import { LoaderCircle, MoreVertical, StickyNote } from "lucide-react"
+import { toast } from "sonner"
+
+import { useMemo, useState, type JSX } from "react"
+
 import { useItemNote } from "@/lib/queries/items"
 import {
     useAssignLoot,
@@ -14,9 +19,7 @@ import {
     type CharAssignmentInfo,
     type LootWithAssigned,
 } from "@/shared/types/types"
-import { LoaderCircle, MoreVertical, StickyNote } from "lucide-react"
-import { useMemo, useState, type JSX } from "react"
-import { toast } from "sonner"
+
 import { DroptimizerUpgradeForItemEquipped } from "./droptimizer-upgrade-for-item"
 import {
     DropdownMenu,

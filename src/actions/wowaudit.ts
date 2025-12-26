@@ -1,5 +1,6 @@
 "use server"
 
+import { getConfig } from "@/db/repositories/settings"
 import {
     addCharacterWowAudit,
     deleteAllCharacterWowAudit,
@@ -7,7 +8,6 @@ import {
     getLastTimeSyncedWowAudit,
     getLastWowAuditInfo,
 } from "@/db/repositories/wowaudit"
-import { getConfig } from "@/db/repositories/settings"
 import { logger } from "@/lib/logger"
 import { fetchWowAuditData, parseWowAuditData } from "@/lib/wowaudit/wowaudit-sync"
 import {

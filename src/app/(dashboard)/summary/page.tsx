@@ -1,9 +1,11 @@
 "use client"
 
-import { TiersetInfo } from "@/components/wow/tierset-info"
-import { WowClassIcon } from "@/components/wow/wow-class-icon"
-import { WowCurrencyIcon } from "@/components/wow/wow-currency-icon"
-import { WowGearIcon } from "@/components/wow/wow-gear-icon"
+import clsx from "clsx"
+import { AlertTriangle, CheckCircle, LoaderCircle, XCircle } from "lucide-react"
+
+import { useRouter } from "next/navigation"
+import { useMemo, useState, type JSX } from "react"
+
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import {
@@ -14,6 +16,10 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { TiersetInfo } from "@/components/wow/tierset-info"
+import { WowClassIcon } from "@/components/wow/wow-class-icon"
+import { WowCurrencyIcon } from "@/components/wow/wow-currency-icon"
+import { WowGearIcon } from "@/components/wow/wow-gear-icon"
 import { useRosterSummary } from "@/lib/queries/summary"
 import { isRelevantCurrency } from "@/shared/libs/currency/currency-utils"
 import {
@@ -22,10 +28,6 @@ import {
     WowAuditWarn,
     type CharacterSummary,
 } from "@/shared/types/types"
-import clsx from "clsx"
-import { AlertTriangle, CheckCircle, LoaderCircle, XCircle } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useMemo, useState, type JSX } from "react"
 
 // Constants
 const DEFAULT_TIER_COMPLETION_FILTER = {

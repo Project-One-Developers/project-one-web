@@ -1,12 +1,13 @@
+import { NextResponse } from "next/server"
+
 import {
     syncDroptimizersFromDiscordAction,
     deleteSimulationsOlderThanHoursAction,
 } from "@/actions/droptimizer"
-import { env } from "@/env"
 import { checkWowAuditUpdatesAction } from "@/actions/wowaudit"
+import { env } from "@/env"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
-import { NextResponse } from "next/server"
 
 // Verify this is a cron request from Vercel
 function verifyCronSecret(request: Request): boolean {

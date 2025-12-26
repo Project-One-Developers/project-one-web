@@ -25,6 +25,7 @@ import type {
     NewLootManual,
 } from "@/shared/types/types"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+
 import { queryKeys } from "./keys"
 
 // ============== QUERIES ==============

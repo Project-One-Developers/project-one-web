@@ -1,14 +1,17 @@
 "use client"
 
+import { Loader2, Search, StickyNote, Users } from "lucide-react"
+import { toast } from "sonner"
+
+import { useState, useMemo, type JSX } from "react"
+
 import { useUpdateItemBisSpecs } from "@/lib/queries/bis-list"
 import { useItemNote, useSetItemNote } from "@/lib/queries/items"
 import { useCharactersWithLootsByItemId } from "@/lib/queries/loots"
 import { WOW_CLASS_WITH_SPECS } from "@/shared/libs/spec-parser/spec-utils.schemas"
 import type { CharacterWithGears, Item } from "@/shared/types/types"
 import * as ToggleGroup from "@radix-ui/react-toggle-group"
-import { Loader2, Search, StickyNote, Users } from "lucide-react"
-import { useState, useMemo, type JSX } from "react"
-import { toast } from "sonner"
+
 import { Button } from "./ui/button"
 import { Checkbox } from "./ui/checkbox"
 import {

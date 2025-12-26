@@ -1,9 +1,10 @@
+import { z } from "zod"
+
 import { db } from "@/db"
 import { bossTable } from "@/db/schema"
 import { buildConflictUpdateColumns } from "@/db/utils"
 import { bossSchema, bossWithItemsSchema } from "@/shared/schemas/boss.schema"
 import type { Boss, BossWithItems } from "@/shared/types/types"
-import { z } from "zod"
 
 export async function upsertBosses(bosses: Boss[]): Promise<void> {
     if (bosses.length === 0) {

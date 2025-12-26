@@ -1,3 +1,6 @@
+import { and, eq, ilike } from "drizzle-orm"
+import { z } from "zod"
+
 import { db } from "@/db"
 import {
     itemNoteTable,
@@ -7,15 +10,13 @@ import {
 } from "@/db/schema"
 import { buildConflictUpdateColumns } from "@/db/utils"
 import { CURRENT_SEASON } from "@/shared/consts/wow.consts"
+import { itemNoteSchema } from "@/shared/schemas/itemNote.schema"
 import {
     itemSchema,
     itemToCatalystArraySchema,
     itemToTiersetArraySchema,
 } from "@/shared/schemas/items.schema"
-import { itemNoteSchema } from "@/shared/schemas/itemNote.schema"
 import type { Item, ItemNote, ItemToCatalyst, ItemToTierset } from "@/shared/types/types"
-import { and, eq, ilike } from "drizzle-orm"
-import { z } from "zod"
 
 // ============== ITEMS ==============
 

@@ -1,8 +1,9 @@
+import { NextResponse } from "next/server"
+
 import { checkRaiderioUpdatesAction } from "@/actions/raiderio"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
-import { NextResponse } from "next/server"
 
 // Verify this is a cron request from Vercel
 function verifyCronSecret(request: Request): boolean {

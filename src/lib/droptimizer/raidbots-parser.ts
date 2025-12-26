@@ -1,3 +1,10 @@
+import { z } from "zod"
+
+import {
+    getItems,
+    getItemToCatalystMapping,
+    getItemToTiersetMapping,
+} from "@/db/repositories/items"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
 import { CURRENT_SEASON } from "@/shared/consts/wow.consts"
@@ -25,12 +32,7 @@ import type {
     WowItemEquippedSlotKey,
     WowRaidDifficulty,
 } from "@/shared/types/types"
-import {
-    getItems,
-    getItemToCatalystMapping,
-    getItemToTiersetMapping,
-} from "@/db/repositories/items"
-import { z } from "zod"
+
 import {
     droptimizerEquippedItemsSchema,
     RaidbotJson,

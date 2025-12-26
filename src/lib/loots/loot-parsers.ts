@@ -1,3 +1,6 @@
+import { parse } from "papaparse"
+import { z } from "zod"
+
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
 import { PROFESSION_TYPES } from "@/shared/consts/wow.consts"
@@ -31,8 +34,6 @@ import type {
     NewLootManual,
     WowRaidDifficulty,
 } from "@/shared/types/types"
-import { parse } from "papaparse"
-import { z } from "zod"
 
 const parseWowDiff = (wowDiff: number): WowRaidDifficulty => {
     switch (wowDiff) {

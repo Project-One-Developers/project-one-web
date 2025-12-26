@@ -1,3 +1,5 @@
+import { match } from "ts-pattern"
+
 import { CURRENT_CATALYST_CHARGE_ID, CURRENT_SEASON } from "@/shared/consts/wow.consts"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import {
@@ -34,7 +36,6 @@ import {
     type WowRaidDifficulty,
     type WowSpec,
 } from "@/shared/types/types"
-import { match } from "ts-pattern"
 
 export const getLatestSyncDate = (
     charDroptimizers: Droptimizer[],

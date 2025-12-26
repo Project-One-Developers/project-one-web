@@ -1,5 +1,6 @@
 "use server"
 
+import { getCharactersList } from "@/db/repositories/characters"
 import {
     addRaidSession,
     deleteRaidSession,
@@ -9,7 +10,6 @@ import {
     getRaidSessionWithRoster,
     getRaidSessionWithSummaryList,
 } from "@/db/repositories/raid-sessions"
-import { getCharactersList } from "@/db/repositories/characters"
 import { newUUID } from "@/db/utils"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import type {

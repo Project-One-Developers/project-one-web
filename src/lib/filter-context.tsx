@@ -1,6 +1,7 @@
 "use client"
 
 import React, { createContext, type ReactNode, useContext, useState } from "react"
+
 import type { LootFilter } from "./filters"
 
 // Default filter state - you can customize this for your needs

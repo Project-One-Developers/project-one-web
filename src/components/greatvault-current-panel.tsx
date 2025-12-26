@@ -1,8 +1,10 @@
 "use client"
 
+import { useMemo } from "react"
+
 import { isInCurrentWowWeek } from "@/shared/libs/date/date-utils"
 import type { Droptimizer } from "@/shared/types/types"
-import { useMemo } from "react"
+
 import { WowGearIcon } from "./wow/wow-gear-icon"
 
 type CurrentGreatVaultPanelProps = {

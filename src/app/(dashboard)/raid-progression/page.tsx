@@ -1,7 +1,10 @@
 "use client"
 
+import { LoaderCircle } from "lucide-react"
+
 import Image from "next/image"
-import { WowCharacterIcon } from "@/components/wow/wow-character-icon"
+import { useEffect, useMemo, useState, type JSX } from "react"
+
 import { Input } from "@/components/ui/input"
 import {
     Select,
@@ -11,6 +14,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { WowCharacterIcon } from "@/components/wow/wow-character-icon"
 import { useBosses, useRosterProgression } from "@/lib/queries/bosses"
 import { encounterIcon } from "@/lib/wow-icon"
 import type { RaiderioEncounter } from "@/shared/schemas/raiderio.schemas"
@@ -20,8 +24,6 @@ import type {
     CharacterWithProgression,
     WowRaidDifficulty,
 } from "@/shared/types/types"
-import { LoaderCircle } from "lucide-react"
-import { useEffect, useMemo, useState, type JSX } from "react"
 
 // Constants
 const ROLE_PRIORITIES = {

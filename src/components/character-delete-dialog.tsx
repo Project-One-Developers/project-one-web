@@ -1,11 +1,14 @@
 "use client"
 
-import { useDeleteCharacter } from "@/lib/queries/players"
-import type { Character } from "@/shared/types/types"
 import { Loader2 } from "lucide-react"
+import { toast } from "sonner"
+
 import { useRouter } from "next/navigation"
 import { type JSX } from "react"
-import { toast } from "sonner"
+
+import { useDeleteCharacter } from "@/lib/queries/players"
+import type { Character } from "@/shared/types/types"
+
 import { Button } from "./ui/button"
 import {
     Dialog,

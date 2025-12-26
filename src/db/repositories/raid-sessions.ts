@@ -1,3 +1,6 @@
+import { count, eq, InferInsertModel } from "drizzle-orm"
+import { z } from "zod"
+
 import { db } from "@/db"
 import {
     charTable,
@@ -20,8 +23,6 @@ import type {
     RaidSessionWithRoster,
     RaidSessionWithSummary,
 } from "@/shared/types/types"
-import { count, eq, InferInsertModel } from "drizzle-orm"
-import { z } from "zod"
 
 type RaidSessionWithCharPartecipation = RaidSession & {
     charPartecipation?: { character: Character }[]

@@ -1,13 +1,16 @@
 "use client"
 
+import { LoaderCircle, X } from "lucide-react"
+import { toast } from "sonner"
+
+import { useRouter } from "next/navigation"
+
 import { useDeleteDroptimizer } from "@/lib/queries/droptimizers"
 import { s } from "@/lib/safe-stringify"
 import { getDpsHumanReadable } from "@/lib/utils"
 import { formatUnixTimestampToRelativeDays } from "@/shared/libs/date/date-utils"
 import type { Character, Droptimizer } from "@/shared/types/types"
-import { LoaderCircle, X } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
+
 import { Button } from "./ui/button"
 import { WowSpecIcon } from "./wow/wow-spec-icon"
 
