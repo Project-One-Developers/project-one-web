@@ -18,9 +18,22 @@
 
 ### Prerequisites
 
-- Node.js (v20+)
+- Node.js (v24+)
 - pnpm
 - PostgreSQL database
+- [direnv](https://direnv.net/) (optional, for automatic environment setup)
+- [nvm](https://github.com/nvm-sh/nvm) (optional, for Node version management)
+
+### Setup with direnv + nvm
+
+If you have direnv and nvm installed, the project will automatically:
+
+- Switch to the correct Node.js version (via `.nvmrc`)
+- Load environment variables from `.env` and `.env.local`
+
+```bash
+direnv allow
+```
 
 ### Environment Variables
 
