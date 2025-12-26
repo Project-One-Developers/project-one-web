@@ -1,18 +1,18 @@
 "use client"
 
-import Image from "next/image"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import RaidSessionDialog from "@/components/raid-session-dialog"
 import SessionRosterImportDialog from "@/components/session-roster-dialog"
 import SessionLootNewDialog from "@/components/session-loot-new-dialog"
+import { SessionLootsPanel } from "@/components/session-loots-panel"
 import { WowClassIcon } from "@/components/wow/wow-class-icon"
 import {
     useCloneRaidSession,
     useDeleteRaidSession,
     useRaidSession,
 } from "@/lib/queries/raid-sessions"
-import { useLootsBySessionWithAssigned } from "@/lib/queries/loots"
+import { useLootsBySessionWithItem } from "@/lib/queries/loots"
 import { formaUnixTimestampToItalianDate } from "@/shared/libs/date/date-utils"
 import {
     ArrowLeft,
@@ -40,7 +40,7 @@ export default function RaidSessionPage() {
     const [isAddLootDialogOpen, setIsAddLootDialogOpen] = useState(false)
 
     const { data: raidSession, isLoading } = useRaidSession(raidSessionId)
-    const { data: loots } = useLootsBySessionWithAssigned(raidSessionId)
+    const { data: loots } = useLootsBySessionWithItem(raidSessionId)
     const cloneMutation = useCloneRaidSession()
     const deleteMutation = useDeleteRaidSession()
 
@@ -244,41 +244,7 @@ export default function RaidSessionPage() {
                         </Button>
                     </div>
                 </div>
-                {loots && loots.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                        {loots.slice(0, 12).map((loot) => (
-                            <div
-                                key={loot.id}
-                                className="flex items-center gap-2 bg-background/50 p-2 rounded"
-                            >
-                                <Image
-                                    src={`https://wow.zamimg.com/images/wow/icons/medium/${loot.gearItem.item.iconName}.jpg`}
-                                    alt={loot.gearItem.item.name}
-                                    width={32}
-                                    height={32}
-                                    className="rounded"
-                                />
-                                <div className="flex flex-col overflow-hidden">
-                                    <span className="text-xs truncate">
-                                        {loot.gearItem.item.name}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground">
-                                        {loot.gearItem.itemLevel} {loot.raidDifficulty}
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
-                        {loots.length > 12 && (
-                            <div className="flex items-center justify-center text-muted-foreground text-sm">
-                                +{loots.length - 12} more
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <p className="text-muted-foreground">
-                        No loot imported yet. Use the Add button to add loot.
-                    </p>
-                )}
+                <SessionLootsPanel raidSessionId={raidSession.id} />
             </div>
 
             {/* Dialogs */}
