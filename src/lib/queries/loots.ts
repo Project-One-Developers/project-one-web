@@ -9,6 +9,7 @@ import {
     getLootAssignmentInfoAction,
     getLootsBySessionIdAction,
     getLootsBySessionIdWithAssignedAction,
+    getLootsBySessionIdsWithAssignedAction,
     getLootsBySessionIdWithItemAction,
     getLootWithItemByIdAction,
     importMrtLootAction,
@@ -64,6 +65,15 @@ export function useLootsBySessionWithAssigned(raidSessionId: string | undefined)
             return getLootsBySessionIdWithAssignedAction(raidSessionId)
         },
         enabled: !!raidSessionId,
+    })
+}
+
+export function useLootsBySessionsWithAssigned(raidSessionIds: string[]) {
+    return useQuery({
+        queryKey: [queryKeys.loots, "sessions", raidSessionIds, "withAssigned"],
+        queryFn: () => getLootsBySessionIdsWithAssignedAction(raidSessionIds),
+        enabled: raidSessionIds.length > 0,
+        refetchInterval: 60000, // Refetch every minute
     })
 }
 

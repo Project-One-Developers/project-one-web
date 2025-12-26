@@ -14,7 +14,7 @@ import type {
     LootWithItem,
     NewLoot,
 } from "@/shared/types/types"
-import { eq, InferInsertModel } from "drizzle-orm"
+import { eq, inArray, type InferInsertModel } from "drizzle-orm"
 import { z } from "zod"
 
 export async function getLootById(lootId: string): Promise<Loot> {
@@ -62,6 +62,20 @@ export async function getLootsByRaidSessionIdWithAssigned(
 ): Promise<LootWithAssigned[]> {
     const result = await db.query.lootTable.findMany({
         where: (lootTable, { eq }) => eq(lootTable.raidSessionId, raidSessionId),
+        with: { assignedCharacter: true },
+    })
+    return z.array(lootWithAssignedSchema).parse(result)
+}
+
+export async function getLootsByRaidSessionIdsWithAssigned(
+    raidSessionIds: string[]
+): Promise<LootWithAssigned[]> {
+    if (raidSessionIds.length === 0) {
+        return []
+    }
+
+    const result = await db.query.lootTable.findMany({
+        where: inArray(lootTable.raidSessionId, raidSessionIds),
         with: { assignedCharacter: true },
     })
     return z.array(lootWithAssignedSchema).parse(result)

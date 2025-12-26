@@ -2,18 +2,26 @@
 
 import Image from "next/image"
 import { DroptimizerCard } from "@/components/droptimizer-card"
+import DroptimizerNewDialog from "@/components/droptimizer-new-dialog"
+import { GlobalFilterUI } from "@/components/global-filter-ui"
+import { FilterProvider, useFilterContext } from "@/lib/filter-context"
+import { filterDroptimizer } from "@/lib/filters"
 import { useLatestDroptimizers } from "@/lib/queries/droptimizers"
 import { useCharacters } from "@/lib/queries/players"
 import { LoaderCircle } from "lucide-react"
 import { useMemo, type JSX } from "react"
 
-export default function DroptimizerPage(): JSX.Element {
+function DroptimizerPageContent(): JSX.Element {
+    const { filter } = useFilterContext()
     const droptimizerQuery = useLatestDroptimizers()
     const charQuery = useCharacters()
 
-    const droptimizers = useMemo(() => {
-        return droptimizerQuery.data ?? []
-    }, [droptimizerQuery.data])
+    const filteredDroptimizers = useMemo(() => {
+        if (!droptimizerQuery.data || !charQuery.data) {
+            return []
+        }
+        return filterDroptimizer(droptimizerQuery.data, charQuery.data, filter)
+    }, [droptimizerQuery.data, charQuery.data, filter])
 
     const characters = useMemo(() => {
         return charQuery.data ?? []
@@ -30,8 +38,8 @@ export default function DroptimizerPage(): JSX.Element {
     return (
         <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-8 items-center p-8 relative">
             <div className="flex flex-wrap gap-4">
-                {droptimizers.length > 0 ? (
-                    droptimizers.map((dropt) => (
+                {filteredDroptimizers.length > 0 ? (
+                    filteredDroptimizers.map((dropt) => (
                         <DroptimizerCard
                             key={dropt.url}
                             droptimizer={dropt}
@@ -54,6 +62,28 @@ export default function DroptimizerPage(): JSX.Element {
                     </div>
                 )}
             </div>
+
+            {/* Bottom Right Filter button */}
+            <GlobalFilterUI
+                showRaidDifficulty={true}
+                showDroptimizerFilters={true}
+                showClassFilter={true}
+                showSlotFilter={true}
+                showArmorTypeFilter={true}
+            />
+
+            {/* New Droptimizer Dialog Trigger, above the filter icon */}
+            <div className="fixed bottom-24 right-6 z-50">
+                <DroptimizerNewDialog />
+            </div>
         </div>
+    )
+}
+
+export default function DroptimizerPage(): JSX.Element {
+    return (
+        <FilterProvider>
+            <DroptimizerPageContent />
+        </FilterProvider>
     )
 }

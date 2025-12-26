@@ -1,8 +1,11 @@
 "use client"
 
 import Image from "next/image"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { LootImportDialog } from "@/components/loot-import-dialog"
+import RaidSessionDialog from "@/components/raid-session-dialog"
+import SessionRosterImportDialog from "@/components/session-roster-dialog"
+import SessionLootNewDialog from "@/components/session-loot-new-dialog"
 import { WowClassIcon } from "@/components/wow/wow-class-icon"
 import {
     useCloneRaidSession,
@@ -15,8 +18,10 @@ import {
     ArrowLeft,
     Calendar,
     Copy,
+    Edit,
     LoaderCircle,
     LucideMedal,
+    PlusIcon,
     ShoppingBag,
     Trash2,
     Users,
@@ -28,6 +33,11 @@ export default function RaidSessionPage() {
     const params = useParams<{ id: string }>()
     const router = useRouter()
     const raidSessionId = params.id
+
+    // Dialog states
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+    const [isImportRosterDialogOpen, setIsImportRosterDialogOpen] = useState(false)
+    const [isAddLootDialogOpen, setIsAddLootDialogOpen] = useState(false)
 
     const { data: raidSession, isLoading } = useRaidSession(raidSessionId)
     const { data: loots } = useLootsBySessionWithAssigned(raidSessionId)
@@ -133,6 +143,14 @@ export default function RaidSessionPage() {
                 <div className="flex space-x-2">
                     <Button
                         variant="secondary"
+                        onClick={() => {
+                            setIsEditDialogOpen(true)
+                        }}
+                    >
+                        <Edit className="mr-2 h-4 w-4" /> Edit Session
+                    </Button>
+                    <Button
+                        variant="secondary"
                         onClick={handleClone}
                         disabled={cloneMutation.isPending}
                     >
@@ -150,9 +168,19 @@ export default function RaidSessionPage() {
 
             {/* Roster Panel */}
             <div className="bg-muted p-6 rounded-lg shadow-md">
-                <h2 className="text-xl font-semibold mb-4 flex items-center">
-                    <Users className="mr-2" /> Roster
-                </h2>
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold flex items-center">
+                        <Users className="mr-2" /> Roster
+                    </h2>
+                    <Button
+                        variant="secondary"
+                        onClick={() => {
+                            setIsImportRosterDialogOpen(true)
+                        }}
+                    >
+                        <PlusIcon className="mr-2 h-4 w-4" /> Import
+                    </Button>
+                </div>
                 <div className="flex flex-wrap gap-x-10">
                     {[
                         { characters: tanks, label: "Tanks" },
@@ -198,7 +226,6 @@ export default function RaidSessionPage() {
                         </span>
                     </h2>
                     <div className="flex gap-2">
-                        <LootImportDialog raidSessionId={raidSession.id} />
                         <Button
                             variant="secondary"
                             onClick={() => {
@@ -206,6 +233,14 @@ export default function RaidSessionPage() {
                             }}
                         >
                             <LucideMedal className="mr-2 h-4 w-4" /> Assign
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            onClick={() => {
+                                setIsAddLootDialogOpen(true)
+                            }}
+                        >
+                            <PlusIcon className="mr-2 h-4 w-4" /> Add
                         </Button>
                     </div>
                 </div>
@@ -241,10 +276,27 @@ export default function RaidSessionPage() {
                     </div>
                 ) : (
                     <p className="text-muted-foreground">
-                        No loot imported yet. Use the Import button to add loot.
+                        No loot imported yet. Use the Add button to add loot.
                     </p>
                 )}
             </div>
+
+            {/* Dialogs */}
+            <RaidSessionDialog
+                isOpen={isEditDialogOpen}
+                setOpen={setIsEditDialogOpen}
+                existingSession={raidSession}
+            />
+            <SessionRosterImportDialog
+                isOpen={isImportRosterDialogOpen}
+                setOpen={setIsImportRosterDialogOpen}
+                raidSessionId={raidSession.id}
+            />
+            <SessionLootNewDialog
+                isOpen={isAddLootDialogOpen}
+                setOpen={setIsAddLootDialogOpen}
+                raidSessionId={raidSession.id}
+            />
         </div>
     )
 }

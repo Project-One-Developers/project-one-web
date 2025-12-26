@@ -12,6 +12,7 @@ import {
     getLootAssigned,
     getLootsByRaidSessionId,
     getLootsByRaidSessionIdWithAssigned,
+    getLootsByRaidSessionIdsWithAssigned,
     getLootsByRaidSessionIdWithItem,
     getLootWithItemById,
     tradeLoot,
@@ -67,6 +68,12 @@ export async function getLootsBySessionIdWithAssignedAction(
     raidSessionId: string
 ): Promise<LootWithAssigned[]> {
     return await getLootsByRaidSessionIdWithAssigned(raidSessionId)
+}
+
+export async function getLootsBySessionIdsWithAssignedAction(
+    raidSessionIds: string[]
+): Promise<LootWithAssigned[]> {
+    return await getLootsByRaidSessionIdsWithAssigned(raidSessionIds)
 }
 
 export async function getLootWithItemByIdAction(lootId: string): Promise<LootWithItem> {

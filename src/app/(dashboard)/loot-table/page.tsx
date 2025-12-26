@@ -1,235 +1,346 @@
 "use client"
 
 import Image from "next/image"
-import { useState, useMemo, type JSX } from "react"
-import { LoaderCircle, ExternalLink, Search } from "lucide-react"
+import { useState, useMemo, useEffect, type JSX } from "react"
+import { LoaderCircle, Edit, Search } from "lucide-react"
+import { cn, defined } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
-import { useRaidItems } from "@/lib/queries/items"
-import { ITEM_SLOTS_DESC, ARMOR_TYPES } from "@/shared/consts/wow.consts"
-import type { Item } from "@/shared/types/types"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { GlobalFilterUI } from "@/components/global-filter-ui"
+import { FilterProvider, useFilterContext } from "@/lib/filter-context"
+import ItemManagementDialog from "@/components/item-management-dialog"
+import { WowItemIcon } from "@/components/wow/wow-item-icon"
+import { WowSpecIcon } from "@/components/wow/wow-spec-icon"
+import { useRaidLootTable } from "@/lib/queries/bosses"
+import { useBisList } from "@/lib/queries/bis-list"
+import { useItemNotes } from "@/lib/queries/items"
+import { encounterIcon } from "@/lib/wow-icon"
+import { getWowClassBySpecId } from "@/shared/libs/spec-parser/spec-utils"
+import type { BisList, BossWithItems, Item, ItemNote } from "@/shared/types/types"
+import type { LootFilter } from "@/lib/filters"
 
-// Group items by boss for display
-function groupItemsByBoss(items: Item[]): Map<string, Item[]> {
-    const groups = new Map<string, Item[]>()
-    for (const item of items) {
-        const boss = item.bossName
-        const existing = groups.get(boss)
-        if (existing) {
-            existing.push(item)
-        } else {
-            groups.set(boss, [item])
-        }
-    }
-    return groups
+// Boss Panel Component
+type BossPanelProps = {
+    boss: BossWithItems
+    bisLists: BisList[]
+    itemNotes: ItemNote[]
+    onEdit: (item: Item, note: string) => void
+    filter: LootFilter
 }
 
-function ItemRow({ item }: { item: Item }) {
+const BossPanel = ({ boss, bisLists, itemNotes, onEdit, filter }: BossPanelProps) => {
+    // Filter items based on the selected classes, slots, and armor types
+    const filteredItems = useMemo(() => {
+        return boss.items.filter((item) => {
+            const bisForItem = bisLists.filter((bis) => bis.itemId === item.id)
+            const allSpecIds = bisForItem.flatMap((bis) => bis.specIds)
+
+            // If no filter is selected, show all items
+            if (
+                filter.selectedWowClassName.length === 0 &&
+                filter.selectedSlots.length === 0 &&
+                filter.selectedArmorTypes.length === 0
+            ) {
+                return true
+            }
+
+            let passesClassFilter = true
+            let passesSlotFilter = true
+            let passesArmorTypeFilter = true
+
+            // Class filter - check if any BIS specs match selected classes
+            if (filter.selectedWowClassName.length > 0) {
+                const itemClasses = allSpecIds
+                    .map((specId) => {
+                        try {
+                            return getWowClassBySpecId(specId).name
+                        } catch {
+                            return null
+                        }
+                    })
+                    .filter(defined)
+
+                passesClassFilter = itemClasses.some((className) =>
+                    filter.selectedWowClassName.includes(className)
+                )
+            }
+
+            // Slot filter
+            if (filter.selectedSlots.length > 0) {
+                passesSlotFilter = filter.selectedSlots.includes(item.slotKey)
+            }
+
+            // Armor type filter
+            if (filter.selectedArmorTypes.length > 0) {
+                passesArmorTypeFilter = item.armorType
+                    ? filter.selectedArmorTypes.includes(item.armorType)
+                    : false
+            }
+
+            return passesClassFilter && passesSlotFilter && passesArmorTypeFilter
+        })
+    }, [boss.items, bisLists, filter])
+
+    const bossImage = encounterIcon.get(boss.id)
+
     return (
-        <TableRow>
-            <TableCell className="w-12">
-                <Image
-                    src={item.iconUrl}
-                    alt={item.name}
-                    width={32}
-                    height={32}
-                    className="rounded"
-                />
-            </TableCell>
-            <TableCell>
-                <a
-                    href={item.wowheadUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-primary hover:underline"
-                >
-                    {item.name}
-                    <ExternalLink className="h-3 w-3" />
-                </a>
-            </TableCell>
-            <TableCell className="text-muted-foreground">{item.slot}</TableCell>
-            <TableCell className="text-muted-foreground">
-                {item.armorType ?? "-"}
-            </TableCell>
-            <TableCell className="text-center">{item.ilvlMythic}</TableCell>
-            <TableCell>
-                {item.tierset && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-purple-500/20 text-purple-400">
-                        Tier
-                    </span>
+        <div className="flex flex-col bg-muted rounded-lg overflow-hidden min-w-[350px]">
+            {/* Boss header: cover + name */}
+            <div className="flex flex-col gap-y-2">
+                {bossImage && (
+                    <Image
+                        src={bossImage}
+                        alt={`${boss.name} icon`}
+                        width={350}
+                        height={128}
+                        className="w-full h-32 object-scale-down"
+                        unoptimized
+                    />
                 )}
-                {item.token && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-amber-500/20 text-amber-400 ml-1">
-                        Token
-                    </span>
-                )}
-                {item.veryRare && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-orange-500/20 text-orange-400 ml-1">
-                        Rare
-                    </span>
-                )}
-            </TableCell>
-            <TableCell className="text-muted-foreground text-xs max-w-48 truncate">
-                {item.specs?.join(", ") ?? "All specs"}
-            </TableCell>
-        </TableRow>
+                <h2 className="text-center text-xs font-bold">{boss.name}</h2>
+            </div>
+            {/* Boss items */}
+            <div className="flex flex-col gap-y-3 p-6">
+                {filteredItems
+                    .sort((a, b) => {
+                        const aHasBis = bisLists.some((bis) => bis.itemId === a.id)
+                        const bHasBis = bisLists.some((bis) => bis.itemId === b.id)
+                        if (aHasBis && !bHasBis) {
+                            return -1
+                        }
+                        if (!aHasBis && bHasBis) {
+                            return 1
+                        }
+                        return a.id - b.id
+                    })
+                    .map((item) => {
+                        const bisForItem = bisLists.filter(
+                            (bis) => bis.itemId === item.id
+                        )
+                        const allSpecIds = bisForItem.flatMap((bis) => bis.specIds)
+                        const itemNote =
+                            itemNotes.find((note) => note.itemId === item.id)?.note || ""
+
+                        return (
+                            <div
+                                key={item.id}
+                                className={cn(
+                                    "flex flex-row gap-x-8 justify-between items-center p-1 hover:bg-gray-700 transition-colors duration-200 rounded-md cursor-pointer relative group",
+                                    !allSpecIds.length && "opacity-30"
+                                )}
+                                onClick={(e) => {
+                                    e.preventDefault()
+                                    onEdit(item, itemNote)
+                                }}
+                            >
+                                <WowItemIcon
+                                    item={item}
+                                    iconOnly={false}
+                                    raidDiff="Mythic"
+                                    tierBanner={true}
+                                    showIlvl={false}
+                                    showRoleIcons={true}
+                                />
+
+                                <div className="flex flex-col items-center">
+                                    <div className="text-xs text-gray-400 flex items-center gap-1">
+                                        {allSpecIds.length ? (
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <span>
+                                                        {allSpecIds.length} spec
+                                                        {allSpecIds.length > 1 && "s"}
+                                                    </span>
+                                                </TooltipTrigger>
+                                                <TooltipContent
+                                                    className="TooltipContent"
+                                                    sideOffset={5}
+                                                >
+                                                    <div className="flex flex-col gap-y-1">
+                                                        {allSpecIds.map((s) => (
+                                                            <WowSpecIcon
+                                                                key={s}
+                                                                specId={s}
+                                                                className="object-cover object-top rounded-md full h-5 w-5 border border-background"
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        ) : null}
+
+                                        {/* Note indicator */}
+                                        {itemNote && (
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <div className="text-blue-400">
+                                                        <Edit size={12} />
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent
+                                                    className="TooltipContent max-w-xs"
+                                                    sideOffset={5}
+                                                >
+                                                    <div className="text-xs">
+                                                        {itemNote}
+                                                    </div>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <button className="absolute -bottom-2 -right-2 hidden group-hover:flex items-center justify-center w-5 h-5 bg-red-500 text-white rounded-full">
+                                    <Edit size={14} />
+                                </button>
+                            </div>
+                        )
+                    })}
+            </div>
+        </div>
     )
 }
 
-export default function LootTablePage(): JSX.Element {
-    const { data: items, isLoading, error } = useRaidItems()
-    const [searchTerm, setSearchTerm] = useState("")
-    const [slotFilter, setSlotFilter] = useState<string>("all")
-    const [armorFilter, setArmorFilter] = useState<string>("all")
+// Main Content Component (needs filter context)
+type ItemWithBisSpecs = {
+    item: Item
+    specs: number[]
+    note: string
+}
 
-    const filteredItems = useMemo(() => {
-        if (!items) {
+function LootTableContent(): JSX.Element {
+    const { filter } = useFilterContext()
+
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+    const [searchQuery, setSearchQuery] = useState("")
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
+    const [selectedItem, setSelectedItem] = useState<ItemWithBisSpecs | null>(null)
+
+    const bossesWithItemRes = useRaidLootTable()
+    const bisRes = useBisList()
+    const itemNotesRes = useItemNotes()
+
+    // Debounce search input
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery.trim())
+        }, 300)
+
+        return () => {
+            clearTimeout(handler)
+        }
+    }, [searchQuery])
+
+    // Memoized filtering logic with search query
+    const filteredBosses: BossWithItems[] = useMemo(() => {
+        if (!bossesWithItemRes.data) {
             return []
         }
-        return items.filter((item) => {
-            // Search filter
-            if (
-                searchTerm &&
-                !item.name.toLowerCase().includes(searchTerm.toLowerCase())
-            ) {
-                return false
-            }
-            // Slot filter
-            if (slotFilter !== "all" && item.slot !== slotFilter) {
-                return false
-            }
-            // Armor type filter
-            if (armorFilter !== "all" && item.armorType !== armorFilter) {
-                return false
-            }
-            return true
-        })
-    }, [items, searchTerm, slotFilter, armorFilter])
 
-    const groupedItems = useMemo(() => groupItemsByBoss(filteredItems), [filteredItems])
+        return bossesWithItemRes.data
+            .map((boss) => ({
+                ...boss,
+                items: boss.items.filter((item) => {
+                    // Apply search filter first
+                    if (
+                        debouncedSearchQuery &&
+                        !item.name
+                            .toLowerCase()
+                            .includes(debouncedSearchQuery.toLowerCase())
+                    ) {
+                        return false
+                    }
+                    return true
+                }),
+            }))
+            .filter((boss) => boss.items.length > 0) // Remove bosses with no matching items
+    }, [bossesWithItemRes.data, debouncedSearchQuery])
 
-    if (isLoading) {
+    if (bossesWithItemRes.isLoading || bisRes.isLoading || itemNotesRes.isLoading) {
         return (
-            <div className="w-full min-h-screen flex flex-col gap-y-8 items-center justify-center p-8">
-                <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
+            <div className="flex flex-col items-center w-full justify-center mt-10 mb-10">
+                <LoaderCircle className="animate-spin text-5xl" />
             </div>
         )
     }
 
-    if (error) {
-        return (
-            <div className="w-full min-h-screen flex flex-col gap-y-8 items-center p-8">
-                <h1 className="text-3xl font-bold">Loot Table</h1>
-                <div className="bg-destructive/10 p-4 rounded-lg">
-                    <p className="text-destructive">
-                        Error loading items: {error.message}
-                    </p>
-                </div>
-            </div>
-        )
+    const bisLists = bisRes.data ?? []
+    const itemNotes = itemNotesRes.data ?? []
+
+    const handleEditClick = (item: Item, note: string) => {
+        const selectedBis = bisLists.find((b) => b.itemId === item.id)
+        setSelectedItem({ item: item, specs: selectedBis?.specIds ?? [], note })
+        setIsEditDialogOpen(true)
     }
 
     return (
-        <div className="w-full min-h-screen flex flex-col gap-y-6 p-8">
-            <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold">Loot Table</h1>
-                <p className="text-muted-foreground">
-                    Browse raid loot with BIS information.
-                </p>
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-wrap gap-4 items-center">
+        <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-8 items-center p-8 relative">
+            {/* Search Bar */}
+            <div className="w-full max-w-md">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
+                        type="text"
                         placeholder="Search items..."
-                        value={searchTerm}
+                        value={searchQuery}
                         onChange={(e) => {
-                            setSearchTerm(e.target.value)
+                            setSearchQuery(e.target.value)
                         }}
-                        className="pl-9 w-64"
+                        className="w-full pl-10"
                     />
                 </div>
-                <Select value={slotFilter} onValueChange={setSlotFilter}>
-                    <SelectTrigger className="w-40">
-                        <SelectValue placeholder="All Slots" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Slots</SelectItem>
-                        {ITEM_SLOTS_DESC.map((slot) => (
-                            <SelectItem key={slot} value={slot}>
-                                {slot}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <Select value={armorFilter} onValueChange={setArmorFilter}>
-                    <SelectTrigger className="w-40">
-                        <SelectValue placeholder="All Armor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Armor</SelectItem>
-                        {ARMOR_TYPES.map((armor) => (
-                            <SelectItem key={armor} value={armor}>
-                                {armor}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <span className="text-sm text-muted-foreground">
-                    {filteredItems.length} items
-                </span>
             </div>
 
-            {/* Items Table grouped by boss */}
-            {Array.from(groupedItems.entries()).map(([bossName, bossItems]) => (
-                <div key={bossName} className="space-y-2">
-                    <h2 className="text-lg font-semibold text-primary">{bossName}</h2>
-                    <div className="rounded-lg border bg-card">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-12"></TableHead>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Slot</TableHead>
-                                    <TableHead>Armor</TableHead>
-                                    <TableHead className="text-center">ilvl</TableHead>
-                                    <TableHead>Tags</TableHead>
-                                    <TableHead>Specs</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {bossItems.map((item) => (
-                                    <ItemRow key={item.id} item={item} />
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </div>
-            ))}
+            {/* Boss List */}
+            <div className="flex flex-wrap gap-x-4 gap-y-4 justify-center">
+                {filteredBosses
+                    .sort((a, b) => a.order - b.order)
+                    .map((boss) => (
+                        <BossPanel
+                            key={boss.id}
+                            boss={boss}
+                            bisLists={bisLists}
+                            itemNotes={itemNotes}
+                            onEdit={handleEditClick}
+                            filter={filter}
+                        />
+                    ))}
+            </div>
 
-            {groupedItems.size === 0 && (
+            {filteredBosses.length === 0 && (
                 <div className="bg-muted p-8 rounded-lg text-center">
                     <p className="text-muted-foreground">
                         No items found matching your filters.
                     </p>
                 </div>
             )}
+
+            {/* Bottom Right Filter button */}
+            <GlobalFilterUI
+                showRaidDifficulty={false}
+                showDroptimizerFilters={false}
+                showMainsAlts={false}
+                showClassFilter={true}
+                showSlotFilter={true}
+                showArmorTypeFilter={true}
+            />
+
+            {selectedItem && (
+                <ItemManagementDialog
+                    isOpen={isEditDialogOpen}
+                    setOpen={setIsEditDialogOpen}
+                    itemAndSpecs={selectedItem}
+                />
+            )}
         </div>
+    )
+}
+
+// Main Component with FilterProvider
+export default function LootTablePage(): JSX.Element {
+    return (
+        <FilterProvider>
+            <LootTableContent />
+        </FilterProvider>
     )
 }

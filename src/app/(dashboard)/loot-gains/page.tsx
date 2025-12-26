@@ -1,331 +1,174 @@
 "use client"
 
 import Image from "next/image"
-import { useState, useMemo, type JSX } from "react"
-import { s } from "@/lib/safe-stringify"
-import { LoaderCircle, ExternalLink, Search, TrendingUp } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
-import { WowClassIcon } from "@/components/wow/wow-class-icon"
+import { useMemo, type JSX } from "react"
+import { LoaderCircle } from "lucide-react"
+import { GlobalFilterUI } from "@/components/global-filter-ui"
+import { DroptimizersForItem } from "@/components/droptimizers-for-item"
+import { WowItemIcon } from "@/components/wow/wow-item-icon"
+import { FilterProvider, useFilterContext } from "@/lib/filter-context"
+import { filterDroptimizer } from "@/lib/filters"
 import { useLatestDroptimizers } from "@/lib/queries/droptimizers"
-import { RAID_DIFF } from "@/shared/consts/wow.consts"
+import { useCharacters } from "@/lib/queries/players"
+import { useRaidLootTable } from "@/lib/queries/bosses"
+import { encounterIcon } from "@/lib/wow-icon"
 import type {
+    BossWithItems,
     Droptimizer,
-    DroptimizerUpgrade,
-    WowClassName,
+    Item,
     WowRaidDifficulty,
 } from "@/shared/types/types"
 
-// Type for aggregated upgrade data
-type UpgradeWithChar = {
-    upgrade: DroptimizerUpgrade
-    charName: string
-    charSpec: string
-    charClass: WowClassName
+// Boss Panel Component
+type BossPanelProps = {
+    boss: BossWithItems
+    droptimizers: Droptimizer[]
+    diff: WowRaidDifficulty
+    hideItemsWithoutDropt: boolean
 }
 
-// Group upgrades by boss
-function groupUpgradesByBoss(
-    droptimizers: Droptimizer[],
-    difficultyFilter: WowRaidDifficulty | "all"
-): Map<string, UpgradeWithChar[]> {
-    const groups = new Map<string, UpgradeWithChar[]>()
-
-    for (const droptimizer of droptimizers) {
-        // Filter by difficulty
-        if (
-            difficultyFilter !== "all" &&
-            droptimizer.raidInfo.difficulty !== difficultyFilter
-        ) {
-            continue
-        }
-
-        for (const upgrade of droptimizer.upgrades) {
-            const bossName = upgrade.item.bossName
-            const existing = groups.get(bossName)
-            if (existing) {
-                existing.push({
-                    upgrade,
-                    charName: droptimizer.charInfo.name,
-                    charSpec: droptimizer.charInfo.spec,
-                    charClass: droptimizer.charInfo.class,
-                })
-            } else {
-                groups.set(bossName, [
-                    {
-                        upgrade,
-                        charName: droptimizer.charInfo.name,
-                        charSpec: droptimizer.charInfo.spec,
-                        charClass: droptimizer.charInfo.class,
-                    },
-                ])
-            }
-        }
-    }
-
-    // Sort upgrades by DPS gain within each boss
-    for (const [, upgrades] of groups) {
-        upgrades.sort((a, b) => b.upgrade.dps - a.upgrade.dps)
-    }
-
-    return groups
-}
-
-// Format DPS number with commas
-function formatDps(dps: number): string {
-    return dps.toLocaleString("en-US", { maximumFractionDigits: 0 })
-}
-
-function UpgradeRow({ data }: { data: UpgradeWithChar }) {
-    const { upgrade, charName, charSpec, charClass } = data
-
-    return (
-        <TableRow>
-            <TableCell className="w-12">
-                <Image
-                    src={upgrade.item.iconUrl}
-                    alt={upgrade.item.name}
-                    width={32}
-                    height={32}
-                    className="rounded"
-                />
-            </TableCell>
-            <TableCell>
-                <a
-                    href={upgrade.item.wowheadUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-primary hover:underline"
-                >
-                    {upgrade.item.name}
-                    <ExternalLink className="h-3 w-3" />
-                </a>
-            </TableCell>
-            <TableCell className="text-muted-foreground">{upgrade.item.slot}</TableCell>
-            <TableCell className="text-center">{upgrade.ilvl}</TableCell>
-            <TableCell>
-                <div className="flex items-center gap-2">
-                    <WowClassIcon wowClassName={charClass} className="w-5 h-5" />
-                    <span>{charName}</span>
-                    <span className="text-muted-foreground text-xs">({charSpec})</span>
-                </div>
-            </TableCell>
-            <TableCell className="text-right">
-                <span className="inline-flex items-center gap-1 text-green-500 font-medium">
-                    <TrendingUp className="h-4 w-4" />+{formatDps(upgrade.dps)}
-                </span>
-            </TableCell>
-        </TableRow>
-    )
-}
-
-export default function LootGainsPage(): JSX.Element {
-    const { data: droptimizers, isLoading, error } = useLatestDroptimizers()
-    const [searchTerm, setSearchTerm] = useState("")
-    const [difficultyFilter, setDifficultyFilter] = useState<WowRaidDifficulty | "all">(
-        "all"
-    )
-
-    const groupedUpgrades = useMemo((): Map<string, UpgradeWithChar[]> => {
-        if (!droptimizers) {
-            return new Map()
-        }
-        return groupUpgradesByBoss(droptimizers, difficultyFilter)
-    }, [droptimizers, difficultyFilter])
-
-    // Apply search filter
-    const filteredGroups = useMemo((): Map<string, UpgradeWithChar[]> => {
-        if (!searchTerm) {
-            return groupedUpgrades
-        }
-
-        const filtered = new Map<string, UpgradeWithChar[]>()
-        for (const [bossName, upgrades] of groupedUpgrades) {
-            const matchingUpgrades = upgrades.filter(
-                (data) =>
-                    data.upgrade.item.name
-                        .toLowerCase()
-                        .includes(searchTerm.toLowerCase()) ||
-                    data.charName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    bossName.toLowerCase().includes(searchTerm.toLowerCase())
+const BossPanel = ({
+    boss,
+    droptimizers,
+    diff,
+    hideItemsWithoutDropt,
+}: BossPanelProps) => {
+    const itemHasDroptimizers = (item: Item): boolean => {
+        if (hideItemsWithoutDropt) {
+            return droptimizers.some((dropt) =>
+                dropt.upgrades.some((upgrade) => upgrade.item.id === item.id)
             )
-            if (matchingUpgrades.length > 0) {
-                filtered.set(bossName, matchingUpgrades)
-            }
         }
-        return filtered
-    }, [groupedUpgrades, searchTerm])
-
-    // Calculate total DPS gain
-    const totalDpsGain = useMemo(() => {
-        let total = 0
-        for (const [, upgrades] of filteredGroups) {
-            for (const data of upgrades) {
-                total += data.upgrade.dps
-            }
-        }
-        return total
-    }, [filteredGroups])
-
-    // Count unique items
-    const uniqueItemCount = useMemo(() => {
-        const items = new Set<number>()
-        for (const [, upgrades] of filteredGroups) {
-            for (const data of upgrades) {
-                items.add(data.upgrade.item.id)
-            }
-        }
-        return items.size
-    }, [filteredGroups])
-
-    if (isLoading) {
-        return (
-            <div className="w-full min-h-screen flex flex-col gap-y-8 items-center justify-center p-8">
-                <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        )
+        return true
     }
 
-    if (error) {
-        return (
-            <div className="w-full min-h-screen flex flex-col gap-y-8 items-center p-8">
-                <h1 className="text-3xl font-bold">Loot Gains</h1>
-                <div className="bg-destructive/10 p-4 rounded-lg">
-                    <p className="text-destructive">
-                        Error loading droptimizers: {error.message}
-                    </p>
-                </div>
-            </div>
-        )
+    const filteredItems = boss.items.filter(itemHasDroptimizers)
+    const bossImage = encounterIcon.get(boss.id)
+
+    // Don't render empty boss panels when hiding items without droptimizers
+    if (hideItemsWithoutDropt && filteredItems.length === 0) {
+        return null
     }
 
     return (
-        <div className="w-full min-h-screen flex flex-col gap-y-6 p-8">
-            <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold">Loot Gains</h1>
-                <p className="text-muted-foreground">
-                    Upgrade potential from droptimizers grouped by boss encounter.
-                </p>
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-wrap gap-4 items-center">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search items, characters, bosses..."
-                        value={searchTerm}
-                        onChange={(e) => {
-                            setSearchTerm(e.target.value)
-                        }}
-                        className="pl-9 w-80"
+        <div className="flex flex-col bg-muted rounded-lg overflow-hidden min-w-[300px]">
+            {/* Boss header: cover + name */}
+            <div className="flex flex-col gap-y-2">
+                {bossImage && (
+                    <Image
+                        src={bossImage}
+                        alt={`${boss.name} icon`}
+                        width={300}
+                        height={128}
+                        className="w-full h-32 object-scale-down"
+                        unoptimized
                     />
-                </div>
-                <Select
-                    value={difficultyFilter}
-                    onValueChange={(v) => {
-                        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Select options match type
-                        setDifficultyFilter(v as WowRaidDifficulty | "all")
-                    }}
-                >
-                    <SelectTrigger className="w-40">
-                        <SelectValue placeholder="All Difficulties" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Difficulties</SelectItem>
-                        {RAID_DIFF.filter((d) => d !== "LFR").map((diff) => (
-                            <SelectItem key={diff} value={diff.toLowerCase()}>
-                                {diff}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                )}
+                <h2 className="text-center text-xs font-bold">{boss.name}</h2>
             </div>
-
-            {/* Stats Summary */}
-            <div className="flex gap-6 p-4 bg-muted rounded-lg">
-                <div>
-                    <p className="text-sm text-muted-foreground">Total Potential Gains</p>
-                    <p className="text-2xl font-bold text-green-500">
-                        +{formatDps(totalDpsGain)} DPS
+            {/* Boss items */}
+            <div className="flex flex-col gap-y-3 p-6">
+                {filteredItems.length > 0 ? (
+                    filteredItems
+                        .sort((a, b) => a.id - b.id)
+                        .map((item) => (
+                            <div
+                                key={item.id}
+                                className="flex flex-row gap-x-8 justify-between items-center p-1 hover:bg-gray-700 transition-colors duration-200 rounded-md"
+                            >
+                                <WowItemIcon
+                                    item={item}
+                                    iconOnly={false}
+                                    raidDiff={diff}
+                                    tierBanner={true}
+                                    showRoleIcons={true}
+                                />
+                                <div className="flex flex-row items-center gap-x-2">
+                                    <DroptimizersForItem
+                                        item={item}
+                                        droptimizers={droptimizers}
+                                    />
+                                </div>
+                            </div>
+                        ))
+                ) : (
+                    <p className="text-center text-sm text-gray-500">
+                        No upgrades available
                     </p>
-                </div>
-                <div>
-                    <p className="text-sm text-muted-foreground">Unique Items</p>
-                    <p className="text-2xl font-bold">{uniqueItemCount}</p>
-                </div>
-                <div>
-                    <p className="text-sm text-muted-foreground">Boss Encounters</p>
-                    <p className="text-2xl font-bold">{filteredGroups.size}</p>
-                </div>
+                )}
+            </div>
+        </div>
+    )
+}
+
+// Main Content Component (needs filter context)
+function LootGainsContent(): JSX.Element {
+    const { filter } = useFilterContext()
+
+    const droptimizersRes = useLatestDroptimizers()
+    const raidLootTableRes = useRaidLootTable()
+    const charRes = useCharacters()
+
+    const filteredDroptimizers = useMemo(() => {
+        if (!droptimizersRes.data) {
+            return []
+        }
+        return filterDroptimizer(droptimizersRes.data, charRes.data ?? [], filter)
+    }, [droptimizersRes.data, charRes.data, filter])
+
+    if (raidLootTableRes.isLoading || droptimizersRes.isLoading || charRes.isLoading) {
+        return (
+            <div className="flex flex-col items-center w-full justify-center mt-10 mb-10">
+                <LoaderCircle className="animate-spin text-5xl" />
+            </div>
+        )
+    }
+
+    const encounterList = raidLootTableRes.data ?? []
+
+    return (
+        <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-8 items-center p-8 relative">
+            {/* Boss List */}
+            <div className="flex flex-wrap gap-x-4 gap-y-4 justify-center">
+                {encounterList
+                    .sort((a, b) => a.order - b.order)
+                    .map((boss) => (
+                        <BossPanel
+                            key={boss.id}
+                            boss={boss}
+                            droptimizers={filteredDroptimizers}
+                            diff={filter.selectedRaidDiff}
+                            hideItemsWithoutDropt={filter.hideIfNoUpgrade}
+                        />
+                    ))}
             </div>
 
-            {/* Upgrades Table grouped by boss */}
-            {Array.from(filteredGroups.entries()).map(([bossName, upgrades]) => {
-                const bossTotalDps = upgrades.reduce((sum, u) => sum + u.upgrade.dps, 0)
-                return (
-                    <div key={bossName} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-semibold text-primary">
-                                {bossName}
-                            </h2>
-                            <span className="text-sm text-green-500 font-medium">
-                                +{formatDps(bossTotalDps)} total DPS
-                            </span>
-                        </div>
-                        <div className="rounded-lg border bg-card">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="w-12"></TableHead>
-                                        <TableHead>Item</TableHead>
-                                        <TableHead>Slot</TableHead>
-                                        <TableHead className="text-center">
-                                            ilvl
-                                        </TableHead>
-                                        <TableHead>Character</TableHead>
-                                        <TableHead className="text-right">
-                                            DPS Gain
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {upgrades.map((data, idx) => (
-                                        <UpgradeRow
-                                            key={`${s(data.upgrade.id)}-${data.charName}-${s(idx)}`}
-                                            data={data}
-                                        />
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </div>
-                )
-            })}
-
-            {filteredGroups.size === 0 && (
+            {encounterList.length === 0 && (
                 <div className="bg-muted p-8 rounded-lg text-center">
                     <p className="text-muted-foreground">
-                        {droptimizers?.length === 0
-                            ? "No droptimizers found. Import some simulations to see loot gains."
-                            : "No upgrades found matching your filters."}
+                        No raid loot table data available.
                     </p>
                 </div>
             )}
+
+            {/* Bottom Right Filter button */}
+            <GlobalFilterUI
+                showRaidDifficulty={true}
+                showDroptimizerFilters={true}
+                showMainsAlts={true}
+                showClassFilter={true}
+                showSlotFilter={true}
+                showArmorTypeFilter={true}
+            />
         </div>
+    )
+}
+
+// Main Component with FilterProvider
+export default function LootGainsPage(): JSX.Element {
+    return (
+        <FilterProvider>
+            <LootGainsContent />
+        </FilterProvider>
     )
 }

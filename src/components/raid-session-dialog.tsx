@@ -1,9 +1,15 @@
 "use client"
 
-import { useAddRaidSession } from "@/lib/queries/raid-sessions"
+import { useAddRaidSession, useEditRaidSession } from "@/lib/queries/raid-sessions"
 import { useCharacters } from "@/lib/queries/players"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
-import type { Character, NewRaidSession } from "@/shared/types/types"
+import { defined } from "@/lib/utils"
+import type {
+    Character,
+    EditRaidSession,
+    NewRaidSession,
+    RaidSessionWithRoster,
+} from "@/shared/types/types"
 import { Loader2 } from "lucide-react"
 import { useState, type JSX, useMemo } from "react"
 import { toast } from "sonner"
@@ -23,12 +29,15 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 type RaidSessionDialogProps = {
     isOpen: boolean
     setOpen: (open: boolean) => void
+    existingSession?: RaidSessionWithRoster
 }
 
 function RaidSessionDialogContent({
     setOpen,
-}: Pick<RaidSessionDialogProps, "setOpen">): JSX.Element {
+    existingSession,
+}: Pick<RaidSessionDialogProps, "setOpen" | "existingSession">): JSX.Element {
     const { data: characters } = useCharacters()
+    const isEditMode = defined(existingSession)
 
     // Group characters by main/alt status
     const { mains, alts } = useMemo(() => {
@@ -40,19 +49,22 @@ function RaidSessionDialogContent({
         return { mains: mainChars, alts: altChars }
     }, [characters])
 
-    // Initialize with all mains selected
-    const initialSelectedCharacters = useMemo(
-        () => new Set(mains.map((c) => c.id)),
-        [mains]
-    )
+    // Initialize with existing session roster or all mains selected
+    const initialSelectedCharacters = useMemo(() => {
+        if (existingSession) {
+            return new Set(existingSession.roster.map((c) => c.id))
+        }
+        return new Set(mains.map((c) => c.id))
+    }, [existingSession, mains])
 
-    const [sessionName, setSessionName] = useState("")
+    const [sessionName, setSessionName] = useState(existingSession?.name ?? "")
     const [nameError, setNameError] = useState("")
     const [selectedCharacters, setSelectedCharacters] = useState<Set<string>>(
         initialSelectedCharacters
     )
 
     const addMutation = useAddRaidSession()
+    const editMutation = useEditRaidSession()
 
     const resetForm = () => {
         setSessionName("")
@@ -79,22 +91,45 @@ function RaidSessionDialogContent({
             return
         }
 
-        const sessionData: NewRaidSession = {
-            name: sessionName.trim(),
-            raidDate: getUnixTimestamp(),
-            roster: Array.from(selectedCharacters),
-        }
+        if (existingSession) {
+            const sessionData: EditRaidSession = {
+                id: existingSession.id,
+                name: sessionName.trim(),
+                raidDate: existingSession.raidDate,
+                roster: Array.from(selectedCharacters),
+            }
 
-        addMutation.mutate(sessionData, {
-            onSuccess: () => {
-                resetForm()
-                setOpen(false)
-                toast.success(`Raid session "${sessionData.name}" created successfully`)
-            },
-            onError: (error) => {
-                toast.error(`Unable to create raid session. Error: ${error.message}`)
-            },
-        })
+            editMutation.mutate(sessionData, {
+                onSuccess: () => {
+                    setOpen(false)
+                    toast.success(
+                        `Raid session "${sessionData.name}" updated successfully`
+                    )
+                },
+                onError: (error) => {
+                    toast.error(`Unable to update raid session. Error: ${error.message}`)
+                },
+            })
+        } else {
+            const sessionData: NewRaidSession = {
+                name: sessionName.trim(),
+                raidDate: getUnixTimestamp(),
+                roster: Array.from(selectedCharacters),
+            }
+
+            addMutation.mutate(sessionData, {
+                onSuccess: () => {
+                    resetForm()
+                    setOpen(false)
+                    toast.success(
+                        `Raid session "${sessionData.name}" created successfully`
+                    )
+                },
+                onError: (error) => {
+                    toast.error(`Unable to create raid session. Error: ${error.message}`)
+                },
+            })
+        }
     }
 
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,15 +159,18 @@ function RaidSessionDialogContent({
         setSelectedCharacters(new Set())
     }
 
-    const isLoading = addMutation.isPending
+    const isLoading = addMutation.isPending || editMutation.isPending
 
     return (
         <>
             <DialogHeader>
-                <DialogTitle>New Raid Session</DialogTitle>
+                <DialogTitle>
+                    {isEditMode ? "Edit Raid Session" : "New Raid Session"}
+                </DialogTitle>
                 <DialogDescription>
-                    Create a new raid session and select the characters that will
-                    participate.
+                    {isEditMode
+                        ? "Update the raid session name and roster."
+                        : "Create a new raid session and select the characters that will participate."}
                 </DialogDescription>
             </DialogHeader>
 
@@ -223,7 +261,13 @@ function RaidSessionDialogContent({
                 </div>
 
                 <Button disabled={isLoading} type="submit">
-                    {isLoading ? <Loader2 className="animate-spin" /> : "Create Session"}
+                    {isLoading ? (
+                        <Loader2 className="animate-spin" />
+                    ) : isEditMode ? (
+                        "Update Session"
+                    ) : (
+                        "Create Session"
+                    )}
                 </Button>
             </form>
         </>
@@ -233,14 +277,19 @@ function RaidSessionDialogContent({
 export default function RaidSessionDialog({
     isOpen,
     setOpen,
+    existingSession,
 }: RaidSessionDialogProps): JSX.Element {
     // Key forces content remount when dialog opens, resetting form state
-    const contentKey = `session-dialog-${String(isOpen)}`
+    const contentKey = `session-dialog-${String(isOpen)}-${existingSession?.id ?? "new"}`
 
     return (
         <Dialog open={isOpen} onOpenChange={setOpen}>
             <DialogContent className="sm:max-w-[500px]">
-                <RaidSessionDialogContent key={contentKey} setOpen={setOpen} />
+                <RaidSessionDialogContent
+                    key={contentKey}
+                    setOpen={setOpen}
+                    existingSession={existingSession}
+                />
             </DialogContent>
         </Dialog>
     )

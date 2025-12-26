@@ -11,6 +11,7 @@ type WowSpecIconProps = {
     showTooltip?: boolean
     className?: string
     size?: number
+    title?: string
 }
 
 export const WowSpecIcon = ({
@@ -18,6 +19,7 @@ export const WowSpecIcon = ({
     showTooltip,
     className,
     size = 32,
+    title,
 }: WowSpecIconProps) => {
     const iconUrl = specIcon.get(specId)
 
@@ -32,6 +34,7 @@ export const WowSpecIcon = ({
             width={size}
             height={size}
             className={cn("object-cover object-top", className)}
+            title={title}
         />
     )
 

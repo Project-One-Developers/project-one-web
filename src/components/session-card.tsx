@@ -1,28 +1,65 @@
 "use client"
 
+import { cn } from "@/lib/utils"
 import {
     formatUnixTimestampForDisplay,
     unixTimestampToWowWeek,
 } from "@/shared/libs/date/date-utils"
 import type { RaidSessionWithSummary } from "@/shared/types/types"
-import { Calendar, Gem, Users } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { Calendar, ExternalLink, Gem, Package, Users } from "lucide-react"
+import { useRouter } from "next/navigation"
+import type { MouseEvent } from "react"
+import { Button } from "./ui/button"
 
 type SessionCardProps = {
     session: RaidSessionWithSummary
     className?: string
+    showActions?: boolean
     onClick?: () => void
+    onEditRoster?: (sessionId: string) => void
+    onLootImport?: (sessionId: string) => void
 }
 
-const SessionCard = ({ session, className, onClick }: SessionCardProps) => {
+const SessionCard = ({
+    session,
+    className,
+    showActions = false,
+    onClick,
+    onEditRoster,
+    onLootImport,
+}: SessionCardProps) => {
+    const router = useRouter()
+
+    const handleCardClick = () => {
+        if (onClick) {
+            onClick()
+        }
+    }
+
+    const handleGoToSession = (e: MouseEvent) => {
+        e.stopPropagation()
+        router.push(`/raid-session/${session.id}`)
+    }
+
+    const handleEditRoster = (e: MouseEvent) => {
+        e.stopPropagation()
+        onEditRoster?.(session.id)
+    }
+
+    const handleLootImport = (e: MouseEvent) => {
+        e.stopPropagation()
+        onLootImport?.(session.id)
+    }
+
     return (
         <div
             className={cn(
                 "bg-muted rounded-lg border border-gray-900 cursor-pointer hover:bg-gray-700 transition-colors min-w-64 relative flex flex-col",
                 className
             )}
-            onClick={onClick}
+            onClick={handleCardClick}
         >
+            {/* Main content area */}
             <div className="p-4 flex-1">
                 <h3 className="text-xl font-bold truncate max-w-[220px] mb-2">
                     {session.name}
@@ -43,6 +80,41 @@ const SessionCard = ({ session, className, onClick }: SessionCardProps) => {
                     <span>{session.lootCount} loots</span>
                 </div>
             </div>
+
+            {/* Bottom actions bar */}
+            {showActions && (
+                <div className="border-t border-gray-600 px-4 py-2 bg-gray-800/50 rounded-b-lg">
+                    <div className="flex justify-center gap-1">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 hover:bg-gray-600 flex-1"
+                            onClick={handleGoToSession}
+                            title="Go to session page"
+                        >
+                            <ExternalLink className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 hover:bg-gray-600 flex-1"
+                            onClick={handleEditRoster}
+                            title="Edit roster"
+                        >
+                            <Users className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 hover:bg-gray-600 flex-1"
+                            onClick={handleLootImport}
+                            title="Loot import"
+                        >
+                            <Package className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

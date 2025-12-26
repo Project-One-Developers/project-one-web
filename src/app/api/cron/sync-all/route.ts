@@ -10,7 +10,9 @@ import { NextResponse } from "next/server"
 
 // Verify this is a cron request from Vercel
 function verifyCronSecret(request: Request): boolean {
-    if (!env.CRON_SECRET) {return false} // No secret configured, block
+    if (!env.CRON_SECRET) {
+        return false
+    } // No secret configured, block
     const authHeader = request.headers.get("authorization")
     return authHeader === `Bearer ${env.CRON_SECRET}`
 }

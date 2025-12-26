@@ -14,6 +14,7 @@ import {
     RaiderioWarn,
     WowAuditWarn,
     type BisList,
+    type BossWithItems,
     type Character,
     type CharacterWowAudit,
     type CharAssignmentHighlights,
@@ -24,6 +25,7 @@ import {
     type GearItem,
     type Item,
     type Loot,
+    type LootWithAssigned,
     type LootWithItem,
     type SimC,
     type TierSetBonus,
@@ -608,4 +610,145 @@ export const evalScore = (
     const formattedScore = Math.round(score * 100)
 
     return formattedScore
+}
+
+// CSV Export Utilities
+
+export const generateLootFilename = (
+    sessions: { id: string; name: string }[],
+    selectedSessionIds: Set<string>,
+    suffix: string
+): string => {
+    return `${sessions
+        .filter((session) => selectedSessionIds.has(session.id))
+        .map((session) => session.name)
+        .join("-")}-${suffix}.csv`
+}
+
+export const prepareLootData = (
+    loots: LootWithAssigned[],
+    encounterList: BossWithItems[]
+) => {
+    return loots
+        .filter((loot) => loot.assignedCharacter !== null)
+        .map((loot) => ({
+            Difficoltà: loot.raidDifficulty,
+            Boss:
+                encounterList
+                    .find((boss) =>
+                        boss.items.find((item) => item.id === loot.gearItem.item.id)
+                    )
+                    ?.name.replaceAll(",", " ") ?? "",
+            Item: loot.gearItem.item.name,
+            Livello: loot.gearItem.itemLevel,
+            Slot: loot.gearItem.item.slotKey
+                .replaceAll("_", " ")
+                .replace(/\b\w/g, (char) => char.toUpperCase()),
+            Character: loot.assignedCharacter?.name ?? "",
+        }))
+        .sort((a, b) => {
+            if (a.Character < b.Character) {
+                return -1
+            }
+            if (a.Character > b.Character) {
+                return 1
+            }
+            if (a.Difficoltà < b.Difficoltà) {
+                return -1
+            }
+            if (a.Difficoltà > b.Difficoltà) {
+                return 1
+            }
+            return 0
+        })
+}
+
+export const prepareStatsData = (
+    loots: LootWithAssigned[],
+    encounterList: BossWithItems[]
+) => {
+    // Group loots by Boss and Difficulty
+    const groupedData: Record<
+        string,
+        { RaidDpsGain: number; TwoPiecesClosed: string[]; FourPiecesClosed: string[] }
+    > = {}
+
+    loots.forEach((loot) => {
+        if (!loot.assignedCharacter) {
+            return
+        }
+
+        const bossName =
+            encounterList
+                .find((boss) =>
+                    boss.items.find((item) => item.id === loot.gearItem.item.id)
+                )
+                ?.name.replaceAll(",", " ") ?? "Unknown Boss"
+
+        const difficulty = loot.raidDifficulty
+
+        const key = `${bossName}#${difficulty}`
+
+        groupedData[key] ??= {
+            RaidDpsGain: 0,
+            TwoPiecesClosed: [],
+            FourPiecesClosed: [],
+        }
+
+        // Aggregate RaidDpsGain
+        groupedData[key].RaidDpsGain += loot.assignedHighlights?.dpsGain ?? 0
+
+        // Concatenate names for TwoPiecesClosed
+        if (loot.assignedHighlights?.lootEnableTiersetBonus === "2p") {
+            groupedData[key].TwoPiecesClosed.push(loot.assignedCharacter.name)
+        }
+        // Concatenate names for FourPiecesClosed
+        if (loot.assignedHighlights?.lootEnableTiersetBonus === "4p") {
+            groupedData[key].FourPiecesClosed.push(loot.assignedCharacter.name)
+        }
+    })
+
+    // Transform grouped data into the desired format
+    return Object.entries(groupedData).map(([key, value]) => {
+        const [Boss, Difficoltà] = key.split("#")
+        return {
+            Boss,
+            Difficoltà,
+            RaidDpsGain: value.RaidDpsGain,
+            TwoPiecesClosed: value.TwoPiecesClosed.join("|"),
+            FourPiecesClosed: value.FourPiecesClosed.join("|"),
+        }
+    })
+}
+
+export const convertToCSV = (data: Record<string, unknown>[]): string => {
+    if (data.length === 0) {
+        return ""
+    }
+
+    const firstRow = data[0]
+    if (!firstRow) {
+        return ""
+    }
+
+    const headers = Object.keys(firstRow)
+    const headerRow = headers.map((h) => `"${h}"`).join(",")
+    const rows = data.map((row) =>
+        headers.map((h) => `"${String(row[h]).replace(/"/g, '""')}"`).join(",")
+    )
+
+    return [headerRow, ...rows].join("\n")
+}
+
+export const downloadCSV = (data: string, filename: string): void => {
+    const blob = new Blob([data], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.setAttribute("href", url)
+    link.setAttribute("download", filename)
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
 }
