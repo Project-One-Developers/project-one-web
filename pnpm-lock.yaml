@@ -112,7 +112,7 @@ importers:
         version: 4.2.1
     devDependencies:
       '@tailwindcss/postcss':
-        specifier: ^4
+        specifier: ^4.1.18
         version: 4.1.18
       '@trivago/prettier-plugin-sort-imports':
         specifier: ^6.0.0
@@ -121,8 +121,8 @@ importers:
         specifier: ^2.0.7
         version: 2.0.7
       '@types/node':
-        specifier: ^20
-        version: 20.19.27
+        specifier: ^24.10.4
+        version: 24.10.4
       '@types/papaparse':
         specifier: ^5.5.2
         version: 5.5.2
@@ -130,16 +130,16 @@ importers:
         specifier: ^8.16.0
         version: 8.16.0
       '@types/react':
-        specifier: ^19
+        specifier: ^19.2.7
         version: 19.2.7
       '@types/react-dom':
-        specifier: ^19
+        specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.7)
       drizzle-kit:
         specifier: ^0.31.8
         version: 0.31.8
       eslint:
-        specifier: ^9
+        specifier: ^9.39.2
         version: 9.39.2(jiti@2.6.1)
       eslint-config-next:
         specifier: 16.1.1
@@ -154,13 +154,13 @@ importers:
         specifier: ^3.7.4
         version: 3.7.4
       tailwindcss:
-        specifier: ^4
+        specifier: ^4.1.18
         version: 4.1.18
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
       typescript:
-        specifier: ^5
+        specifier: ^5.9.3
         version: 5.9.3
       typescript-eslint:
         specifier: ^8.50.1
@@ -1508,11 +1508,11 @@ packages:
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
 
-  '@types/node@20.19.27':
-    resolution: {integrity: sha512-N2clP5pJhB2YnZJ3PIHFk5RkygRX5WO/5f0WC08tp0wd+sv0rsJk3MqWn3CbNmT2J505a5336jaQj4ph1AdMug==}
-
   '@types/node@22.19.3':
     resolution: {integrity: sha512-1N9SBnWYOJTrNZCdh/yJE+t910Y128BoyY+zBLWhL3r0TYzlTmFdXrPwHL9DyFZmlEXNQQolTZh3KHV31QDhyA==}
+
+  '@types/node@24.10.4':
+    resolution: {integrity: sha512-vnDVpYPMzs4wunl27jHrfmwojOGKya0xyM3sH+UE5iv5uPS6vX7UIoh6m+vQc5LGBq52HBKPIn/zcSZVzeDEZg==}
 
   '@types/papaparse@5.5.2':
     resolution: {integrity: sha512-gFnFp/JMzLHCwRf7tQHrNnfhN4eYBVYYI897CGX4MY1tzY9l2aLkVyx2IlKZ/SAqDbB3I1AOZW5gTMGGsqWliA==}
@@ -3195,6 +3195,9 @@ packages:
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
 
+  undici-types@7.16.0:
+    resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
+
   undici@6.21.3:
     resolution: {integrity: sha512-gBLkYIlEnSp8pFbT64yFgGE6UIB9tAkhukC23PmMDCe5Nd+cRqKxSjw5y54MK2AZMgZfJWMaNE4nYUHgi1XEOw==}
     engines: {node: '>=18.17'}
@@ -4468,22 +4471,22 @@ snapshots:
 
   '@types/json5@0.0.29': {}
 
-  '@types/node@20.19.27':
-    dependencies:
-      undici-types: 6.21.0
-
   '@types/node@22.19.3':
     dependencies:
       undici-types: 6.21.0
     optional: true
 
+  '@types/node@24.10.4':
+    dependencies:
+      undici-types: 7.16.0
+
   '@types/papaparse@5.5.2':
     dependencies:
-      '@types/node': 20.19.27
+      '@types/node': 24.10.4
 
   '@types/pg@8.16.0':
     dependencies:
-      '@types/node': 20.19.27
+      '@types/node': 24.10.4
       pg-protocol: 1.10.3
       pg-types: 2.2.0
 
@@ -4497,7 +4500,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 20.19.27
+      '@types/node': 24.10.4
 
   '@typescript-eslint/eslint-plugin@8.50.1(@typescript-eslint/parser@8.50.1(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)':
     dependencies:
@@ -6339,7 +6342,10 @@ snapshots:
       has-symbols: 1.1.0
       which-boxed-primitive: 1.1.1
 
-  undici-types@6.21.0: {}
+  undici-types@6.21.0:
+    optional: true
+
+  undici-types@7.16.0: {}
 
   undici@6.21.3: {}
 
