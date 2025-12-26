@@ -127,7 +127,8 @@ function AssignContent(): JSX.Element {
         )
     }
 
-    const isLootsLoading = lootsQuery.isLoading || lootsQuery.isFetching
+    // Only show blocking loading state on initial load, not during background refetches
+    const isLootsLoading = lootsQuery.isLoading
 
     return (
         <div className="w-full h-full flex flex-col gap-y-8 p-8 relative">
