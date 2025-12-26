@@ -5,6 +5,7 @@ import { s } from "@/lib/safe-stringify"
 import { currencyIcon } from "@/lib/wow-icon"
 import type { DroptimizerCurrency } from "@/shared/types/types"
 import { cn } from "@/lib/utils"
+import { useRefreshWowheadTooltips } from "./wowhead-tooltips"
 
 type WowCurrencyIconProps = {
     currency: DroptimizerCurrency
@@ -18,7 +19,11 @@ export function WowCurrencyIcon({
     size = 32,
 }: WowCurrencyIconProps) {
     const currencyHref = `https://www.wowhead.com/${currency.type}=${s(currency.id)}`
+    const dataWowhead = `${currency.type}=${s(currency.id)}`
     const currencyInfo = currencyIcon.get(currency.id)
+
+    // Refresh Wowhead tooltips when currency changes
+    useRefreshWowheadTooltips([currency.id, currency.type])
 
     if (!currencyInfo) {
         // Currency icon not found - silently skip rendering
@@ -31,6 +36,7 @@ export function WowCurrencyIcon({
             href={currencyHref}
             rel="noreferrer"
             target="_blank"
+            data-wowhead={dataWowhead}
         >
             <div className="flex flex-col items-center justify-center relative group">
                 <Image

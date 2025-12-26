@@ -6,6 +6,7 @@ import { isHealerSpecs, isTankSpecs } from "@/shared/libs/spec-parser/spec-utils
 import type { Item, WowRaidDifficulty } from "@/shared/types/types"
 import { LoaderCircle } from "lucide-react"
 import Image from "next/image"
+import { useRefreshWowheadTooltips } from "./wowhead-tooltips"
 
 type WowItemIconProps = {
     item: Item | number
@@ -39,6 +40,9 @@ export function WowItemIcon({
 
     // Resolve the item data
     const itemData = typeof item === "number" ? fetchedItem : item
+
+    // Refresh Wowhead tooltips when item changes (must be called before any early return)
+    useRefreshWowheadTooltips([itemData?.id, ilvl, raidDiff])
 
     if (isLoading) {
         return (
@@ -83,13 +87,14 @@ export function WowItemIcon({
     const currentIlvl = getIlvl()
     const iconUrl = `https://wow.zamimg.com/images/wow/icons/large/${itemData.iconName}.jpg`
     const hrefString = `https://www.wowhead.com/item=${String(itemData.id)}&ilvl=${String(currentIlvl)}`
+    const dataWowhead = `item=${String(itemData.id)}&ilvl=${String(currentIlvl)}`
 
     // Role badges
     const healerItem = showRoleIcons ? isHealerSpecs(itemData.specIds) : undefined
     const tankItem = showRoleIcons ? isTankSpecs(itemData.specIds) : undefined
 
     return (
-        <a href={hrefString} rel="noreferrer" target="_blank">
+        <a href={hrefString} rel="noreferrer" target="_blank" data-wowhead={dataWowhead}>
             <div className={cn("flex items-center", className)}>
                 <div className="relative inline-block">
                     <Image

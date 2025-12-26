@@ -12,6 +12,7 @@ import { formatWowSlotKey } from "@/shared/libs/items/item-slot-utils"
 import { trackNameToWowDiff } from "@/shared/libs/items/item-tracks"
 import { isHealerSpecs, isTankSpecs } from "@/shared/libs/spec-parser/spec-utils"
 import type { GearItem } from "@/shared/types/types"
+import { useRefreshWowheadTooltips } from "./wowhead-tooltips"
 
 type WowGearIconProps = {
     gearItem: GearItem
@@ -63,6 +64,15 @@ export function WowGearIcon({
     }${
         enchantIds?.length ? `&ench=${enchantIds.join(":")}` : ""
     }${gemIds?.length ? `&gems=${gemIds.join(":")}` : ""}`
+
+    const dataWowhead = `item=${s(id)}&ilvl=${s(itemLevel)}${
+        bonusIds?.length ? `&bonus=${bonusIds.join(":")}` : ""
+    }${
+        enchantIds?.length ? `&ench=${enchantIds.join(":")}` : ""
+    }${gemIds?.length ? `&gems=${gemIds.join(":")}` : ""}`
+
+    // Refresh Wowhead tooltips when gear changes
+    useRefreshWowheadTooltips([id, itemLevel, bonusIds, enchantIds, gemIds])
 
     // role badges
     const healerItem = showRoleIcons ? isHealerSpecs(specIds) : undefined
@@ -156,7 +166,7 @@ export function WowGearIcon({
     ) : null
 
     return (
-        <a href={hrefString} rel="noreferrer" target="_blank">
+        <a href={hrefString} rel="noreferrer" target="_blank" data-wowhead={dataWowhead}>
             <div className={cn("flex flex-row items-center", className)}>
                 {flipExtendedInfo && extendedInfoElement}
 

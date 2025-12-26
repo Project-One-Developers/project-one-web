@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Providers } from "@/components/providers"
+import { WowheadTooltips } from "@/components/wow/wowhead-tooltips"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -25,6 +26,9 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" className="dark">
+            <head>
+                <WowheadTooltips />
+            </head>
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
                 <Providers>{children}</Providers>
             </body>
