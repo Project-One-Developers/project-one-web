@@ -22,6 +22,10 @@ function getDb(): NodePgDatabase<typeof schema> {
     _pool = new Pool({
         connectionString: databaseUrl,
         ssl: { rejectUnauthorized: false },
+        min: 0,
+        max: 10,
+        idleTimeoutMillis: 10_000,
+        connectionTimeoutMillis: 5_000,
     })
 
     _db = drizzle(_pool, { schema })

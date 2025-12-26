@@ -1,13 +1,16 @@
 import { getTableColumns, sql, SQL } from "drizzle-orm"
 import { PgTable } from "drizzle-orm/pg-core"
+import { z } from "zod"
 
-export const isPresent = <T>(value: T | null | undefined): value is T =>
+export const defined = <T>(value: T | null | undefined): value is T =>
     value !== null && value !== undefined
+
+export const identity = <T>(value: T): T => value
 
 export const newUUID = (): string => crypto.randomUUID()
 
 export const takeFirstResult = <T>(results: T[]): T | null =>
-    results.length > 0 && isPresent(results[0]) ? results[0] : null
+    results.length > 0 && defined(results[0]) ? results[0] : null
 
 // https://orm.drizzle.team/docs/guides/upsert#postgresql-and-sqlite
 export const buildConflictUpdateColumns = <
@@ -50,4 +53,19 @@ export const conflictUpdateAllExcept = <T extends PgTable>(
         }
         return acc
     }, {})
+}
+
+/**
+ * Maps database results to domain models with Zod validation.
+ * Ensures type safety at the boundary between database and application layers.
+ */
+export function mapAndParse<TDb, TModel>(
+    dbResult: TDb | TDb[],
+    mapper: (row: TDb) => TModel,
+    schema: z.ZodType<TModel>
+): TModel | TModel[] {
+    if (Array.isArray(dbResult)) {
+        return schema.array().parse(dbResult.map(mapper))
+    }
+    return schema.parse(mapper(dbResult))
 }
