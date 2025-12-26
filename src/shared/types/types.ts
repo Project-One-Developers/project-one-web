@@ -181,6 +181,13 @@ export type CharacterSummary = {
     warnRaiderio: RaiderioWarn
 }
 
+// Compact version for roster page - avoids fetching full droptimizer data
+export type CharacterSummaryCompact = {
+    character: CharacterWithPlayer
+    itemLevel: string
+    tiersetCount: number
+}
+
 export type TierSetBonus = z.infer<typeof tierSetBonusSchema>
 export type CharAssignmentHighlights = z.infer<typeof charAssignmentHighlightsSchema>
 

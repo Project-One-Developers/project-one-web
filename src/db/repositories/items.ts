@@ -80,51 +80,49 @@ export async function upsertItems(items: Item[]): Promise<void> {
         return
     }
 
-    // For upsert, we need to handle each item individually to get proper conflict handling
-    for (const item of items) {
-        await db
-            .insert(itemTable)
-            .values(item)
-            .onConflictDoUpdate({
-                target: itemTable.id,
-                set: buildConflictUpdateColumns(itemTable, [
-                    "name",
-                    "ilvlBase",
-                    "ilvlMythic",
-                    "ilvlHeroic",
-                    "ilvlNormal",
-                    "itemClass",
-                    "slot",
-                    "slotKey",
-                    "armorType",
-                    "itemSubclass",
-                    "token",
-                    "tokenPrefix",
-                    "tierset",
-                    "tiersetPrefix",
-                    "veryRare",
-                    "boe",
-                    "onUseTrinket",
-                    "specs",
-                    "specIds",
-                    "classes",
-                    "classesId",
-                    "stats",
-                    "mainStats",
-                    "secondaryStats",
-                    "wowheadUrl",
-                    "iconName",
-                    "iconUrl",
-                    "catalyzed",
-                    "sourceId",
-                    "sourceName",
-                    "sourceType",
-                    "bossName",
-                    "season",
-                    "bossId",
-                ]),
-            })
-    }
+    // Batch upsert - single query instead of N queries
+    await db
+        .insert(itemTable)
+        .values(items)
+        .onConflictDoUpdate({
+            target: itemTable.id,
+            set: buildConflictUpdateColumns(itemTable, [
+                "name",
+                "ilvlBase",
+                "ilvlMythic",
+                "ilvlHeroic",
+                "ilvlNormal",
+                "itemClass",
+                "slot",
+                "slotKey",
+                "armorType",
+                "itemSubclass",
+                "token",
+                "tokenPrefix",
+                "tierset",
+                "tiersetPrefix",
+                "veryRare",
+                "boe",
+                "onUseTrinket",
+                "specs",
+                "specIds",
+                "classes",
+                "classesId",
+                "stats",
+                "mainStats",
+                "secondaryStats",
+                "wowheadUrl",
+                "iconName",
+                "iconUrl",
+                "catalyzed",
+                "sourceId",
+                "sourceName",
+                "sourceType",
+                "bossName",
+                "season",
+                "bossId",
+            ]),
+        })
 }
 
 export async function deleteItemById(id: number): Promise<void> {

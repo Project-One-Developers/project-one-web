@@ -9,6 +9,7 @@ export function useBisList() {
     return useQuery({
         queryKey: [queryKeys.bisList],
         queryFn: () => getBisListAction(),
+        staleTime: 60000, // 1 minute - user-editable but not frequent
     })
 }
 

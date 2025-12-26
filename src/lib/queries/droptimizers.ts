@@ -19,6 +19,7 @@ export function useDroptimizers() {
     return useQuery({
         queryKey: [queryKeys.droptimizers],
         queryFn: () => getDroptimizerListAction(),
+        staleTime: 30000,
     })
 }
 
@@ -26,6 +27,7 @@ export function useLatestDroptimizers() {
     return useQuery({
         queryKey: [queryKeys.droptimizers, "latest"],
         queryFn: () => getDroptimizerLatestListAction(),
+        staleTime: 30000,
     })
 }
 
@@ -60,6 +62,7 @@ export function useDroptimizerLastByCharAndDiff(
             return getDroptimizerLastByCharAndDiffAction(charName, charRealm, raidDiff)
         },
         enabled: !!charName && !!charRealm && !!raidDiff,
+        staleTime: 30000,
     })
 }
 

@@ -12,6 +12,7 @@ export function useBosses(raidId: number = CURRENT_RAID_ID) {
     return useQuery({
         queryKey: [queryKeys.bosses, raidId],
         queryFn: () => getBossesAction(raidId),
+        staleTime: 3600000, // 1 hour - boss data is static per patch
     })
 }
 
@@ -19,12 +20,14 @@ export function useRaidLootTable(raidId: number = CURRENT_RAID_ID) {
     return useQuery({
         queryKey: [queryKeys.bosses, "lootTable", raidId],
         queryFn: () => getRaidLootTableAction(raidId),
+        staleTime: 3600000, // 1 hour - loot table is static per patch
     })
 }
 
 export function useRosterProgression(showMains: boolean, showAlts: boolean) {
     return useQuery({
         queryKey: [queryKeys.raidProgression, showMains, showAlts],
+        staleTime: 60000, // 1 minute - progression updates infrequently
         queryFn: async (): Promise<CharacterWithProgression[]> => {
             // Convert the boolean filter states to the numeric parameter
             let filterParam = 0 // default: all characters

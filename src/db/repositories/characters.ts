@@ -67,11 +67,11 @@ export async function getPlayerWithCharactersList(): Promise<PlayerWithCharacter
 
 export async function getPlayersWithoutCharactersList(): Promise<Player[]> {
     const result = await db
-        .select()
+        .select({ id: playerTable.id, name: playerTable.name })
         .from(playerTable)
         .leftJoin(charTable, eq(playerTable.id, charTable.playerId))
         .where(isNull(charTable.playerId))
-    return z.array(playerSchema).parse(result.map((row) => row.players))
+    return z.array(playerSchema).parse(result)
 }
 
 export async function getPlayerById(id: string): Promise<Player | null> {

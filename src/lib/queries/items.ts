@@ -20,6 +20,7 @@ export function useItems() {
     return useQuery({
         queryKey: [queryKeys.items],
         queryFn: () => getItemsAction(),
+        staleTime: 3600000, // 1 hour - item data is static per patch
     })
 }
 
@@ -27,6 +28,7 @@ export function useRaidItems() {
     return useQuery({
         queryKey: [queryKeys.items, "raid"],
         queryFn: () => getRaidItemsAction(),
+        staleTime: 3600000, // 1 hour - item data is static per patch
     })
 }
 
@@ -48,6 +50,7 @@ export function useSearchItems(searchTerm: string, limit = 20) {
         queryKey: [queryKeys.items, "search", searchTerm, limit],
         queryFn: () => searchItemsAction(searchTerm, limit),
         enabled: searchTerm.length >= 2,
+        staleTime: 3600000, // 1 hour - item data is static per patch
     })
 }
 
@@ -55,6 +58,7 @@ export function useItemNotes() {
     return useQuery({
         queryKey: [queryKeys.items, "notes"],
         queryFn: () => getAllItemNotesAction(),
+        staleTime: 60000, // 1 minute - user-editable but not frequent
     })
 }
 

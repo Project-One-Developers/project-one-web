@@ -7,15 +7,17 @@ import { type JSX } from "react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { classIcon } from "@/lib/wow-icon"
-import type { CharacterSummary } from "@/shared/types/types"
+import type { CharacterSummary, CharacterSummaryCompact } from "@/shared/types/types"
 
 import { WowCharacterLink } from "./wow-character-links"
+
+type CharacterSummaryType = CharacterSummary | CharacterSummaryCompact
 
 const CharacterTooltip = ({
     summary,
     isLowItemLevel,
 }: {
-    summary: CharacterSummary
+    summary: CharacterSummaryType
     isLowItemLevel: boolean
 }) => (
     <div className="flex flex-col gap-1 p-2 bg-gray-800 rounded text-xs">
@@ -47,13 +49,13 @@ export const CharacterOverviewIcon = ({
     className,
     isLowItemLevel,
 }: {
-    charsWithSummary: CharacterSummary[]
+    charsWithSummary: CharacterSummaryType[]
     className?: string
     isLowItemLevel?: (itemLevel: string) => boolean
 }): JSX.Element => {
     const router = useRouter()
 
-    const getBorderColor = (char: CharacterSummary): string => {
+    const getBorderColor = (char: CharacterSummaryType): string => {
         if (char.character.main) {
             return "border-red-500"
         }
@@ -65,7 +67,7 @@ export const CharacterOverviewIcon = ({
         return "border-background"
     }
 
-    const getItemLevelTextColor = (char: CharacterSummary): string => {
+    const getItemLevelTextColor = (char: CharacterSummaryType): string => {
         if (isLowItemLevel?.(char.itemLevel)) {
             return "text-orange-400"
         }

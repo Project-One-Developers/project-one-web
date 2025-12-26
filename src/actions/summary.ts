@@ -1,7 +1,11 @@
 "use server"
 
 import { getCharactersWithPlayerList } from "@/db/repositories/characters"
-import { getDroptimizerLatestList } from "@/db/repositories/droptimizer"
+import {
+    getDroptimizerLatestByCharsCompact,
+    getDroptimizerLatestList,
+    type DroptimizerCompact,
+} from "@/db/repositories/droptimizer"
 import { getAllCharacterRaiderio } from "@/db/repositories/raiderio"
 import { getAllCharacterWowAudit } from "@/db/repositories/wowaudit"
 import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
@@ -10,6 +14,7 @@ import {
     RaiderioWarn,
     WowAuditWarn,
     type CharacterSummary,
+    type CharacterSummaryCompact,
     type CharacterWowAudit,
     type Droptimizer,
     type GearItem,
@@ -151,6 +156,99 @@ export async function getRosterSummaryAction(): Promise<CharacterSummary[]> {
             warnDroptimizer: parseDroptimizerWarn(charDroptimizers),
             warnWowAudit: parseWowAuditWarn(charWowAudit),
             warnRaiderio: parseRaiderioWarn(charRaiderio),
+        }
+    })
+
+    return res
+}
+
+// Compact version for roster page - only fetches item level and tierset count
+// Avoids loading full droptimizers with all upgrades, weekly chest, currencies, etc.
+function parseItemLevelCompact(
+    droptimizers: DroptimizerCompact[],
+    raiderio: CharacterRaiderio | null,
+    wowAudit: CharacterWowAudit | null
+): string {
+    // Prefer droptimizer data (most recent by simDate)
+    if (droptimizers.length > 0) {
+        const sorted = [...droptimizers].sort((a, b) => b.simDate - a.simDate)
+        const mostRecent = sorted[0]
+        const ilvl = mostRecent?.itemsAverageItemLevelEquipped
+        if (ilvl) {
+            return ilvl.toFixed(1)
+        }
+    }
+    if (raiderio?.averageItemLevel) {
+        return raiderio.averageItemLevel
+    }
+    if (wowAudit?.averageIlvl) {
+        return wowAudit.averageIlvl
+    }
+    return "?"
+}
+
+function parseTiersetCountCompact(
+    droptimizers: DroptimizerCompact[],
+    wowAudit: CharacterWowAudit | null,
+    raiderio: CharacterRaiderio | null
+): number {
+    if (droptimizers.length > 0) {
+        const sorted = [...droptimizers].sort((a, b) => b.simDate - a.simDate)
+        const mostRecent = sorted[0]
+        return mostRecent?.tiersetInfo?.length ?? 0
+    }
+    if (wowAudit?.tiersetInfo) {
+        return wowAudit.tiersetInfo.length
+    }
+    if (raiderio?.itemsEquipped) {
+        return raiderio.itemsEquipped.filter((item) => item.item.tierset).length
+    }
+    return 0
+}
+
+export async function getRosterSummaryCompactAction(): Promise<
+    CharacterSummaryCompact[]
+> {
+    const roster = await getCharactersWithPlayerList()
+
+    // Fetch droptimizer data only for characters in roster (more efficient)
+    const charList = roster.map((char) => ({ name: char.name, realm: char.realm }))
+
+    const [latestDroptimizers, wowAuditData, raiderioData] = await Promise.all([
+        getDroptimizerLatestByCharsCompact(charList),
+        getAllCharacterWowAudit(),
+        getAllCharacterRaiderio(),
+    ])
+
+    const res: CharacterSummaryCompact[] = roster.map((char) => {
+        // Get latest droptimizers for a given char
+        const charDroptimizers = latestDroptimizers.filter(
+            (dropt) =>
+                dropt.characterName === char.name && dropt.characterServer === char.realm
+        )
+
+        const charWowAudit: CharacterWowAudit | null =
+            wowAuditData.find(
+                (wowaudit) => wowaudit.name === char.name && wowaudit.realm === char.realm
+            ) ?? null
+
+        const charRaiderio: CharacterRaiderio | null =
+            raiderioData.find(
+                (raiderio) => raiderio.name === char.name && raiderio.realm === char.realm
+            ) ?? null
+
+        return {
+            character: char,
+            itemLevel: parseItemLevelCompact(
+                charDroptimizers,
+                charRaiderio,
+                charWowAudit
+            ),
+            tiersetCount: parseTiersetCountCompact(
+                charDroptimizers,
+                charWowAudit,
+                charRaiderio
+            ),
         }
     })
 

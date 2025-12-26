@@ -307,3 +307,46 @@ export async function getDroptimizerLatestByChars(
     const urls = latestDroptimizers.map((row) => row.url)
     return getDroptimizerByIdsList(urls)
 }
+
+// Compact version for roster page - only fetches fields needed for item level display
+export type DroptimizerCompact = {
+    characterName: string
+    characterServer: string
+    simDate: number
+    itemsAverageItemLevelEquipped: number | null
+    tiersetInfo: unknown[] | null // We only need the array length for counting
+}
+
+export async function getDroptimizerLatestByCharsCompact(
+    chars: { name: string; realm: string }[]
+): Promise<DroptimizerCompact[]> {
+    if (chars.length === 0) {
+        return []
+    }
+
+    // Build OR conditions for each character using Drizzle
+    const charCondition = or(
+        ...chars.map((c) =>
+            and(
+                eq(droptimizerTable.characterName, c.name),
+                eq(droptimizerTable.characterServer, c.realm)
+            )
+        )
+    )
+
+    // Use Drizzle's selectDistinctOn for PostgreSQL DISTINCT ON
+    // Only select fields needed for roster display
+    const result = await db
+        .selectDistinctOn([droptimizerTable.ak], {
+            characterName: droptimizerTable.characterName,
+            characterServer: droptimizerTable.characterServer,
+            simDate: droptimizerTable.simDate,
+            itemsAverageItemLevelEquipped: droptimizerTable.itemsAverageItemLevelEquipped,
+            tiersetInfo: droptimizerTable.tiersetInfo,
+        })
+        .from(droptimizerTable)
+        .where(charCondition)
+        .orderBy(droptimizerTable.ak, desc(droptimizerTable.simDate))
+
+    return result
+}

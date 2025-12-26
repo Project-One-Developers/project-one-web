@@ -14,12 +14,13 @@ import {
     getPlayerWithCharactersListAction,
     getPlayersWithoutCharactersAction,
 } from "@/actions/characters"
-import { getRosterSummaryAction } from "@/actions/summary"
+import { getRosterSummaryAction, getRosterSummaryCompactAction } from "@/actions/summary"
 import {
     DroptimizerWarn,
     RaiderioWarn,
     WowAuditWarn,
     type CharacterSummary,
+    type CharacterSummaryCompact,
     type EditCharacter,
     type EditPlayer,
     type NewCharacter,
@@ -36,12 +37,20 @@ export type PlayerWithCharactersSummary = {
     charsSummary: CharacterSummary[]
 }
 
+// Compact version for roster page - reduces payload by ~70%
+export type PlayerWithCharactersSummaryCompact = {
+    id: string
+    name: string
+    charsSummary: CharacterSummaryCompact[]
+}
+
 // ============== QUERIES ==============
 
 export function usePlayersWithCharacters() {
     return useQuery({
         queryKey: [queryKeys.playersWithCharacters],
         queryFn: () => getPlayerWithCharactersListAction(),
+        staleTime: 30000,
     })
 }
 
@@ -49,6 +58,7 @@ export function usePlayersWithoutCharacters() {
     return useQuery({
         queryKey: [queryKeys.playersWithoutCharacters],
         queryFn: () => getPlayersWithoutCharactersAction(),
+        staleTime: 30000,
     })
 }
 
@@ -56,6 +66,7 @@ export function useCharacters() {
     return useQuery({
         queryKey: [queryKeys.characters],
         queryFn: () => getCharacterListAction(),
+        staleTime: 30000,
     })
 }
 
@@ -63,6 +74,7 @@ export function useCharactersWithPlayer() {
     return useQuery({
         queryKey: [queryKeys.characters, "withPlayer"],
         queryFn: () => getCharactersWithPlayerListAction(),
+        staleTime: 30000,
     })
 }
 
@@ -96,6 +108,7 @@ export function useCharacterGameInfo(name?: string, realm?: string) {
 export function usePlayersSummary() {
     return useQuery({
         queryKey: [queryKeys.playersSummary],
+        staleTime: 30000,
         queryFn: async (): Promise<PlayerWithCharactersSummary[]> => {
             const [playersWithChars, playersWithoutChars, rosterSummary] =
                 await Promise.all([
@@ -138,6 +151,59 @@ export function usePlayersSummary() {
 
             // Players without characters
             const playersWithoutCharsFormatted: PlayerWithCharactersSummary[] =
+                playersWithoutChars.map((player) => ({
+                    id: player.id,
+                    name: player.name,
+                    charsSummary: [],
+                }))
+
+            return [...playersWithCharacters, ...playersWithoutCharsFormatted]
+        },
+    })
+}
+
+// Compact version for roster page - avoids loading full droptimizer data
+export function usePlayersSummaryCompact() {
+    return useQuery({
+        queryKey: [queryKeys.playersSummary, "compact"],
+        staleTime: 30000,
+        queryFn: async (): Promise<PlayerWithCharactersSummaryCompact[]> => {
+            const [playersWithChars, playersWithoutChars, rosterSummary] =
+                await Promise.all([
+                    getPlayerWithCharactersListAction(),
+                    getPlayersWithoutCharactersAction(),
+                    getRosterSummaryCompactAction(),
+                ])
+
+            // Map character summaries by character ID for quick lookup
+            const summaryByCharId = new Map(
+                rosterSummary.map((cs) => [cs.character.id, cs])
+            )
+
+            // Build players with compact character summaries
+            const playersWithCharacters: PlayerWithCharactersSummaryCompact[] =
+                playersWithChars.map((player) => ({
+                    id: player.id,
+                    name: player.name,
+                    charsSummary: player.characters.map((char) => {
+                        const summary = summaryByCharId.get(char.id)
+                        if (summary) {
+                            return summary
+                        }
+                        // Fallback for characters without summary data
+                        return {
+                            character: {
+                                ...char,
+                                player: { id: player.id, name: player.name },
+                            },
+                            itemLevel: "?",
+                            tiersetCount: 0,
+                        }
+                    }),
+                }))
+
+            // Players without characters
+            const playersWithoutCharsFormatted: PlayerWithCharactersSummaryCompact[] =
                 playersWithoutChars.map((player) => ({
                     id: player.id,
                     name: player.name,

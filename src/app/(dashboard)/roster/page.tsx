@@ -12,8 +12,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CharacterOverviewIcon } from "@/components/wow/character-overview-icon"
 import {
-    usePlayersSummary,
-    type PlayerWithCharactersSummary,
+    usePlayersSummaryCompact,
+    type PlayerWithCharactersSummaryCompact,
 } from "@/lib/queries/players"
 import type { Player } from "@/shared/types/types"
 
@@ -30,7 +30,7 @@ export default function RosterPage(): JSX.Element {
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
     const [searchQuery, setSearchQuery] = useState("")
 
-    const playersQuery = usePlayersSummary()
+    const playersQuery = usePlayersSummaryCompact()
 
     const players = useMemo(() => playersQuery.data ?? [], [playersQuery.data])
 
@@ -72,7 +72,7 @@ export default function RosterPage(): JSX.Element {
                     "Character Name": charSummary.character.name,
                     "Character Realm": charSummary.character.realm,
                     "Character Item Level": charSummary.itemLevel,
-                    "Tierset Set": charSummary.tierset.length,
+                    "Tierset Set": charSummary.tiersetCount,
                     "Raider.io URL": `https://raider.io/characters/eu/${charSummary.character.realm}/${charSummary.character.name}`,
                 }))
             )
@@ -123,12 +123,12 @@ export default function RosterPage(): JSX.Element {
             )
         })
 
-    const handleDeleteClick = (player: PlayerWithCharactersSummary) => {
+    const handleDeleteClick = (player: PlayerWithCharactersSummaryCompact) => {
         setSelectedPlayer({ id: player.id, name: player.name })
         setIsDeleteDialogOpen(true)
     }
 
-    const handleNewCharClick = (player: PlayerWithCharactersSummary) => {
+    const handleNewCharClick = (player: PlayerWithCharactersSummaryCompact) => {
         setSelectedPlayer({ id: player.id, name: player.name })
         setIsNewCharDialogOpen(true)
     }

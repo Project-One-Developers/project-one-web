@@ -5,7 +5,7 @@ import { appConfigTable } from "@/db/schema"
 
 export async function getConfig(key: string): Promise<string | null> {
     const result = await db
-        .select()
+        .select({ value: appConfigTable.value })
         .from(appConfigTable)
         .where(eq(appConfigTable.key, key))
         .then((r) => r.at(0))

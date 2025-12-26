@@ -11,23 +11,22 @@ export async function upsertBosses(bosses: Boss[]): Promise<void> {
         return
     }
 
-    for (const boss of bosses) {
-        await db
-            .insert(bossTable)
-            .values(boss)
-            .onConflictDoUpdate({
-                target: bossTable.id,
-                set: buildConflictUpdateColumns(bossTable, [
-                    "name",
-                    "instanceId",
-                    "instanceName",
-                    "instanceType",
-                    "order",
-                    "raiderioEncounterSlug",
-                    "raiderioRaidSlug",
-                ]),
-            })
-    }
+    // Batch upsert - single query instead of N queries
+    await db
+        .insert(bossTable)
+        .values(bosses)
+        .onConflictDoUpdate({
+            target: bossTable.id,
+            set: buildConflictUpdateColumns(bossTable, [
+                "name",
+                "instanceId",
+                "instanceName",
+                "instanceType",
+                "order",
+                "raiderioEncounterSlug",
+                "raiderioRaidSlug",
+            ]),
+        })
 }
 
 export async function getRaidLootTable(raidId: number): Promise<BossWithItems[]> {
