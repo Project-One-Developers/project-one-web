@@ -6,13 +6,29 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
 import { useDeleteDroptimizer } from "@/lib/queries/droptimizers"
-import { s } from "@/lib/safe-stringify"
 import { getDpsHumanReadable } from "@/lib/utils"
 import { formatUnixTimestampToRelativeDays } from "@/shared/libs/date/date-utils"
-import type { Character, Droptimizer } from "@/shared/types/types"
+import type { Character, Droptimizer, DroptimizerUpgrade } from "@/shared/types/types"
 
 import { Button } from "./ui/button"
+import { WowItemIcon } from "./wow/wow-item-icon"
 import { WowSpecIcon } from "./wow/wow-spec-icon"
+
+const UpgradeItem = ({ upgrade }: { upgrade: DroptimizerUpgrade }) => {
+    return (
+        <div className="-mr-3 relative">
+            <WowItemIcon
+                item={upgrade.item}
+                iconOnly={true}
+                ilvl={upgrade.ilvl}
+                iconClassName="object-cover object-top rounded-full h-9 w-9 border border-background"
+            />
+            <p className="text-xs text-center font-medium mt-1">
+                {getDpsHumanReadable(upgrade.dps)}
+            </p>
+        </div>
+    )
+}
 
 type DroptimizerCardProps = {
     droptimizer: Droptimizer
@@ -105,20 +121,12 @@ export const DroptimizerCard = ({
             </div>
 
             {/* Top Upgrades Preview */}
-            <div className="flex items-center gap-2 mt-2 text-xs">
+            <div className="flex items-center gap-3 mt-1">
                 {dropt.upgrades
                     .sort((a, b) => b.dps - a.dps)
-                    .slice(0, 5)
-                    .map((upgrade, i) => (
-                        <div
-                            key={`${s(upgrade.item.id)}-${s(i)}`}
-                            className="bg-background/50 px-2 py-1 rounded text-center"
-                            title={`Item ${s(upgrade.item.id)} - ${upgrade.slot}`}
-                        >
-                            <span className="font-medium">
-                                {getDpsHumanReadable(upgrade.dps)}
-                            </span>
-                        </div>
+                    .slice(0, 6)
+                    .map((upgrade) => (
+                        <UpgradeItem key={upgrade.item.id} upgrade={upgrade} />
                     ))}
             </div>
         </div>

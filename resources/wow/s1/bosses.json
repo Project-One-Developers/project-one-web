@@ -1,0 +1,210 @@
+[
+    {
+        "id": 1271,
+        "name": "Ara-Kara, City of Echoes",
+        "order": -1,
+        "instanceId": -1,
+        "instanceName": "Mythic+ Dungeons",
+        "instanceType": "mplus-chest"
+    },
+    {
+        "id": 1274,
+        "name": "City of Threads",
+        "order": -1,
+        "instanceId": -1,
+        "instanceName": "Mythic+ Dungeons",
+        "instanceType": "mplus-chest"
+    },
+    {
+        "id": 71,
+        "name": "Grim Batol",
+        "order": -1,
+        "instanceId": -1,
+        "instanceName": "Mythic+ Dungeons",
+        "instanceType": "mplus-chest"
+    },
+    {
+        "id": 1184,
+        "name": "Mists of Tirna Scithe",
+        "order": -1,
+        "instanceId": -1,
+        "instanceName": "Mythic+ Dungeons",
+        "instanceType": "mplus-chest"
+    },
+    {
+        "id": 1023,
+        "name": "Siege of Boralus",
+        "order": -1,
+        "instanceId": -1,
+        "instanceName": "Mythic+ Dungeons",
+        "instanceType": "mplus-chest"
+    },
+    {
+        "id": 1270,
+        "name": "The Dawnbreaker",
+        "order": -1,
+        "instanceId": -1,
+        "instanceName": "Mythic+ Dungeons",
+        "instanceType": "mplus-chest"
+    },
+    {
+        "id": 1182,
+        "name": "The Necrotic Wake",
+        "order": -1,
+        "instanceId": -1,
+        "instanceName": "Mythic+ Dungeons",
+        "instanceType": "mplus-chest"
+    },
+    {
+        "id": 1269,
+        "name": "The Stonevault",
+        "order": -1,
+        "instanceId": -1,
+        "instanceName": "Mythic+ Dungeons",
+        "instanceType": "mplus-chest"
+    },
+    {
+        "id": -70,
+        "name": "Catalyst - Season 1",
+        "order": 1,
+        "instanceId": -70,
+        "instanceName": "Catalyst - Season 1",
+        "instanceType": "catalyst"
+    },
+    {
+        "id": -43,
+        "name": "Alchemy",
+        "order": 1,
+        "instanceId": -66,
+        "instanceName": "Professions - Epic",
+        "instanceType": "profession593"
+    },
+    {
+        "id": -33,
+        "name": "Blacksmithing",
+        "order": 2,
+        "instanceId": -66,
+        "instanceName": "Professions - Epic",
+        "instanceType": "profession593"
+    },
+    {
+        "id": -34,
+        "name": "Enchanting",
+        "order": 3,
+        "instanceId": -66,
+        "instanceName": "Professions - Epic",
+        "instanceType": "profession593"
+    },
+    {
+        "id": -35,
+        "name": "Engineering",
+        "order": 4,
+        "instanceId": -66,
+        "instanceName": "Professions - Epic",
+        "instanceType": "profession593"
+    },
+    {
+        "id": -36,
+        "name": "Inscription",
+        "order": 5,
+        "instanceId": -66,
+        "instanceName": "Professions - Epic",
+        "instanceType": "profession593"
+    },
+    {
+        "id": -37,
+        "name": "Jewelcrafting",
+        "order": 6,
+        "instanceId": -66,
+        "instanceName": "Professions - Epic",
+        "instanceType": "profession593"
+    },
+    {
+        "id": -38,
+        "name": "Leatherworking",
+        "order": 7,
+        "instanceId": -66,
+        "instanceName": "Professions - Epic",
+        "instanceType": "profession593"
+    },
+    {
+        "id": -39,
+        "name": "Tailoring",
+        "order": 8,
+        "instanceId": -66,
+        "instanceName": "Professions - Epic",
+        "instanceType": "profession593"
+    },
+    {
+        "id": 2607,
+        "name": "Ulgrax the Devourer",
+        "order": 1,
+        "instanceId": 1273,
+        "instanceName": "Nerub-ar Palace",
+        "instanceType": "raid"
+    },
+    {
+        "id": 2611,
+        "name": "The Bloodbound Horror",
+        "order": 2,
+        "instanceId": 1273,
+        "instanceName": "Nerub-ar Palace",
+        "instanceType": "raid"
+    },
+    {
+        "id": 2599,
+        "name": "Sikran, Captain of the Sureki",
+        "order": 3,
+        "instanceId": 1273,
+        "instanceName": "Nerub-ar Palace",
+        "instanceType": "raid"
+    },
+    {
+        "id": 2609,
+        "name": "Rasha'nan",
+        "order": 4,
+        "instanceId": 1273,
+        "instanceName": "Nerub-ar Palace",
+        "instanceType": "raid"
+    },
+    {
+        "id": 2612,
+        "name": "Broodtwister Ovi'nax",
+        "order": 5,
+        "instanceId": 1273,
+        "instanceName": "Nerub-ar Palace",
+        "instanceType": "raid"
+    },
+    {
+        "id": 2601,
+        "name": "Nexus-Princess Ky'veza",
+        "order": 6,
+        "instanceId": 1273,
+        "instanceName": "Nerub-ar Palace",
+        "instanceType": "raid"
+    },
+    {
+        "id": 2608,
+        "name": "The Silken Court",
+        "order": 7,
+        "instanceId": 1273,
+        "instanceName": "Nerub-ar Palace",
+        "instanceType": "raid"
+    },
+    {
+        "id": 2602,
+        "name": "Queen Ansurek",
+        "order": 8,
+        "instanceId": 1273,
+        "instanceName": "Nerub-ar Palace",
+        "instanceType": "raid"
+    },
+    {
+        "id": -67,
+        "name": "Trash Drop",
+        "order": 99,
+        "instanceId": 1273,
+        "instanceName": "Nerub-ar Palace",
+        "instanceType": "raid"
+    }
+]
