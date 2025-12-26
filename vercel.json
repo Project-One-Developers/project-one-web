@@ -1,4 +1,5 @@
 {
+    "buildCommand": "pnpm lint && pnpm build",
     "crons": [
         {
             "path": "/api/cron/sync-all",
