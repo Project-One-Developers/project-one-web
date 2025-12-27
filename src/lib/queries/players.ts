@@ -14,35 +14,17 @@ import {
     getPlayerWithCharactersList,
     getPlayersWithoutCharacters,
 } from "@/actions/characters"
-import { getRosterSummary, getRosterSummaryCompact } from "@/actions/summary"
+import { getPlayersWithSummaryCompact } from "@/actions/summary"
 import {
-    DroptimizerWarn,
-    RaiderioWarn,
-    WowAuditWarn,
-    type CharacterSummary,
-    type CharacterSummaryCompact,
     type EditCharacter,
     type EditPlayer,
     type NewCharacter,
     type NewPlayer,
+    type PlayerWithSummaryCompact,
 } from "@/shared/types/types"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { queryKeys } from "./keys"
-
-// Type for enriched player summary (used in roster page)
-export type PlayerWithCharactersSummary = {
-    id: string
-    name: string
-    charsSummary: CharacterSummary[]
-}
-
-// Compact version for roster page - reduces payload by ~70%
-export type PlayerWithCharactersSummaryCompact = {
-    id: string
-    name: string
-    charsSummary: CharacterSummaryCompact[]
-}
 
 // ============== QUERIES ==============
 
@@ -104,114 +86,14 @@ export function useCharacterGameInfo(name?: string, realm?: string) {
     })
 }
 
-// Player summary with real character data from droptimizers, wowaudit, and raiderio
-export function usePlayersSummary() {
-    return useQuery({
-        queryKey: [queryKeys.playersSummary],
-        staleTime: 30000,
-        queryFn: async (): Promise<PlayerWithCharactersSummary[]> => {
-            const [playersWithChars, playersWithoutChars, rosterSummary] =
-                await Promise.all([
-                    getPlayerWithCharactersList(),
-                    getPlayersWithoutCharacters(),
-                    getRosterSummary(),
-                ])
-
-            // Map character summaries by character ID for quick lookup
-            const summaryByCharId = new Map(
-                rosterSummary.map((cs) => [cs.character.id, cs])
-            )
-
-            // Build players with real character summaries
-            const playersWithCharacters: PlayerWithCharactersSummary[] =
-                playersWithChars.map((player) => ({
-                    id: player.id,
-                    name: player.name,
-                    charsSummary: player.characters.map((char) => {
-                        const summary = summaryByCharId.get(char.id)
-                        if (summary) {
-                            return summary
-                        }
-                        // Fallback for characters without summary data
-                        return {
-                            character: {
-                                ...char,
-                                player: { id: player.id, name: player.name },
-                            },
-                            itemLevel: "?",
-                            weeklyChest: [],
-                            tierset: [],
-                            currencies: [],
-                            warnDroptimizer: DroptimizerWarn.NotImported,
-                            warnWowAudit: WowAuditWarn.NotTracked,
-                            warnRaiderio: RaiderioWarn.NotTracked,
-                        }
-                    }),
-                }))
-
-            // Players without characters
-            const playersWithoutCharsFormatted: PlayerWithCharactersSummary[] =
-                playersWithoutChars.map((player) => ({
-                    id: player.id,
-                    name: player.name,
-                    charsSummary: [],
-                }))
-
-            return [...playersWithCharacters, ...playersWithoutCharsFormatted]
-        },
-    })
-}
-
-// Compact version for roster page - avoids loading full droptimizer data
+// Compact version for roster page - uses consolidated server action
+// Single HTTP call instead of 3, eliminates redundant character fetching
 export function usePlayersSummaryCompact() {
     return useQuery({
         queryKey: [queryKeys.playersSummary, "compact"],
         staleTime: 30000,
-        queryFn: async (): Promise<PlayerWithCharactersSummaryCompact[]> => {
-            const [playersWithChars, playersWithoutChars, rosterSummary] =
-                await Promise.all([
-                    getPlayerWithCharactersList(),
-                    getPlayersWithoutCharacters(),
-                    getRosterSummaryCompact(),
-                ])
-
-            // Map character summaries by character ID for quick lookup
-            const summaryByCharId = new Map(
-                rosterSummary.map((cs) => [cs.character.id, cs])
-            )
-
-            // Build players with compact character summaries
-            const playersWithCharacters: PlayerWithCharactersSummaryCompact[] =
-                playersWithChars.map((player) => ({
-                    id: player.id,
-                    name: player.name,
-                    charsSummary: player.characters.map((char) => {
-                        const summary = summaryByCharId.get(char.id)
-                        if (summary) {
-                            return summary
-                        }
-                        // Fallback for characters without summary data
-                        return {
-                            character: {
-                                ...char,
-                                player: { id: player.id, name: player.name },
-                            },
-                            itemLevel: "?",
-                            tiersetCount: 0,
-                        }
-                    }),
-                }))
-
-            // Players without characters
-            const playersWithoutCharsFormatted: PlayerWithCharactersSummaryCompact[] =
-                playersWithoutChars.map((player) => ({
-                    id: player.id,
-                    name: player.name,
-                    charsSummary: [],
-                }))
-
-            return [...playersWithCharacters, ...playersWithoutCharsFormatted]
-        },
+        queryFn: (): Promise<PlayerWithSummaryCompact[]> =>
+            getPlayersWithSummaryCompact(),
     })
 }
 

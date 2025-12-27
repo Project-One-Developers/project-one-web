@@ -188,6 +188,13 @@ export type CharacterSummaryCompact = {
     tiersetCount: number
 }
 
+// Player with compact character summaries - used by roster page
+export type PlayerWithSummaryCompact = {
+    id: string
+    name: string
+    charsSummary: CharacterSummaryCompact[]
+}
+
 export type TierSetBonus = z.infer<typeof tierSetBonusSchema>
 export type CharAssignmentHighlights = z.infer<typeof charAssignmentHighlightsSchema>
 

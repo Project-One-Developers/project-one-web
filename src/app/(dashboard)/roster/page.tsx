@@ -11,11 +11,8 @@ import PlayerDialog from "@/components/player-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CharacterOverviewIcon } from "@/components/wow/character-overview-icon"
-import {
-    usePlayersSummaryCompact,
-    type PlayerWithCharactersSummaryCompact,
-} from "@/lib/queries/players"
-import type { Player } from "@/shared/types/types"
+import { usePlayersSummaryCompact } from "@/lib/queries/players"
+import type { Player, PlayerWithSummaryCompact } from "@/shared/types/types"
 
 type ItemLevelStats = {
     mean: number
@@ -123,12 +120,12 @@ export default function RosterPage(): JSX.Element {
             )
         })
 
-    const handleDeleteClick = (player: PlayerWithCharactersSummaryCompact) => {
+    const handleDeleteClick = (player: PlayerWithSummaryCompact) => {
         setSelectedPlayer({ id: player.id, name: player.name })
         setIsDeleteDialogOpen(true)
     }
 
-    const handleNewCharClick = (player: PlayerWithCharactersSummaryCompact) => {
+    const handleNewCharClick = (player: PlayerWithSummaryCompact) => {
         setSelectedPlayer({ id: player.id, name: player.name })
         setIsNewCharDialogOpen(true)
     }

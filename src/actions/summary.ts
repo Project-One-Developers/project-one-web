@@ -2,7 +2,7 @@
 
 import { groupBy, keyBy } from "es-toolkit"
 
-import { characterRepo } from "@/db/repositories/characters"
+import { characterRepo, playerRepo } from "@/db/repositories/characters"
 import { droptimizerRepo, type DroptimizerCompact } from "@/db/repositories/droptimizer"
 import { raiderioRepo } from "@/db/repositories/raiderio"
 import { wowauditRepo } from "@/db/repositories/wowaudit"
@@ -12,10 +12,10 @@ import {
     RaiderioWarn,
     WowAuditWarn,
     type CharacterSummary,
-    type CharacterSummaryCompact,
     type CharacterWowAudit,
     type Droptimizer,
     type GearItem,
+    type PlayerWithSummaryCompact,
 } from "@/shared/types/types"
 
 // Parse item level from various data sources
@@ -205,17 +205,28 @@ function parseTiersetCountCompact(
     return 0
 }
 
-export async function getRosterSummaryCompact(): Promise<CharacterSummaryCompact[]> {
-    const roster = await characterRepo.getWithPlayerList()
+/**
+ * Consolidated action for roster page - fetches all data in a single server call
+ * This eliminates redundant character fetching and reduces HTTP round trips from 3 to 1
+ */
+export async function getPlayersWithSummaryCompact(): Promise<
+    PlayerWithSummaryCompact[]
+> {
+    // Single fetch: get all players with their characters
+    const playersWithChars = await playerRepo.getWithCharactersList()
 
-    // Scope queries to roster characters only
-    const charList = roster.map((char) => ({ name: char.name, realm: char.realm }))
+    // Extract all characters across all players for scoped external data queries
+    const allChars = playersWithChars.flatMap((p) => p.characters)
+    const charList = allChars.map((c) => ({ name: c.name, realm: c.realm }))
+
+    // Fetch external data scoped to only these characters
     const [latestDroptimizers, wowAuditData, raiderioData] = await Promise.all([
         droptimizerRepo.getLatestByCharsCompact(charList),
         wowauditRepo.getByChars(charList),
         raiderioRepo.getByChars(charList),
     ])
 
+    // Build lookup maps for O(1) access
     const droptimizerByChar = groupBy(
         latestDroptimizers,
         (d) => `${d.characterName}-${d.characterServer}`
@@ -223,27 +234,33 @@ export async function getRosterSummaryCompact(): Promise<CharacterSummaryCompact
     const wowAuditByChar = keyBy(wowAuditData, (w) => `${w.name}-${w.realm}`)
     const raiderioByChar = keyBy(raiderioData, (r) => `${r.name}-${r.realm}`)
 
-    const res: CharacterSummaryCompact[] = roster.map((char) => {
-        const charKey: `${string}-${string}` = `${char.name}-${char.realm}`
+    // Build result grouped by player
+    return playersWithChars.map((player) => ({
+        id: player.id,
+        name: player.name,
+        charsSummary: player.characters.map((char) => {
+            const charKey: `${string}-${string}` = `${char.name}-${char.realm}`
 
-        const charDroptimizers = droptimizerByChar[charKey] ?? []
-        const charWowAudit: CharacterWowAudit | null = wowAuditByChar[charKey] ?? null
-        const charRaiderio: CharacterRaiderio | null = raiderioByChar[charKey] ?? null
+            const charDroptimizers = droptimizerByChar[charKey] ?? []
+            const charWowAudit: CharacterWowAudit | null = wowAuditByChar[charKey] ?? null
+            const charRaiderio: CharacterRaiderio | null = raiderioByChar[charKey] ?? null
 
-        return {
-            character: char,
-            itemLevel: parseItemLevelCompact(
-                charDroptimizers,
-                charRaiderio,
-                charWowAudit
-            ),
-            tiersetCount: parseTiersetCountCompact(
-                charDroptimizers,
-                charWowAudit,
-                charRaiderio
-            ),
-        }
-    })
-
-    return res
+            return {
+                character: {
+                    ...char,
+                    player: { id: player.id, name: player.name },
+                },
+                itemLevel: parseItemLevelCompact(
+                    charDroptimizers,
+                    charRaiderio,
+                    charWowAudit
+                ),
+                tiersetCount: parseTiersetCountCompact(
+                    charDroptimizers,
+                    charWowAudit,
+                    charRaiderio
+                ),
+            }
+        }),
+    }))
 }
