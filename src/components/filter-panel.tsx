@@ -71,8 +71,8 @@ export const FiltersPanel = ({
         <div className="space-y-3">
             {/* Raid Difficulty Selector */}
             {showRaidDifficulty && (
-                <fieldset className="border-t border-gray-700 pt-2">
-                    <legend className="text-sm font-semibold text-white mb-2">
+                <fieldset className="border-t border-border/50 pt-2">
+                    <legend className="text-sm font-semibold text-foreground mb-2">
                         Difficulty
                     </legend>
                     <div className="flex flex-wrap gap-2">
@@ -108,8 +108,8 @@ export const FiltersPanel = ({
 
             {/* Character Type Filters */}
             {showMainsAlts && (
-                <fieldset className="border-t border-gray-700 pt-2">
-                    <legend className="text-sm font-semibold text-white mb-2">
+                <fieldset className="border-t border-border/50 pt-2">
+                    <legend className="text-sm font-semibold text-foreground mb-2">
                         Characters
                     </legend>
                     <div className="flex flex-wrap gap-2">
@@ -124,9 +124,15 @@ export const FiltersPanel = ({
                                 updateFilter("showMains", !filter.showMains)
                             }}
                         >
-                            <div className="w-10 h-10 bg-green-600 flex items-center justify-center text-white font-bold text-lg">
-                                M
-                            </div>
+                            <Image
+                                src="/icons/char-main.png"
+                                alt="Main Characters"
+                                width={40}
+                                height={40}
+                                className="w-10 h-10 object-cover"
+                                title="Main Characters"
+                                unoptimized
+                            />
                             <div className="text-center text-[10px] mt-0.5 font-semibold">
                                 Mains
                             </div>
@@ -142,9 +148,15 @@ export const FiltersPanel = ({
                                 updateFilter("showAlts", !filter.showAlts)
                             }}
                         >
-                            <div className="w-10 h-10 bg-orange-600 flex items-center justify-center text-white font-bold text-lg">
-                                A
-                            </div>
+                            <Image
+                                src="/icons/char-alt.png"
+                                alt="Alt Characters"
+                                width={40}
+                                height={40}
+                                className="w-10 h-10 object-cover"
+                                title="Alt Characters"
+                                unoptimized
+                            />
                             <div className="text-center text-[10px] mt-0.5 font-semibold">
                                 Alts
                             </div>
@@ -155,8 +167,8 @@ export const FiltersPanel = ({
 
             {/* Class Filter */}
             {showClassFilter && (
-                <fieldset className="border-t border-gray-700 pt-2">
-                    <legend className="text-sm font-semibold text-white mb-2">
+                <fieldset className="border-t border-border/50 pt-2">
+                    <legend className="text-sm font-semibold text-foreground mb-2">
                         Class
                     </legend>
                     <div className="flex flex-wrap gap-1">
@@ -190,8 +202,8 @@ export const FiltersPanel = ({
 
             {/* Item Slot Filter */}
             {showSlotFilter && (
-                <fieldset className="border-t border-gray-700 pt-2">
-                    <legend className="text-sm font-semibold text-white mb-2">
+                <fieldset className="border-t border-border/50 pt-2">
+                    <legend className="text-sm font-semibold text-foreground mb-2">
                         Item Slot
                     </legend>
                     <div className="flex flex-wrap gap-1">
@@ -225,8 +237,8 @@ export const FiltersPanel = ({
 
             {/* Armor Type Filter */}
             {showArmorTypeFilter && (
-                <fieldset className="border-t border-gray-700 pt-2">
-                    <legend className="text-sm font-semibold text-white mb-2">
+                <fieldset className="border-t border-border/50 pt-2">
+                    <legend className="text-sm font-semibold text-foreground mb-2">
                         Armor Type
                     </legend>
                     <div className="flex flex-wrap gap-1">
@@ -260,8 +272,8 @@ export const FiltersPanel = ({
 
             {/* Droptimizer-specific filters */}
             {showDroptimizerFilters && (
-                <fieldset className="border-t border-gray-700 pt-2">
-                    <legend className="text-lg font-semibold text-white mb-1">
+                <fieldset className="border-t border-border/50 pt-2">
+                    <legend className="text-lg font-semibold text-foreground mb-1">
                         Droptimizer
                     </legend>
                     <div className="space-y-4">
@@ -319,9 +331,7 @@ export const FiltersPanel = ({
     )
 
     return (
-        <div
-            className={cn("bg-gray-800 border border-gray-600 rounded-lg p-3", className)}
-        >
+        <div className={cn("bg-card border border-border/50 rounded-lg p-3", className)}>
             {renderContent()}
         </div>
     )
