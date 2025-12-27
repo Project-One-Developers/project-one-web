@@ -13,11 +13,13 @@ import {
 import type { RaidSessionWithSummary } from "@/shared/types/types"
 
 import { Button } from "./ui/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 
 type SessionCardProps = {
     session: RaidSessionWithSummary
     className?: string
     showActions?: boolean
+    isSelected?: boolean
     onClick?: () => void
     onEditRoster?: (sessionId: string) => void
     onLootImport?: (sessionId: string) => void
@@ -27,6 +29,7 @@ const SessionCard = ({
     session,
     className,
     showActions = false,
+    isSelected = false,
     onClick,
     onEditRoster,
     onLootImport,
@@ -57,65 +60,99 @@ const SessionCard = ({
     return (
         <div
             className={cn(
-                "bg-muted rounded-lg border border-gray-900 cursor-pointer hover:bg-gray-700 transition-colors min-w-64 relative flex flex-col",
+                "group flex flex-col w-52 rounded-lg cursor-pointer transition-all duration-150",
+                "bg-card border border-border/50 hover:border-border",
+                "hover:bg-accent/50",
+                isSelected && "ring-1 ring-primary border-primary bg-accent/30",
                 className
             )}
             onClick={handleCardClick}
         >
-            {/* Main content area */}
-            <div className="p-4 flex-1">
-                <h3 className="text-xl font-bold truncate max-w-[220px] mb-2">
+            <div className="px-3 pt-3 pb-2">
+                {/* Title */}
+                <h3
+                    className="text-sm font-medium text-foreground truncate mb-1.5"
+                    title={session.name}
+                >
                     {session.name}
                 </h3>
-                <div className="flex items-center text-gray-400 mb-1">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    <span>
-                        {formatUnixTimestampForDisplay(session.raidDate)} -{" "}
-                        {unixTimestampToWowWeek(session.raidDate)}
+
+                {/* Date and week */}
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                    <div className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        <span>{formatUnixTimestampForDisplay(session.raidDate)}</span>
+                    </div>
+                    <span className="text-primary/80 font-medium">
+                        W{unixTimestampToWowWeek(session.raidDate)}
                     </span>
                 </div>
-                <div className="flex items-center text-gray-400 mb-1">
-                    <Users className="w-4 h-4 mr-2" />
-                    <span>{session.rosterCount} participants</span>
-                </div>
-                <div className="flex items-center text-gray-400">
-                    <Gem className="w-4 h-4 mr-2" />
-                    <span>{session.lootCount} loots</span>
+
+                {/* Stats */}
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                        <Users className="w-3 h-3" />
+                        <span>{session.rosterCount}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <Gem className="w-3 h-3" />
+                        <span>{session.lootCount}</span>
+                    </div>
                 </div>
             </div>
 
-            {/* Bottom actions bar */}
+            {/* Actions */}
             {showActions && (
-                <div className="border-t border-gray-600 px-4 py-2 bg-gray-800/50 rounded-b-lg">
-                    <div className="flex justify-center gap-1">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-2 hover:bg-gray-600 flex-1"
-                            onClick={handleGoToSession}
-                            title="Go to session page"
-                        >
-                            <ExternalLink className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-2 hover:bg-gray-600 flex-1"
-                            onClick={handleEditRoster}
-                            title="Edit roster"
-                        >
-                            <Users className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-2 hover:bg-gray-600 flex-1"
-                            onClick={handleLootImport}
-                            title="Loot import"
-                        >
-                            <Package className="h-4 w-4" />
-                        </Button>
-                    </div>
+                <div className="border-t border-border/50 px-1 py-1">
+                    <TooltipProvider delayDuration={200}>
+                        <div className="flex justify-around">
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                                        onClick={handleGoToSession}
+                                    >
+                                        <ExternalLink className="h-3.5 w-3.5" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" className="text-xs">
+                                    View session
+                                </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                                        onClick={handleEditRoster}
+                                    >
+                                        <Users className="h-3.5 w-3.5" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" className="text-xs">
+                                    Edit roster
+                                </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                                        onClick={handleLootImport}
+                                    >
+                                        <Package className="h-3.5 w-3.5" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" className="text-xs">
+                                    Import loot
+                                </TooltipContent>
+                            </Tooltip>
+                        </div>
+                    </TooltipProvider>
                 </div>
             )}
         </div>

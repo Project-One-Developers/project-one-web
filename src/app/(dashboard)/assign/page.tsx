@@ -213,11 +213,7 @@ function AssignContent(): JSX.Element {
                             <SessionCard
                                 key={session.id}
                                 session={session}
-                                className={
-                                    selectedSessions.has(session.id)
-                                        ? "border border-primary"
-                                        : ""
-                                }
+                                isSelected={selectedSessions.has(session.id)}
                                 showActions={true}
                                 onClick={() => {
                                     toggleSession(session.id)
