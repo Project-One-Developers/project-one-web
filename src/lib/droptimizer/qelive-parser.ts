@@ -1,3 +1,4 @@
+import { keyBy } from "es-toolkit"
 import { z } from "zod"
 
 import { itemRepo } from "@/db/repositories/items"
@@ -74,21 +75,21 @@ const parseUpgrades = async (
     const itemToTiersetMapping = await itemRepo.getTiersetMapping()
     const itemToCatalystMapping = await itemRepo.getCatalystMapping()
 
+    const tiersetByItemId = keyBy(itemToTiersetMapping, (i) => s(i.itemId))
+    const catalystByKey = keyBy(
+        itemToCatalystMapping,
+        (i) => `${s(i.catalyzedItemId)}-${s(i.encounterId)}`
+    )
+
     const upgradesMap = upgrades
         // filter out item without dps gain
         .filter((item) => item.dps > 0)
         // remap itemid to tierset & catalyst
         .map((up) => {
-            const tiersetMapping = itemToTiersetMapping.find(
-                (i) => i.itemId === up.itemId
-            )
+            const tiersetMapping = tiersetByItemId[s(up.itemId)]
 
             const catalystMapping = !tiersetMapping
-                ? itemToCatalystMapping.find(
-                      (i) =>
-                          i.catalyzedItemId === up.itemId &&
-                          i.encounterId === up.encounterId
-                  )
+                ? catalystByKey[`${s(up.itemId)}-${s(up.encounterId)}`]
                 : null
 
             const res: NewDroptimizerUpgrade = {
@@ -222,8 +223,9 @@ const convertJsonToDroptimizer = async (
     }
 
     const itemsInDb = await itemRepo.getAll()
+    const itemsById = keyBy(itemsInDb, (i) => i.id)
 
-    const itemsEquipped = parseEquippedGear(itemsInDb, data.equippedItems, url)
+    const itemsEquipped = parseEquippedGear(itemsById, data.equippedItems, url)
 
     // Filter results with 0 score and raid only
     const raidResults = data.results.filter((r) => r.rawDiff > 0 && r.dropLoc === "Raid")
@@ -246,7 +248,7 @@ const convertJsonToDroptimizer = async (
 
         // Transform results to the format expected by parseUpgrades
         const transformedResults = difficultyResults.map((result) => {
-            const item = itemsInDb.find((i) => i.id === result.item)
+            const item = itemsById[result.item]
             if (!item) {
                 throw new Error(
                     `[error] convertJsonToDroptimizer: item not found in db: ${s(
@@ -296,7 +298,7 @@ const convertJsonToDroptimizer = async (
 }
 
 export const parseEquippedGear = (
-    itemsInDb: Item[],
+    itemsById: Record<number, Item>,
     equipped: z.infer<typeof qeliveEquippedItemSchema>[],
     url: string
 ): GearItem[] => {
@@ -311,7 +313,7 @@ export const parseEquippedGear = (
             )
         }
         const bonusIds = equippedItem.bonusIDS.split(":").map(Number)
-        const wowItem = itemsInDb.find((i) => i.id === equippedItem.id)
+        const wowItem = itemsById[equippedItem.id]
         if (!wowItem) {
             logger.debug(
                 "QELiveParser",

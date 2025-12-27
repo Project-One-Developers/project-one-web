@@ -458,26 +458,21 @@ export async function getCharactersWithLootsByItemId(
         (character) => item.classes === null || item.classes.includes(character.class)
     )
 
+    const droptimizerByChar = groupBy(
+        latestDroptimizer,
+        (d) => `${d.charInfo.name}-${d.charInfo.server}`
+    )
+    const wowAuditByChar = keyBy(wowAuditData, (w) => `${w.name}-${w.realm}`)
+    const raiderioByChar = keyBy(raiderioData, (r) => `${r.name}-${r.realm}`)
+    const simcByChar = keyBy(simcData, (s) => `${s.charName}-${s.charRealm}`)
+
     const res = filteredRoster.map((char) => {
-        const charDroptimizers = latestDroptimizer.filter(
-            (dropt) =>
-                dropt.charInfo.name === char.name && dropt.charInfo.server === char.realm
-        )
+        const charKey: `${string}-${string}` = `${char.name}-${char.realm}`
 
-        const charWowAudit: CharacterWowAudit | null =
-            wowAuditData.find(
-                (wowaudit) => wowaudit.name === char.name && wowaudit.realm === char.realm
-            ) ?? null
-
-        const charRaiderio: CharacterRaiderio | null =
-            raiderioData.find(
-                (raiderio) => raiderio.name === char.name && raiderio.realm === char.realm
-            ) ?? null
-
-        const charSimc: SimC | null =
-            simcData.find(
-                (simc) => simc.charName === char.name && simc.charRealm === char.realm
-            ) ?? null
+        const charDroptimizers = droptimizerByChar[charKey] ?? []
+        const charWowAudit: CharacterWowAudit | null = wowAuditByChar[charKey] ?? null
+        const charRaiderio: CharacterRaiderio | null = raiderioByChar[charKey] ?? null
+        const charSimc: SimC | null = simcByChar[charKey] ?? null
 
         const lowerBound = getLatestSyncDate(charDroptimizers, null, null, charSimc)
 

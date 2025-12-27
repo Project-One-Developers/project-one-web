@@ -1,5 +1,7 @@
 "use server"
 
+import { groupBy, keyBy } from "es-toolkit"
+
 import { characterRepo } from "@/db/repositories/characters"
 import { droptimizerRepo, type DroptimizerCompact } from "@/db/repositories/droptimizer"
 import { raiderioRepo } from "@/db/repositories/raiderio"
@@ -126,22 +128,19 @@ export async function getRosterSummary(): Promise<CharacterSummary[]> {
         raiderioRepo.getAll(),
     ])
 
+    const droptimizerByChar = groupBy(
+        latestDroptimizers,
+        (d) => `${d.charInfo.name}-${d.charInfo.server}`
+    )
+    const wowAuditByChar = keyBy(wowAuditData, (w) => `${w.name}-${w.realm}`)
+    const raiderioByChar = keyBy(raiderioData, (r) => `${r.name}-${r.realm}`)
+
     const res: CharacterSummary[] = roster.map((char) => {
-        // Get latest droptimizers for a given char
-        const charDroptimizers = latestDroptimizers.filter(
-            (dropt) =>
-                dropt.charInfo.name === char.name && dropt.charInfo.server === char.realm
-        )
+        const charKey: `${string}-${string}` = `${char.name}-${char.realm}`
 
-        const charWowAudit: CharacterWowAudit | null =
-            wowAuditData.find(
-                (wowaudit) => wowaudit.name === char.name && wowaudit.realm === char.realm
-            ) ?? null
-
-        const charRaiderio: CharacterRaiderio | null =
-            raiderioData.find(
-                (raiderio) => raiderio.name === char.name && raiderio.realm === char.realm
-            ) ?? null
+        const charDroptimizers = droptimizerByChar[charKey] ?? []
+        const charWowAudit: CharacterWowAudit | null = wowAuditByChar[charKey] ?? null
+        const charRaiderio: CharacterRaiderio | null = raiderioByChar[charKey] ?? null
 
         return {
             character: char,
@@ -214,22 +213,19 @@ export async function getRosterSummaryCompact(): Promise<CharacterSummaryCompact
         raiderioRepo.getAll(),
     ])
 
+    const droptimizerByChar = groupBy(
+        latestDroptimizers,
+        (d) => `${d.characterName}-${d.characterServer}`
+    )
+    const wowAuditByChar = keyBy(wowAuditData, (w) => `${w.name}-${w.realm}`)
+    const raiderioByChar = keyBy(raiderioData, (r) => `${r.name}-${r.realm}`)
+
     const res: CharacterSummaryCompact[] = roster.map((char) => {
-        // Get latest droptimizers for a given char
-        const charDroptimizers = latestDroptimizers.filter(
-            (dropt) =>
-                dropt.characterName === char.name && dropt.characterServer === char.realm
-        )
+        const charKey: `${string}-${string}` = `${char.name}-${char.realm}`
 
-        const charWowAudit: CharacterWowAudit | null =
-            wowAuditData.find(
-                (wowaudit) => wowaudit.name === char.name && wowaudit.realm === char.realm
-            ) ?? null
-
-        const charRaiderio: CharacterRaiderio | null =
-            raiderioData.find(
-                (raiderio) => raiderio.name === char.name && raiderio.realm === char.realm
-            ) ?? null
+        const charDroptimizers = droptimizerByChar[charKey] ?? []
+        const charWowAudit: CharacterWowAudit | null = wowAuditByChar[charKey] ?? null
+        const charRaiderio: CharacterRaiderio | null = raiderioByChar[charKey] ?? null
 
         return {
             character: char,

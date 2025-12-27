@@ -1,3 +1,4 @@
+import { keyBy } from "es-toolkit"
 import { z } from "zod"
 
 import { itemRepo } from "@/db/repositories/items"
@@ -96,6 +97,12 @@ const parseUpgrades = async (
     const itemToTiersetMapping = await itemRepo.getTiersetMapping()
     const itemToCatalystMapping = await itemRepo.getCatalystMapping()
 
+    const tiersetByItemId = keyBy(itemToTiersetMapping, (i) => s(i.itemId))
+    const catalystByKey = keyBy(
+        itemToCatalystMapping,
+        (i) => `${s(i.catalyzedItemId)}-${s(i.encounterId)}`
+    )
+
     // One Armed Bandit workaround for Best-In-Slots item
     const bestInSlotUpgrades = upgrades.find(
         (up) => up.itemId === 232526 || up.itemId === 232805
@@ -144,16 +151,10 @@ const parseUpgrades = async (
         })
         // remap itemid to tierset & catalyst
         .map((up) => {
-            const tiersetMapping = itemToTiersetMapping.find(
-                (i) => i.itemId === up.itemId
-            )
+            const tiersetMapping = tiersetByItemId[s(up.itemId)]
 
             const catalystMapping = !tiersetMapping
-                ? itemToCatalystMapping.find(
-                      (i) =>
-                          i.catalyzedItemId === up.itemId &&
-                          i.encounterId === up.encounterId
-                  )
+                ? catalystByKey[`${s(up.itemId)}-${s(up.encounterId)}`]
                 : null
 
             const res: NewDroptimizerUpgrade = {
@@ -290,6 +291,8 @@ export const parseEquippedGear = async (
     droptEquipped: z.infer<typeof droptimizerEquippedItemsSchema>
 ): Promise<GearItem[]> => {
     const itemsInDb = await itemRepo.getAll()
+    const itemsById = keyBy(itemsInDb, (i) => i.id)
+
     const res: GearItem[] = []
 
     for (const [slot, droptGearItem] of Object.entries(droptEquipped)) {
@@ -301,7 +304,7 @@ export const parseEquippedGear = async (
             )
         }
         const bonusIds = droptGearItem.bonus_id.split("/").map(Number)
-        const wowItem = itemsInDb.find((i) => i.id === droptGearItem.id)
+        const wowItem = itemsById[droptGearItem.id]
         if (!wowItem) {
             logger.debug(
                 "RaidbotsParser",

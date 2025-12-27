@@ -1,3 +1,4 @@
+import { keyBy } from "es-toolkit"
 import { parse } from "papaparse"
 import { z } from "zod"
 
@@ -101,6 +102,8 @@ export const parseMrtLoots = (
 
     const validatedRecords = z.array(rawMrtRecordSchema).parse(rawRecords)
 
+    const itemsById = keyBy(allItemsInDb, (i) => i.id)
+
     const res: NewLoot[] = []
     const recordMap = new Map<string, number>()
 
@@ -140,7 +143,7 @@ export const parseMrtLoots = (
 
             const itemId = parsedItem.itemID
             const bonusIds = getItemBonusString(parsedItem).split(":").map(Number)
-            const wowItem = allItemsInDb.find((i) => i.id === itemId)
+            const wowItem = itemsById[itemId]
 
             const raidDiff = parseWowDiff(difficulty)
 
@@ -258,6 +261,14 @@ export const parseRcLoots = (
     )
 
     const rawRecords = z.array(rawLootRecordSchema).parse(filteredData)
+
+    const itemsById = keyBy(allItemsInDb, (i) => i.id)
+    const charsByKey: Record<string, Character> = keyBy(
+        allCharacters,
+        (c) =>
+            `${c.name.toLowerCase()}-${c.realm.toLowerCase().replace("'", "").replace("-", "")}`
+    )
+
     const res: NewLoot[] = []
     const recordMap = new Map<string, number>()
 
@@ -289,7 +300,7 @@ export const parseRcLoots = (
             }
 
             const bonusIds = getItemBonusString(parsedItem).split(":").map(Number)
-            const wowItem = allItemsInDb.find((i) => i.id === itemId)
+            const wowItem = itemsById[itemId]
 
             const raidDiff = parseWowDiff(difficultyID)
 
@@ -361,19 +372,8 @@ export const parseRcLoots = (
                         )} - https://www.wowhead.com/item=${s(itemId)}?bonus=${s(bonusIds)}`
                     )
                 } else {
-                    const charnameRealm = record.player
-                        .toLowerCase()
-                        .replace("'", "")
-                        .split("-")
-                    charAssignment =
-                        allCharacters.find(
-                            (c) =>
-                                c.name.toLowerCase() === charnameRealm[0] &&
-                                c.realm
-                                    .toLowerCase()
-                                    .replace("'", "")
-                                    .replace("-", "") === charnameRealm[1]
-                        ) ?? null
+                    const charKey = record.player.toLowerCase().replace("'", "")
+                    charAssignment = charsByKey[charKey] ?? null
                     if (!charAssignment) {
                         logger.debug(
                             "LootParser",
@@ -413,11 +413,13 @@ export const parseManualLoots = (
     loots: NewLootManual[],
     allItemsInDb: Item[]
 ): NewLoot[] => {
+    const itemsById = keyBy(allItemsInDb, (i) => i.id)
+
     const res: NewLoot[] = []
 
     for (const loot of loots) {
         try {
-            const wowItem = allItemsInDb.find((i) => i.id === loot.itemId)
+            const wowItem = itemsById[loot.itemId]
 
             if (!wowItem) {
                 logger.debug(

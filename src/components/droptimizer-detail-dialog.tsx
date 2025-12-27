@@ -18,23 +18,30 @@ export default function DroptimizerDetailDialog({
 }: DroptimizerDetailDialogProps): JSX.Element {
     const { data: bosses = [] } = useRaidLootTable(droptimizer.raidInfo.id)
 
+    // Build lookups
+    const bossByItemId = new Map<number, BossWithItems>()
+    const itemById = new Map<number, BossWithItems["items"][number]>()
+    for (const boss of bosses) {
+        for (const item of boss.items) {
+            bossByItemId.set(item.id, boss)
+            itemById.set(item.id, item)
+        }
+    }
+
     // Group upgrades by boss
     const bossMap = new Map<BossWithItems, DroptimizerUpgrade[]>()
 
-    droptimizer.upgrades.forEach((up) => {
-        for (const boss of bosses) {
-            const bossHasItem = boss.items.some((i) => i.id === up.item.id)
-            if (bossHasItem) {
-                const existing = bossMap.get(boss)
-                if (existing) {
-                    existing.push(up)
-                } else {
-                    bossMap.set(boss, [up])
-                }
-                break
+    for (const up of droptimizer.upgrades) {
+        const boss = bossByItemId.get(up.item.id)
+        if (boss) {
+            const existing = bossMap.get(boss)
+            if (existing) {
+                existing.push(up)
+            } else {
+                bossMap.set(boss, [up])
             }
         }
-    })
+    }
 
     // Sort bosses by order
     const sortedBosses = [...bossMap.keys()].sort((a, b) => a.order - b.order)
@@ -67,9 +74,7 @@ export default function DroptimizerDetailDialog({
                                 .get(boss)
                                 ?.sort((a, b) => b.dps - a.dps)
                                 .map((upgrade) => {
-                                    const foundItem = boss.items.find(
-                                        (i) => i.id === upgrade.item.id
-                                    )
+                                    const foundItem = itemById.get(upgrade.item.id)
                                     return (
                                         <div
                                             key={upgrade.item.id}
