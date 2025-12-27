@@ -1,20 +1,20 @@
 "use client"
 
 import {
-    addCharacterAction,
-    addPlayerAction,
-    deleteCharacterAction,
-    deletePlayerAction,
-    editCharacterAction,
-    editPlayerAction,
-    getCharacterAction,
-    getCharacterListAction,
-    getCharactersWithPlayerListAction,
-    getCharLatestGameInfoAction,
-    getPlayerWithCharactersListAction,
-    getPlayersWithoutCharactersAction,
+    addCharacter,
+    addPlayer,
+    deleteCharacter,
+    deletePlayer,
+    editCharacter,
+    editPlayer,
+    getCharacter,
+    getCharacterList,
+    getCharactersWithPlayerList,
+    getCharLatestGameInfo,
+    getPlayerWithCharactersList,
+    getPlayersWithoutCharacters,
 } from "@/actions/characters"
-import { getRosterSummaryAction, getRosterSummaryCompactAction } from "@/actions/summary"
+import { getRosterSummary, getRosterSummaryCompact } from "@/actions/summary"
 import {
     DroptimizerWarn,
     RaiderioWarn,
@@ -49,7 +49,7 @@ export type PlayerWithCharactersSummaryCompact = {
 export function usePlayersWithCharacters() {
     return useQuery({
         queryKey: [queryKeys.playersWithCharacters],
-        queryFn: () => getPlayerWithCharactersListAction(),
+        queryFn: () => getPlayerWithCharactersList(),
         staleTime: 30000,
     })
 }
@@ -57,7 +57,7 @@ export function usePlayersWithCharacters() {
 export function usePlayersWithoutCharacters() {
     return useQuery({
         queryKey: [queryKeys.playersWithoutCharacters],
-        queryFn: () => getPlayersWithoutCharactersAction(),
+        queryFn: () => getPlayersWithoutCharacters(),
         staleTime: 30000,
     })
 }
@@ -65,7 +65,7 @@ export function usePlayersWithoutCharacters() {
 export function useCharacters() {
     return useQuery({
         queryKey: [queryKeys.characters],
-        queryFn: () => getCharacterListAction(),
+        queryFn: () => getCharacterList(),
         staleTime: 30000,
     })
 }
@@ -73,7 +73,7 @@ export function useCharacters() {
 export function useCharactersWithPlayer() {
     return useQuery({
         queryKey: [queryKeys.characters, "withPlayer"],
-        queryFn: () => getCharactersWithPlayerListAction(),
+        queryFn: () => getCharactersWithPlayerList(),
         staleTime: 30000,
     })
 }
@@ -85,7 +85,7 @@ export function useCharacter(id: string | undefined) {
             if (!id) {
                 throw new Error("No character id provided")
             }
-            return getCharacterAction(id)
+            return getCharacter(id)
         },
         enabled: !!id,
     })
@@ -98,7 +98,7 @@ export function useCharacterGameInfo(name?: string, realm?: string) {
             if (!name || !realm) {
                 throw new Error("Name and realm are required")
             }
-            return getCharLatestGameInfoAction(name, realm)
+            return getCharLatestGameInfo(name, realm)
         },
         enabled: !!name && !!realm,
     })
@@ -112,9 +112,9 @@ export function usePlayersSummary() {
         queryFn: async (): Promise<PlayerWithCharactersSummary[]> => {
             const [playersWithChars, playersWithoutChars, rosterSummary] =
                 await Promise.all([
-                    getPlayerWithCharactersListAction(),
-                    getPlayersWithoutCharactersAction(),
-                    getRosterSummaryAction(),
+                    getPlayerWithCharactersList(),
+                    getPlayersWithoutCharacters(),
+                    getRosterSummary(),
                 ])
 
             // Map character summaries by character ID for quick lookup
@@ -170,9 +170,9 @@ export function usePlayersSummaryCompact() {
         queryFn: async (): Promise<PlayerWithCharactersSummaryCompact[]> => {
             const [playersWithChars, playersWithoutChars, rosterSummary] =
                 await Promise.all([
-                    getPlayerWithCharactersListAction(),
-                    getPlayersWithoutCharactersAction(),
-                    getRosterSummaryCompactAction(),
+                    getPlayerWithCharactersList(),
+                    getPlayersWithoutCharacters(),
+                    getRosterSummaryCompact(),
                 ])
 
             // Map character summaries by character ID for quick lookup
@@ -221,7 +221,7 @@ export function useAddPlayer() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (player: NewPlayer) => addPlayerAction(player),
+        mutationFn: (player: NewPlayer) => addPlayer(player),
         onSuccess: () => {
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithCharacters],
@@ -238,7 +238,7 @@ export function useEditPlayer() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (player: EditPlayer) => editPlayerAction(player),
+        mutationFn: (player: EditPlayer) => editPlayer(player),
         onSuccess: () => {
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithCharacters],
@@ -252,7 +252,7 @@ export function useDeletePlayer() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (id: string) => deletePlayerAction(id),
+        mutationFn: (id: string) => deletePlayer(id),
         onSuccess: () => {
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithCharacters],
@@ -269,7 +269,7 @@ export function useAddCharacter() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (character: NewCharacter) => addCharacterAction(character),
+        mutationFn: (character: NewCharacter) => addCharacter(character),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
             void queryClient.invalidateQueries({
@@ -287,7 +287,7 @@ export function useEditCharacter() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (character: EditCharacter) => editCharacterAction(character),
+        mutationFn: (character: EditCharacter) => editCharacter(character),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
             void queryClient.invalidateQueries({
@@ -302,7 +302,7 @@ export function useDeleteCharacter() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (id: string) => deleteCharacterAction(id),
+        mutationFn: (id: string) => deleteCharacter(id),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
             void queryClient.invalidateQueries({

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { checkRaiderioUpdatesAction } from "@/actions/raiderio"
+import { checkRaiderioUpdates } from "@/actions/raiderio"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     try {
         logger.info("Cron", `Raider.io sync started at ${new Date().toISOString()}`)
 
-        const result = await checkRaiderioUpdatesAction()
+        const result = await checkRaiderioUpdates()
 
         logger.info("Cron", `Raider.io sync completed: ${result.message}`)
 

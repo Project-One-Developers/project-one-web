@@ -54,138 +54,136 @@ const playerStorageSchema = z
 
 const playersListStorageSchema = z.array(playerStorageSchema)
 
-// ============== PLAYERS ==============
-
-export async function getPlayerWithCharactersList(): Promise<PlayerWithCharacters[]> {
-    const result = await db.query.playerTable.findMany({
-        with: {
-            characters: true,
-        },
-    })
-    return playersListStorageSchema.parse(result)
-}
-
-export async function getPlayersWithoutCharactersList(): Promise<Player[]> {
-    const result = await db
-        .select({ id: playerTable.id, name: playerTable.name })
-        .from(playerTable)
-        .leftJoin(charTable, eq(playerTable.id, charTable.playerId))
-        .where(isNull(charTable.playerId))
-    return z.array(playerSchema).parse(result)
-}
-
-export async function getPlayerById(id: string): Promise<Player | null> {
-    const result = await db
-        .select()
-        .from(playerTable)
-        .where(eq(playerTable.id, id))
-        .then((r) => r.at(0))
-
-    if (!result) {
-        return null
-    }
-
-    return playerSchema.parse(result)
-}
-
-export async function addPlayer(player: NewPlayer): Promise<string> {
-    const id = newUUID()
-
-    await db.insert(playerTable).values({
-        id: id,
-        name: player.name,
-    })
-
-    return id
-}
-
-export async function editPlayer(edited: EditPlayer): Promise<void> {
-    await db
-        .update(playerTable)
-        .set({
-            name: edited.name,
+export const playerRepo = {
+    getWithCharactersList: async (): Promise<PlayerWithCharacters[]> => {
+        const result = await db.query.playerTable.findMany({
+            with: {
+                characters: true,
+            },
         })
-        .where(eq(playerTable.id, edited.id))
-}
+        return playersListStorageSchema.parse(result)
+    },
 
-export async function deletePlayer(id: string): Promise<void> {
-    await db.delete(charTable).where(eq(charTable.playerId, id))
-    await db.delete(playerTable).where(eq(playerTable.id, id))
-}
+    getWithoutCharactersList: async (): Promise<Player[]> => {
+        const result = await db
+            .select({ id: playerTable.id, name: playerTable.name })
+            .from(playerTable)
+            .leftJoin(charTable, eq(playerTable.id, charTable.playerId))
+            .where(isNull(charTable.playerId))
+        return z.array(playerSchema).parse(result)
+    },
 
-// ============== CHARACTERS ==============
+    getById: async (id: string): Promise<Player | null> => {
+        const result = await db
+            .select()
+            .from(playerTable)
+            .where(eq(playerTable.id, id))
+            .then((r) => r.at(0))
 
-export async function getCharacterWithPlayerById(
-    id: string
-): Promise<CharacterWithPlayer | null> {
-    const result = await db.query.charTable.findFirst({
-        where: (char, { eq }) => eq(char.id, id),
-        with: {
-            player: true,
-        },
-    })
+        if (!result) {
+            return null
+        }
 
-    if (!result) {
-        return null
-    }
+        return playerSchema.parse(result)
+    },
 
-    return characterWithPlayerSchema.parse(result)
-}
+    add: async (player: NewPlayer): Promise<string> => {
+        const id = newUUID()
 
-export async function getCharactersWithPlayerList(): Promise<CharacterWithPlayer[]> {
-    const result = await db.query.charTable.findMany({
-        with: {
-            player: true,
-        },
-    })
-    return z.array(characterWithPlayerSchema).parse(result)
-}
-
-export async function getCharactersList(): Promise<Character[]> {
-    const result = await db.query.charTable.findMany()
-    return z.array(characterSchema).parse(result)
-}
-
-export async function addCharacter(character: NewCharacter): Promise<string> {
-    const id = newUUID()
-
-    await db.insert(charTable).values({
-        id,
-        name: character.name,
-        realm: character.realm,
-        class: character.class,
-        role: character.role,
-        main: character.main,
-        playerId: character.playerId,
-    })
-
-    return id
-}
-
-export async function editCharacter(edited: EditCharacter): Promise<void> {
-    await db
-        .update(charTable)
-        .set({
-            name: edited.name,
-            realm: edited.realm,
-            class: edited.class,
-            role: edited.role,
-            main: edited.main,
+        await db.insert(playerTable).values({
+            id: id,
+            name: player.name,
         })
-        .where(eq(charTable.id, edited.id))
+
+        return id
+    },
+
+    edit: async (edited: EditPlayer): Promise<void> => {
+        await db
+            .update(playerTable)
+            .set({
+                name: edited.name,
+            })
+            .where(eq(playerTable.id, edited.id))
+    },
+
+    delete: async (id: string): Promise<void> => {
+        await db.delete(charTable).where(eq(charTable.playerId, id))
+        await db.delete(playerTable).where(eq(playerTable.id, id))
+    },
 }
 
-export async function deleteCharacter(id: string): Promise<void> {
-    await db.delete(charTable).where(eq(charTable.id, id))
-}
+export const characterRepo = {
+    getWithPlayerById: async (id: string): Promise<CharacterWithPlayer | null> => {
+        const result = await db.query.charTable.findFirst({
+            where: (char, { eq }) => eq(char.id, id),
+            with: {
+                player: true,
+            },
+        })
 
-export async function getCharactersByIds(ids: string[]): Promise<CharacterWithPlayer[]> {
-    if (ids.length === 0) {
-        return []
-    }
-    const result = await db.query.charTable.findMany({
-        where: inArray(charTable.id, ids),
-        with: { player: true },
-    })
-    return z.array(characterWithPlayerSchema).parse(result)
+        if (!result) {
+            return null
+        }
+
+        return characterWithPlayerSchema.parse(result)
+    },
+
+    getWithPlayerList: async (): Promise<CharacterWithPlayer[]> => {
+        const result = await db.query.charTable.findMany({
+            with: {
+                player: true,
+            },
+        })
+        return z.array(characterWithPlayerSchema).parse(result)
+    },
+
+    getList: async (): Promise<Character[]> => {
+        const result = await db.query.charTable.findMany()
+        return z.array(characterSchema).parse(result)
+    },
+
+    add: async (character: NewCharacter): Promise<string> => {
+        const id = newUUID()
+
+        await db.insert(charTable).values({
+            id,
+            name: character.name,
+            realm: character.realm,
+            class: character.class,
+            role: character.role,
+            main: character.main,
+            playerId: character.playerId,
+        })
+
+        return id
+    },
+
+    edit: async (edited: EditCharacter): Promise<void> => {
+        await db
+            .update(charTable)
+            .set({
+                name: edited.name,
+                realm: edited.realm,
+                class: edited.class,
+                role: edited.role,
+                main: edited.main,
+            })
+            .where(eq(charTable.id, edited.id))
+    },
+
+    delete: async (id: string): Promise<void> => {
+        await db.delete(charTable).where(eq(charTable.id, id))
+    },
+
+    getByIds: async (ids: string[]): Promise<CharacterWithPlayer[]> => {
+        if (ids.length === 0) {
+            return []
+        }
+        const result = await db.query.charTable.findMany({
+            where: inArray(charTable.id, ids),
+            with: { player: true },
+        })
+        return z.array(characterWithPlayerSchema).parse(result)
+    },
 }

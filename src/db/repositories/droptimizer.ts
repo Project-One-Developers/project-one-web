@@ -89,225 +89,6 @@ const droptimizerStorageToSchema = droptimizerStorageSchema.transform(
 
 const droptimizerStorageListToSchema = z.array(droptimizerStorageToSchema)
 
-export async function getDroptimizer(url: string): Promise<Droptimizer | null> {
-    const result = await db.query.droptimizerTable.findFirst({
-        where: (droptimizerTable, { eq }) => eq(droptimizerTable.url, url),
-        with: {
-            upgrades: true,
-        },
-    })
-
-    if (!result) {
-        return null
-    }
-    return droptimizerStorageToSchema.parse(result)
-}
-
-export async function getDroptimizerList(): Promise<Droptimizer[]> {
-    const result = await db.query.droptimizerTable.findMany({
-        with: {
-            upgrades: {
-                columns: { itemId: false },
-                with: { item: true },
-            },
-        },
-    })
-    return droptimizerStorageListToSchema.parse(result)
-}
-
-export async function getDroptimizerByIdsList(ids: string[]): Promise<Droptimizer[]> {
-    const result = await db.query.droptimizerTable.findMany({
-        where: (droptimizerTable, { inArray }) => inArray(droptimizerTable.url, ids),
-        with: {
-            upgrades: {
-                columns: { itemId: false },
-                with: { item: true },
-            },
-        },
-    })
-    return droptimizerStorageListToSchema.parse(result)
-}
-
-export async function getDroptimizerLatestList(): Promise<Droptimizer[]> {
-    // Use Drizzle's selectDistinctOn for PostgreSQL DISTINCT ON
-    const latestDroptimizers = await db
-        .selectDistinctOn([droptimizerTable.ak], {
-            url: droptimizerTable.url,
-        })
-        .from(droptimizerTable)
-        .orderBy(droptimizerTable.ak, desc(droptimizerTable.simDate))
-
-    const urls = latestDroptimizers.map((row) => row.url)
-    return getDroptimizerByIdsList(urls)
-}
-
-export async function getDroptimizerLastByCharAndDiff(
-    charName: string,
-    charRealm: string,
-    raidDiff: WowRaidDifficulty
-): Promise<Droptimizer | null> {
-    const result = await db.query.droptimizerTable.findFirst({
-        where: (droptimizerTable, { eq, and }) =>
-            and(
-                eq(droptimizerTable.characterName, charName),
-                eq(droptimizerTable.characterServer, charRealm),
-                eq(droptimizerTable.raidDifficulty, raidDiff)
-            ),
-        orderBy: (droptimizerTable, { desc }) => desc(droptimizerTable.simDate),
-        with: {
-            upgrades: {
-                columns: { itemId: false },
-                with: { item: true },
-            },
-        },
-    })
-    return result ? droptimizerStorageToSchema.parse(result) : null
-}
-
-export async function addDroptimizer(droptimizer: NewDroptimizer): Promise<Droptimizer> {
-    // Check for existing droptimizer with same ak
-    const alreadyPresent = await db.query.droptimizerTable.findFirst({
-        where: (droptimizerTable, { eq }) => eq(droptimizerTable.ak, droptimizer.ak),
-    })
-
-    if (alreadyPresent) {
-        if (alreadyPresent.simDate >= droptimizer.simInfo.date) {
-            logger.debug(
-                "Droptimizer",
-                `addDroptimizer: not importing - not newer than existing - ak: ${droptimizer.ak}`
-            )
-            const existing = await getDroptimizer(alreadyPresent.url)
-            if (!existing) {
-                throw new Error("Failed to get existing droptimizer")
-            }
-            return existing
-        }
-        // Delete older version
-        await db
-            .delete(droptimizerTable)
-            .where(eq(droptimizerTable.url, alreadyPresent.url))
-    }
-
-    // Insert new droptimizer
-    const droptimizerRes = await db
-        .insert(droptimizerTable)
-        .values({
-            url: droptimizer.url,
-            ak: droptimizer.ak,
-            dateImported: droptimizer.dateImported,
-            simDate: droptimizer.simInfo.date,
-            simFightStyle: droptimizer.simInfo.fightstyle,
-            simDuration: droptimizer.simInfo.duration,
-            simNTargets: droptimizer.simInfo.nTargets,
-            simUpgradeEquipped: droptimizer.simInfo.upgradeEquipped,
-            raidId: droptimizer.raidInfo.id,
-            raidDifficulty: droptimizer.raidInfo.difficulty,
-            characterName: droptimizer.charInfo.name,
-            characterServer: droptimizer.charInfo.server,
-            characterClass: droptimizer.charInfo.class,
-            characterClassId: droptimizer.charInfo.classId,
-            characterSpec: droptimizer.charInfo.spec,
-            characterSpecId: droptimizer.charInfo.specId,
-            characterTalents: droptimizer.charInfo.talents,
-            weeklyChest: droptimizer.weeklyChest,
-            currencies: droptimizer.currencies,
-            itemsEquipped: droptimizer.itemsEquipped,
-            itemsInBag: droptimizer.itemsInBag,
-            tiersetInfo: droptimizer.tiersetInfo,
-        })
-        .returning({ url: droptimizerTable.url })
-        .then((r) => r.at(0))
-
-    if (!droptimizerRes) {
-        throw new Error(`Failed to insert droptimizer: ${JSON.stringify(droptimizer)}`)
-    }
-
-    // Insert upgrades
-    const upgradesArray = droptimizer.upgrades.map(
-        (up): InferInsertModel<typeof droptimizerUpgradesTable> => ({
-            id: newUUID(),
-            droptimizerId: droptimizerRes.url,
-            ...up,
-        })
-    )
-
-    if (upgradesArray.length > 0) {
-        await db.insert(droptimizerUpgradesTable).values(upgradesArray)
-    }
-
-    const result = await getDroptimizer(droptimizerRes.url)
-    if (!result) {
-        throw new Error("Failed to get newly inserted droptimizer")
-    }
-    return result
-}
-
-export async function deleteDroptimizer(url: string): Promise<void> {
-    await db.delete(droptimizerTable).where(eq(droptimizerTable.url, url))
-}
-
-export async function deleteDroptimizerOlderThanDate(dateUnixTs: number): Promise<void> {
-    await db.delete(droptimizerTable).where(lte(droptimizerTable.simDate, dateUnixTs))
-}
-
-export async function getLatestDroptimizerUnixTs(): Promise<number | null> {
-    const result = await db.query.droptimizerTable.findFirst({
-        orderBy: (droptimizerTable, { desc }) => desc(droptimizerTable.simDate),
-    })
-    return result ? result.simDate : null
-}
-
-export async function getDroptimizerLastByChar(
-    charName: string,
-    charRealm: string
-): Promise<Droptimizer | null> {
-    const result = await db.query.droptimizerTable.findFirst({
-        where: (droptimizerTable, { eq, and }) =>
-            and(
-                eq(droptimizerTable.characterName, charName),
-                eq(droptimizerTable.characterServer, charRealm)
-            ),
-        orderBy: (droptimizerTable, { desc }) => desc(droptimizerTable.simDate),
-        with: {
-            upgrades: {
-                columns: { itemId: false },
-                with: { item: true },
-            },
-        },
-    })
-    return result ? droptimizerStorageToSchema.parse(result) : null
-}
-
-export async function getDroptimizerLatestByChars(
-    chars: { name: string; realm: string }[]
-): Promise<Droptimizer[]> {
-    if (chars.length === 0) {
-        return []
-    }
-
-    // Build OR conditions for each character using Drizzle
-    const charCondition = or(
-        ...chars.map((c) =>
-            and(
-                eq(droptimizerTable.characterName, c.name),
-                eq(droptimizerTable.characterServer, c.realm)
-            )
-        )
-    )
-
-    // Use Drizzle's selectDistinctOn for PostgreSQL DISTINCT ON
-    const latestDroptimizers = await db
-        .selectDistinctOn([droptimizerTable.ak], {
-            url: droptimizerTable.url,
-        })
-        .from(droptimizerTable)
-        .where(charCondition)
-        .orderBy(droptimizerTable.ak, desc(droptimizerTable.simDate))
-
-    const urls = latestDroptimizers.map((row) => row.url)
-    return getDroptimizerByIdsList(urls)
-}
-
 // Compact version for roster page - only fetches fields needed for item level display
 export type DroptimizerCompact = {
     characterName: string
@@ -317,36 +98,260 @@ export type DroptimizerCompact = {
     tiersetInfo: unknown[] | null // We only need the array length for counting
 }
 
-export async function getDroptimizerLatestByCharsCompact(
-    chars: { name: string; realm: string }[]
-): Promise<DroptimizerCompact[]> {
-    if (chars.length === 0) {
-        return []
-    }
+export const droptimizerRepo = {
+    get: async (url: string): Promise<Droptimizer | null> => {
+        const result = await db.query.droptimizerTable.findFirst({
+            where: (droptimizerTable, { eq }) => eq(droptimizerTable.url, url),
+            with: {
+                upgrades: true,
+            },
+        })
 
-    // Build OR conditions for each character using Drizzle
-    const charCondition = or(
-        ...chars.map((c) =>
-            and(
-                eq(droptimizerTable.characterName, c.name),
-                eq(droptimizerTable.characterServer, c.realm)
+        if (!result) {
+            return null
+        }
+        return droptimizerStorageToSchema.parse(result)
+    },
+
+    getList: async (): Promise<Droptimizer[]> => {
+        const result = await db.query.droptimizerTable.findMany({
+            with: {
+                upgrades: {
+                    columns: { itemId: false },
+                    with: { item: true },
+                },
+            },
+        })
+        return droptimizerStorageListToSchema.parse(result)
+    },
+
+    getByIdsList: async (ids: string[]): Promise<Droptimizer[]> => {
+        const result = await db.query.droptimizerTable.findMany({
+            where: (droptimizerTable, { inArray }) => inArray(droptimizerTable.url, ids),
+            with: {
+                upgrades: {
+                    columns: { itemId: false },
+                    with: { item: true },
+                },
+            },
+        })
+        return droptimizerStorageListToSchema.parse(result)
+    },
+
+    getLatestList: async (): Promise<Droptimizer[]> => {
+        // Use Drizzle's selectDistinctOn for PostgreSQL DISTINCT ON
+        const latestDroptimizers = await db
+            .selectDistinctOn([droptimizerTable.ak], {
+                url: droptimizerTable.url,
+            })
+            .from(droptimizerTable)
+            .orderBy(droptimizerTable.ak, desc(droptimizerTable.simDate))
+
+        const urls = latestDroptimizers.map((row) => row.url)
+        return droptimizerRepo.getByIdsList(urls)
+    },
+
+    getLastByCharAndDiff: async (
+        charName: string,
+        charRealm: string,
+        raidDiff: WowRaidDifficulty
+    ): Promise<Droptimizer | null> => {
+        const result = await db.query.droptimizerTable.findFirst({
+            where: (droptimizerTable, { eq, and }) =>
+                and(
+                    eq(droptimizerTable.characterName, charName),
+                    eq(droptimizerTable.characterServer, charRealm),
+                    eq(droptimizerTable.raidDifficulty, raidDiff)
+                ),
+            orderBy: (droptimizerTable, { desc }) => desc(droptimizerTable.simDate),
+            with: {
+                upgrades: {
+                    columns: { itemId: false },
+                    with: { item: true },
+                },
+            },
+        })
+        return result ? droptimizerStorageToSchema.parse(result) : null
+    },
+
+    add: async (droptimizer: NewDroptimizer): Promise<Droptimizer> => {
+        // Check for existing droptimizer with same ak
+        const alreadyPresent = await db.query.droptimizerTable.findFirst({
+            where: (droptimizerTable, { eq }) => eq(droptimizerTable.ak, droptimizer.ak),
+        })
+
+        if (alreadyPresent) {
+            if (alreadyPresent.simDate >= droptimizer.simInfo.date) {
+                logger.debug(
+                    "Droptimizer",
+                    `addDroptimizer: not importing - not newer than existing - ak: ${droptimizer.ak}`
+                )
+                const existing = await droptimizerRepo.get(alreadyPresent.url)
+                if (!existing) {
+                    throw new Error("Failed to get existing droptimizer")
+                }
+                return existing
+            }
+            // Delete older version
+            await db
+                .delete(droptimizerTable)
+                .where(eq(droptimizerTable.url, alreadyPresent.url))
+        }
+
+        // Insert new droptimizer
+        const droptimizerRes = await db
+            .insert(droptimizerTable)
+            .values({
+                url: droptimizer.url,
+                ak: droptimizer.ak,
+                dateImported: droptimizer.dateImported,
+                simDate: droptimizer.simInfo.date,
+                simFightStyle: droptimizer.simInfo.fightstyle,
+                simDuration: droptimizer.simInfo.duration,
+                simNTargets: droptimizer.simInfo.nTargets,
+                simUpgradeEquipped: droptimizer.simInfo.upgradeEquipped,
+                raidId: droptimizer.raidInfo.id,
+                raidDifficulty: droptimizer.raidInfo.difficulty,
+                characterName: droptimizer.charInfo.name,
+                characterServer: droptimizer.charInfo.server,
+                characterClass: droptimizer.charInfo.class,
+                characterClassId: droptimizer.charInfo.classId,
+                characterSpec: droptimizer.charInfo.spec,
+                characterSpecId: droptimizer.charInfo.specId,
+                characterTalents: droptimizer.charInfo.talents,
+                weeklyChest: droptimizer.weeklyChest,
+                currencies: droptimizer.currencies,
+                itemsEquipped: droptimizer.itemsEquipped,
+                itemsInBag: droptimizer.itemsInBag,
+                tiersetInfo: droptimizer.tiersetInfo,
+            })
+            .returning({ url: droptimizerTable.url })
+            .then((r) => r.at(0))
+
+        if (!droptimizerRes) {
+            throw new Error(
+                `Failed to insert droptimizer: ${JSON.stringify(droptimizer)}`
+            )
+        }
+
+        // Insert upgrades
+        const upgradesArray = droptimizer.upgrades.map(
+            (up): InferInsertModel<typeof droptimizerUpgradesTable> => ({
+                id: newUUID(),
+                droptimizerId: droptimizerRes.url,
+                ...up,
+            })
+        )
+
+        if (upgradesArray.length > 0) {
+            await db.insert(droptimizerUpgradesTable).values(upgradesArray)
+        }
+
+        const result = await droptimizerRepo.get(droptimizerRes.url)
+        if (!result) {
+            throw new Error("Failed to get newly inserted droptimizer")
+        }
+        return result
+    },
+
+    delete: async (url: string): Promise<void> => {
+        await db.delete(droptimizerTable).where(eq(droptimizerTable.url, url))
+    },
+
+    deleteOlderThanDate: async (dateUnixTs: number): Promise<void> => {
+        await db.delete(droptimizerTable).where(lte(droptimizerTable.simDate, dateUnixTs))
+    },
+
+    getLatestUnixTs: async (): Promise<number | null> => {
+        const result = await db.query.droptimizerTable.findFirst({
+            orderBy: (droptimizerTable, { desc }) => desc(droptimizerTable.simDate),
+        })
+        return result ? result.simDate : null
+    },
+
+    getLastByChar: async (
+        charName: string,
+        charRealm: string
+    ): Promise<Droptimizer | null> => {
+        const result = await db.query.droptimizerTable.findFirst({
+            where: (droptimizerTable, { eq, and }) =>
+                and(
+                    eq(droptimizerTable.characterName, charName),
+                    eq(droptimizerTable.characterServer, charRealm)
+                ),
+            orderBy: (droptimizerTable, { desc }) => desc(droptimizerTable.simDate),
+            with: {
+                upgrades: {
+                    columns: { itemId: false },
+                    with: { item: true },
+                },
+            },
+        })
+        return result ? droptimizerStorageToSchema.parse(result) : null
+    },
+
+    getLatestByChars: async (
+        chars: { name: string; realm: string }[]
+    ): Promise<Droptimizer[]> => {
+        if (chars.length === 0) {
+            return []
+        }
+
+        // Build OR conditions for each character using Drizzle
+        const charCondition = or(
+            ...chars.map((c) =>
+                and(
+                    eq(droptimizerTable.characterName, c.name),
+                    eq(droptimizerTable.characterServer, c.realm)
+                )
             )
         )
-    )
 
-    // Use Drizzle's selectDistinctOn for PostgreSQL DISTINCT ON
-    // Only select fields needed for roster display
-    const result = await db
-        .selectDistinctOn([droptimizerTable.ak], {
-            characterName: droptimizerTable.characterName,
-            characterServer: droptimizerTable.characterServer,
-            simDate: droptimizerTable.simDate,
-            itemsAverageItemLevelEquipped: droptimizerTable.itemsAverageItemLevelEquipped,
-            tiersetInfo: droptimizerTable.tiersetInfo,
-        })
-        .from(droptimizerTable)
-        .where(charCondition)
-        .orderBy(droptimizerTable.ak, desc(droptimizerTable.simDate))
+        // Use Drizzle's selectDistinctOn for PostgreSQL DISTINCT ON
+        const latestDroptimizers = await db
+            .selectDistinctOn([droptimizerTable.ak], {
+                url: droptimizerTable.url,
+            })
+            .from(droptimizerTable)
+            .where(charCondition)
+            .orderBy(droptimizerTable.ak, desc(droptimizerTable.simDate))
 
-    return result
+        const urls = latestDroptimizers.map((row) => row.url)
+        return droptimizerRepo.getByIdsList(urls)
+    },
+
+    getLatestByCharsCompact: async (
+        chars: { name: string; realm: string }[]
+    ): Promise<DroptimizerCompact[]> => {
+        if (chars.length === 0) {
+            return []
+        }
+
+        // Build OR conditions for each character using Drizzle
+        const charCondition = or(
+            ...chars.map((c) =>
+                and(
+                    eq(droptimizerTable.characterName, c.name),
+                    eq(droptimizerTable.characterServer, c.realm)
+                )
+            )
+        )
+
+        // Use Drizzle's selectDistinctOn for PostgreSQL DISTINCT ON
+        // Only select fields needed for roster display
+        const result = await db
+            .selectDistinctOn([droptimizerTable.ak], {
+                characterName: droptimizerTable.characterName,
+                characterServer: droptimizerTable.characterServer,
+                simDate: droptimizerTable.simDate,
+                itemsAverageItemLevelEquipped:
+                    droptimizerTable.itemsAverageItemLevelEquipped,
+                tiersetInfo: droptimizerTable.tiersetInfo,
+            })
+            .from(droptimizerTable)
+            .where(charCondition)
+            .orderBy(droptimizerTable.ak, desc(droptimizerTable.simDate))
+
+        return result
+    },
 }

@@ -1,13 +1,7 @@
 "use server"
 
-import { getCharactersList } from "@/db/repositories/characters"
-import {
-    addCharacterRaiderio,
-    deleteAllCharacterRaiderio,
-    getAllCharacterRaiderio,
-    getLastTimeSyncedRaiderio,
-    upsertCharacterRaiderio,
-} from "@/db/repositories/raiderio"
+import { characterRepo } from "@/db/repositories/characters"
+import { raiderioRepo } from "@/db/repositories/raiderio"
 import { logger } from "@/lib/logger"
 import {
     fetchCharacterRaidProgress,
@@ -25,14 +19,14 @@ import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
  * Sync all characters' Raider.io data
  * Fetches raid progress and equipped items for all roster characters
  */
-export async function syncAllCharactersRaiderioAction(): Promise<{
+export async function syncAllCharactersRaiderio(): Promise<{
     synced: number
     errors: string[]
 }> {
     logger.info("Raiderio", "Start Full Sync")
     resetItemsCache() // Reset cache for fresh data
 
-    const roster = await getCharactersList()
+    const roster = await characterRepo.getList()
     const errors: string[] = []
     const results: CharacterRaiderio[] = []
 
@@ -59,8 +53,8 @@ export async function syncAllCharactersRaiderioAction(): Promise<{
     )
 
     if (results.length > 0) {
-        await deleteAllCharacterRaiderio()
-        await addCharacterRaiderio(results)
+        await raiderioRepo.deleteAll()
+        await raiderioRepo.add(results)
     }
 
     logger.info(
@@ -74,7 +68,7 @@ export async function syncAllCharactersRaiderioAction(): Promise<{
 /**
  * Sync a single character's Raider.io data
  */
-export async function syncCharacterRaiderioAction(
+export async function syncCharacterRaiderio(
     characterName: string,
     characterRealm: string
 ): Promise<void> {
@@ -86,7 +80,7 @@ export async function syncCharacterRaiderioAction(
     const raiderioData = await fetchCharacterRaidProgress(characterName, characterRealm)
     const result = await parseRaiderioData(characterName, characterRealm, raiderioData)
 
-    await upsertCharacterRaiderio([result])
+    await raiderioRepo.upsert([result])
 
     logger.info(
         "Raiderio",
@@ -98,13 +92,13 @@ export async function syncCharacterRaiderioAction(
  * Check if Raider.io data needs updating (based on last sync time)
  * Returns true if sync was performed, false if skipped
  */
-export async function checkRaiderioUpdatesAction(): Promise<{
+export async function checkRaiderioUpdates(): Promise<{
     synced: boolean
     message: string
     result?: { synced: number; errors: string[] }
 }> {
     logger.info("Raiderio", "checkRaiderioUpdates: checking..")
-    const lastSync = await getLastTimeSyncedRaiderio()
+    const lastSync = await raiderioRepo.getLastTimeSynced()
     const frequencyTS = 1 * 60 * 60 // 1 hour in seconds
 
     if (lastSync === null || getUnixTimestamp() - lastSync > frequencyTS) {
@@ -114,7 +108,7 @@ export async function checkRaiderioUpdatesAction(): Promise<{
                 lastSync !== null ? formaUnixTimestampToItalianDate(lastSync) : "never"
             }) - syncing now`
         )
-        const result = await syncAllCharactersRaiderioAction()
+        const result = await syncAllCharactersRaiderio()
         return {
             synced: true,
             message: `Synced ${s(result.synced)} characters`,
@@ -130,28 +124,28 @@ export async function checkRaiderioUpdatesAction(): Promise<{
 /**
  * Get all stored Raider.io data
  */
-export async function getAllCharacterRaiderioAction(): Promise<CharacterRaiderio[]> {
-    return await getAllCharacterRaiderio()
+export async function getAllCharacterRaiderio(): Promise<CharacterRaiderio[]> {
+    return await raiderioRepo.getAll()
 }
 
 /**
  * Get the last sync timestamp
  */
-export async function getLastRaiderioSyncTimeAction(): Promise<number | null> {
-    return await getLastTimeSyncedRaiderio()
+export async function getLastRaiderioSyncTime(): Promise<number | null> {
+    return await raiderioRepo.getLastTimeSynced()
 }
 
 /**
  * Get roster progression data (characters with their Raider.io data)
  * @param filter 0 = all, 1 = mains only, 2 = alts only
  */
-export async function getRosterProgressionAction(filter = 0): Promise<
+export async function getRosterProgression(filter = 0): Promise<
     {
-        p1Character: Awaited<ReturnType<typeof getCharactersList>>[0]
+        p1Character: Awaited<ReturnType<typeof characterRepo.getList>>[0]
         raiderIo: CharacterRaiderio | null
     }[]
 > {
-    const roster = await getCharactersList()
+    const roster = await characterRepo.getList()
     logger.info(
         "Raiderio",
         `Fetching roster progression for ${s(roster.length)} characters`
@@ -174,7 +168,7 @@ export async function getRosterProgressionAction(filter = 0): Promise<
         `After filtering: ${s(filteredRoster.length)} characters (filter: ${s(filter)})`
     )
 
-    const allRaiderio = await getAllCharacterRaiderio()
+    const allRaiderio = await raiderioRepo.getAll()
 
     return filteredRoster.map((character) => {
         // Find matching raiderio data based on name and realm

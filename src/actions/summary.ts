@@ -1,13 +1,9 @@
 "use server"
 
-import { getCharactersWithPlayerList } from "@/db/repositories/characters"
-import {
-    getDroptimizerLatestByCharsCompact,
-    getDroptimizerLatestList,
-    type DroptimizerCompact,
-} from "@/db/repositories/droptimizer"
-import { getAllCharacterRaiderio } from "@/db/repositories/raiderio"
-import { getAllCharacterWowAudit } from "@/db/repositories/wowaudit"
+import { characterRepo } from "@/db/repositories/characters"
+import { droptimizerRepo, type DroptimizerCompact } from "@/db/repositories/droptimizer"
+import { raiderioRepo } from "@/db/repositories/raiderio"
+import { wowauditRepo } from "@/db/repositories/wowaudit"
 import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
 import {
     DroptimizerWarn,
@@ -122,12 +118,12 @@ function parseRaiderioWarn(raiderio: CharacterRaiderio | null): RaiderioWarn {
     return RaiderioWarn.None
 }
 
-export async function getRosterSummaryAction(): Promise<CharacterSummary[]> {
+export async function getRosterSummary(): Promise<CharacterSummary[]> {
     const [roster, latestDroptimizers, wowAuditData, raiderioData] = await Promise.all([
-        getCharactersWithPlayerList(),
-        getDroptimizerLatestList(),
-        getAllCharacterWowAudit(),
-        getAllCharacterRaiderio(),
+        characterRepo.getWithPlayerList(),
+        droptimizerRepo.getLatestList(),
+        wowauditRepo.getAll(),
+        raiderioRepo.getAll(),
     ])
 
     const res: CharacterSummary[] = roster.map((char) => {
@@ -206,18 +202,16 @@ function parseTiersetCountCompact(
     return 0
 }
 
-export async function getRosterSummaryCompactAction(): Promise<
-    CharacterSummaryCompact[]
-> {
-    const roster = await getCharactersWithPlayerList()
+export async function getRosterSummaryCompact(): Promise<CharacterSummaryCompact[]> {
+    const roster = await characterRepo.getWithPlayerList()
 
     // Fetch droptimizer data only for characters in roster (more efficient)
     const charList = roster.map((char) => ({ name: char.name, realm: char.realm }))
 
     const [latestDroptimizers, wowAuditData, raiderioData] = await Promise.all([
-        getDroptimizerLatestByCharsCompact(charList),
-        getAllCharacterWowAudit(),
-        getAllCharacterRaiderio(),
+        droptimizerRepo.getLatestByCharsCompact(charList),
+        wowauditRepo.getAll(),
+        raiderioRepo.getAll(),
     ])
 
     const res: CharacterSummaryCompact[] = roster.map((char) => {

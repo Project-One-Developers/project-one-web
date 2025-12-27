@@ -1,14 +1,14 @@
 "use client"
 
 import {
-    deleteItemNoteAction,
-    getAllItemNotesAction,
-    getItemByIdAction,
-    getItemNoteAction,
-    getItemsAction,
-    getRaidItemsAction,
-    searchItemsAction,
-    setItemNoteAction,
+    deleteItemNote,
+    getAllItemNotes,
+    getItemById,
+    getItemNote,
+    getItems,
+    getRaidItems,
+    searchItems,
+    setItemNote,
 } from "@/actions/items"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
@@ -19,7 +19,7 @@ import { queryKeys } from "./keys"
 export function useItems() {
     return useQuery({
         queryKey: [queryKeys.items],
-        queryFn: () => getItemsAction(),
+        queryFn: () => getItems(),
         staleTime: 3600000, // 1 hour - item data is static per patch
     })
 }
@@ -27,7 +27,7 @@ export function useItems() {
 export function useRaidItems() {
     return useQuery({
         queryKey: [queryKeys.items, "raid"],
-        queryFn: () => getRaidItemsAction(),
+        queryFn: () => getRaidItems(),
         staleTime: 3600000, // 1 hour - item data is static per patch
     })
 }
@@ -39,7 +39,7 @@ export function useItem(id: number | undefined) {
             if (!id) {
                 throw new Error("No item id provided")
             }
-            return getItemByIdAction(id)
+            return getItemById(id)
         },
         enabled: !!id,
     })
@@ -48,7 +48,7 @@ export function useItem(id: number | undefined) {
 export function useSearchItems(searchTerm: string, limit = 20) {
     return useQuery({
         queryKey: [queryKeys.items, "search", searchTerm, limit],
-        queryFn: () => searchItemsAction(searchTerm, limit),
+        queryFn: () => searchItems(searchTerm, limit),
         enabled: searchTerm.length >= 2,
         staleTime: 3600000, // 1 hour - item data is static per patch
     })
@@ -57,7 +57,7 @@ export function useSearchItems(searchTerm: string, limit = 20) {
 export function useItemNotes() {
     return useQuery({
         queryKey: [queryKeys.items, "notes"],
-        queryFn: () => getAllItemNotesAction(),
+        queryFn: () => getAllItemNotes(),
         staleTime: 60000, // 1 minute - user-editable but not frequent
     })
 }
@@ -69,7 +69,7 @@ export function useItemNote(id: number | undefined) {
             if (!id) {
                 throw new Error("No item id provided")
             }
-            return getItemNoteAction(id)
+            return getItemNote(id)
         },
         enabled: !!id,
     })
@@ -81,8 +81,7 @@ export function useSetItemNote() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: ({ id, note }: { id: number; note: string }) =>
-            setItemNoteAction(id, note),
+        mutationFn: ({ id, note }: { id: number; note: string }) => setItemNote(id, note),
         onSuccess: (_, vars) => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.items, "notes"] })
             void queryClient.invalidateQueries({
@@ -96,7 +95,7 @@ export function useDeleteItemNote() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (id: number) => deleteItemNoteAction(id),
+        mutationFn: (id: number) => deleteItemNote(id),
         onSuccess: (_, id) => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.items, "notes"] })
             void queryClient.invalidateQueries({

@@ -1,7 +1,7 @@
 "use client"
 
-import { getBossesAction, getRaidLootTableAction } from "@/actions/bosses"
-import { getRosterProgressionAction } from "@/actions/raiderio"
+import { getBosses, getRaidLootTable } from "@/actions/bosses"
+import { getRosterProgression } from "@/actions/raiderio"
 import { CURRENT_RAID_ID } from "@/shared/consts/wow.consts"
 import type { CharacterWithProgression } from "@/shared/types/types"
 import { useQuery } from "@tanstack/react-query"
@@ -11,7 +11,7 @@ import { queryKeys } from "./keys"
 export function useBosses(raidId: number = CURRENT_RAID_ID) {
     return useQuery({
         queryKey: [queryKeys.bosses, raidId],
-        queryFn: () => getBossesAction(raidId),
+        queryFn: () => getBosses(raidId),
         staleTime: 3600000, // 1 hour - boss data is static per patch
     })
 }
@@ -19,7 +19,7 @@ export function useBosses(raidId: number = CURRENT_RAID_ID) {
 export function useRaidLootTable(raidId: number = CURRENT_RAID_ID) {
     return useQuery({
         queryKey: [queryKeys.bosses, "lootTable", raidId],
-        queryFn: () => getRaidLootTableAction(raidId),
+        queryFn: () => getRaidLootTable(raidId),
         staleTime: 3600000, // 1 hour - loot table is static per patch
     })
 }
@@ -38,7 +38,7 @@ export function useRosterProgression(showMains: boolean, showAlts: boolean) {
             }
             // If both showMains and showAlts are true, or both are false, use 0 (all characters)
 
-            const result = await getRosterProgressionAction(filterParam)
+            const result = await getRosterProgression(filterParam)
             return result as CharacterWithProgression[]
         },
     })

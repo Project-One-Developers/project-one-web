@@ -1,4 +1,4 @@
-import { getItems } from "@/db/repositories/items"
+import { itemRepo } from "@/db/repositories/items"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
@@ -44,7 +44,7 @@ export async function parseRaiderioData(
     realm: string,
     raiderioCharData: RaiderioResponse
 ): Promise<CharacterRaiderio> {
-    itemsInDb ??= await getItems()
+    itemsInDb ??= await itemRepo.getAll()
 
     const res: CharacterRaiderio = {
         name: name,

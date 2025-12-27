@@ -1,22 +1,9 @@
 "use server"
 
-import {
-    addCharacter,
-    addPlayer,
-    deleteCharacter,
-    deletePlayer,
-    editCharacter,
-    editPlayer,
-    getCharactersList,
-    getCharactersWithPlayerList,
-    getCharacterWithPlayerById,
-    getPlayerById,
-    getPlayerWithCharactersList,
-    getPlayersWithoutCharactersList,
-} from "@/db/repositories/characters"
-import { getDroptimizerLastByChar } from "@/db/repositories/droptimizer"
-import { getLastRaiderioInfo } from "@/db/repositories/raiderio"
-import { getLastWowAuditInfo } from "@/db/repositories/wowaudit"
+import { characterRepo, playerRepo } from "@/db/repositories/characters"
+import { droptimizerRepo } from "@/db/repositories/droptimizer"
+import { raiderioRepo } from "@/db/repositories/raiderio"
+import { wowauditRepo } from "@/db/repositories/wowaudit"
 import type {
     Character,
     CharacterGameInfo,
@@ -31,76 +18,70 @@ import type {
 
 // ============== CHARACTERS ==============
 
-export async function addCharacterAction(
+export async function addCharacter(
     character: NewCharacter
 ): Promise<CharacterWithPlayer | null> {
-    const id = await addCharacter(character)
-    return await getCharacterWithPlayerById(id)
+    const id = await characterRepo.add(character)
+    return await characterRepo.getWithPlayerById(id)
 }
 
-export async function getCharacterAction(
-    id: string
-): Promise<CharacterWithPlayer | null> {
-    return await getCharacterWithPlayerById(id)
+export async function getCharacter(id: string): Promise<CharacterWithPlayer | null> {
+    return await characterRepo.getWithPlayerById(id)
 }
 
-export async function getCharacterListAction(): Promise<Character[]> {
-    return await getCharactersList()
+export async function getCharacterList(): Promise<Character[]> {
+    return await characterRepo.getList()
 }
 
-export async function getCharactersWithPlayerListAction(): Promise<
-    CharacterWithPlayer[]
-> {
-    return await getCharactersWithPlayerList()
+export async function getCharactersWithPlayerList(): Promise<CharacterWithPlayer[]> {
+    return await characterRepo.getWithPlayerList()
 }
 
-export async function deleteCharacterAction(id: string): Promise<void> {
-    await deleteCharacter(id)
+export async function deleteCharacter(id: string): Promise<void> {
+    await characterRepo.delete(id)
 }
 
-export async function editCharacterAction(
+export async function editCharacter(
     edited: EditCharacter
 ): Promise<CharacterWithPlayer | null> {
-    await editCharacter(edited)
-    return await getCharacterWithPlayerById(edited.id)
+    await characterRepo.edit(edited)
+    return await characterRepo.getWithPlayerById(edited.id)
 }
 
 // ============== PLAYERS ==============
 
-export async function addPlayerAction(player: NewPlayer): Promise<Player | null> {
-    const id = await addPlayer(player)
-    return await getPlayerById(id)
+export async function addPlayer(player: NewPlayer): Promise<Player | null> {
+    const id = await playerRepo.add(player)
+    return await playerRepo.getById(id)
 }
 
-export async function deletePlayerAction(playerId: string): Promise<void> {
-    await deletePlayer(playerId)
+export async function deletePlayer(playerId: string): Promise<void> {
+    await playerRepo.delete(playerId)
 }
 
-export async function editPlayerAction(edited: EditPlayer): Promise<Player | null> {
-    await editPlayer(edited)
-    return await getPlayerById(edited.id)
+export async function editPlayer(edited: EditPlayer): Promise<Player | null> {
+    await playerRepo.edit(edited)
+    return await playerRepo.getById(edited.id)
 }
 
-export async function getPlayerWithCharactersListAction(): Promise<
-    PlayerWithCharacters[]
-> {
-    return await getPlayerWithCharactersList()
+export async function getPlayerWithCharactersList(): Promise<PlayerWithCharacters[]> {
+    return await playerRepo.getWithCharactersList()
 }
 
-export async function getPlayersWithoutCharactersAction(): Promise<Player[]> {
-    return await getPlayersWithoutCharactersList()
+export async function getPlayersWithoutCharacters(): Promise<Player[]> {
+    return await playerRepo.getWithoutCharactersList()
 }
 
 // ============== CHARACTER INFO ==============
 
-export async function getCharLatestGameInfoAction(
+export async function getCharLatestGameInfo(
     charName: string,
     charRealm: string
 ): Promise<CharacterGameInfo> {
     const [lastDroptimizer, lastWowAudit, lastRaiderio] = await Promise.all([
-        getDroptimizerLastByChar(charName, charRealm),
-        getLastWowAuditInfo(charName, charRealm),
-        getLastRaiderioInfo(charName, charRealm),
+        droptimizerRepo.getLastByChar(charName, charRealm),
+        wowauditRepo.getByChar(charName, charRealm),
+        raiderioRepo.getByChar(charName, charRealm),
     ])
 
     return {

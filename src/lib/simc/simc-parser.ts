@@ -1,4 +1,4 @@
-import { getItems, getTiersetAndTokenList } from "@/db/repositories/items"
+import { itemRepo } from "@/db/repositories/items"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
 import { CURRENT_CATALYST_CHARGE_ID } from "@/shared/consts/wow.consts"
@@ -8,7 +8,7 @@ import {
     parseItemTrack,
 } from "@/shared/libs/items/item-bonus-utils"
 import { wowItemEquippedSlotKeySchema } from "@/shared/schemas/wow.schemas"
-import type { DroptimizerCurrency, GearItem, Item, SimC } from "@/shared/types/types"
+import type { DroptimizerCurrency, GearItem, SimC } from "@/shared/types/types"
 
 export async function parseSimC(simc: string): Promise<SimC> {
     const itemsInBag = await parseBagGearsFromSimc(simc)
@@ -217,7 +217,7 @@ async function parseGreatVaultFromSimc(simc: string): Promise<GearItem[]> {
     }
 
     const items: GearItem[] = []
-    const itemsInDb: Item[] = await getItems()
+    const itemsInDb = await itemRepo.getAll()
 
     // Create a Map for O(1) lookups instead of O(n) array.find()
     const itemsMap = new Map(itemsInDb.map((item) => [item.id, item]))
@@ -286,7 +286,7 @@ async function parseTiersets(
     equipped: GearItem[],
     bags: GearItem[]
 ): Promise<GearItem[]> {
-    const tiersetItems = await getTiersetAndTokenList()
+    const tiersetItems = await itemRepo.getTiersetAndTokenList()
 
     const tiersetItemIds = new Set(tiersetItems.map((item) => item.id))
 
@@ -306,7 +306,7 @@ async function parseBagGearsFromSimc(simc: string): Promise<GearItem[]> {
     const gearSection = gearSectionMatch[0]
     const itemLines = gearSection.split("\n").filter((line) => line.includes("="))
 
-    const itemsInDb: Item[] = await getItems()
+    const itemsInDb = await itemRepo.getAll()
     const items: GearItem[] = []
 
     for (const line of itemLines) {
@@ -422,7 +422,7 @@ async function parseEquippedGearFromSimc(simc: string): Promise<GearItem[]> {
     const equippedSlotPattern = `(${equippedSlots.join("|")})`
     const equipmentRegex = new RegExp(`^${equippedSlotPattern}=.*?,id=(\\d+).*$`, "gm")
 
-    const itemsInDb: Item[] = await getItems()
+    const itemsInDb = await itemRepo.getAll()
     const items: GearItem[] = []
     let match: RegExpExecArray | null
 

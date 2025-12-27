@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- External API parsing with known data structure */
-import { getItems } from "@/db/repositories/items"
+import { itemRepo } from "@/db/repositories/items"
 import type { NewCharacterWowAudit } from "@/db/repositories/wowaudit"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
@@ -57,7 +57,7 @@ export async function parseWowAuditData(
         wowAuditLastRefreshDate.getTime() / 1000
     )
 
-    itemsInDb = await getItems()
+    itemsInDb = await itemRepo.getAll()
 
     // we skip header
     const res = jsonData.slice(1).map((row) => {

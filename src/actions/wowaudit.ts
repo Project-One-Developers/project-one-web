@@ -1,13 +1,7 @@
 "use server"
 
-import { getConfig } from "@/db/repositories/settings"
-import {
-    addCharacterWowAudit,
-    deleteAllCharacterWowAudit,
-    getAllCharacterWowAudit,
-    getLastTimeSyncedWowAudit,
-    getLastWowAuditInfo,
-} from "@/db/repositories/wowaudit"
+import { settingsRepo } from "@/db/repositories/settings"
+import { wowauditRepo } from "@/db/repositories/wowaudit"
 import { logger } from "@/lib/logger"
 import { fetchWowAuditData, parseWowAuditData } from "@/lib/wowaudit/wowaudit-sync"
 import {
@@ -16,19 +10,19 @@ import {
 } from "@/shared/libs/date/date-utils"
 import type { CharacterWowAudit } from "@/shared/types/types"
 
-export async function getAllCharacterWowAuditAction(): Promise<CharacterWowAudit[]> {
-    return await getAllCharacterWowAudit()
+export async function getAllCharacterWowAudit(): Promise<CharacterWowAudit[]> {
+    return await wowauditRepo.getAll()
 }
 
-export async function getLastWowAuditInfoAction(
+export async function getLastWowAuditInfo(
     charName: string,
     charRealm: string
 ): Promise<CharacterWowAudit | null> {
-    return await getLastWowAuditInfo(charName, charRealm)
+    return await wowauditRepo.getByChar(charName, charRealm)
 }
 
-export async function syncCharacterWowAuditAction(): Promise<void> {
-    const key = await getConfig("WOW_AUDIT_API_KEY")
+export async function syncCharacterWowAudit(): Promise<void> {
+    const key = await settingsRepo.get("WOW_AUDIT_API_KEY")
 
     if (key === null) {
         throw new Error("WOW_AUDIT_API_KEY not set in database")
@@ -40,18 +34,18 @@ export async function syncCharacterWowAuditAction(): Promise<void> {
 
     if (json !== null) {
         const charsData = await parseWowAuditData(json)
-        await deleteAllCharacterWowAudit()
-        await addCharacterWowAudit(charsData)
+        await wowauditRepo.deleteAll()
+        await wowauditRepo.add(charsData)
     }
     logger.info("WowAudit", "End Sync")
 }
 
-export async function checkWowAuditUpdatesAction(): Promise<{
+export async function checkWowAuditUpdates(): Promise<{
     synced: boolean
     message: string
 }> {
     logger.info("WowAudit", "checkWowAuditUpdates: checking..")
-    const lastSync = await getLastTimeSyncedWowAudit()
+    const lastSync = await wowauditRepo.getLastTimeSynced()
     const fourHoursUnixTs = 4 * 60 * 60
 
     if (lastSync === null || getUnixTimestamp() - lastSync > fourHoursUnixTs) {
@@ -61,7 +55,7 @@ export async function checkWowAuditUpdatesAction(): Promise<{
                 lastSync !== null ? formaUnixTimestampToItalianDate(lastSync) : "never"
             }) - syncing now`
         )
-        await syncCharacterWowAuditAction()
+        await syncCharacterWowAudit()
         return {
             synced: true,
             message: "WowAudit data was older than 4 hours, synced now",

@@ -1,15 +1,15 @@
 "use server"
 
-import { getBisList, updateItemBisSpec } from "@/db/repositories/bis-list"
+import { bisListRepo } from "@/db/repositories/bis-list"
 import type { BisList } from "@/shared/types/types"
 
-export async function getBisListAction(): Promise<BisList[]> {
-    return await getBisList()
+export async function getBisList(): Promise<BisList[]> {
+    return await bisListRepo.getAll()
 }
 
-export async function updateItemBisSpecAction(
+export async function updateItemBisSpec(
     itemId: number,
     specIds: number[]
 ): Promise<void> {
-    await updateItemBisSpec(itemId, specIds)
+    await bisListRepo.updateItemBisSpec(itemId, specIds)
 }

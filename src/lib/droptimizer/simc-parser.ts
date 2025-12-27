@@ -1,4 +1,4 @@
-import { getItems, getTiersetAndTokenList } from "@/db/repositories/items"
+import { itemRepo } from "@/db/repositories/items"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
 import { CURRENT_CATALYST_CHARGE_ID } from "@/shared/consts/wow.consts"
@@ -7,7 +7,7 @@ import {
     parseItemLevelFromBonusIds,
     parseItemTrack,
 } from "@/shared/libs/items/item-bonus-utils"
-import type { DroptimizerCurrency, GearItem, Item } from "@/shared/types/types"
+import type { DroptimizerCurrency, GearItem } from "@/shared/types/types"
 
 export const parseCatalystFromSimc = (simc: string): DroptimizerCurrency[] => {
     const catalystRegex = /# catalyst_currencies=([^\n]+)/
@@ -61,7 +61,7 @@ export const parseGreatVaultFromSimc = async (simc: string): Promise<GearItem[]>
     }
 
     const items: GearItem[] = []
-    const itemsInDb: Item[] = await getItems()
+    const itemsInDb = await itemRepo.getAll()
 
     // Create a Map for O(1) lookups instead of O(n) array.find()
     const itemsMap = new Map(itemsInDb.map((item) => [item.id, item]))
@@ -130,7 +130,7 @@ export const parseTiersets = async (
     equipped: GearItem[],
     bags: GearItem[]
 ): Promise<GearItem[]> => {
-    const tiersetItems = await getTiersetAndTokenList()
+    const tiersetItems = await itemRepo.getTiersetAndTokenList()
 
     const tiersetItemIds = new Set(tiersetItems.map((item) => item.id))
 
@@ -150,7 +150,7 @@ export async function parseBagGearsFromSimc(simc: string): Promise<GearItem[]> {
     const gearSection = gearSectionMatch[0]
     const itemLines = gearSection.split("\n").filter((line) => line.includes("="))
 
-    const itemsInDb: Item[] = await getItems()
+    const itemsInDb = await itemRepo.getAll()
     const items: GearItem[] = []
 
     for (const line of itemLines) {

@@ -12,8 +12,11 @@ Next.js 16 + React 19 TypeScript web application for World of Warcraft guild man
 pnpm dev              # Start development server
 pnpm build            # Production build
 pnpm lint             # Run ESLint
+pnpm typecheck        # TypeScript check (shows ALL errors, faster than build)
 pnpm drizzle-kit push # Push database schema changes to PostgreSQL
 ```
+
+> **Tip**: Use `pnpm typecheck` instead of `pnpm build` when checking for type errors - it shows all errors at once and is faster.
 
 ## Architecture
 
@@ -42,7 +45,7 @@ pnpm drizzle-kit push # Push database schema changes to PostgreSQL
 
 **Data Flow**: Server Actions (`/actions`) for mutations + React Query hooks (`/lib/queries`) for fetching
 
-**Repository Pattern**: Each entity has a repository in `/db/repositories` with functions like `getCharactersList()`, `addCharacter()`
+**Repository Pattern**: Each entity has a repository object in `/db/repositories` (e.g., `characterRepo.getList()`, `itemRepo.getAll()`)
 
 **Validation**: Zod schemas in `/shared/schemas` for both DB response and form validation
 
@@ -55,7 +58,8 @@ pnpm drizzle-kit push # Push database schema changes to PostgreSQL
 ### Naming Conventions
 
 - Components: PascalCase (`CharacterDialog.tsx`)
-- Actions: camelCase with suffix (`addCharacterAction`)
+- Actions: camelCase (`addCharacter`, `getBosses`) - no suffix needed, they live in `/actions`
+- Repositories: camelCase + `Repo` suffix (`characterRepo`, `itemRepo`)
 - Schemas: camelCase + `Schema` suffix (`characterSchema`)
 - Hooks: `use` prefix (`usePlayersSummary()`)
 - Constants: SCREAMING_SNAKE_CASE (`CURRENT_RAID_ID`)

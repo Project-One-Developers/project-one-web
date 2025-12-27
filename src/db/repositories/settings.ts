@@ -3,34 +3,36 @@ import { eq } from "drizzle-orm"
 import { db } from "@/db"
 import { appConfigTable } from "@/db/schema"
 
-export async function getConfig(key: string): Promise<string | null> {
-    const result = await db
-        .select({ value: appConfigTable.value })
-        .from(appConfigTable)
-        .where(eq(appConfigTable.key, key))
-        .then((r) => r.at(0))
+export const settingsRepo = {
+    get: async (key: string): Promise<string | null> => {
+        const result = await db
+            .select({ value: appConfigTable.value })
+            .from(appConfigTable)
+            .where(eq(appConfigTable.key, key))
+            .then((r) => r.at(0))
 
-    if (!result) {
-        return null
-    }
-    return result.value
-}
+        if (!result) {
+            return null
+        }
+        return result.value
+    },
 
-export async function setConfig(key: string, value: string): Promise<void> {
-    await db.insert(appConfigTable).values({ key, value }).onConflictDoUpdate({
-        target: appConfigTable.key,
-        set: { value },
-    })
-}
+    set: async (key: string, value: string): Promise<void> => {
+        await db.insert(appConfigTable).values({ key, value }).onConflictDoUpdate({
+            target: appConfigTable.key,
+            set: { value },
+        })
+    },
 
-export async function deleteConfig(key: string): Promise<void> {
-    await db.delete(appConfigTable).where(eq(appConfigTable.key, key))
-}
+    delete: async (key: string): Promise<void> => {
+        await db.delete(appConfigTable).where(eq(appConfigTable.key, key))
+    },
 
-export async function getAllConfig(): Promise<Record<string, string>> {
-    const result = await db.select().from(appConfigTable)
-    return result.reduce<Record<string, string>>((acc, { key, value }) => {
-        acc[key] = value
-        return acc
-    }, {})
+    getAll: async (): Promise<Record<string, string>> => {
+        const result = await db.select().from(appConfigTable)
+        return result.reduce<Record<string, string>>((acc, { key, value }) => {
+            acc[key] = value
+            return acc
+        }, {})
+    },
 }

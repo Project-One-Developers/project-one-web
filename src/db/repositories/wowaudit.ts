@@ -117,62 +117,62 @@ const charWowAuditStorageToCharacterWowAudit = newCharacterWowAuditSchema.transf
     })
 )
 
-export async function addCharacterWowAudit(
-    characters: NewCharacterWowAudit[]
-): Promise<void> {
-    if (characters.length === 0) {
-        return
-    }
-    await db.insert(charWowAuditTable).values(characters)
-}
+export const wowauditRepo = {
+    add: async (characters: NewCharacterWowAudit[]): Promise<void> => {
+        if (characters.length === 0) {
+            return
+        }
+        await db.insert(charWowAuditTable).values(characters)
+    },
 
-export async function getLastTimeSyncedWowAudit(): Promise<number | null> {
-    const result = await db.query.charWowAuditTable.findFirst({
-        orderBy: (charWowAuditTable, { desc }) =>
-            desc(charWowAuditTable.wowauditLastModifiedUnixTs),
-    })
-    return result ? result.wowauditLastModifiedUnixTs : null
-}
+    getLastTimeSynced: async (): Promise<number | null> => {
+        const result = await db.query.charWowAuditTable.findFirst({
+            orderBy: (charWowAuditTable, { desc }) =>
+                desc(charWowAuditTable.wowauditLastModifiedUnixTs),
+        })
+        return result ? result.wowauditLastModifiedUnixTs : null
+    },
 
-export async function getLastWowAuditInfo(
-    charName: string,
-    charRealm: string
-): Promise<CharacterWowAudit | null> {
-    const result = await db.query.charWowAuditTable.findFirst({
-        where: (charWowAuditTable, { eq, and }) =>
-            and(
-                eq(charWowAuditTable.name, charName),
-                eq(charWowAuditTable.realm, charRealm)
-            ),
-    })
-    return result ? charWowAuditStorageToCharacterWowAudit.parse(result) : null
-}
-
-export async function getAllCharacterWowAudit(): Promise<CharacterWowAudit[]> {
-    const result = await db.query.charWowAuditTable.findMany()
-    return z.array(charWowAuditStorageToCharacterWowAudit).parse(result)
-}
-
-export async function deleteAllCharacterWowAudit(): Promise<void> {
-    await db.delete(charWowAuditTable)
-}
-
-export async function getWowAuditByChars(
-    chars: { name: string; realm: string }[]
-): Promise<CharacterWowAudit[]> {
-    if (chars.length === 0) {
-        return []
-    }
-
-    const result = await db.query.charWowAuditTable.findMany({
-        where: or(
-            ...chars.map((c) =>
+    getByChar: async (
+        charName: string,
+        charRealm: string
+    ): Promise<CharacterWowAudit | null> => {
+        const result = await db.query.charWowAuditTable.findFirst({
+            where: (charWowAuditTable, { eq, and }) =>
                 and(
-                    eq(charWowAuditTable.name, c.name),
-                    eq(charWowAuditTable.realm, c.realm)
+                    eq(charWowAuditTable.name, charName),
+                    eq(charWowAuditTable.realm, charRealm)
+                ),
+        })
+        return result ? charWowAuditStorageToCharacterWowAudit.parse(result) : null
+    },
+
+    getAll: async (): Promise<CharacterWowAudit[]> => {
+        const result = await db.query.charWowAuditTable.findMany()
+        return z.array(charWowAuditStorageToCharacterWowAudit).parse(result)
+    },
+
+    deleteAll: async (): Promise<void> => {
+        await db.delete(charWowAuditTable)
+    },
+
+    getByChars: async (
+        chars: { name: string; realm: string }[]
+    ): Promise<CharacterWowAudit[]> => {
+        if (chars.length === 0) {
+            return []
+        }
+
+        const result = await db.query.charWowAuditTable.findMany({
+            where: or(
+                ...chars.map((c) =>
+                    and(
+                        eq(charWowAuditTable.name, c.name),
+                        eq(charWowAuditTable.realm, c.realm)
+                    )
                 )
-            )
-        ),
-    })
-    return z.array(charWowAuditStorageToCharacterWowAudit).parse(result)
+            ),
+        })
+        return z.array(charWowAuditStorageToCharacterWowAudit).parse(result)
+    },
 }

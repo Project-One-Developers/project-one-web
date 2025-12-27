@@ -1,10 +1,6 @@
 import { z } from "zod"
 
-import {
-    getItems,
-    getItemToCatalystMapping,
-    getItemToTiersetMapping,
-} from "@/db/repositories/items"
+import { itemRepo } from "@/db/repositories/items"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
 import { CURRENT_RAID_ID } from "@/shared/consts/wow.consts"
@@ -75,8 +71,8 @@ const parseUpgrades = async (
         slot: WowItemEquippedSlotKey
     }[]
 ): Promise<NewDroptimizerUpgrade[]> => {
-    const itemToTiersetMapping = await getItemToTiersetMapping()
-    const itemToCatalystMapping = await getItemToCatalystMapping()
+    const itemToTiersetMapping = await itemRepo.getTiersetMapping()
+    const itemToCatalystMapping = await itemRepo.getCatalystMapping()
 
     const upgradesMap = upgrades
         // filter out item without dps gain
@@ -225,7 +221,7 @@ const convertJsonToDroptimizer = async (
         talents: "qe_no_support",
     }
 
-    const itemsInDb: Item[] = await getItems()
+    const itemsInDb = await itemRepo.getAll()
 
     const itemsEquipped = parseEquippedGear(itemsInDb, data.equippedItems, url)
 

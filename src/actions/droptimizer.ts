@@ -1,15 +1,8 @@
 "use server"
 
-import {
-    addDroptimizer,
-    deleteDroptimizer,
-    deleteDroptimizerOlderThanDate,
-    getDroptimizerLastByCharAndDiff,
-    getDroptimizerLatestList,
-    getDroptimizerList,
-} from "@/db/repositories/droptimizer"
-import { getConfig } from "@/db/repositories/settings"
-import { addSimC } from "@/db/repositories/simc"
+import { droptimizerRepo } from "@/db/repositories/droptimizer"
+import { settingsRepo } from "@/db/repositories/settings"
+import { simcRepo } from "@/db/repositories/simc"
 import { fetchDroptimizerFromQELiveURL } from "@/lib/droptimizer/qelive-parser"
 import { fetchDroptimizerFromURL } from "@/lib/droptimizer/raidbots-parser"
 import { logger } from "@/lib/logger"
@@ -23,53 +16,49 @@ import type {
     WowRaidDifficulty,
 } from "@/shared/types/types"
 
-export async function getDroptimizerListAction(): Promise<Droptimizer[]> {
-    return await getDroptimizerList()
+export async function getDroptimizerList(): Promise<Droptimizer[]> {
+    return await droptimizerRepo.getList()
 }
 
-export async function getDroptimizerLatestListAction(): Promise<Droptimizer[]> {
-    return await getDroptimizerLatestList()
+export async function getDroptimizerLatestList(): Promise<Droptimizer[]> {
+    return await droptimizerRepo.getLatestList()
 }
 
-export async function deleteDroptimizerAction(url: string): Promise<void> {
-    await deleteDroptimizer(url)
+export async function deleteDroptimizer(url: string): Promise<void> {
+    await droptimizerRepo.delete(url)
 }
 
-export async function getDroptimizerLastByCharAndDiffAction(
+export async function getDroptimizerLastByCharAndDiff(
     charName: string,
     charRealm: string,
     raidDiff: WowRaidDifficulty
 ): Promise<Droptimizer | null> {
-    return await getDroptimizerLastByCharAndDiff(charName, charRealm, raidDiff)
+    return await droptimizerRepo.getLastByCharAndDiff(charName, charRealm, raidDiff)
 }
 
-export async function addDroptimizerAction(
-    droptimizer: NewDroptimizer
-): Promise<Droptimizer> {
-    return await addDroptimizer(droptimizer)
+export async function addDroptimizer(droptimizer: NewDroptimizer): Promise<Droptimizer> {
+    return await droptimizerRepo.add(droptimizer)
 }
 
-export async function deleteSimulationsOlderThanHoursAction(
-    hours: number
-): Promise<void> {
+export async function deleteSimulationsOlderThanHours(hours: number): Promise<void> {
     const currentTimeStamp = getUnixTimestamp()
     const upperBound = currentTimeStamp - hours * 60 * 60
-    await deleteDroptimizerOlderThanDate(upperBound)
+    await droptimizerRepo.deleteOlderThanDate(upperBound)
 }
 
 /**
  * Add SimC character data (for vault/tierset info without running a full droptimizer)
  */
-export async function addSimCAction(simcData: string): Promise<SimC> {
+export async function addSimC(simcData: string): Promise<SimC> {
     const simc = await parseSimC(simcData)
-    await addSimC(simc)
+    await simcRepo.add(simc)
     return simc
 }
 
 /**
  * Add a simulation from a URL (Raidbots or QE Live)
  */
-export async function addSimulationFromUrlAction(url: string): Promise<Droptimizer[]> {
+export async function addSimulationFromUrl(url: string): Promise<Droptimizer[]> {
     logger.info("Droptimizer", `Adding simulation from url ${url}`)
     const results: Droptimizer[] = []
 
@@ -77,13 +66,13 @@ export async function addSimulationFromUrlAction(url: string): Promise<Droptimiz
         // QE Live report: healers
         const droptimizers: NewDroptimizer[] = await fetchDroptimizerFromQELiveURL(url)
         for (const dropt of droptimizers) {
-            const result = await addDroptimizer(dropt)
+            const result = await droptimizerRepo.add(dropt)
             results.push(result)
         }
     } else if (url.startsWith("https://www.raidbots.com/simbot/")) {
         // If the URL is a Raidbots simbot, fetch it
         const droptimizer: NewDroptimizer = await fetchDroptimizerFromURL(url)
-        const result = await addDroptimizer(droptimizer)
+        const result = await droptimizerRepo.add(droptimizer)
         results.push(result)
     } else {
         throw new Error("Invalid URL format for droptimizer")
@@ -93,7 +82,7 @@ export async function addSimulationFromUrlAction(url: string): Promise<Droptimiz
 }
 
 export async function getDiscordBotToken(): Promise<string | null> {
-    return await getConfig("DISCORD_BOT_TOKEN")
+    return await settingsRepo.get("DISCORD_BOT_TOKEN")
 }
 
 // eslint-disable-next-line @typescript-eslint/require-await
@@ -106,14 +95,14 @@ export async function getDiscordChannelId(): Promise<string> {
  * Sync droptimizers from Discord channel
  * Fetches all messages from the droptimizers channel and imports any URLs found
  */
-export async function syncDroptimizersFromDiscordAction(
+export async function syncDroptimizersFromDiscord(
     hours: number
 ): Promise<{ imported: number; errors: string[] }> {
     // Dynamic import to avoid loading discord.js on client
     const { readAllMessagesInDiscord, extractUrlsFromMessages } =
         await import("@/lib/discord/discord")
 
-    const botKey = await getConfig("DISCORD_BOT_TOKEN")
+    const botKey = await settingsRepo.get("DISCORD_BOT_TOKEN")
     const channelId = await getDiscordChannelId()
 
     if (!botKey) {
@@ -142,7 +131,7 @@ export async function syncDroptimizersFromDiscordAction(
         Array.from(uniqueUrls).map((url) =>
             limit(async () => {
                 try {
-                    await addSimulationFromUrlAction(url)
+                    await addSimulationFromUrl(url)
                     importedCount++
                 } catch (error) {
                     const errorMsg = `Failed to import ${url}: ${error instanceof Error ? error.message : "Unknown error"}`

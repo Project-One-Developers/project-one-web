@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server"
 
 import {
-    syncDroptimizersFromDiscordAction,
-    deleteSimulationsOlderThanHoursAction,
+    syncDroptimizersFromDiscord,
+    deleteSimulationsOlderThanHours,
 } from "@/actions/droptimizer"
-import { checkWowAuditUpdatesAction } from "@/actions/wowaudit"
+import { checkWowAuditUpdates } from "@/actions/wowaudit"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
@@ -45,7 +45,7 @@ export async function GET(request: Request) {
 
         // WowAudit sync - syncs if data is older than 4 hours
         try {
-            const wowauditResult = await checkWowAuditUpdatesAction()
+            const wowauditResult = await checkWowAuditUpdates()
             results.wowaudit.success = true
             results.wowaudit.synced = wowauditResult.synced
             results.wowaudit.message = wowauditResult.message
@@ -56,8 +56,7 @@ export async function GET(request: Request) {
 
         // Discord droptimizer sync
         try {
-            const discordResult =
-                await syncDroptimizersFromDiscordAction(DISCORD_SYNC_HOURS)
+            const discordResult = await syncDroptimizersFromDiscord(DISCORD_SYNC_HOURS)
             results.discord.success = true
             results.discord.imported = discordResult.imported
             results.discord.errors = discordResult.errors
@@ -70,7 +69,7 @@ export async function GET(request: Request) {
 
         // Cleanup old simulations
         try {
-            await deleteSimulationsOlderThanHoursAction(DELETE_OLD_SIMULATIONS_HOURS)
+            await deleteSimulationsOlderThanHours(DELETE_OLD_SIMULATIONS_HOURS)
             results.cleanup.success = true
         } catch (error) {
             results.cleanup.error =

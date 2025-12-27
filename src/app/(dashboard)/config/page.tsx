@@ -11,9 +11,9 @@ import { toast } from "sonner"
 
 import { useState, type JSX } from "react"
 
-import { syncDroptimizersFromDiscordAction } from "@/actions/droptimizer"
-import { syncAllCharactersRaiderioAction } from "@/actions/raiderio"
-import { syncCharacterWowAuditAction } from "@/actions/wowaudit"
+import { syncDroptimizersFromDiscord } from "@/actions/droptimizer"
+import { syncAllCharactersRaiderio } from "@/actions/raiderio"
+import { syncCharacterWowAudit } from "@/actions/wowaudit"
 import { Button } from "@/components/ui/button"
 import { s } from "@/lib/safe-stringify"
 
@@ -25,7 +25,7 @@ export default function SettingsPage(): JSX.Element {
     const handleSyncWowAudit = async () => {
         setIsSyncingWowAudit(true)
         try {
-            await syncCharacterWowAuditAction()
+            await syncCharacterWowAudit()
             toast.success("WowAudit sync completed successfully")
         } catch (error) {
             toast.error(
@@ -39,7 +39,7 @@ export default function SettingsPage(): JSX.Element {
     const handleSyncRaiderio = async () => {
         setIsSyncingRaiderio(true)
         try {
-            const result = await syncAllCharactersRaiderioAction()
+            const result = await syncAllCharactersRaiderio()
             toast.success(
                 `Raider.io sync completed: ${s(result.synced)} characters synced`
             )
@@ -58,7 +58,7 @@ export default function SettingsPage(): JSX.Element {
     const handleSyncDiscord = async () => {
         setIsSyncingDiscord(true)
         try {
-            const result = await syncDroptimizersFromDiscordAction(168) // Last 7 days
+            const result = await syncDroptimizersFromDiscord(168) // Last 7 days
             toast.success(
                 `Discord sync completed: ${s(result.imported)} droptimizers imported`
             )

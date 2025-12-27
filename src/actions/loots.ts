@@ -2,31 +2,15 @@
 
 import { groupBy, keyBy } from "es-toolkit"
 
-import { getBisList } from "@/db/repositories/bis-list"
-import { getCharactersByIds, getCharactersList } from "@/db/repositories/characters"
-import {
-    getDroptimizerLatestByChars,
-    getDroptimizerLatestList,
-} from "@/db/repositories/droptimizer"
-import { getItem, getItems, getItemToTiersetMapping } from "@/db/repositories/items"
-import {
-    addLoots,
-    assignLoot,
-    deleteLoot,
-    getLootAssigned,
-    getLootsByRaidSessionId,
-    getLootsByRaidSessionIdWithAssigned,
-    getLootsByRaidSessionIdsWithAssigned,
-    getLootsByRaidSessionIdWithItem,
-    getLootWithItemById,
-    tradeLoot,
-    unassignLoot,
-    untradeLoot,
-} from "@/db/repositories/loots"
-import { getRaidSession, getRaidSessionRoster } from "@/db/repositories/raid-sessions"
-import { getAllCharacterRaiderio, getRaiderioByChars } from "@/db/repositories/raiderio"
-import { getAllSimC, getSimcByChars } from "@/db/repositories/simc"
-import { getAllCharacterWowAudit, getWowAuditByChars } from "@/db/repositories/wowaudit"
+import { bisListRepo } from "@/db/repositories/bis-list"
+import { characterRepo } from "@/db/repositories/characters"
+import { droptimizerRepo } from "@/db/repositories/droptimizer"
+import { itemRepo } from "@/db/repositories/items"
+import { lootRepo } from "@/db/repositories/loots"
+import { raidSessionRepo } from "@/db/repositories/raid-sessions"
+import { raiderioRepo } from "@/db/repositories/raiderio"
+import { simcRepo } from "@/db/repositories/simc"
+import { wowauditRepo } from "@/db/repositories/wowaudit"
 import {
     evalHighlightsAndScore,
     getLatestSyncDate,
@@ -59,62 +43,59 @@ import type {
     SimC,
 } from "@/shared/types/types"
 
-export async function getLootsBySessionIdAction(raidSessionId: string): Promise<Loot[]> {
-    return await getLootsByRaidSessionId(raidSessionId)
+export async function getLootsBySessionId(raidSessionId: string): Promise<Loot[]> {
+    return await lootRepo.getByRaidSessionId(raidSessionId)
 }
 
-export async function getLootsBySessionIdWithItemAction(
+export async function getLootsBySessionIdWithItem(
     raidSessionId: string
 ): Promise<LootWithItem[]> {
-    return await getLootsByRaidSessionIdWithItem(raidSessionId)
+    return await lootRepo.getByRaidSessionIdWithItem(raidSessionId)
 }
 
-export async function getLootsBySessionIdWithAssignedAction(
+export async function getLootsBySessionIdWithAssigned(
     raidSessionId: string
 ): Promise<LootWithAssigned[]> {
-    return await getLootsByRaidSessionIdWithAssigned(raidSessionId)
+    return await lootRepo.getByRaidSessionIdWithAssigned(raidSessionId)
 }
 
-export async function getLootsBySessionIdsWithAssignedAction(
+export async function getLootsBySessionIdsWithAssigned(
     raidSessionIds: string[]
 ): Promise<LootWithAssigned[]> {
-    return await getLootsByRaidSessionIdsWithAssigned(raidSessionIds)
+    return await lootRepo.getByRaidSessionIdsWithAssigned(raidSessionIds)
 }
 
-export async function getLootWithItemByIdAction(lootId: string): Promise<LootWithItem> {
-    return await getLootWithItemById(lootId)
+export async function getLootWithItemById(lootId: string): Promise<LootWithItem> {
+    return await lootRepo.getWithItemById(lootId)
 }
 
-export async function assignLootAction(
+export async function assignLoot(
     charId: string,
     lootId: string,
     highlights: CharAssignmentHighlights | null
 ): Promise<void> {
-    await assignLoot(charId, lootId, highlights)
+    await lootRepo.assign(charId, lootId, highlights)
 }
 
-export async function unassignLootAction(lootId: string): Promise<void> {
-    await unassignLoot(lootId)
+export async function unassignLoot(lootId: string): Promise<void> {
+    await lootRepo.unassign(lootId)
 }
 
-export async function tradeLootAction(lootId: string): Promise<void> {
-    await tradeLoot(lootId)
+export async function tradeLoot(lootId: string): Promise<void> {
+    await lootRepo.trade(lootId)
 }
 
-export async function untradeLootAction(lootId: string): Promise<void> {
-    await untradeLoot(lootId)
+export async function untradeLoot(lootId: string): Promise<void> {
+    await lootRepo.untrade(lootId)
 }
 
-export async function deleteLootAction(lootId: string): Promise<void> {
-    await deleteLoot(lootId)
+export async function deleteLoot(lootId: string): Promise<void> {
+    await lootRepo.delete(lootId)
 }
 
-export async function addLootsAction(
-    raidSessionId: string,
-    loots: NewLoot[]
-): Promise<void> {
-    const eligibleCharacters = await getRaidSessionRoster(raidSessionId)
-    await addLoots(raidSessionId, loots, eligibleCharacters)
+export async function addLoots(raidSessionId: string, loots: NewLoot[]): Promise<void> {
+    const eligibleCharacters = await raidSessionRepo.getRoster(raidSessionId)
+    await lootRepo.addMany(raidSessionId, loots, eligibleCharacters)
 }
 
 // ============== LOOT IMPORT ACTIONS ==============
@@ -122,19 +103,19 @@ export async function addLootsAction(
 /**
  * Import loot from RC Loot Council CSV export
  */
-export async function importRcLootCsvAction(
+export async function importRcLootCsv(
     raidSessionId: string,
     csv: string,
     importAssignedCharacter: boolean
 ): Promise<{ imported: number; errors: string[] }> {
-    const session = await getRaidSession(raidSessionId)
+    const session = await raidSessionRepo.getById(raidSessionId)
 
     // Date bounds: session date ± 12 hours
     const dateLowerBound = session.raidDate - 12 * 60 * 60
     const dateUpperBound = session.raidDate + 12 * 60 * 60
 
-    const allItems = await getItems()
-    const allCharacters = importAssignedCharacter ? await getCharactersList() : []
+    const allItems = await itemRepo.getAll()
+    const allCharacters = importAssignedCharacter ? await characterRepo.getList() : []
 
     const loots = parseRcLoots(
         csv,
@@ -146,8 +127,8 @@ export async function importRcLootCsvAction(
     )
 
     if (loots.length > 0) {
-        const eligibleCharacters = await getRaidSessionRoster(raidSessionId)
-        await addLoots(raidSessionId, loots, eligibleCharacters)
+        const eligibleCharacters = await raidSessionRepo.getRoster(raidSessionId)
+        await lootRepo.addMany(raidSessionId, loots, eligibleCharacters)
     }
 
     return { imported: loots.length, errors: [] }
@@ -176,16 +157,16 @@ const bonusIdsMatch = (
  * Import loot assignments from RC Loot Council CSV export
  * This assigns existing session loots based on RC Loot Council data
  */
-export async function importRcLootAssignmentsAction(
+export async function importRcLootAssignments(
     raidSessionId: string,
     csv: string
 ): Promise<{ assigned: number; warnings: string[] }> {
-    const session = await getRaidSession(raidSessionId)
+    const session = await raidSessionRepo.getById(raidSessionId)
 
     const RAID_SESSION_UPPER_BOUND_DELTA = 12 * 60 * 60
 
-    const allItems = await getItems()
-    const allCharacters = await getCharactersList()
+    const allItems = await itemRepo.getAll()
+    const allCharacters = await characterRepo.getList()
 
     const [rcLootData, sessionLoots] = await Promise.all([
         Promise.resolve(
@@ -198,7 +179,7 @@ export async function importRcLootAssignmentsAction(
                 allCharacters
             )
         ),
-        getLootsByRaidSessionId(raidSessionId),
+        lootRepo.getByRaidSessionId(raidSessionId),
     ])
 
     const warnings: string[] = []
@@ -258,7 +239,7 @@ export async function importRcLootAssignmentsAction(
         // Assign available loots
         const lootsToAssign = unassignedLoots.slice(0, actualAssignCount)
         for (const loot of lootsToAssign) {
-            await assignLoot(charId, loot.id, null)
+            await lootRepo.assign(charId, loot.id, null)
             // Update the loot in sessionLoots to reflect the assignment (so next filters are up to date)
             const lootIndex = sessionLoots.findIndex((l) => l.id === loot.id)
             if (lootIndex !== -1) {
@@ -277,23 +258,23 @@ export async function importRcLootAssignmentsAction(
 /**
  * Import loot from MRT (Method Raid Tools) export
  */
-export async function importMrtLootAction(
+export async function importMrtLoot(
     raidSessionId: string,
     data: string
 ): Promise<{ imported: number; errors: string[] }> {
-    const session = await getRaidSession(raidSessionId)
+    const session = await raidSessionRepo.getById(raidSessionId)
 
     // Date bounds: session date ± 12 hours
     const dateLowerBound = session.raidDate - 12 * 60 * 60
     const dateUpperBound = session.raidDate + 12 * 60 * 60
 
-    const allItems = await getItems()
+    const allItems = await itemRepo.getAll()
 
     const loots = parseMrtLoots(data, dateLowerBound, dateUpperBound, allItems)
 
     if (loots.length > 0) {
-        const eligibleCharacters = await getRaidSessionRoster(raidSessionId)
-        await addLoots(raidSessionId, loots, eligibleCharacters)
+        const eligibleCharacters = await raidSessionRepo.getRoster(raidSessionId)
+        await lootRepo.addMany(raidSessionId, loots, eligibleCharacters)
     }
 
     return { imported: loots.length, errors: [] }
@@ -302,17 +283,17 @@ export async function importMrtLootAction(
 /**
  * Add manually entered loot
  */
-export async function addManualLootAction(
+export async function addManualLoot(
     raidSessionId: string,
     manualLoots: NewLootManual[]
 ): Promise<{ imported: number; errors: string[] }> {
-    const allItems = await getItems()
+    const allItems = await itemRepo.getAll()
 
     const loots = parseManualLoots(manualLoots, allItems)
 
     if (loots.length > 0) {
-        const eligibleCharacters = await getRaidSessionRoster(raidSessionId)
-        await addLoots(raidSessionId, loots, eligibleCharacters)
+        const eligibleCharacters = await raidSessionRepo.getRoster(raidSessionId)
+        await lootRepo.addMany(raidSessionId, loots, eligibleCharacters)
     }
 
     return { imported: loots.length, errors: [] }
@@ -323,14 +304,12 @@ export async function addManualLootAction(
 /**
  * Retrieve all the information to evaluate the loot assignments
  */
-export async function getLootAssignmentInfoAction(
-    lootId: string
-): Promise<LootAssignmentInfo> {
+export async function getLootAssignmentInfo(lootId: string): Promise<LootAssignmentInfo> {
     // Step 1: Get loot first to access eligibility
-    const loot = await getLootWithItemById(lootId)
+    const loot = await lootRepo.getWithItemById(lootId)
 
     // Step 2: Get eligible characters (~25 instead of ~200)
-    const eligibleChars = await getCharactersByIds(loot.charsEligibility)
+    const eligibleChars = await characterRepo.getByIds(loot.charsEligibility)
 
     // Filter by class eligibility
     const filteredRoster = eligibleChars.filter(
@@ -351,13 +330,13 @@ export async function getLootAssignmentInfoAction(
         bisList,
         itemToTiersetMapping,
     ] = await Promise.all([
-        getDroptimizerLatestByChars(charLookups),
-        getWowAuditByChars(charLookups),
-        getRaiderioByChars(charLookups),
-        getSimcByChars(charLookups),
-        getLootsByRaidSessionIdWithAssigned(loot.raidSessionId),
-        getBisList(),
-        getItemToTiersetMapping(),
+        droptimizerRepo.getLatestByChars(charLookups),
+        wowauditRepo.getByChars(charLookups),
+        raiderioRepo.getByChars(charLookups),
+        simcRepo.getByChars(charLookups),
+        lootRepo.getByRaidSessionIdWithAssigned(loot.raidSessionId),
+        bisListRepo.getAll(),
+        itemRepo.getTiersetMapping(),
     ])
 
     // Step 4: Build lookup objects O(n) once instead of O(n²) filtering
@@ -448,7 +427,7 @@ export async function getLootAssignmentInfoAction(
 /**
  * Get all characters with their gear for a specific item
  */
-export async function getCharactersWithLootsByItemIdAction(
+export async function getCharactersWithLootsByItemId(
     itemId: number
 ): Promise<CharacterWithGears[]> {
     const { isInCurrentWowWeek } = await import("@/shared/libs/date/date-utils")
@@ -464,13 +443,13 @@ export async function getCharactersWithLootsByItemIdAction(
         raiderioData,
         simcData,
     ] = await Promise.all([
-        getItem(itemId),
-        getCharactersList(),
-        getDroptimizerLatestList(),
-        getLootAssigned(),
-        getAllCharacterWowAudit(),
-        getAllCharacterRaiderio(),
-        getAllSimC(),
+        itemRepo.getById(itemId),
+        characterRepo.getList(),
+        droptimizerRepo.getLatestList(),
+        lootRepo.getAssigned(),
+        wowauditRepo.getAll(),
+        raiderioRepo.getAll(),
+        simcRepo.getAll(),
     ])
 
     if (item === null) {

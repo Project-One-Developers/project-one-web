@@ -5,7 +5,7 @@ import { toast } from "sonner"
 
 import { useState } from "react"
 
-import { importRcLootCsvAction, importMrtLootAction } from "@/actions/loots"
+import { importRcLootCsv, importMrtLoot } from "@/actions/loots"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -43,11 +43,7 @@ export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
 
         setIsLoading(true)
         try {
-            const result = await importRcLootCsvAction(
-                raidSessionId,
-                rcCsvData,
-                importAssigned
-            )
+            const result = await importRcLootCsv(raidSessionId, rcCsvData, importAssigned)
             toast.success(`Imported ${s(result.imported)} loot items`)
             void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
             void queryClient.invalidateQueries({
@@ -70,7 +66,7 @@ export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
 
         setIsLoading(true)
         try {
-            const result = await importMrtLootAction(raidSessionId, mrtData)
+            const result = await importMrtLoot(raidSessionId, mrtData)
             toast.success(`Imported ${s(result.imported)} loot items`)
             void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
             void queryClient.invalidateQueries({

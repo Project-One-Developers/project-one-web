@@ -1,10 +1,6 @@
 import { z } from "zod"
 
-import {
-    getItems,
-    getItemToCatalystMapping,
-    getItemToTiersetMapping,
-} from "@/db/repositories/items"
+import { itemRepo } from "@/db/repositories/items"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
 import { CURRENT_SEASON } from "@/shared/consts/wow.consts"
@@ -23,7 +19,6 @@ import {
 } from "@/shared/schemas/wow.schemas"
 import type {
     GearItem,
-    Item,
     ItemTrack,
     NewDroptimizer,
     NewDroptimizerUpgrade,
@@ -98,8 +93,8 @@ const parseUpgrades = async (
     itemsInBag: GearItem[],
     itemsEquipped: GearItem[]
 ): Promise<NewDroptimizerUpgrade[]> => {
-    const itemToTiersetMapping = await getItemToTiersetMapping()
-    const itemToCatalystMapping = await getItemToCatalystMapping()
+    const itemToTiersetMapping = await itemRepo.getTiersetMapping()
+    const itemToCatalystMapping = await itemRepo.getCatalystMapping()
 
     // One Armed Bandit workaround for Best-In-Slots item
     const bestInSlotUpgrades = upgrades.find(
@@ -294,7 +289,7 @@ export const convertJsonToDroptimizer = async (
 export const parseEquippedGear = async (
     droptEquipped: z.infer<typeof droptimizerEquippedItemsSchema>
 ): Promise<GearItem[]> => {
-    const itemsInDb: Item[] = await getItems()
+    const itemsInDb = await itemRepo.getAll()
     const res: GearItem[] = []
 
     for (const [slot, droptGearItem] of Object.entries(droptEquipped)) {

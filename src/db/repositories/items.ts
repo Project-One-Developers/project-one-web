@@ -18,163 +18,159 @@ import {
 } from "@/shared/schemas/items.schema"
 import type { Item, ItemNote, ItemToCatalyst, ItemToTierset } from "@/shared/types/types"
 
-// ============== ITEMS ==============
+export const itemRepo = {
+    getAll: async (): Promise<Item[]> => {
+        const items = await db.query.itemTable.findMany()
+        return z.array(itemSchema).parse(items)
+    },
 
-export async function getItems(): Promise<Item[]> {
-    const items = await db.query.itemTable.findMany()
-    return z.array(itemSchema).parse(items)
-}
+    getById: async (id: number): Promise<Item | null> => {
+        const res = await db.query.itemTable.findFirst({
+            where: (itemTable, { eq }) => eq(itemTable.id, id),
+        })
+        return res ? itemSchema.parse(res) : null
+    },
 
-export async function getItem(id: number): Promise<Item | null> {
-    const res = await db.query.itemTable.findFirst({
-        where: (itemTable, { eq }) => eq(itemTable.id, id),
-    })
-    return res ? itemSchema.parse(res) : null
-}
+    getByIds: async (ids: number[]): Promise<Item[]> => {
+        const res = await db.query.itemTable.findMany({
+            where: (itemTable, { inArray }) => inArray(itemTable.id, ids),
+        })
+        return z.array(itemSchema).parse(res)
+    },
 
-export async function getItemByIds(ids: number[]): Promise<Item[]> {
-    const res = await db.query.itemTable.findMany({
-        where: (itemTable, { inArray }) => inArray(itemTable.id, ids),
-    })
-    return z.array(itemSchema).parse(res)
-}
+    getTiersetMapping: async (): Promise<ItemToTierset[]> => {
+        const result = await db.query.itemToTiersetTable.findMany()
+        return itemToTiersetArraySchema.parse(result)
+    },
 
-export async function getItemToTiersetMapping(): Promise<ItemToTierset[]> {
-    const result = await db.query.itemToTiersetTable.findMany()
-    return itemToTiersetArraySchema.parse(result)
-}
+    getCatalystMapping: async (): Promise<ItemToCatalyst[]> => {
+        const result = await db.query.itemToCatalystTable.findMany()
+        return itemToCatalystArraySchema.parse(result)
+    },
 
-export async function getItemToCatalystMapping(): Promise<ItemToCatalyst[]> {
-    const result = await db.query.itemToCatalystTable.findMany()
-    return itemToCatalystArraySchema.parse(result)
-}
+    getTiersetAndTokenList: async (): Promise<Item[]> => {
+        const res = await db.query.itemTable.findMany({
+            where: (itemTable, { eq, or, and }) =>
+                and(
+                    eq(itemTable.season, CURRENT_SEASON),
+                    or(eq(itemTable.tierset, true), eq(itemTable.token, true))
+                ),
+        })
+        return z.array(itemSchema).parse(res)
+    },
 
-export async function getTiersetAndTokenList(): Promise<Item[]> {
-    const res = await db.query.itemTable.findMany({
-        where: (itemTable, { eq, or, and }) =>
-            and(
-                eq(itemTable.season, CURRENT_SEASON),
-                or(eq(itemTable.tierset, true), eq(itemTable.token, true))
-            ),
-    })
-    return z.array(itemSchema).parse(res)
-}
-
-export async function searchItems(searchTerm: string, limit: number): Promise<Item[]> {
-    const res = await db
-        .select()
-        .from(itemTable)
-        .where(
-            and(
-                eq(itemTable.season, CURRENT_SEASON),
-                eq(itemTable.sourceType, "raid"),
-                ilike(itemTable.name, `%${searchTerm}%`)
+    search: async (searchTerm: string, limit: number): Promise<Item[]> => {
+        const res = await db
+            .select()
+            .from(itemTable)
+            .where(
+                and(
+                    eq(itemTable.season, CURRENT_SEASON),
+                    eq(itemTable.sourceType, "raid"),
+                    ilike(itemTable.name, `%${searchTerm}%`)
+                )
             )
-        )
-        .limit(limit)
-    return z.array(itemSchema).parse(res)
+            .limit(limit)
+        return z.array(itemSchema).parse(res)
+    },
+
+    upsert: async (items: Item[]): Promise<void> => {
+        if (items.length === 0) {
+            return
+        }
+
+        // Batch upsert - single query instead of N queries
+        await db
+            .insert(itemTable)
+            .values(items)
+            .onConflictDoUpdate({
+                target: itemTable.id,
+                set: buildConflictUpdateColumns(itemTable, [
+                    "name",
+                    "ilvlBase",
+                    "ilvlMythic",
+                    "ilvlHeroic",
+                    "ilvlNormal",
+                    "itemClass",
+                    "slot",
+                    "slotKey",
+                    "armorType",
+                    "itemSubclass",
+                    "token",
+                    "tokenPrefix",
+                    "tierset",
+                    "tiersetPrefix",
+                    "veryRare",
+                    "boe",
+                    "onUseTrinket",
+                    "specs",
+                    "specIds",
+                    "classes",
+                    "classesId",
+                    "stats",
+                    "mainStats",
+                    "secondaryStats",
+                    "wowheadUrl",
+                    "iconName",
+                    "iconUrl",
+                    "catalyzed",
+                    "sourceId",
+                    "sourceName",
+                    "sourceType",
+                    "bossName",
+                    "season",
+                    "bossId",
+                ]),
+            })
+    },
+
+    deleteById: async (id: number): Promise<void> => {
+        await db.delete(itemTable).where(eq(itemTable.id, id))
+    },
+
+    upsertTiersetMapping: async (itemsToTierset: ItemToTierset[]): Promise<void> => {
+        if (itemsToTierset.length === 0) {
+            return
+        }
+        await db.delete(itemToTiersetTable)
+        await db.insert(itemToTiersetTable).values(itemsToTierset)
+    },
+
+    upsertCatalystMapping: async (itemsToCatalyst: ItemToCatalyst[]): Promise<void> => {
+        if (itemsToCatalyst.length === 0) {
+            return
+        }
+        await db.insert(itemToCatalystTable).values(itemsToCatalyst).onConflictDoNothing()
+    },
 }
 
-export async function upsertItems(items: Item[]): Promise<void> {
-    if (items.length === 0) {
-        return
-    }
+export const itemNoteRepo = {
+    getAll: async (): Promise<ItemNote[]> => {
+        const items = await db.query.itemNoteTable.findMany()
+        return z.array(itemNoteSchema).parse(items)
+    },
 
-    // Batch upsert - single query instead of N queries
-    await db
-        .insert(itemTable)
-        .values(items)
-        .onConflictDoUpdate({
-            target: itemTable.id,
-            set: buildConflictUpdateColumns(itemTable, [
-                "name",
-                "ilvlBase",
-                "ilvlMythic",
-                "ilvlHeroic",
-                "ilvlNormal",
-                "itemClass",
-                "slot",
-                "slotKey",
-                "armorType",
-                "itemSubclass",
-                "token",
-                "tokenPrefix",
-                "tierset",
-                "tiersetPrefix",
-                "veryRare",
-                "boe",
-                "onUseTrinket",
-                "specs",
-                "specIds",
-                "classes",
-                "classesId",
-                "stats",
-                "mainStats",
-                "secondaryStats",
-                "wowheadUrl",
-                "iconName",
-                "iconUrl",
-                "catalyzed",
-                "sourceId",
-                "sourceName",
-                "sourceType",
-                "bossName",
-                "season",
-                "bossId",
-            ]),
+    getById: async (id: number): Promise<ItemNote | null> => {
+        const res = await db.query.itemNoteTable.findFirst({
+            where: (itemNoteTable, { eq }) => eq(itemNoteTable.itemId, id),
         })
-}
+        return res ? itemNoteSchema.parse(res) : null
+    },
 
-export async function deleteItemById(id: number): Promise<void> {
-    await db.delete(itemTable).where(eq(itemTable.id, id))
-}
+    set: async (id: number, note: string): Promise<ItemNote> => {
+        const [res] = await db
+            .insert(itemNoteTable)
+            .values({ itemId: id, note })
+            .onConflictDoUpdate({
+                target: itemNoteTable.itemId,
+                set: { note },
+            })
+            .returning()
 
-export async function upsertItemsToTierset(
-    itemsToTierset: ItemToTierset[]
-): Promise<void> {
-    if (itemsToTierset.length === 0) {
-        return
-    }
-    await db.delete(itemToTiersetTable)
-    await db.insert(itemToTiersetTable).values(itemsToTierset)
-}
+        return itemNoteSchema.parse(res)
+    },
 
-export async function upsertItemsToCatalyst(
-    itemsToCatalyst: ItemToCatalyst[]
-): Promise<void> {
-    if (itemsToCatalyst.length === 0) {
-        return
-    }
-    await db.insert(itemToCatalystTable).values(itemsToCatalyst).onConflictDoNothing()
-}
-
-// ============== ITEM NOTES ==============
-
-export async function getAllItemNotes(): Promise<ItemNote[]> {
-    const items = await db.query.itemNoteTable.findMany()
-    return z.array(itemNoteSchema).parse(items)
-}
-
-export async function getItemNote(id: number): Promise<ItemNote | null> {
-    const res = await db.query.itemNoteTable.findFirst({
-        where: (itemNoteTable, { eq }) => eq(itemNoteTable.itemId, id),
-    })
-    return res ? itemNoteSchema.parse(res) : null
-}
-
-export async function setItemNote(id: number, note: string): Promise<ItemNote> {
-    const [res] = await db
-        .insert(itemNoteTable)
-        .values({ itemId: id, note })
-        .onConflictDoUpdate({
-            target: itemNoteTable.itemId,
-            set: { note },
-        })
-        .returning()
-
-    return itemNoteSchema.parse(res)
-}
-
-export async function deleteItemNote(id: number): Promise<void> {
-    await db.delete(itemNoteTable).where(eq(itemNoteTable.itemId, id))
+    delete: async (id: number): Promise<void> => {
+        await db.delete(itemNoteTable).where(eq(itemNoteTable.itemId, id))
+    },
 }

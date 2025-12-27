@@ -3,12 +3,8 @@ import path from "path"
 
 import { NextResponse } from "next/server"
 
-import { upsertBosses } from "@/db/repositories/bosses"
-import {
-    upsertItems,
-    upsertItemsToCatalyst,
-    upsertItemsToTierset,
-} from "@/db/repositories/items"
+import { bossRepo } from "@/db/repositories/bosses"
+import { itemRepo } from "@/db/repositories/items"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
@@ -155,7 +151,7 @@ export async function GET(request: Request) {
             const uniqueBosses = Array.from(
                 new Map(allBosses.map((b) => [b.id, b])).values()
             )
-            await upsertBosses(uniqueBosses)
+            await bossRepo.upsert(uniqueBosses)
             results.bosses.success = true
             results.bosses.count = uniqueBosses.length
         } catch (error) {
@@ -181,7 +177,7 @@ export async function GET(request: Request) {
             const uniqueItems = Array.from(
                 new Map(allItems.map((i) => [i.id, i])).values()
             )
-            await upsertItems(uniqueItems)
+            await itemRepo.upsert(uniqueItems)
             results.items.success = true
             results.items.count = uniqueItems.length
         } catch (error) {
@@ -212,7 +208,7 @@ export async function GET(request: Request) {
             const uniqueTierset = Array.from(
                 new Map(allTierset.map((t) => [t.itemId, t])).values()
             )
-            await upsertItemsToTierset(uniqueTierset)
+            await itemRepo.upsertTiersetMapping(uniqueTierset)
             results.itemsToTierset.success = true
             results.itemsToTierset.count = uniqueTierset.length
         } catch (error) {
@@ -240,7 +236,7 @@ export async function GET(request: Request) {
                     )
                 }
             }
-            await upsertItemsToCatalyst(allCatalyst)
+            await itemRepo.upsertCatalystMapping(allCatalyst)
             results.itemsToCatalyst.success = true
             results.itemsToCatalyst.count = allCatalyst.length
         } catch (error) {

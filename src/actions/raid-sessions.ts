@@ -1,15 +1,7 @@
 "use server"
 
-import { getCharactersList } from "@/db/repositories/characters"
-import {
-    addRaidSession,
-    deleteRaidSession,
-    editRaidSession,
-    getRaidSession,
-    getRaidSessionRoster,
-    getRaidSessionWithRoster,
-    getRaidSessionWithSummaryList,
-} from "@/db/repositories/raid-sessions"
+import { characterRepo } from "@/db/repositories/characters"
+import { raidSessionRepo } from "@/db/repositories/raid-sessions"
 import { newUUID } from "@/db/utils"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import type {
@@ -21,53 +13,49 @@ import type {
     RaidSessionWithSummary,
 } from "@/shared/types/types"
 
-export async function getRaidSessionWithRosterAction(
+export async function getRaidSessionWithRoster(
     id: string
 ): Promise<RaidSessionWithRoster> {
-    return await getRaidSessionWithRoster(id)
+    return await raidSessionRepo.getWithRoster(id)
 }
 
-export async function getRaidSessionWithSummaryListAction(): Promise<
-    RaidSessionWithSummary[]
-> {
-    return await getRaidSessionWithSummaryList()
+export async function getRaidSessionWithSummaryList(): Promise<RaidSessionWithSummary[]> {
+    return await raidSessionRepo.getWithSummaryList()
 }
 
-export async function addRaidSessionAction(
-    raidSession: NewRaidSession
-): Promise<RaidSession> {
-    const id = await addRaidSession(raidSession)
-    return await getRaidSession(id)
+export async function addRaidSession(raidSession: NewRaidSession): Promise<RaidSession> {
+    const id = await raidSessionRepo.add(raidSession)
+    return await raidSessionRepo.getById(id)
 }
 
-export async function editRaidSessionAction(
+export async function editRaidSession(
     editedRaidSession: EditRaidSession
 ): Promise<RaidSession> {
-    await editRaidSession(editedRaidSession)
-    return await getRaidSession(editedRaidSession.id)
+    await raidSessionRepo.edit(editedRaidSession)
+    return await raidSessionRepo.getById(editedRaidSession.id)
 }
 
-export async function deleteRaidSessionAction(id: string): Promise<void> {
-    await deleteRaidSession(id)
+export async function deleteRaidSession(id: string): Promise<void> {
+    await raidSessionRepo.delete(id)
 }
 
-export async function cloneRaidSessionAction(id: string): Promise<RaidSession> {
-    const source = await getRaidSessionWithRoster(id)
+export async function cloneRaidSession(id: string): Promise<RaidSession> {
+    const source = await raidSessionRepo.getWithRoster(id)
     const cloned: NewRaidSession = {
         name: `${source.name}-${newUUID().slice(0, 6)}`,
         raidDate: getUnixTimestamp(),
         roster: source.roster.map((r) => r.id),
     }
-    const newId = await addRaidSession(cloned)
-    return await getRaidSession(newId)
+    const newId = await raidSessionRepo.add(cloned)
+    return await raidSessionRepo.getById(newId)
 }
 
-export async function importRosterInRaidSessionAction(
+export async function importRosterInRaidSession(
     raidSessionId: string,
     csv: string
 ): Promise<void> {
-    const source = await getRaidSession(raidSessionId)
-    const allCharacters = await getCharactersList()
+    const source = await raidSessionRepo.getById(raidSessionId)
+    const allCharacters = await characterRepo.getList()
 
     // Parse CSV: each line is a character name-server or character name
     const roster: Character[] = csv
@@ -94,9 +82,9 @@ export async function importRosterInRaidSessionAction(
         roster: roster.map((r) => r.id),
     }
 
-    await editRaidSession(editedRaidSession)
+    await raidSessionRepo.edit(editedRaidSession)
 }
 
-export async function getRaidSessionRosterAction(id: string): Promise<Character[]> {
-    return await getRaidSessionRoster(id)
+export async function getRaidSessionRoster(id: string): Promise<Character[]> {
+    return await raidSessionRepo.getRoster(id)
 }

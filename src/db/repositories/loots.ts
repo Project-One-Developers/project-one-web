@@ -18,139 +18,141 @@ import type {
     NewLoot,
 } from "@/shared/types/types"
 
-export async function getLootById(lootId: string): Promise<Loot> {
-    const result = await db.query.lootTable.findFirst({
-        where: (lootTable, { eq }) => eq(lootTable.id, lootId),
-    })
-    return lootSchema.parse(result)
-}
-
-export async function getLootWithItemById(lootId: string): Promise<LootWithItem> {
-    const result = await db.query.lootTable.findFirst({
-        where: (lootTable, { eq }) => eq(lootTable.id, lootId),
-        with: { item: true },
-    })
-    return lootWithItemSchema.parse(result)
-}
-
-export async function getLootAssigned(): Promise<Loot[]> {
-    const result = await db.query.lootTable.findMany({
-        where: (lootTable, { isNotNull }) => isNotNull(lootTable.raidSessionId),
-    })
-    return z.array(lootSchema).parse(result)
-}
-
-export async function getLootAssignedBySession(raidSessionId: string): Promise<Loot[]> {
-    const result = await db.query.lootTable.findMany({
-        where: (lootTable, { eq, and, isNotNull }) =>
-            and(
-                eq(lootTable.raidSessionId, raidSessionId),
-                isNotNull(lootTable.assignedCharacterId)
-            ),
-    })
-    return z.array(lootSchema).parse(result)
-}
-
-export async function getLootsByRaidSessionId(raidSessionId: string): Promise<Loot[]> {
-    const result = await db.query.lootTable.findMany({
-        where: (lootTable, { eq }) => eq(lootTable.raidSessionId, raidSessionId),
-    })
-    return z.array(lootSchema).parse(result)
-}
-
-export async function getLootsByRaidSessionIdWithAssigned(
-    raidSessionId: string
-): Promise<LootWithAssigned[]> {
-    const result = await db.query.lootTable.findMany({
-        where: (lootTable, { eq }) => eq(lootTable.raidSessionId, raidSessionId),
-        with: { assignedCharacter: true },
-    })
-    return z.array(lootWithAssignedSchema).parse(result)
-}
-
-export async function getLootsByRaidSessionIdsWithAssigned(
-    raidSessionIds: string[]
-): Promise<LootWithAssigned[]> {
-    if (raidSessionIds.length === 0) {
-        return []
-    }
-
-    const result = await db.query.lootTable.findMany({
-        where: inArray(lootTable.raidSessionId, raidSessionIds),
-        with: { assignedCharacter: true },
-    })
-    return z.array(lootWithAssignedSchema).parse(result)
-}
-
-export async function getLootsByRaidSessionIdWithItem(
-    raidSessionId: string
-): Promise<LootWithItem[]> {
-    const result = await db.query.lootTable.findMany({
-        where: (lootTable, { eq }) => eq(lootTable.raidSessionId, raidSessionId),
-        with: { item: true },
-    })
-    return z.array(lootWithItemSchema).parse(result)
-}
-
-export async function addLoots(
-    raidSessionId: string,
-    loots: NewLoot[],
-    eligibleCharacters: Character[]
-): Promise<void> {
-    const lootValues: InferInsertModel<typeof lootTable>[] = loots.map((loot) => ({
-        id: loot.addonId ?? newUUID(),
-        charsEligibility: eligibleCharacters.map((c) => c.id),
-        itemId: loot.gearItem.item.id,
-        raidSessionId,
-        dropDate: loot.dropDate,
-        gearItem: loot.gearItem,
-        raidDifficulty: loot.raidDifficulty,
-        itemString: loot.itemString,
-        tradedToAssigned: false,
-        assignedCharacterId: loot.assignedTo,
-    }))
-
-    await db
-        .insert(lootTable)
-        .values(lootValues)
-        .onConflictDoNothing({ target: lootTable.id })
-}
-
-export async function assignLoot(
-    charId: string,
-    lootId: string,
-    highlights: CharAssignmentHighlights | null
-): Promise<void> {
-    await db
-        .update(lootTable)
-        .set({
-            assignedCharacterId: charId,
-            assignedHighlights: highlights,
+export const lootRepo = {
+    getById: async (lootId: string): Promise<Loot> => {
+        const result = await db.query.lootTable.findFirst({
+            where: (lootTable, { eq }) => eq(lootTable.id, lootId),
         })
-        .where(eq(lootTable.id, lootId))
-}
+        return lootSchema.parse(result)
+    },
 
-export async function unassignLoot(lootId: string): Promise<void> {
-    await db
-        .update(lootTable)
-        .set({ assignedCharacterId: null })
-        .where(eq(lootTable.id, lootId))
-}
+    getWithItemById: async (lootId: string): Promise<LootWithItem> => {
+        const result = await db.query.lootTable.findFirst({
+            where: (lootTable, { eq }) => eq(lootTable.id, lootId),
+            with: { item: true },
+        })
+        return lootWithItemSchema.parse(result)
+    },
 
-export async function tradeLoot(lootId: string): Promise<void> {
-    await db
-        .update(lootTable)
-        .set({ tradedToAssigned: true })
-        .where(eq(lootTable.id, lootId))
-}
+    getAssigned: async (): Promise<Loot[]> => {
+        const result = await db.query.lootTable.findMany({
+            where: (lootTable, { isNotNull }) => isNotNull(lootTable.raidSessionId),
+        })
+        return z.array(lootSchema).parse(result)
+    },
 
-export async function untradeLoot(lootId: string): Promise<void> {
-    await db
-        .update(lootTable)
-        .set({ tradedToAssigned: false })
-        .where(eq(lootTable.id, lootId))
-}
+    getAssignedBySession: async (raidSessionId: string): Promise<Loot[]> => {
+        const result = await db.query.lootTable.findMany({
+            where: (lootTable, { eq, and, isNotNull }) =>
+                and(
+                    eq(lootTable.raidSessionId, raidSessionId),
+                    isNotNull(lootTable.assignedCharacterId)
+                ),
+        })
+        return z.array(lootSchema).parse(result)
+    },
 
-export async function deleteLoot(lootId: string): Promise<void> {
-    await db.delete(lootTable).where(eq(lootTable.id, lootId))
+    getByRaidSessionId: async (raidSessionId: string): Promise<Loot[]> => {
+        const result = await db.query.lootTable.findMany({
+            where: (lootTable, { eq }) => eq(lootTable.raidSessionId, raidSessionId),
+        })
+        return z.array(lootSchema).parse(result)
+    },
+
+    getByRaidSessionIdWithAssigned: async (
+        raidSessionId: string
+    ): Promise<LootWithAssigned[]> => {
+        const result = await db.query.lootTable.findMany({
+            where: (lootTable, { eq }) => eq(lootTable.raidSessionId, raidSessionId),
+            with: { assignedCharacter: true },
+        })
+        return z.array(lootWithAssignedSchema).parse(result)
+    },
+
+    getByRaidSessionIdsWithAssigned: async (
+        raidSessionIds: string[]
+    ): Promise<LootWithAssigned[]> => {
+        if (raidSessionIds.length === 0) {
+            return []
+        }
+
+        const result = await db.query.lootTable.findMany({
+            where: inArray(lootTable.raidSessionId, raidSessionIds),
+            with: { assignedCharacter: true },
+        })
+        return z.array(lootWithAssignedSchema).parse(result)
+    },
+
+    getByRaidSessionIdWithItem: async (
+        raidSessionId: string
+    ): Promise<LootWithItem[]> => {
+        const result = await db.query.lootTable.findMany({
+            where: (lootTable, { eq }) => eq(lootTable.raidSessionId, raidSessionId),
+            with: { item: true },
+        })
+        return z.array(lootWithItemSchema).parse(result)
+    },
+
+    addMany: async (
+        raidSessionId: string,
+        loots: NewLoot[],
+        eligibleCharacters: Character[]
+    ): Promise<void> => {
+        const lootValues: InferInsertModel<typeof lootTable>[] = loots.map((loot) => ({
+            id: loot.addonId ?? newUUID(),
+            charsEligibility: eligibleCharacters.map((c) => c.id),
+            itemId: loot.gearItem.item.id,
+            raidSessionId,
+            dropDate: loot.dropDate,
+            gearItem: loot.gearItem,
+            raidDifficulty: loot.raidDifficulty,
+            itemString: loot.itemString,
+            tradedToAssigned: false,
+            assignedCharacterId: loot.assignedTo,
+        }))
+
+        await db
+            .insert(lootTable)
+            .values(lootValues)
+            .onConflictDoNothing({ target: lootTable.id })
+    },
+
+    assign: async (
+        charId: string,
+        lootId: string,
+        highlights: CharAssignmentHighlights | null
+    ): Promise<void> => {
+        await db
+            .update(lootTable)
+            .set({
+                assignedCharacterId: charId,
+                assignedHighlights: highlights,
+            })
+            .where(eq(lootTable.id, lootId))
+    },
+
+    unassign: async (lootId: string): Promise<void> => {
+        await db
+            .update(lootTable)
+            .set({ assignedCharacterId: null })
+            .where(eq(lootTable.id, lootId))
+    },
+
+    trade: async (lootId: string): Promise<void> => {
+        await db
+            .update(lootTable)
+            .set({ tradedToAssigned: true })
+            .where(eq(lootTable.id, lootId))
+    },
+
+    untrade: async (lootId: string): Promise<void> => {
+        await db
+            .update(lootTable)
+            .set({ tradedToAssigned: false })
+            .where(eq(lootTable.id, lootId))
+    },
+
+    delete: async (lootId: string): Promise<void> => {
+        await db.delete(lootTable).where(eq(lootTable.id, lootId))
+    },
 }

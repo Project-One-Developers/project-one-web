@@ -1,12 +1,12 @@
 "use server"
 
-import { getBosses, getRaidLootTable } from "@/db/repositories/bosses"
+import { bossRepo } from "@/db/repositories/bosses"
 import type { Boss, BossWithItems } from "@/shared/types/types"
 
-export async function getBossesAction(raidId: number): Promise<Boss[]> {
-    return await getBosses(raidId)
+export async function getBosses(raidId: number): Promise<Boss[]> {
+    return await bossRepo.getAll(raidId)
 }
 
-export async function getRaidLootTableAction(raidId: number): Promise<BossWithItems[]> {
-    return await getRaidLootTable(raidId)
+export async function getRaidLootTable(raidId: number): Promise<BossWithItems[]> {
+    return await bossRepo.getLootTable(raidId)
 }
