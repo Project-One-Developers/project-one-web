@@ -5,6 +5,7 @@ import pLimit from "p-limit"
 import { droptimizerRepo } from "@/db/repositories/droptimizer"
 import { settingsRepo } from "@/db/repositories/settings"
 import { simcRepo } from "@/db/repositories/simc"
+import { env } from "@/env"
 import { fetchDroptimizerFromQELiveURL } from "@/lib/droptimizer/qelive-parser"
 import { fetchDroptimizerFromURL } from "@/lib/droptimizer/raidbots-parser"
 import { logger } from "@/lib/logger"
@@ -87,12 +88,6 @@ export async function getDiscordBotToken(): Promise<string | null> {
     return await settingsRepo.get("DISCORD_BOT_TOKEN")
 }
 
-// eslint-disable-next-line @typescript-eslint/require-await
-export async function getDiscordChannelId(): Promise<string> {
-    // Hardcoded for now, can be moved to config
-    return "1283383693695778878"
-}
-
 /**
  * Sync droptimizers from Discord channel
  * Fetches all messages from the droptimizers channel and imports any URLs found
@@ -105,7 +100,7 @@ export async function syncDroptimizersFromDiscord(
         await import("@/lib/discord/discord")
 
     const botKey = await settingsRepo.get("DISCORD_BOT_TOKEN")
-    const channelId = await getDiscordChannelId()
+    const channelId = env.DISCORD_DROPTIMIZER_CHANNEL_ID
 
     if (!botKey) {
         throw new Error("DISCORD_BOT_TOKEN not set in database")

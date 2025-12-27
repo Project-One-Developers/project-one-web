@@ -5,6 +5,7 @@ const envSchema = z.object({
     DATABASE_URL: z.string(),
     DISCORD_GUILD_ID: z.string(),
     DISCORD_ALLOWED_ROLES: z.string().transform((v) => v.split(",")),
+    DISCORD_DROPTIMIZER_CHANNEL_ID: z.string(),
     CRON_SECRET: z.string().optional(),
     // Next-Auth (also validated by next-auth itself)
     AUTH_DISCORD_ID: z.string(),

@@ -55,6 +55,14 @@ pnpm drizzle-kit push # Push database schema changes to PostgreSQL
 
 **Database**: Drizzle ORM with PostgreSQL, lazy connection via Proxy pattern, pgEnum for WoW constants
 
+**Environment Variables**: Validated at startup via Zod schema in `src/env.ts`. Import `env` object for type-safe access:
+
+```typescript
+import { env } from "@/env"
+
+env.DATABASE_URL // typed and validated
+```
+
 ### Naming Conventions
 
 - Components: PascalCase (`CharacterDialog.tsx`)

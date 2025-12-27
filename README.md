@@ -37,22 +37,11 @@ direnv allow
 
 ### Environment Variables
 
-Copy `.env.example` to `.env.local` and fill in the values:
+Copy `.env.example` to `.env.local` and fill in the values. Environment variables are validated at startup via Zod in `src/env.ts`.
 
 ```bash
 cp .env.example .env.local
 ```
-
-Required variables:
-
-| Variable                | Description                                              |
-| ----------------------- | -------------------------------------------------------- |
-| `DATABASE_URL`          | PostgreSQL connection string                             |
-| `AUTH_SECRET`           | Session encryption key (generate with `npx auth secret`) |
-| `AUTH_DISCORD_ID`       | Discord OAuth app client ID                              |
-| `AUTH_DISCORD_SECRET`   | Discord OAuth app client secret                          |
-| `DISCORD_GUILD_ID`      | Your Discord server ID                                   |
-| `DISCORD_ALLOWED_ROLES` | Comma-separated role IDs for access control              |
 
 ### Database Setup
 
