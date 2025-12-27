@@ -2,6 +2,7 @@
 
 import clsx from "clsx"
 import { AlertTriangle, CheckCircle, LoaderCircle, XCircle } from "lucide-react"
+import { match } from "ts-pattern"
 
 import { useRouter } from "next/navigation"
 import { useMemo, useState, type JSX } from "react"
@@ -79,37 +80,29 @@ const StatusIndicator = ({
     status: "success" | "warning" | "error" | "none"
     label?: string
 }) => {
-    const getStatusConfig = () => {
-        switch (status) {
-            case "success":
-                return {
-                    icon: CheckCircle,
-                    className: "bg-green-900/30 text-green-400 border-green-500/30",
-                    label: label || "OK",
-                }
-            case "warning":
-                return {
-                    icon: AlertTriangle,
-                    className: "bg-yellow-900/30 text-yellow-400 border-yellow-500/30",
-                    label: label || "Warning",
-                }
-            case "error":
-                return {
-                    icon: XCircle,
-                    className: "bg-red-900/30 text-red-400 border-red-500/30",
-                    label: label || "Error",
-                }
-            case "none":
-            default:
-                return {
-                    icon: null,
-                    className: "bg-gray-800/50 text-gray-500 border-gray-600/30",
-                    label: "—",
-                }
-        }
-    }
+    const config = match(status)
+        .with("success", () => ({
+            icon: CheckCircle,
+            className: "bg-green-900/30 text-green-400 border-green-500/30",
+            label: label || "OK",
+        }))
+        .with("warning", () => ({
+            icon: AlertTriangle,
+            className: "bg-yellow-900/30 text-yellow-400 border-yellow-500/30",
+            label: label || "Warning",
+        }))
+        .with("error", () => ({
+            icon: XCircle,
+            className: "bg-red-900/30 text-red-400 border-red-500/30",
+            label: label || "Error",
+        }))
+        .with("none", () => ({
+            icon: null,
+            className: "bg-gray-800/50 text-gray-500 border-gray-600/30",
+            label: "—",
+        }))
+        .exhaustive()
 
-    const config = getStatusConfig()
     const Icon = config.icon
 
     return (
@@ -126,36 +119,37 @@ const StatusIndicator = ({
 }
 
 const DroptimizerStatus = ({ warn }: { warn: DroptimizerWarn }) => {
-    const getDroptimizerStatus = (warn: DroptimizerWarn) => {
-        switch (warn) {
-            case DroptimizerWarn.None:
-                return { status: "success" as const, label: "Synced" }
-            case DroptimizerWarn.NotImported:
-                return { status: "warning" as const, label: "Not Imported" }
-            case DroptimizerWarn.Outdated:
-                return { status: "warning" as const, label: "Out of Date" }
-            default:
-                return { status: "error" as const, label: "Unknown" }
-        }
-    }
+    const { status, label } = match(warn)
+        .with(DroptimizerWarn.None, () => ({
+            status: "success" as const,
+            label: "Synced",
+        }))
+        .with(DroptimizerWarn.NotImported, () => ({
+            status: "warning" as const,
+            label: "Not Imported",
+        }))
+        .with(DroptimizerWarn.Outdated, () => ({
+            status: "warning" as const,
+            label: "Out of Date",
+        }))
+        .exhaustive()
 
-    const { status, label } = getDroptimizerStatus(warn)
     return <StatusIndicator status={status} label={label} />
 }
 
 const WowAuditStatus = ({ warn }: { warn: WowAuditWarn }) => {
-    const getWowAuditStatus = (warn: WowAuditWarn) => {
-        switch (warn) {
-            case WowAuditWarn.None:
-                return { status: "success" as const, label: "Tracked" }
-            case WowAuditWarn.NotTracked:
-                return { status: "error" as const, label: "Missing" }
-            default:
-                return { status: "error" as const, label: "Unknown" }
-        }
-    }
+    const { status, label } = match(warn)
+        .with(WowAuditWarn.None, () => ({ status: "success" as const, label: "Tracked" }))
+        .with(WowAuditWarn.Outdated, () => ({
+            status: "warning" as const,
+            label: "Outdated",
+        }))
+        .with(WowAuditWarn.NotTracked, () => ({
+            status: "error" as const,
+            label: "Missing",
+        }))
+        .exhaustive()
 
-    const { status, label } = getWowAuditStatus(warn)
     return <StatusIndicator status={status} label={label} />
 }
 

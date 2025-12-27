@@ -1,4 +1,5 @@
 import { keyBy } from "es-toolkit"
+import { match } from "ts-pattern"
 import { z } from "zod"
 
 import { itemRepo } from "@/db/repositories/items"
@@ -129,20 +130,17 @@ const parseUpgrades = async (
  * @returns The corresponding WowRaidDifficulty value
  */
 export function parseRaidDiff(id: number): WowRaidDifficulty {
-    switch (id) {
-        case 4:
-            return "Heroic"
-        case 5:
-            return "Heroic" // Heroic (max)
-        case 6:
-            return "Mythic"
-        case 7:
-            return "Mythic" // Mythic (max)
-        default:
+    return match(id)
+        .returnType<WowRaidDifficulty>()
+        .with(4, () => "Heroic")
+        .with(5, () => "Heroic") // Heroic (max)
+        .with(6, () => "Mythic")
+        .with(7, () => "Mythic") // Mythic (max)
+        .otherwise((i) => {
             throw new Error(
-                `Invalid raid difficulty ID: ${s(id)}. 4-5 (Heroic), or 6-7 (Mythic)`
+                `Invalid raid difficulty ID: ${s(i)}. 4-5 (Heroic), or 6-7 (Mythic)`
             )
-    }
+        })
 }
 
 export function parseQELiveSlotToEquippedSlot(slot: string): WowItemEquippedSlotKey {

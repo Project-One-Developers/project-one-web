@@ -1,5 +1,6 @@
 import { keyBy } from "es-toolkit"
 import { parse } from "papaparse"
+import { match } from "ts-pattern"
 import { z } from "zod"
 
 import { logger } from "@/lib/logger"
@@ -37,16 +38,12 @@ import type {
 } from "@/shared/types/types"
 
 const parseWowDiff = (wowDiff: number): WowRaidDifficulty => {
-    switch (wowDiff) {
-        case 14:
-            return "Normal"
-        case 15:
-            return "Heroic"
-        case 16:
-            return "Mythic"
-        default:
-            return "Mythic"
-    }
+    return match(wowDiff)
+        .returnType<WowRaidDifficulty>()
+        .with(14, () => "Normal")
+        .with(15, () => "Heroic")
+        .with(16, () => "Mythic")
+        .otherwise(() => "Mythic")
 }
 
 const parseDateTime = (dateStr: string, timeStr: string): number => {
@@ -431,21 +428,12 @@ export const parseManualLoots = (
                 continue
             }
 
-            let itemLevel
-            switch (loot.raidDifficulty) {
-                case "Heroic":
-                    itemLevel = wowItem.ilvlHeroic
-                    break
-                case "Mythic":
-                    itemLevel = wowItem.ilvlMythic
-                    break
-                case "Normal":
-                    itemLevel = wowItem.ilvlNormal
-                    break
-                default:
-                    itemLevel = wowItem.ilvlBase
-                    break
-            }
+            const itemLevel = match(loot.raidDifficulty)
+                .with("Heroic", () => wowItem.ilvlHeroic)
+                .with("Mythic", () => wowItem.ilvlMythic)
+                .with("Normal", () => wowItem.ilvlNormal)
+                .with("LFR", () => wowItem.ilvlBase)
+                .exhaustive()
 
             const bonusIds: number[] = []
 

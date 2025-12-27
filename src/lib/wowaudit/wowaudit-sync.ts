@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- External API parsing with known data structure */
+import { match } from "ts-pattern"
+
 import { itemRepo } from "@/db/repositories/items"
 import type { NewCharacterWowAudit } from "@/db/repositories/wowaudit"
 import { logger } from "@/lib/logger"
@@ -519,18 +521,15 @@ function wowAuditDiffToRealDiff(diff: string | null): WowRaidDifficulty | null {
         return null
     }
 
-    switch (diff) {
-        case "H":
-            return "Heroic"
-        case "N":
-            return "Normal"
-        case "M":
-            return "Mythic"
-        case "R":
-            return "LFR"
-        default:
-            throw new Error(`wowAuditDiffToRealDiff: diff not mapped - ${diff}`)
-    }
+    return match(diff)
+        .returnType<WowRaidDifficulty>()
+        .with("H", () => "Heroic")
+        .with("N", () => "Normal")
+        .with("M", () => "Mythic")
+        .with("R", () => "LFR")
+        .otherwise((d) => {
+            throw new Error(`wowAuditDiffToRealDiff: diff not mapped - ${d}`)
+        })
 }
 
 function createTiersetGearPiece(

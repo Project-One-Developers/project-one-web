@@ -1,3 +1,5 @@
+import { match } from "ts-pattern"
+
 import {
     wowItemEquippedSlotKeySchema,
     wowItemSlotKeySchema,
@@ -19,53 +21,30 @@ export const slotToEquippedSlot = (slotKey: WowItemSlotKey): WowItemEquippedSlot
 }
 
 export function formatWowSlotKey(slot: WowItemSlotKey): string {
-    switch (slot) {
-        case "head":
-            return "Head"
-        case "neck":
-            return "Neck"
-        case "shoulder":
-            return "Shoulder"
-        case "back":
-            return "Back"
-        case "chest":
-            return "Chest"
-        case "wrist":
-            return "Wrist"
-        case "hands":
-            return "Hands"
-        case "waist":
-            return "Waist"
-        case "legs":
-            return "Legs"
-        case "feet":
-            return "Feet"
-        case "finger":
-            return "Finger"
-        case "trinket":
-            return "Trinket"
-        case "main_hand":
-            return "Main Hand"
-        case "off_hand":
-            return "Off Hand"
-        case "omni":
-            return "Omni"
-        default:
-            throw new Error(`Unknown slot: ${slot as string}`)
-    }
+    return match(slot)
+        .with("head", () => "Head")
+        .with("neck", () => "Neck")
+        .with("shoulder", () => "Shoulder")
+        .with("back", () => "Back")
+        .with("chest", () => "Chest")
+        .with("wrist", () => "Wrist")
+        .with("hands", () => "Hands")
+        .with("waist", () => "Waist")
+        .with("legs", () => "Legs")
+        .with("feet", () => "Feet")
+        .with("finger", () => "Finger")
+        .with("trinket", () => "Trinket")
+        .with("main_hand", () => "Main Hand")
+        .with("off_hand", () => "Off Hand")
+        .with("omni", () => "Omni")
+        .exhaustive()
 }
 
 export function formatWowEquippedSlotKey(slot: WowItemEquippedSlotKey): string {
-    switch (slot) {
-        case "finger1":
-            return "Finger"
-        case "finger2":
-            return "Finger"
-        case "trinket1":
-            return "Trinket"
-        case "trinket2":
-            return "Trinket"
-        default:
-            return formatWowSlotKey(slot)
-    }
+    return match(slot)
+        .with("finger1", () => "Finger")
+        .with("finger2", () => "Finger")
+        .with("trinket1", () => "Trinket")
+        .with("trinket2", () => "Trinket")
+        .otherwise((s) => formatWowSlotKey(s))
 }
