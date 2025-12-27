@@ -1,7 +1,6 @@
 "use client"
 
 import {
-    Code2Icon,
     FileSpreadsheet,
     LucideAccessibility,
     LucideBot,
@@ -77,29 +76,6 @@ const raidItems = [
     },
 ]
 
-const weakaurasItems = [
-    {
-        title: "Project One",
-        url: "https://wago.io/_vARNxg02",
-        icon: Code2Icon,
-    },
-    {
-        title: "Reloe",
-        url: "https://wago.io/search/imports/wow/all?q=User%3A%22Reloe%22",
-        icon: Code2Icon,
-    },
-    {
-        title: "Northern Sky",
-        url: "https://wago.io/Y7yEWhBqV",
-        icon: Code2Icon,
-    },
-    {
-        title: "Liquid",
-        url: "https://wago.io/LiquidManaforge",
-        icon: Code2Icon,
-    },
-]
-
 const spreadsheetItems = [
     {
         title: "Split",
@@ -170,30 +146,6 @@ export default function AppSidebar(): JSX.Element {
                                                 <item.icon />
                                                 <span>{item.title}</span>
                                             </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-                                ))}
-                            </SidebarMenu>
-                        </SidebarGroupContent>
-                    </SidebarGroup>
-                    <SidebarGroup>
-                        <SidebarGroupLabel>Weakauras</SidebarGroupLabel>
-                        <SidebarGroupContent>
-                            <SidebarMenu>
-                                {weakaurasItems.map((item) => (
-                                    <SidebarMenuItem
-                                        key={item.title}
-                                        className="hover:bg-muted"
-                                    >
-                                        <SidebarMenuButton asChild>
-                                            <a
-                                                href={item.url}
-                                                rel="noreferrer"
-                                                target="_blank"
-                                            >
-                                                <item.icon />
-                                                <span>{item.title}</span>
-                                            </a>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
                                 ))}
