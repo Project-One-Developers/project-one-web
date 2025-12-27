@@ -27,6 +27,8 @@ import {
 } from "@/lib/loot/loot-utils"
 import { parseManualLoots, parseMrtLoots, parseRcLoots } from "@/lib/loots/loot-parsers"
 import { s } from "@/lib/safe-stringify"
+import { isInCurrentWowWeek } from "@/shared/libs/date/date-utils"
+import { compareGearItem, gearAreTheSame } from "@/shared/libs/items/item-bonus-utils"
 import { getWowClassFromIdOrName } from "@/shared/libs/spec-parser/spec-utils"
 import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
 import type {
@@ -430,10 +432,6 @@ export async function getLootAssignmentInfo(lootId: string): Promise<LootAssignm
 export async function getCharactersWithLootsByItemId(
     itemId: number
 ): Promise<CharacterWithGears[]> {
-    const { isInCurrentWowWeek } = await import("@/shared/libs/date/date-utils")
-    const { gearAreTheSame, compareGearItem } =
-        await import("@/shared/libs/items/item-bonus-utils")
-
     const [
         item,
         roster,

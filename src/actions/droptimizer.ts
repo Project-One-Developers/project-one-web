@@ -1,5 +1,7 @@
 "use server"
 
+import pLimit from "p-limit"
+
 import { droptimizerRepo } from "@/db/repositories/droptimizer"
 import { settingsRepo } from "@/db/repositories/settings"
 import { simcRepo } from "@/db/repositories/simc"
@@ -124,7 +126,6 @@ export async function syncDroptimizersFromDiscord(
     let importedCount = 0
 
     // Process URLs with concurrency limit
-    const { default: pLimit } = await import("p-limit")
     const limit = pLimit(5)
 
     await Promise.all(
