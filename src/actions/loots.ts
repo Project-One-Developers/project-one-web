@@ -432,31 +432,36 @@ export async function getLootAssignmentInfo(lootId: string): Promise<LootAssignm
 export async function getCharactersWithLootsByItemId(
     itemId: number
 ): Promise<CharacterWithGears[]> {
-    const [
-        item,
-        roster,
-        latestDroptimizer,
-        allAssignedLoots,
-        wowAuditData,
-        raiderioData,
-        simcData,
-    ] = await Promise.all([
+    // Stage 1: Get item and roster to determine eligible characters
+    const [item, roster] = await Promise.all([
         itemRepo.getById(itemId),
         characterRepo.getList(),
-        droptimizerRepo.getLatestList(),
-        lootRepo.getAssigned(),
-        wowauditRepo.getAll(),
-        raiderioRepo.getAll(),
-        simcRepo.getAll(),
     ])
 
     if (item === null) {
         throw new Error("Item not found")
     }
 
+    // Filter to class-eligible characters
     const filteredRoster = roster.filter(
         (character) => item.classes === null || item.classes.includes(character.class)
     )
+    const charLookups = filteredRoster.map((c) => ({ name: c.name, realm: c.realm }))
+
+    // Stage 2: Fetch only data for eligible characters (not all tracked characters)
+    const [
+        latestDroptimizer,
+        assignedLootsForItem,
+        wowAuditData,
+        raiderioData,
+        simcData,
+    ] = await Promise.all([
+        droptimizerRepo.getLatestByChars(charLookups),
+        lootRepo.getAssignedByItemId(itemId),
+        wowauditRepo.getByChars(charLookups),
+        raiderioRepo.getByChars(charLookups),
+        simcRepo.getByChars(charLookups),
+    ])
 
     const droptimizerByChar = groupBy(
         latestDroptimizer,
@@ -478,11 +483,8 @@ export async function getCharactersWithLootsByItemId(
 
         const charAssignedLoots = !lowerBound
             ? []
-            : allAssignedLoots.filter(
-                  (l) =>
-                      l.itemId === item.id &&
-                      l.assignedCharacterId === char.id &&
-                      l.dropDate > lowerBound
+            : assignedLootsForItem.filter(
+                  (l) => l.assignedCharacterId === char.id && l.dropDate > lowerBound
               )
 
         // Get all loots by item ID

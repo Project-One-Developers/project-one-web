@@ -121,11 +121,15 @@ function parseRaiderioWarn(raiderio: CharacterRaiderio | null): RaiderioWarn {
 }
 
 export async function getRosterSummary(): Promise<CharacterSummary[]> {
-    const [roster, latestDroptimizers, wowAuditData, raiderioData] = await Promise.all([
-        characterRepo.getWithPlayerList(),
-        droptimizerRepo.getLatestList(),
-        wowauditRepo.getAll(),
-        raiderioRepo.getAll(),
+    // Fetch roster first to scope subsequent queries
+    const roster = await characterRepo.getWithPlayerList()
+    const charList = roster.map((char) => ({ name: char.name, realm: char.realm }))
+
+    // Fetch only data for roster characters (not all tracked characters)
+    const [latestDroptimizers, wowAuditData, raiderioData] = await Promise.all([
+        droptimizerRepo.getLatestByChars(charList),
+        wowauditRepo.getByChars(charList),
+        raiderioRepo.getByChars(charList),
     ])
 
     const droptimizerByChar = groupBy(
@@ -204,13 +208,12 @@ function parseTiersetCountCompact(
 export async function getRosterSummaryCompact(): Promise<CharacterSummaryCompact[]> {
     const roster = await characterRepo.getWithPlayerList()
 
-    // Fetch droptimizer data only for characters in roster (more efficient)
+    // Scope queries to roster characters only
     const charList = roster.map((char) => ({ name: char.name, realm: char.realm }))
-
     const [latestDroptimizers, wowAuditData, raiderioData] = await Promise.all([
         droptimizerRepo.getLatestByCharsCompact(charList),
-        wowauditRepo.getAll(),
-        raiderioRepo.getAll(),
+        wowauditRepo.getByChars(charList),
+        raiderioRepo.getByChars(charList),
     ])
 
     const droptimizerByChar = groupBy(

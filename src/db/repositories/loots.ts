@@ -41,6 +41,17 @@ export const lootRepo = {
         return z.array(lootSchema).parse(result)
     },
 
+    getAssignedByItemId: async (itemId: number): Promise<Loot[]> => {
+        const result = await db.query.lootTable.findMany({
+            where: (lootTable, { and, eq, isNotNull }) =>
+                and(
+                    eq(lootTable.itemId, itemId),
+                    isNotNull(lootTable.assignedCharacterId)
+                ),
+        })
+        return z.array(lootSchema).parse(result)
+    },
+
     getAssignedBySession: async (raidSessionId: string): Promise<Loot[]> => {
         const result = await db.query.lootTable.findMany({
             where: (lootTable, { eq, and, isNotNull }) =>
