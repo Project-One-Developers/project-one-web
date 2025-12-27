@@ -49,9 +49,7 @@ export function TiersetInfo({ tierset, className }: TiersetInfoProps) {
                                             </div>
                                         </div>
                                     </TooltipTrigger>
-                                    <TooltipContent className="bg-gray-800 text-gray-200 p-2 rounded-lg">
-                                        In Bag (Not Equipped)
-                                    </TooltipContent>
+                                    <TooltipContent>In Bag (Not Equipped)</TooltipContent>
                                 </Tooltip>
                             ) : (
                                 <WowGearIcon
@@ -97,9 +95,7 @@ export function TiersetInfo({ tierset, className }: TiersetInfoProps) {
                                             </div>
                                         </div>
                                     </TooltipTrigger>
-                                    <TooltipContent className="bg-gray-800 text-gray-200 p-2 rounded-lg">
-                                        In Bag (Not Equipped)
-                                    </TooltipContent>
+                                    <TooltipContent>In Bag (Not Equipped)</TooltipContent>
                                 </Tooltip>
                             ) : (
                                 <WowGearIcon

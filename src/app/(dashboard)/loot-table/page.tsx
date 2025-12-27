@@ -154,10 +154,7 @@ const BossPanel = ({ boss, bisLists, itemNotes, onEdit, filter }: BossPanelProps
                                                         {allSpecIds.length > 1 && "s"}
                                                     </span>
                                                 </TooltipTrigger>
-                                                <TooltipContent
-                                                    className="TooltipContent"
-                                                    sideOffset={5}
-                                                >
+                                                <TooltipContent>
                                                     <div className="flex flex-col gap-y-1">
                                                         {allSpecIds.map((s) => (
                                                             <WowSpecIcon
@@ -179,13 +176,8 @@ const BossPanel = ({ boss, bisLists, itemNotes, onEdit, filter }: BossPanelProps
                                                         <Edit size={12} />
                                                     </div>
                                                 </TooltipTrigger>
-                                                <TooltipContent
-                                                    className="TooltipContent max-w-xs"
-                                                    sideOffset={5}
-                                                >
-                                                    <div className="text-xs">
-                                                        {itemNote}
-                                                    </div>
+                                                <TooltipContent className="max-w-xs">
+                                                    {itemNote}
                                                 </TooltipContent>
                                             </Tooltip>
                                         )}

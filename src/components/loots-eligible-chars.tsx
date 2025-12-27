@@ -178,10 +178,7 @@ export default function LootsEligibleChars({
                                 </span>
                             </div>
                         </TooltipTrigger>
-                        <TooltipContent
-                            side="top"
-                            className="max-w-sm p-3 bg-gray-800 border-gray-600"
-                        >
+                        <TooltipContent side="top" className="max-w-sm">
                             <div className="whitespace-pre-wrap break-words">
                                 <strong className="text-blue-400">Item Note:</strong>
                                 <br />
@@ -313,10 +310,7 @@ export default function LootsEligibleChars({
                                                         BIS
                                                     </span>
                                                 </TooltipTrigger>
-                                                <TooltipContent
-                                                    className="TooltipContent"
-                                                    sideOffset={5}
-                                                >
+                                                <TooltipContent>
                                                     <div className="flex flex-col gap-y-1">
                                                         {charInfo.bisForSpec.map((s) => (
                                                             <div
@@ -327,9 +321,7 @@ export default function LootsEligibleChars({
                                                                     specId={s.id}
                                                                     className="object-cover object-top rounded-md full h-5 w-5 border border-background"
                                                                 />
-                                                                <p className="text-xs">
-                                                                    {s.name}
-                                                                </p>
+                                                                <p>{s.name}</p>
                                                             </div>
                                                         ))}
                                                     </div>

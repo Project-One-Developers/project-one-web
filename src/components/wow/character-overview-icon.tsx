@@ -20,11 +20,11 @@ const CharacterTooltip = ({
     summary: CharacterSummaryType
     isLowItemLevel: boolean
 }) => (
-    <div className="flex flex-col gap-1 p-2 bg-gray-800 rounded text-xs">
-        <div className="font-medium text-white">
+    <div className="flex flex-col gap-1">
+        <div className="font-medium">
             {summary.character.name} ({summary.character.main ? "Main" : "Alt"})
         </div>
-        <div className="text-gray-400">
+        <div className="text-zinc-400">
             {summary.character.realm.replaceAll("-", " ")}
         </div>
         <div
@@ -36,7 +36,7 @@ const CharacterTooltip = ({
             Item Level: {summary.itemLevel}
             {isLowItemLevel && " (Below Average)"}
         </div>
-        <div className="flex flex-row gap-2">
+        <div className="flex flex-row gap-2 pt-1">
             <WowCharacterLink character={summary.character} site="raiderio" />
             <WowCharacterLink character={summary.character} site="warcraftlogs" />
             <WowCharacterLink character={summary.character} site="armory" />
@@ -114,7 +114,7 @@ export const CharacterOverviewIcon = ({
                                         </div>
                                     </div>
                                 </TooltipTrigger>
-                                <TooltipContent className="TooltipContent" sideOffset={5}>
+                                <TooltipContent>
                                     <CharacterTooltip
                                         summary={item}
                                         isLowItemLevel={isLow}

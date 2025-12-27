@@ -142,22 +142,22 @@ const CharacterTooltip = ({
     character: Character
     encounter?: RaiderioEncounter | WowRaidDifficulty | null
 }) => (
-    <div className="flex flex-col gap-1 p-2 bg-gray-800 rounded text-xs">
-        <div className="font-medium text-white">{character.name}</div>
+    <div className="flex flex-col gap-1">
+        <div className="font-medium">{character.name}</div>
         {encounter && typeof encounter === "object" ? (
             <>
                 <div className="text-green-400">Kills: {encounter.numKills}</div>
-                <div className="text-gray-300">
+                <div className="text-zinc-300">
                     First kill ilvl: {encounter.itemLevel}
                 </div>
                 {encounter.firstDefeated && (
-                    <div className="text-gray-400">
+                    <div className="text-zinc-400">
                         First Kill:{" "}
                         {new Date(encounter.firstDefeated).toLocaleDateString()}
                     </div>
                 )}
                 {encounter.lastDefeated && (
-                    <div className="text-gray-400">
+                    <div className="text-zinc-400">
                         Last Kill: {new Date(encounter.lastDefeated).toLocaleDateString()}
                     </div>
                 )}

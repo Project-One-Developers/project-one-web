@@ -65,9 +65,7 @@ export const DroptimizerUpgradeForItemEquipped = ({
                                 </svg>
                             </div>
                         </TooltipTrigger>
-                        <TooltipContent className="bg-gray-800 text-gray-200 p-2 rounded-lg">
-                            {`Outdated: ${droptDate}`}
-                        </TooltipContent>
+                        <TooltipContent>Outdated: {droptDate}</TooltipContent>
                     </Tooltip>
                 )}
                 <div className="flex items-center mt-1">
