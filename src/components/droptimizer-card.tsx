@@ -4,13 +4,16 @@ import { LoaderCircle, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 import { useDeleteDroptimizer } from "@/lib/queries/droptimizers"
 import { getDpsHumanReadable } from "@/lib/utils"
 import { formatUnixTimestampToRelativeDays } from "@/shared/libs/date/date-utils"
 import type { Character, Droptimizer, DroptimizerUpgrade } from "@/shared/types/types"
 
+import DroptimizerDetailDialog from "./droptimizer-detail-dialog"
 import { Button } from "./ui/button"
+import { Dialog, DialogTrigger } from "./ui/dialog"
 import { WowItemIcon } from "./wow/wow-item-icon"
 import { WowSpecIcon } from "./wow/wow-spec-icon"
 
@@ -41,6 +44,7 @@ export const DroptimizerCard = ({
 }: DroptimizerCardProps) => {
     const router = useRouter()
     const deleteMutation = useDeleteDroptimizer()
+    const [isDetailOpen, setIsDetailOpen] = useState(false)
 
     const handleDelete = (e: React.MouseEvent) => {
         e.stopPropagation()
@@ -115,9 +119,14 @@ export const DroptimizerCard = ({
                     <strong>Date:</strong>{" "}
                     {formatUnixTimestampToRelativeDays(dropt.simInfo.date)}
                 </p>
-                <p>
-                    <strong>Upgrades:</strong> {dropt.upgrades.length}
-                </p>
+                <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+                    <DialogTrigger asChild>
+                        <p className="cursor-pointer text-blue-400 hover:underline">
+                            <strong>Upgrades:</strong> {dropt.upgrades.length}
+                        </p>
+                    </DialogTrigger>
+                    <DroptimizerDetailDialog droptimizer={dropt} />
+                </Dialog>
             </div>
 
             {/* Top Upgrades Preview */}
