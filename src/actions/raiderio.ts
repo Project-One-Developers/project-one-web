@@ -143,6 +143,7 @@ export async function getLastRaiderioSyncTime(): Promise<number | null> {
     return await raiderioRepo.getLastTimeSynced()
 }
 
+// TODO: use enum or something better than a magic number as a filter
 /**
  * Get roster progression data (characters with their Raider.io data)
  * @param filter 0 = all, 1 = mains only, 2 = alts only
@@ -153,6 +154,7 @@ export async function getRosterProgression(filter = 0): Promise<
         raiderIo: CharacterRaiderio | null
     }[]
 > {
+    // TODO: filter at db level?
     const roster = await characterRepo.getList()
     logger.info(
         "Raiderio",
@@ -178,16 +180,13 @@ export async function getRosterProgression(filter = 0): Promise<
 
     const allRaiderio = await raiderioRepo.getAll()
 
-    return filteredRoster.map((character) => {
-        // Find matching raiderio data based on name and realm
-        const matchingRaiderio = allRaiderio.find(
-            (raiderio) =>
-                raiderio.name === character.name && raiderio.realm === character.realm
-        )
+    const raiderioMap = new Map(allRaiderio.map((r) => [`${r.name}-${r.realm}`, r]))
 
+    return filteredRoster.map((character) => {
+        const key = `${character.name}-${character.realm}`
         return {
             p1Character: character,
-            raiderIo: matchingRaiderio ?? null,
+            raiderIo: raiderioMap.get(key) ?? null,
         }
     })
 }
