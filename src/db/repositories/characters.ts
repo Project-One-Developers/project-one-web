@@ -1,13 +1,13 @@
-import { eq, inArray, isNull, type SQL } from "drizzle-orm"
-import { z } from "zod"
+import { eq, inArray, isNull, type InferSelectModel, type SQL } from "drizzle-orm"
 
 import { db } from "@/db"
 import { charTable, playerTable } from "@/db/schema"
-import { newUUID } from "@/db/utils"
+import { mapAndParse, newUUID } from "@/db/utils"
 import {
     characterSchema,
     characterWithPlayerSchema,
     playerSchema,
+    playerWithCharacterSchema,
     type Character,
     type CharacterWithPlayer,
     type EditCharacter,
@@ -17,40 +17,47 @@ import {
     type Player,
     type PlayerWithCharacters,
 } from "@/shared/models/character.model"
-import { wowClassNameSchema, wowRolesSchema } from "@/shared/models/wow.model"
 
-// Player storage schema for parsing DB results
-const playerStorageSchema = z
-    .object({
-        id: z.string(),
-        name: z.string(),
-        characters: z.array(
-            z.object({
-                id: z.string(),
-                name: z.string(),
-                realm: z.string(),
-                class: wowClassNameSchema,
-                role: wowRolesSchema,
-                main: z.boolean(),
-                playerId: z.string(),
-            })
-        ),
-    })
-    .transform((data) => ({
-        id: data.id,
-        name: data.name,
-        characters: data.characters.map((char) => ({
-            id: char.id,
-            name: char.name,
-            realm: char.realm,
-            main: char.main,
-            class: char.class,
-            role: char.role,
-            playerId: char.playerId,
-        })),
-    }))
+// DB type definitions for type-safe mapping
+type DbPlayer = InferSelectModel<typeof playerTable>
+type DbCharacter = InferSelectModel<typeof charTable>
+type DbPlayerWithChars = DbPlayer & { characters: DbCharacter[] }
+type DbCharacterWithPlayer = DbCharacter & { player: DbPlayer }
 
-const playersListStorageSchema = z.array(playerStorageSchema)
+// Mapper functions
+function mapDbToCharacter(db: DbCharacter): Character {
+    return {
+        id: db.id,
+        name: db.name,
+        realm: db.realm,
+        class: db.class,
+        role: db.role,
+        main: db.main,
+        playerId: db.playerId,
+    }
+}
+
+function mapDbToPlayer(db: DbPlayer): Player {
+    return {
+        id: db.id,
+        name: db.name,
+    }
+}
+
+function mapDbToPlayerWithCharacters(db: DbPlayerWithChars): PlayerWithCharacters {
+    return {
+        id: db.id,
+        name: db.name,
+        characters: db.characters.map(mapDbToCharacter),
+    }
+}
+
+function mapDbToCharacterWithPlayer(db: DbCharacterWithPlayer): CharacterWithPlayer {
+    return {
+        ...mapDbToCharacter(db),
+        player: mapDbToPlayer(db.player),
+    }
+}
 
 export const playerRepo = {
     getWithCharactersList: async (): Promise<PlayerWithCharacters[]> => {
@@ -59,7 +66,7 @@ export const playerRepo = {
                 characters: true,
             },
         })
-        return playersListStorageSchema.parse(result)
+        return mapAndParse(result, mapDbToPlayerWithCharacters, playerWithCharacterSchema)
     },
 
     getWithoutCharactersList: async (): Promise<Player[]> => {
@@ -68,7 +75,7 @@ export const playerRepo = {
             .from(playerTable)
             .leftJoin(charTable, eq(playerTable.id, charTable.playerId))
             .where(isNull(charTable.playerId))
-        return z.array(playerSchema).parse(result)
+        return mapAndParse(result, mapDbToPlayer, playerSchema)
     },
 
     getById: async (id: string): Promise<Player | null> => {
@@ -82,7 +89,7 @@ export const playerRepo = {
             return null
         }
 
-        return playerSchema.parse(result)
+        return mapAndParse(result, mapDbToPlayer, playerSchema)
     },
 
     add: async (player: NewPlayer): Promise<string> => {
@@ -124,7 +131,7 @@ export const characterRepo = {
             return null
         }
 
-        return characterWithPlayerSchema.parse(result)
+        return mapAndParse(result, mapDbToCharacterWithPlayer, characterWithPlayerSchema)
     },
 
     getWithPlayerList: async (): Promise<CharacterWithPlayer[]> => {
@@ -133,7 +140,7 @@ export const characterRepo = {
                 player: true,
             },
         })
-        return z.array(characterWithPlayerSchema).parse(result)
+        return mapAndParse(result, mapDbToCharacterWithPlayer, characterWithPlayerSchema)
     },
 
     getList: async (showMains = true, showAlts = true): Promise<Character[]> => {
@@ -149,7 +156,7 @@ export const characterRepo = {
         const result = await db.query.charTable.findMany({
             where: whereClause,
         })
-        return z.array(characterSchema).parse(result)
+        return mapAndParse(result, mapDbToCharacter, characterSchema)
     },
 
     add: async (character: NewCharacter): Promise<string> => {
@@ -193,6 +200,6 @@ export const characterRepo = {
             where: inArray(charTable.id, ids),
             with: { player: true },
         })
-        return z.array(characterWithPlayerSchema).parse(result)
+        return mapAndParse(result, mapDbToCharacterWithPlayer, characterWithPlayerSchema)
     },
 }

@@ -138,6 +138,26 @@ export const ITEM_SLOTS_KEY = [
     "omni",
 ] as const
 
+// Equipped slots - actual character slots (finger1/2, trinket1/2 instead of generic)
+export const ITEM_EQUIPPED_SLOTS_KEY = [
+    "head",
+    "neck",
+    "shoulder",
+    "back",
+    "chest",
+    "wrist",
+    "hands",
+    "waist",
+    "legs",
+    "feet",
+    "finger1",
+    "finger2",
+    "trinket1",
+    "trinket2",
+    "main_hand",
+    "off_hand",
+] as const
+
 export const ITEM_SLOTS_KEY_TIERSET = [
     "head",
     "shoulder",

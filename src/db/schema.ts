@@ -16,6 +16,7 @@ import {
 import {
     ARMOR_TYPES,
     CLASSES_NAME,
+    ITEM_EQUIPPED_SLOTS_KEY,
     ITEM_SLOTS_DESC,
     ITEM_SLOTS_KEY,
     RAID_DIFF,
@@ -36,6 +37,10 @@ export const pgRaidDiffEnum = pgEnum("raid_diff", RAID_DIFF)
 export const pgItemArmorTypeEnum = pgEnum("item_armor_type", ARMOR_TYPES)
 export const pgItemSlotEnum = pgEnum("item_slot", ITEM_SLOTS_DESC)
 export const pgItemSlotKeyEnum = pgEnum("item_slot_key", ITEM_SLOTS_KEY)
+export const pgItemEquippedSlotKeyEnum = pgEnum(
+    "item_equipped_slot_key",
+    ITEM_EQUIPPED_SLOTS_KEY
+)
 
 //////////////////////////////////////////////////////////
 //                   CHARACHTERS                        //
@@ -148,7 +153,7 @@ export const droptimizerUpgradesTable = pgTable(
     {
         id: varchar("id").primaryKey(),
         dps: integer("dps").notNull(),
-        slot: varchar("slot").notNull(),
+        slot: pgItemEquippedSlotKeyEnum("slot").notNull(),
         ilvl: integer("ilvl").notNull(),
         itemId: integer("item_id")
             .references(() => itemTable.id)
@@ -285,7 +290,7 @@ export const itemTable = pgTable("items", {
     ilvlMythic: integer("ilvl_mythic").notNull(),
     ilvlHeroic: integer("ilvl_heroic").notNull(),
     ilvlNormal: integer("ilvl_normal").notNull(),
-    itemClass: varchar("item_class", { length: 50 }),
+    itemClass: varchar("item_class", { length: 50 }).notNull(),
     slot: pgItemSlotEnum("slot").notNull(),
     slotKey: pgItemSlotKeyEnum("slot_key").notNull(),
     armorType: pgItemArmorTypeEnum("armor_type"),
@@ -311,7 +316,7 @@ export const itemTable = pgTable("items", {
     sourceId: integer("source_id").notNull(),
     sourceName: varchar("source_name").notNull(),
     sourceType: varchar("source_type").notNull(),
-    bossName: varchar("boss_name", { length: 255 }), // ridondante ma utile
+    bossName: varchar("boss_name", { length: 255 }).notNull(), // ridondante ma utile
     season: integer("season").notNull(),
     bossId: integer("boss_id")
         .references(() => bossTable.id)

@@ -1,59 +1,20 @@
-import { and, eq, or } from "drizzle-orm"
-import { z } from "zod"
+import { and, eq, type InferSelectModel, or } from "drizzle-orm"
 
 import { db } from "@/db"
 import { charWowAuditTable } from "@/db/schema"
-import { gearItemSchema } from "@/shared/models/item.model"
-import type { CharacterWowAudit } from "@/shared/models/wowaudit.model"
+import { mapAndParse } from "@/db/utils"
+import {
+    charWowAuditSchema,
+    type CharacterWowAudit,
+} from "@/shared/models/wowaudit.model"
 
-// Schema for new WowAudit character data (matches DB table)
-export const newCharacterWowAuditSchema = z.object({
-    name: z.string().max(24),
-    realm: z.string(),
-    race: z.string().nullable(),
-    guildRank: z.string().nullable(),
-    characterId: z.number(),
-    blizzardLastModifiedUnixTs: z.number(),
-    wowauditLastModifiedUnixTs: z.number(),
-    weekMythicDungeons: z.number().nullable(),
-    emptySockets: z.number().nullable(),
-    averageItemLevel: z.string().nullable(),
-    highestIlvlEverEquipped: z.string().nullable(),
-    enchantQualityWrist: z.number().nullable(),
-    enchantQualityLegs: z.number().nullable(),
-    enchantQualityMainHand: z.number().nullable(),
-    enchantQualityOffHand: z.number().nullable(),
-    enchantQualityFinger1: z.number().nullable(),
-    enchantQualityFinger2: z.number().nullable(),
-    enchantQualityBack: z.number().nullable(),
-    enchantQualityChest: z.number().nullable(),
-    enchantQualityFeet: z.number().nullable(),
-    enchantNameWrist: z.string().nullable(),
-    enchantNameLegs: z.string().nullable(),
-    enchantNameMainHand: z.string().nullable(),
-    enchantNameOffHand: z.string().nullable(),
-    enchantNameFinger1: z.string().nullable(),
-    enchantNameFinger2: z.string().nullable(),
-    enchantNameBack: z.string().nullable(),
-    enchantNameChest: z.string().nullable(),
-    enchantNameFeet: z.string().nullable(),
-    greatVaultSlot1: z.number().nullable(),
-    greatVaultSlot2: z.number().nullable(),
-    greatVaultSlot3: z.number().nullable(),
-    greatVaultSlot4: z.number().nullable(),
-    greatVaultSlot5: z.number().nullable(),
-    greatVaultSlot6: z.number().nullable(),
-    greatVaultSlot7: z.number().nullable(),
-    greatVaultSlot8: z.number().nullable(),
-    greatVaultSlot9: z.number().nullable(),
-    bestItemsEquipped: z.array(gearItemSchema),
-    itemsEquipped: z.array(gearItemSchema),
-    tiersetInfo: z.array(gearItemSchema),
-})
+// DB type definition for type-safe mapping
+type DbCharWowAudit = InferSelectModel<typeof charWowAuditTable>
 
-export type NewCharacterWowAudit = z.infer<typeof newCharacterWowAuditSchema>
+// Re-export the DB insert type for external use (e.g., in sync logic)
+export type NewCharacterWowAudit = DbCharWowAudit
 
-// Transform storage data to CharacterWowAudit type
+// Helper to create enchant piece from flat DB columns
 function createEnchantPiece(
     name: string | null,
     quality: number | null
@@ -64,58 +25,50 @@ function createEnchantPiece(
     return { name, quality }
 }
 
-const charWowAuditStorageToCharacterWowAudit = newCharacterWowAuditSchema.transform(
-    (data): CharacterWowAudit => ({
-        name: data.name,
-        realm: data.realm,
-        race: data.race,
-        guildRank: data.guildRank,
-        characterId: data.characterId,
-        blizzardLastModifiedUnixTs: data.blizzardLastModifiedUnixTs,
-        wowauditLastModifiedUnixTs: data.wowauditLastModifiedUnixTs,
-        weekMythicDungeons: data.weekMythicDungeons,
-        emptySockets: data.emptySockets,
-        averageIlvl: data.averageItemLevel,
-        hightestIlvlEverEquipped: data.highestIlvlEverEquipped,
+// Mapper function: DB flat structure -> domain model nested structure
+function mapDbToCharWowAudit(db: DbCharWowAudit): CharacterWowAudit {
+    return {
+        name: db.name,
+        realm: db.realm,
+        race: db.race,
+        guildRank: db.guildRank,
+        characterId: db.characterId,
+        blizzardLastModifiedUnixTs: db.blizzardLastModifiedUnixTs,
+        wowauditLastModifiedUnixTs: db.wowauditLastModifiedUnixTs,
+        weekMythicDungeons: db.weekMythicDungeons,
+        emptySockets: db.emptySockets,
+        averageIlvl: db.averageItemLevel,
+        hightestIlvlEverEquipped: db.highestIlvlEverEquipped,
         enchant: {
-            wrist: createEnchantPiece(data.enchantNameWrist, data.enchantQualityWrist),
-            legs: createEnchantPiece(data.enchantNameLegs, data.enchantQualityLegs),
+            wrist: createEnchantPiece(db.enchantNameWrist, db.enchantQualityWrist),
+            legs: createEnchantPiece(db.enchantNameLegs, db.enchantQualityLegs),
             main_hand: createEnchantPiece(
-                data.enchantNameMainHand,
-                data.enchantQualityMainHand
+                db.enchantNameMainHand,
+                db.enchantQualityMainHand
             ),
-            off_hand: createEnchantPiece(
-                data.enchantNameOffHand,
-                data.enchantQualityOffHand
-            ),
-            finger1: createEnchantPiece(
-                data.enchantNameFinger1,
-                data.enchantQualityFinger1
-            ),
-            finger2: createEnchantPiece(
-                data.enchantNameFinger2,
-                data.enchantQualityFinger2
-            ),
-            back: createEnchantPiece(data.enchantNameBack, data.enchantQualityBack),
-            chest: createEnchantPiece(data.enchantNameChest, data.enchantQualityChest),
-            feet: createEnchantPiece(data.enchantNameFeet, data.enchantQualityFeet),
+            off_hand: createEnchantPiece(db.enchantNameOffHand, db.enchantQualityOffHand),
+            finger1: createEnchantPiece(db.enchantNameFinger1, db.enchantQualityFinger1),
+            finger2: createEnchantPiece(db.enchantNameFinger2, db.enchantQualityFinger2),
+            back: createEnchantPiece(db.enchantNameBack, db.enchantQualityBack),
+            chest: createEnchantPiece(db.enchantNameChest, db.enchantQualityChest),
+            feet: createEnchantPiece(db.enchantNameFeet, db.enchantQualityFeet),
         },
         greatVault: {
-            slot1: data.greatVaultSlot1,
-            slot2: data.greatVaultSlot2,
-            slot3: data.greatVaultSlot3,
-            slot4: data.greatVaultSlot4,
-            slot5: data.greatVaultSlot5,
-            slot6: data.greatVaultSlot6,
-            slot7: data.greatVaultSlot7,
-            slot8: data.greatVaultSlot8,
-            slot9: data.greatVaultSlot9,
+            slot1: db.greatVaultSlot1,
+            slot2: db.greatVaultSlot2,
+            slot3: db.greatVaultSlot3,
+            slot4: db.greatVaultSlot4,
+            slot5: db.greatVaultSlot5,
+            slot6: db.greatVaultSlot6,
+            slot7: db.greatVaultSlot7,
+            slot8: db.greatVaultSlot8,
+            slot9: db.greatVaultSlot9,
         },
-        itemsEquipped: data.itemsEquipped,
-        tiersetInfo: data.tiersetInfo,
-        bestItemsEquipped: data.bestItemsEquipped,
-    })
-)
+        itemsEquipped: db.itemsEquipped,
+        tiersetInfo: db.tiersetInfo,
+        bestItemsEquipped: db.bestItemsEquipped,
+    }
+}
 
 export const wowauditRepo = {
     add: async (characters: NewCharacterWowAudit[]): Promise<void> => {
@@ -144,12 +97,14 @@ export const wowauditRepo = {
                     eq(charWowAuditTable.realm, charRealm)
                 ),
         })
-        return result ? charWowAuditStorageToCharacterWowAudit.parse(result) : null
+        return result
+            ? mapAndParse(result, mapDbToCharWowAudit, charWowAuditSchema)
+            : null
     },
 
     getAll: async (): Promise<CharacterWowAudit[]> => {
         const result = await db.query.charWowAuditTable.findMany()
-        return z.array(charWowAuditStorageToCharacterWowAudit).parse(result)
+        return mapAndParse(result, mapDbToCharWowAudit, charWowAuditSchema)
     },
 
     deleteAll: async (): Promise<void> => {
@@ -173,6 +128,6 @@ export const wowauditRepo = {
                 )
             ),
         })
-        return z.array(charWowAuditStorageToCharacterWowAudit).parse(result)
+        return mapAndParse(result, mapDbToCharWowAudit, charWowAuditSchema)
     },
 }

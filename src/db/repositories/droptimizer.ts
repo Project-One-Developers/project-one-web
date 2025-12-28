@@ -1,98 +1,83 @@
-import { and, desc, eq, InferInsertModel, lte, or } from "drizzle-orm"
-import { z } from "zod"
+import {
+    and,
+    desc,
+    eq,
+    type InferInsertModel,
+    type InferSelectModel,
+    lte,
+    or,
+} from "drizzle-orm"
 
 import { db } from "@/db"
-import { droptimizerTable, droptimizerUpgradesTable } from "@/db/schema"
-import { newUUID } from "@/db/utils"
+import { droptimizerTable, droptimizerUpgradesTable, itemTable } from "@/db/schema"
+import { mapAndParse, newUUID } from "@/db/utils"
 import { logger } from "@/lib/logger"
-import { gearItemSchema } from "@/shared/models/item.model"
 import {
-    droptimizerCurrencySchema,
-    droptimizerUpgradeSchema,
+    droptimizerSchema,
     type Droptimizer,
+    type DroptimizerUpgrade,
     type NewDroptimizer,
 } from "@/shared/models/simulation.model"
-import {
-    wowClassNameSchema,
-    wowRaidDiffSchema,
-    type WowRaidDifficulty,
-} from "@/shared/models/wow.model"
+import type { WowRaidDifficulty } from "@/shared/models/wow.model"
 
-// Schema for parsing droptimizer storage results
-const droptimizerStorageSchema = z.object({
-    url: z.url(),
-    ak: z.string(),
-    dateImported: z.number(),
-    simDate: z.number(),
-    simFightStyle: z.string(),
-    simDuration: z.number().min(1),
-    simNTargets: z.number().min(1),
-    simUpgradeEquipped: z.boolean().nullable(),
-    raidId: z.number(),
-    raidDifficulty: wowRaidDiffSchema,
-    characterName: z.string(),
-    characterServer: z.string(),
-    characterClass: wowClassNameSchema,
-    characterClassId: z.number(),
-    characterSpec: z.string(),
-    characterSpecId: z.number(),
-    characterTalents: z.string(),
-    upgrades: z.array(droptimizerUpgradeSchema),
-    weeklyChest: z.array(gearItemSchema).nullable(),
-    currencies: z.array(droptimizerCurrencySchema).nullable(),
-    itemsAverageItemLevel: z.number().nullable(),
-    itemsAverageItemLevelEquipped: z.number().nullable(),
-    itemsInBag: z.array(gearItemSchema).nullable(),
-    itemsEquipped: z.array(gearItemSchema),
-    tiersetInfo: z.array(gearItemSchema).nullable(),
-})
+type DbDroptimizer = InferSelectModel<typeof droptimizerTable>
+type DbDroptimizerUpgradeBase = InferSelectModel<typeof droptimizerUpgradesTable>
+type DbItem = InferSelectModel<typeof itemTable>
+type DbDroptimizerUpgradeWithItem = Omit<DbDroptimizerUpgradeBase, "itemId"> & {
+    item: DbItem
+}
+type DbDroptimizerWithUpgrades = DbDroptimizer & {
+    upgrades: DbDroptimizerUpgradeWithItem[]
+}
 
-const droptimizerStorageToSchema = droptimizerStorageSchema.transform(
-    (data): Droptimizer => ({
-        url: data.url,
-        ak: data.ak,
-        dateImported: data.dateImported,
+function mapDbToUpgrade(db: DbDroptimizerUpgradeWithItem): DroptimizerUpgrade {
+    return {
+        id: db.id,
+        item: db.item,
+        dps: db.dps,
+        ilvl: db.ilvl,
+        slot: db.slot,
+        catalyzedItemId: db.catalyzedItemId,
+        tiersetItemId: db.tiersetItemId,
+        droptimizerId: db.droptimizerId,
+    }
+}
+
+function mapDbToDroptimizer(db: DbDroptimizerWithUpgrades): Droptimizer {
+    return {
+        url: db.url,
+        ak: db.ak,
+        dateImported: db.dateImported,
         simInfo: {
-            date: data.simDate,
-            fightstyle: data.simFightStyle,
-            duration: data.simDuration,
-            nTargets: data.simNTargets,
-            upgradeEquipped: data.simUpgradeEquipped ?? false,
+            date: db.simDate,
+            fightstyle: db.simFightStyle,
+            duration: db.simDuration,
+            nTargets: db.simNTargets,
+            upgradeEquipped: db.simUpgradeEquipped ?? false,
         },
         raidInfo: {
-            id: data.raidId,
-            difficulty: data.raidDifficulty,
+            id: db.raidId,
+            difficulty: db.raidDifficulty,
         },
         charInfo: {
-            name: data.characterName,
-            server: data.characterServer,
-            class: data.characterClass,
-            classId: data.characterClassId,
-            spec: data.characterSpec,
-            specId: data.characterSpecId,
-            talents: data.characterTalents,
+            name: db.characterName,
+            server: db.characterServer,
+            class: db.characterClass,
+            classId: db.characterClassId,
+            spec: db.characterSpec,
+            specId: db.characterSpecId,
+            talents: db.characterTalents,
         },
-        upgrades: data.upgrades.map((up) => ({
-            id: up.id,
-            item: up.item,
-            dps: up.dps,
-            ilvl: up.ilvl,
-            slot: up.slot,
-            catalyzedItemId: up.catalyzedItemId,
-            tiersetItemId: up.tiersetItemId,
-            droptimizerId: up.droptimizerId,
-        })),
-        weeklyChest: data.weeklyChest ?? [],
-        currencies: data.currencies ?? [],
-        itemsAverageItemLevel: data.itemsAverageItemLevel,
-        itemsAverageItemLevelEquipped: data.itemsAverageItemLevelEquipped,
-        itemsEquipped: data.itemsEquipped,
-        itemsInBag: data.itemsInBag ?? [],
-        tiersetInfo: data.tiersetInfo ?? [],
-    })
-)
-
-const droptimizerStorageListToSchema = z.array(droptimizerStorageToSchema)
+        upgrades: db.upgrades.map(mapDbToUpgrade),
+        weeklyChest: db.weeklyChest ?? [],
+        currencies: db.currencies ?? [],
+        itemsAverageItemLevel: db.itemsAverageItemLevel,
+        itemsAverageItemLevelEquipped: db.itemsAverageItemLevelEquipped,
+        itemsEquipped: db.itemsEquipped,
+        itemsInBag: db.itemsInBag ?? [],
+        tiersetInfo: db.tiersetInfo ?? [],
+    }
+}
 
 // Compact version for roster page - only fetches fields needed for item level display
 export type DroptimizerCompact = {
@@ -108,14 +93,17 @@ export const droptimizerRepo = {
         const result = await db.query.droptimizerTable.findFirst({
             where: (droptimizerTable, { eq }) => eq(droptimizerTable.url, url),
             with: {
-                upgrades: true,
+                upgrades: {
+                    columns: { itemId: false },
+                    with: { item: true },
+                },
             },
         })
 
         if (!result) {
             return null
         }
-        return droptimizerStorageToSchema.parse(result)
+        return mapAndParse(result, mapDbToDroptimizer, droptimizerSchema)
     },
 
     getList: async (): Promise<Droptimizer[]> => {
@@ -127,7 +115,7 @@ export const droptimizerRepo = {
                 },
             },
         })
-        return droptimizerStorageListToSchema.parse(result)
+        return mapAndParse(result, mapDbToDroptimizer, droptimizerSchema)
     },
 
     getByIdsList: async (ids: string[]): Promise<Droptimizer[]> => {
@@ -140,7 +128,7 @@ export const droptimizerRepo = {
                 },
             },
         })
-        return droptimizerStorageListToSchema.parse(result)
+        return mapAndParse(result, mapDbToDroptimizer, droptimizerSchema)
     },
 
     getLatestList: async (): Promise<Droptimizer[]> => {
@@ -176,7 +164,7 @@ export const droptimizerRepo = {
                 },
             },
         })
-        return result ? droptimizerStorageToSchema.parse(result) : null
+        return result ? mapAndParse(result, mapDbToDroptimizer, droptimizerSchema) : null
     },
 
     add: async (droptimizer: NewDroptimizer): Promise<Droptimizer> => {
@@ -292,7 +280,7 @@ export const droptimizerRepo = {
                 },
             },
         })
-        return result ? droptimizerStorageToSchema.parse(result) : null
+        return result ? mapAndParse(result, mapDbToDroptimizer, droptimizerSchema) : null
     },
 
     getLatestByChars: async (

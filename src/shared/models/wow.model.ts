@@ -3,6 +3,7 @@ import { z } from "zod"
 import {
     ARMOR_TYPES,
     CLASSES_NAME as CLASSES_NAME_VALUES,
+    ITEM_EQUIPPED_SLOTS_KEY,
     ITEM_SLOTS_DESC,
     ITEM_SLOTS_KEY,
     RAID_DIFF,
@@ -37,24 +38,7 @@ export type WowItemSlot = z.infer<typeof wowItemSlotSchema>
 export const wowItemSlotKeySchema = z.enum(ITEM_SLOTS_KEY)
 export type WowItemSlotKey = z.infer<typeof wowItemSlotKeySchema>
 
-export const wowItemEquippedSlotKeySchema = z.enum([
-    "head",
-    "neck",
-    "shoulder",
-    "back",
-    "chest",
-    "wrist",
-    "hands",
-    "waist",
-    "legs",
-    "feet",
-    "finger1",
-    "finger2",
-    "trinket1",
-    "trinket2",
-    "main_hand",
-    "off_hand",
-])
+export const wowItemEquippedSlotKeySchema = z.enum(ITEM_EQUIPPED_SLOTS_KEY)
 export type WowItemEquippedSlotKey = z.infer<typeof wowItemEquippedSlotKeySchema>
 
 export const wowItemSlotKeyTiersetSchema = z.enum([

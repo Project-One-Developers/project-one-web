@@ -52,7 +52,24 @@ export const conflictUpdateAllExcept = <T extends PgTable>(
 /**
  * Maps database results to domain models with Zod validation.
  * Ensures type safety at the boundary between database and application layers.
+ *
+ * @param dbResult - Raw result(s) from the database query
+ * @param mapper - Function to transform the DB result to the model type
+ * @param schema - Zod schema to validate the mapped result
+ * @returns Validated and typed domain model(s)
  */
+export function mapAndParse<TDb, TModel>(
+    dbResults: TDb[],
+    mapper: (row: TDb) => TModel,
+    schema: z.ZodType<TModel>
+): TModel[]
+
+export function mapAndParse<TDb, TModel>(
+    dbResult: TDb,
+    mapper: (row: TDb) => TModel,
+    schema: z.ZodType<TModel>
+): TModel
+
 export function mapAndParse<TDb, TModel>(
     dbResult: TDb | TDb[],
     mapper: (row: TDb) => TModel,
