@@ -13,7 +13,8 @@
         "lint:fix": "eslint --fix",
         "typecheck": "tsc --noEmit",
         "format": "prettier --write --log-level warn .",
-        "format:check": "prettier --check ."
+        "format:check": "prettier --check .",
+        "db:push": "drizzle-kit push --verbose"
     },
     "dependencies": {
         "@radix-ui/react-checkbox": "^1.3.3",
