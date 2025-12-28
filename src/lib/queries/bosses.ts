@@ -29,16 +29,7 @@ export function useRosterProgression(showMains: boolean, showAlts: boolean) {
         queryKey: [queryKeys.raidProgression, showMains, showAlts],
         staleTime: 60000, // 1 minute - progression updates infrequently
         queryFn: async (): Promise<CharacterWithProgression[]> => {
-            // Convert the boolean filter states to the numeric parameter
-            let filterParam = 0 // default: all characters
-            if (showMains && !showAlts) {
-                filterParam = 1 // only mains
-            } else if (!showMains && showAlts) {
-                filterParam = 2 // only alts
-            }
-            // If both showMains and showAlts are true, or both are false, use 0 (all characters)
-
-            const result = await getRosterProgression(filterParam)
+            const result = await getRosterProgression(showMains, showAlts)
             return result as CharacterWithProgression[]
         },
     })

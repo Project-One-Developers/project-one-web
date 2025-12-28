@@ -143,46 +143,29 @@ export async function getLastRaiderioSyncTime(): Promise<number | null> {
     return await raiderioRepo.getLastTimeSynced()
 }
 
-// TODO: use enum or something better than a magic number as a filter
 /**
  * Get roster progression data (characters with their Raider.io data)
- * @param filter 0 = all, 1 = mains only, 2 = alts only
  */
-export async function getRosterProgression(filter = 0): Promise<
+export async function getRosterProgression(
+    showMains = true,
+    showAlts = true
+): Promise<
     {
         p1Character: Awaited<ReturnType<typeof characterRepo.getList>>[0]
         raiderIo: CharacterRaiderio | null
     }[]
 > {
-    // TODO: filter at db level?
-    const roster = await characterRepo.getList()
+    const roster = await characterRepo.getList(showMains, showAlts)
     logger.info(
         "Raiderio",
-        `Fetching roster progression for ${s(roster.length)} characters`
-    )
-
-    // Apply filter based on the parameter
-    const filteredRoster = (() => {
-        switch (filter) {
-            case 1: // only mains
-                return roster.filter((c) => c.main)
-            case 2: // only alts
-                return roster.filter((c) => !c.main)
-            default: // no filter, get progress for all characters
-                return roster
-        }
-    })()
-
-    logger.info(
-        "Raiderio",
-        `After filtering: ${s(filteredRoster.length)} characters (filter: ${s(filter)})`
+        `Fetching roster progression for ${s(roster.length)} characters (mains: ${s(showMains)}, alts: ${s(showAlts)})`
     )
 
     const allRaiderio = await raiderioRepo.getAll()
 
     const raiderioMap = new Map(allRaiderio.map((r) => [`${r.name}-${r.realm}`, r]))
 
-    return filteredRoster.map((character) => {
+    return roster.map((character) => {
         const key = `${character.name}-${character.realm}`
         return {
             p1Character: character,

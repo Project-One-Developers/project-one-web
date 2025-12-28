@@ -1,4 +1,4 @@
-import { eq, inArray, isNull } from "drizzle-orm"
+import { eq, inArray, isNull, type SQL } from "drizzle-orm"
 import { z } from "zod"
 
 import { db } from "@/db"
@@ -138,8 +138,19 @@ export const characterRepo = {
         return z.array(characterWithPlayerSchema).parse(result)
     },
 
-    getList: async (): Promise<Character[]> => {
-        const result = await db.query.charTable.findMany()
+    getList: async (showMains = true, showAlts = true): Promise<Character[]> => {
+        // Both false = nothing to show
+        if (!showMains && !showAlts) {
+            return []
+        }
+
+        // Both true = no filter needed
+        const whereClause: SQL | undefined =
+            showMains && showAlts ? undefined : eq(charTable.main, showMains)
+
+        const result = await db.query.charTable.findMany({
+            where: whereClause,
+        })
         return z.array(characterSchema).parse(result)
     },
 
