@@ -6,7 +6,7 @@ import {
     wowItemSlotKeySchema,
     wowItemSlotSchema,
     wowItemTrackNameSchema,
-} from "./wow.schemas"
+} from "./wow.model"
 
 export const itemSchema = z.object({
     id: z.number(),
@@ -45,12 +45,14 @@ export const itemSchema = z.object({
     onUseTrinket: z.boolean(),
     season: z.number(),
 })
+export type Item = z.infer<typeof itemSchema>
 
 export const itemToTiersetSchema = z.object({
     itemId: z.number(),
     tokenId: z.number(),
     classId: z.number(),
 })
+export type ItemToTierset = z.infer<typeof itemToTiersetSchema>
 export const itemToTiersetArraySchema = z.array(itemToTiersetSchema)
 
 export const itemToCatalystSchema = z.object({
@@ -58,6 +60,7 @@ export const itemToCatalystSchema = z.object({
     encounterId: z.number(),
     catalyzedItemId: z.number(),
 })
+export type ItemToCatalyst = z.infer<typeof itemToCatalystSchema>
 export const itemToCatalystArraySchema = z.array(itemToCatalystSchema)
 
 export const itemTrackSchema = z.object({
@@ -69,6 +72,7 @@ export const itemTrackSchema = z.object({
     season: z.number(),
     maxItemLevel: z.number(),
 })
+export type ItemTrack = z.infer<typeof itemTrackSchema>
 
 /**
  * Represents a looted version of an item (so with bonus and actual ilvl)
@@ -97,3 +101,4 @@ export const gearItemSchema = z.object({
     craftedStats: z.string().optional(),
     craftingQuality: z.string().optional(),
 })
+export type GearItem = z.infer<typeof gearItemSchema>

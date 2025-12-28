@@ -4,7 +4,7 @@ import { Check, Copy } from "lucide-react"
 
 import { useState } from "react"
 
-import type { LootWithAssigned } from "@/shared/types/types"
+import type { LootWithAssigned } from "@/shared/models/loot.model"
 
 import { Button } from "./ui/button"
 import {

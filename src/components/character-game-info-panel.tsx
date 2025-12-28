@@ -18,8 +18,10 @@ import {
     isRelevantCurrency,
 } from "@/shared/libs/currency/currency-utils"
 import { formatUnixTimestampForDisplay } from "@/shared/libs/date/date-utils"
-import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
-import type { Character, CharacterWowAudit, Droptimizer } from "@/shared/types/types"
+import type { Character } from "@/shared/models/character.model"
+import type { CharacterRaiderio } from "@/shared/models/raiderio.model"
+import type { Droptimizer } from "@/shared/models/simulation.model"
+import type { CharacterWowAudit } from "@/shared/models/wowaudit.model"
 
 import DroptimizerData from "./droptimizer-data"
 import { CurrentGreatVaultPanel } from "./greatvault-current-panel"

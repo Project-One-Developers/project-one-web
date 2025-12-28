@@ -3,13 +3,14 @@ import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import { evalRealSeason, parseItemTrack } from "@/shared/libs/items/item-bonus-utils"
+import type { GearItem, Item } from "@/shared/models/item.model"
 import {
     raiderioResponseSchema,
     type RaiderioItems,
     type RaiderioResponse,
-} from "@/shared/schemas/raiderio-response.schemas"
-import { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
-import type { GearItem, Item, WowItemEquippedSlotKey } from "@/shared/types/types"
+} from "@/shared/models/raiderio-response.model"
+import { CharacterRaiderio } from "@/shared/models/raiderio.model"
+import type { WowItemEquippedSlotKey } from "@/shared/models/wow.model"
 
 export async function fetchCharacterRaidProgress(
     characterName: string,

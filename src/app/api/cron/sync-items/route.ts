@@ -8,15 +8,9 @@ import { itemRepo } from "@/db/repositories/items"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
-import type {
-    Boss,
-    Item,
-    ItemToCatalyst,
-    ItemToTierset,
-    WowArmorType,
-    WowItemSlot,
-    WowItemSlotKey,
-} from "@/shared/types/types"
+import type { Boss } from "@/shared/models/boss.model"
+import type { Item, ItemToCatalyst, ItemToTierset } from "@/shared/models/item.model"
+import type { WowArmorType, WowItemSlot, WowItemSlotKey } from "@/shared/models/wow.model"
 
 // Verify this is a cron request from Vercel or local dev
 function verifyCronSecret(request: Request): boolean {

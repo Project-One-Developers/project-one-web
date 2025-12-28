@@ -14,7 +14,7 @@ import type {
     NewPlayer,
     Player,
     PlayerWithCharacters,
-} from "@/shared/types/types"
+} from "@/shared/models/character.model"
 
 // ============== CHARACTERS ==============
 

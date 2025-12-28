@@ -4,7 +4,7 @@ import { z } from "zod"
 import { db } from "@/db"
 import { charRaiderioTable } from "@/db/schema"
 import { conflictUpdateAllExcept } from "@/db/utils"
-import { CharacterRaiderio, charRaiderioSchema } from "@/shared/schemas/raiderio.schemas"
+import { CharacterRaiderio, charRaiderioSchema } from "@/shared/models/raiderio.model"
 
 export const raiderioRepo = {
     upsert: async (characters: CharacterRaiderio[]): Promise<void> => {

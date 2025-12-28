@@ -6,7 +6,8 @@ import { useMemo } from "react"
 
 import { useBosses } from "@/lib/queries/bosses"
 import { useDeleteLoot, useLootsBySessionWithItem } from "@/lib/queries/loots"
-import type { LootWithItem, WowRaidDifficulty } from "@/shared/types/types"
+import type { LootWithItem } from "@/shared/models/loot.model"
+import type { WowRaidDifficulty } from "@/shared/models/wow.model"
 
 import { WowGearIcon } from "./wow/wow-gear-icon"
 

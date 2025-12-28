@@ -1,12 +1,7 @@
 import { s } from "@/lib/safe-stringify"
-import {
-    Item,
-    WowClass,
-    WowClassName,
-    WoWRole,
-    WowSpec,
-    WowSpecName,
-} from "@/shared/types/types"
+import type { Item } from "@/shared/models/item.model"
+import type { WowClassName, WoWRole, WowSpecName } from "@/shared/models/wow.model"
+import type { WowClass, WowSpec } from "@/shared/types/types"
 
 import { WOW_CLASS_WITH_SPECS } from "./spec-utils.schemas"
 

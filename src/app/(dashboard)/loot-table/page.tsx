@@ -19,7 +19,10 @@ import { useItemNotes } from "@/lib/queries/items"
 import { cn, defined } from "@/lib/utils"
 import { encounterIcon } from "@/lib/wow-icon"
 import { getWowClassBySpecId } from "@/shared/libs/spec-parser/spec-utils"
-import type { BisList, BossWithItems, Item, ItemNote } from "@/shared/types/types"
+import type { BisList } from "@/shared/models/bis-list.model"
+import type { BossWithItems } from "@/shared/models/boss.model"
+import type { ItemNote } from "@/shared/models/item-note.model"
+import type { Item } from "@/shared/models/item.model"
 
 // Boss Panel Component
 type BossPanelProps = {

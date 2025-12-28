@@ -1,6 +1,6 @@
 import Image from "next/image"
 
-import type { Character } from "@/shared/types/types"
+import type { Character } from "@/shared/models/character.model"
 
 type WowCharacterLinkProps = {
     character: Character

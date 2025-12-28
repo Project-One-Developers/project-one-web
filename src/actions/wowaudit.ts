@@ -8,7 +8,7 @@ import {
     formaUnixTimestampToItalianDate,
     getUnixTimestamp,
 } from "@/shared/libs/date/date-utils"
-import type { CharacterWowAudit } from "@/shared/types/types"
+import type { CharacterWowAudit } from "@/shared/models/wowaudit.model"
 
 export async function getAllCharacterWowAudit(): Promise<CharacterWowAudit[]> {
     return await wowauditRepo.getAll()

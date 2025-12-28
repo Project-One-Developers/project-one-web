@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import { useState, useMemo, type JSX } from "react"
 
 import { useAddPlayer, useEditPlayer } from "@/lib/queries/players"
-import type { NewPlayer, Player } from "@/shared/types/types"
+import type { NewPlayer, Player } from "@/shared/models/character.model"
 
 import { Button } from "./ui/button"
 import {

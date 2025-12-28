@@ -13,21 +13,20 @@ import {
     parseItemTrack,
 } from "@/shared/libs/items/item-bonus-utils"
 import { equippedSlotToSlot } from "@/shared/libs/items/item-slot-utils"
-import { raidbotsURLSchema } from "@/shared/schemas/simulations.schemas"
+import type { GearItem, ItemTrack } from "@/shared/models/item.model"
+import {
+    raidbotsURLSchema,
+    type NewDroptimizer,
+    type NewDroptimizerUpgrade,
+    type RaidbotsURL,
+} from "@/shared/models/simulation.model"
 import {
     wowItemEquippedSlotKeySchema,
     wowRaidDiffSchema,
-} from "@/shared/schemas/wow.schemas"
-import type {
-    GearItem,
-    ItemTrack,
-    NewDroptimizer,
-    NewDroptimizerUpgrade,
-    RaidbotsURL,
-    WowClassName,
-    WowItemEquippedSlotKey,
-    WowRaidDifficulty,
-} from "@/shared/types/types"
+    type WowClassName,
+    type WowItemEquippedSlotKey,
+    type WowRaidDifficulty,
+} from "@/shared/models/wow.model"
 
 import {
     droptimizerEquippedItemsSchema,

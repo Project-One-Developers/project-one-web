@@ -10,7 +10,7 @@ import {
     formatUnixTimestampForDisplay,
     unixTimestampToWowWeek,
 } from "@/shared/libs/date/date-utils"
-import type { RaidSessionWithSummary } from "@/shared/types/types"
+import type { RaidSessionWithSummary } from "@/shared/models/raid-session.model"
 
 import { Button } from "./ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"

@@ -21,8 +21,9 @@ import {
     RAID_DIFF,
     ROLES,
 } from "@/shared/consts/wow.consts"
-import { RaiderioProgress } from "@/shared/schemas/raiderio.schemas"
-import { CharAssignmentHighlights, GearItem } from "@/shared/types/types"
+import type { GearItem } from "@/shared/models/item.model"
+import type { CharAssignmentHighlights } from "@/shared/models/loot.model"
+import { RaiderioProgress } from "@/shared/models/raiderio.model"
 
 //////////////////////////////////////////////////////////
 //                      ENUMS                           //

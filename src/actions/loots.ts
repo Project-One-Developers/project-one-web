@@ -30,20 +30,19 @@ import { s } from "@/lib/safe-stringify"
 import { isInCurrentWowWeek } from "@/shared/libs/date/date-utils"
 import { compareGearItem, gearAreTheSame } from "@/shared/libs/items/item-bonus-utils"
 import { getWowClassFromIdOrName } from "@/shared/libs/spec-parser/spec-utils"
-import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
+import type { CharacterWithGears } from "@/shared/models/character.model"
 import type {
     CharAssignmentHighlights,
-    CharAssignmentInfo,
-    CharacterWowAudit,
-    CharacterWithGears,
     Loot,
-    LootAssignmentInfo,
     LootWithAssigned,
     LootWithItem,
     NewLoot,
     NewLootManual,
-    SimC,
-} from "@/shared/types/types"
+} from "@/shared/models/loot.model"
+import type { CharacterRaiderio } from "@/shared/models/raiderio.model"
+import type { SimC } from "@/shared/models/simulation.model"
+import type { CharacterWowAudit } from "@/shared/models/wowaudit.model"
+import type { CharAssignmentInfo, LootAssignmentInfo } from "@/shared/types/types"
 
 export async function getLootsBySessionId(raidSessionId: string): Promise<Loot[]> {
     return await lootRepo.getByRaidSessionId(raidSessionId)

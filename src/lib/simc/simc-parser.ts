@@ -7,8 +7,9 @@ import {
     parseItemLevelFromBonusIds,
     parseItemTrack,
 } from "@/shared/libs/items/item-bonus-utils"
-import { wowItemEquippedSlotKeySchema } from "@/shared/schemas/wow.schemas"
-import type { DroptimizerCurrency, GearItem, SimC } from "@/shared/types/types"
+import type { GearItem } from "@/shared/models/item.model"
+import type { DroptimizerCurrency, SimC } from "@/shared/models/simulation.model"
+import { wowItemEquippedSlotKeySchema } from "@/shared/models/wow.model"
 
 export async function parseSimC(simc: string): Promise<SimC> {
     const itemsInBag = await parseBagGearsFromSimc(simc)

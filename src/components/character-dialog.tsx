@@ -7,14 +7,12 @@ import React, { useState, useMemo, type JSX } from "react"
 
 import { useAddCharacter, useEditCharacter } from "@/lib/queries/players"
 import { REALMS, ROLES } from "@/shared/consts/wow.consts"
-import { ROLES_CLASSES_MAP } from "@/shared/schemas/wow.schemas"
-import type {
-    Character,
-    NewCharacter,
-    Player,
-    WowClassName,
-    WoWRole,
-} from "@/shared/types/types"
+import type { Character, NewCharacter, Player } from "@/shared/models/character.model"
+import {
+    ROLES_CLASSES_MAP,
+    type WowClassName,
+    type WoWRole,
+} from "@/shared/models/wow.model"
 import { CheckedState } from "@radix-ui/react-checkbox"
 
 import { Button } from "./ui/button"

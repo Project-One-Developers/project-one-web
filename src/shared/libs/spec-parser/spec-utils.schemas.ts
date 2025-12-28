@@ -1,4 +1,4 @@
-import { WowClass } from "@/shared/types/types"
+import type { WowClass } from "@/shared/types/types"
 
 export const WOW_CLASS_WITH_SPECS: WowClass[] = [
     {

@@ -5,7 +5,7 @@ import Image from "next/image"
 import { s } from "@/lib/safe-stringify"
 import { cn } from "@/lib/utils"
 import { currencyIcon } from "@/lib/wow-icon"
-import type { DroptimizerCurrency } from "@/shared/types/types"
+import type { DroptimizerCurrency } from "@/shared/models/simulation.model"
 
 import { useRefreshWowheadTooltips } from "./wowhead-tooltips"
 

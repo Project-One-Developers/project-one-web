@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CharacterOverviewIcon } from "@/components/wow/character-overview-icon"
 import { usePlayersSummaryCompact } from "@/lib/queries/players"
-import type { Player, PlayerWithSummaryCompact } from "@/shared/types/types"
+import type { Player } from "@/shared/models/character.model"
+import type { PlayerWithSummaryCompact } from "@/shared/types/types"
 
 type ItemLevelStats = {
     mean: number

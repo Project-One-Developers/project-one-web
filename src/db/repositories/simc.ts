@@ -4,8 +4,7 @@ import { z } from "zod"
 import { db } from "@/db"
 import { simcTable } from "@/db/schema"
 import { conflictUpdateAllExcept } from "@/db/utils"
-import { simcSchema } from "@/shared/schemas/simulations.schemas"
-import type { SimC } from "@/shared/types/types"
+import { simcSchema, type SimC } from "@/shared/models/simulation.model"
 
 export const simcRepo = {
     getAll: async (): Promise<SimC[]> => {

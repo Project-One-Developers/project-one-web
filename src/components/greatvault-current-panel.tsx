@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 
 import { isInCurrentWowWeek } from "@/shared/libs/date/date-utils"
-import type { Droptimizer } from "@/shared/types/types"
+import type { Droptimizer } from "@/shared/models/simulation.model"
 
 import { WowGearIcon } from "./wow/wow-gear-icon"
 

@@ -4,14 +4,14 @@ import { characterRepo } from "@/db/repositories/characters"
 import { raidSessionRepo } from "@/db/repositories/raid-sessions"
 import { newUUID } from "@/db/utils"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
+import type { Character } from "@/shared/models/character.model"
 import type {
-    Character,
     EditRaidSession,
     NewRaidSession,
     RaidSession,
     RaidSessionWithRoster,
     RaidSessionWithSummary,
-} from "@/shared/types/types"
+} from "@/shared/models/raid-session.model"
 
 export async function getRaidSessionWithRoster(
     id: string

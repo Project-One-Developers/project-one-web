@@ -3,7 +3,7 @@
 import { getBosses, getRaidLootTable } from "@/actions/bosses"
 import { getRosterProgression } from "@/actions/raiderio"
 import { CURRENT_RAID_ID } from "@/shared/consts/wow.consts"
-import type { CharacterWithProgression } from "@/shared/types/types"
+import type { CharacterWithProgression } from "@/shared/models/character.model"
 import { useQuery } from "@tanstack/react-query"
 
 import { queryKeys } from "./keys"

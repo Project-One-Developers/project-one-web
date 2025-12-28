@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import type { GearItem } from "@/shared/types/types"
+import type { GearItem } from "@/shared/models/item.model"
 
 import { WowGearIcon } from "./wow-gear-icon"
 

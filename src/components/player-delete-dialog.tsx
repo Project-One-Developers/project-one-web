@@ -7,7 +7,7 @@ import Image from "next/image"
 import { type JSX } from "react"
 
 import { useDeletePlayer } from "@/lib/queries/players"
-import type { Player } from "@/shared/types/types"
+import type { Player } from "@/shared/models/character.model"
 
 import { Button } from "./ui/button"
 import {

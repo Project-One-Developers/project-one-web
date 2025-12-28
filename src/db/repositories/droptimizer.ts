@@ -5,13 +5,18 @@ import { db } from "@/db"
 import { droptimizerTable, droptimizerUpgradesTable } from "@/db/schema"
 import { newUUID } from "@/db/utils"
 import { logger } from "@/lib/logger"
-import { gearItemSchema } from "@/shared/schemas/items.schema"
+import { gearItemSchema } from "@/shared/models/item.model"
 import {
     droptimizerCurrencySchema,
     droptimizerUpgradeSchema,
-} from "@/shared/schemas/simulations.schemas"
-import { wowClassNameSchema, wowRaidDiffSchema } from "@/shared/schemas/wow.schemas"
-import type { Droptimizer, NewDroptimizer, WowRaidDifficulty } from "@/shared/types/types"
+    type Droptimizer,
+    type NewDroptimizer,
+} from "@/shared/models/simulation.model"
+import {
+    wowClassNameSchema,
+    wowRaidDiffSchema,
+    type WowRaidDifficulty,
+} from "@/shared/models/wow.model"
 
 // Schema for parsing droptimizer storage results
 const droptimizerStorageSchema = z.object({

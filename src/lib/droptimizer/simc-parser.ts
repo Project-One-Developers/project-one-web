@@ -7,7 +7,8 @@ import {
     parseItemLevelFromBonusIds,
     parseItemTrack,
 } from "@/shared/libs/items/item-bonus-utils"
-import type { DroptimizerCurrency, GearItem } from "@/shared/types/types"
+import type { GearItem } from "@/shared/models/item.model"
+import type { DroptimizerCurrency } from "@/shared/models/simulation.model"
 
 export const parseCatalystFromSimc = (simc: string): DroptimizerCurrency[] => {
     const catalystRegex = /# catalyst_currencies=([^\n]+)/

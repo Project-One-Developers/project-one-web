@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { itemSchema } from "./items.schema"
+import { itemSchema } from "./item.model"
 
 export const bossSchema = z.object({
     id: z.number(),
@@ -12,7 +12,9 @@ export const bossSchema = z.object({
     raiderioRaidSlug: z.string().nullish(),
     raiderioEncounterSlug: z.string().nullish(),
 })
+export type Boss = z.infer<typeof bossSchema>
 
 export const bossWithItemsSchema = bossSchema.extend({
     items: z.array(itemSchema),
 })
+export type BossWithItems = z.infer<typeof bossWithItemsSchema>

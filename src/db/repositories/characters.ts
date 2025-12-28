@@ -8,18 +8,16 @@ import {
     characterSchema,
     characterWithPlayerSchema,
     playerSchema,
-} from "@/shared/schemas/characters.schemas"
-import { wowClassNameSchema, wowRolesSchema } from "@/shared/schemas/wow.schemas"
-import type {
-    Character,
-    CharacterWithPlayer,
-    EditCharacter,
-    EditPlayer,
-    NewCharacter,
-    NewPlayer,
-    Player,
-    PlayerWithCharacters,
-} from "@/shared/types/types"
+    type Character,
+    type CharacterWithPlayer,
+    type EditCharacter,
+    type EditPlayer,
+    type NewCharacter,
+    type NewPlayer,
+    type Player,
+    type PlayerWithCharacters,
+} from "@/shared/models/character.model"
+import { wowClassNameSchema, wowRolesSchema } from "@/shared/models/wow.model"
 
 // Player storage schema for parsing DB results
 const playerStorageSchema = z

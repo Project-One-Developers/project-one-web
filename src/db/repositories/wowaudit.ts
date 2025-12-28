@@ -3,8 +3,8 @@ import { z } from "zod"
 
 import { db } from "@/db"
 import { charWowAuditTable } from "@/db/schema"
-import { gearItemSchema } from "@/shared/schemas/items.schema"
-import type { CharacterWowAudit } from "@/shared/types/types"
+import { gearItemSchema } from "@/shared/models/item.model"
+import type { CharacterWowAudit } from "@/shared/models/wowaudit.model"
 
 // Schema for new WowAudit character data (matches DB table)
 export const newCharacterWowAuditSchema = z.object({

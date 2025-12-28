@@ -5,7 +5,7 @@ import Image from "next/image"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { classIcon } from "@/lib/wow-icon"
-import type { WowClassName } from "@/shared/types/types"
+import type { WowClassName } from "@/shared/models/wow.model"
 
 type WowClassIconProps = {
     wowClassName: WowClassName

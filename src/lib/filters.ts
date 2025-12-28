@@ -1,11 +1,11 @@
+import type { Character } from "@/shared/models/character.model"
+import type { Droptimizer } from "@/shared/models/simulation.model"
 import type {
-    Character,
-    Droptimizer,
     WowArmorType,
     WowClassName,
     WowItemSlotKey,
     WowRaidDifficulty,
-} from "@/shared/types/types"
+} from "@/shared/models/wow.model"
 
 export type LootFilter = {
     selectedRaidDiff: WowRaidDifficulty

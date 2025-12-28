@@ -4,7 +4,8 @@ import type { JSX } from "react"
 
 import { useRaidLootTable } from "@/lib/queries/bosses"
 import { getDpsHumanReadable } from "@/lib/utils"
-import type { BossWithItems, Droptimizer, DroptimizerUpgrade } from "@/shared/types/types"
+import type { BossWithItems } from "@/shared/models/boss.model"
+import type { Droptimizer, DroptimizerUpgrade } from "@/shared/models/simulation.model"
 
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog"
 import { WowItemIcon } from "./wow/wow-item-icon"

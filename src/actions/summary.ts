@@ -10,15 +10,15 @@ import { characterRepo, playerRepo } from "@/db/repositories/characters"
 import { droptimizerRepo } from "@/db/repositories/droptimizer"
 import { raiderioRepo } from "@/db/repositories/raiderio"
 import { wowauditRepo } from "@/db/repositories/wowaudit"
-import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
+import type { GearItem } from "@/shared/models/item.model"
+import type { CharacterRaiderio } from "@/shared/models/raiderio.model"
+import type { Droptimizer } from "@/shared/models/simulation.model"
+import type { CharacterWowAudit } from "@/shared/models/wowaudit.model"
 import {
     DroptimizerWarn,
     RaiderioWarn,
     WowAuditWarn,
     type CharacterSummary,
-    type CharacterWowAudit,
-    type Droptimizer,
-    type GearItem,
     type PlayerWithSummaryCompact,
 } from "@/shared/types/types"
 

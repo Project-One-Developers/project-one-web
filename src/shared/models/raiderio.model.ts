@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { gearItemSchema } from "./items.schema"
+import { gearItemSchema } from "./item.model"
 
 export const encounterSchema = z.object({
     slug: z.string(),

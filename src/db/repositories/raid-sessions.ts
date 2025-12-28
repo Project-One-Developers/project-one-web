@@ -9,20 +9,17 @@ import {
     raidSessionTable,
 } from "@/db/schema"
 import { newUUID } from "@/db/utils"
-import { characterSchema } from "@/shared/schemas/characters.schemas"
+import { characterSchema, type Character } from "@/shared/models/character.model"
 import {
     raidSessionSchema,
     raidSessionWithRosterSchema,
     raidSessionWithSummarySchema,
-} from "@/shared/schemas/raid.schemas"
-import type {
-    Character,
-    EditRaidSession,
-    NewRaidSession,
-    RaidSession,
-    RaidSessionWithRoster,
-    RaidSessionWithSummary,
-} from "@/shared/types/types"
+    type EditRaidSession,
+    type NewRaidSession,
+    type RaidSession,
+    type RaidSessionWithRoster,
+    type RaidSessionWithSummary,
+} from "@/shared/models/raid-session.model"
 
 type RaidSessionWithCharPartecipation = RaidSession & {
     charPartecipation?: { character: Character }[]

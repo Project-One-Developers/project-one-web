@@ -12,7 +12,7 @@ import {
 import { formatWowSlotKey } from "@/shared/libs/items/item-slot-utils"
 import { trackNameToWowDiff } from "@/shared/libs/items/item-tracks"
 import { isHealerSpecs, isTankSpecs } from "@/shared/libs/spec-parser/spec-utils"
-import type { GearItem } from "@/shared/types/types"
+import type { GearItem } from "@/shared/models/item.model"
 
 import { useRefreshWowheadTooltips } from "./wowhead-tooltips"
 

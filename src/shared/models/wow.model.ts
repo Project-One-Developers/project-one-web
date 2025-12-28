@@ -11,6 +11,7 @@ import {
 } from "@/shared/consts/wow.consts"
 
 export const wowClassNameSchema = z.enum(CLASSES_NAME_VALUES)
+export type WowClassName = z.infer<typeof wowClassNameSchema>
 
 export const wowClassTankSchema = z.enum([
     "Death Knight",
@@ -31,8 +32,10 @@ export const wowClassHealerSchema = z.enum([
 ])
 
 export const wowItemSlotSchema = z.enum(ITEM_SLOTS_DESC)
+export type WowItemSlot = z.infer<typeof wowItemSlotSchema>
 
 export const wowItemSlotKeySchema = z.enum(ITEM_SLOTS_KEY)
+export type WowItemSlotKey = z.infer<typeof wowItemSlotKeySchema>
 
 export const wowItemEquippedSlotKeySchema = z.enum([
     "head",
@@ -52,6 +55,7 @@ export const wowItemEquippedSlotKeySchema = z.enum([
     "main_hand",
     "off_hand",
 ])
+export type WowItemEquippedSlotKey = z.infer<typeof wowItemEquippedSlotKeySchema>
 
 export const wowItemSlotKeyTiersetSchema = z.enum([
     "head",
@@ -60,13 +64,19 @@ export const wowItemSlotKeyTiersetSchema = z.enum([
     "hands",
     "legs",
 ])
+export type WowTiersetSlot = z.infer<typeof wowItemSlotKeyTiersetSchema>
 
 export const wowArmorTypeSchema = z.enum(ARMOR_TYPES)
+export type WowArmorType = z.infer<typeof wowArmorTypeSchema>
 
 export const wowRolesSchema = z.enum(ROLES)
+export type WoWRole = z.infer<typeof wowRolesSchema>
+
 export const wowRolePositionSchema = z.enum(["Melee", "Ranged"])
+export type WoWRolePosition = z.infer<typeof wowRolePositionSchema>
 
 export const wowRaidDiffSchema = z.enum(RAID_DIFF)
+export type WowRaidDifficulty = z.infer<typeof wowRaidDiffSchema>
 
 export const wowItemTrackNameSchema = z.enum([
     "Explorer",
@@ -76,8 +86,10 @@ export const wowItemTrackNameSchema = z.enum([
     "Hero",
     "Myth",
 ])
+export type WowItemTrackName = z.infer<typeof wowItemTrackNameSchema>
 
 export const tierSetBonusSchema = z.enum(["none", "2p", "4p"])
+export type TierSetBonus = z.infer<typeof tierSetBonusSchema>
 
 export const wowRoleClassSchema = z.object({
     Tank: wowClassTankSchema,
@@ -86,6 +98,7 @@ export const wowRoleClassSchema = z.object({
 })
 
 export const wowSpecNameSchema = z.enum(SPECS_NAME)
+export type WowSpecName = z.infer<typeof wowSpecNameSchema>
 
 export const ROLES_CLASSES_MAP = {
     Tank: wowRoleClassSchema.shape.Tank.options,

@@ -13,21 +13,19 @@ import {
     getWowClassFromIdOrName,
     getWowSpecByClassNameAndSpecName,
 } from "@/shared/libs/spec-parser/spec-utils"
-import { qeLiveURLSchema } from "@/shared/schemas/simulations.schemas"
+import type { GearItem, Item, ItemTrack } from "@/shared/models/item.model"
+import {
+    qeLiveURLSchema,
+    type NewDroptimizer,
+    type NewDroptimizerUpgrade,
+} from "@/shared/models/simulation.model"
 import {
     wowClassNameSchema,
     wowItemEquippedSlotKeySchema,
     wowSpecNameSchema,
-} from "@/shared/schemas/wow.schemas"
-import type {
-    GearItem,
-    Item,
-    ItemTrack,
-    NewDroptimizer,
-    NewDroptimizerUpgrade,
-    WowItemEquippedSlotKey,
-    WowRaidDifficulty,
-} from "@/shared/types/types"
+    type WowItemEquippedSlotKey,
+    type WowRaidDifficulty,
+} from "@/shared/models/wow.model"
 
 import { qeliveEquippedItemSchema, QELiveJson, qeliveJsonSchema } from "./qelive.schemas"
 

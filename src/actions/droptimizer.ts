@@ -12,12 +12,8 @@ import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
 import { parseSimC } from "@/lib/simc/simc-parser"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
-import type {
-    Droptimizer,
-    NewDroptimizer,
-    SimC,
-    WowRaidDifficulty,
-} from "@/shared/types/types"
+import type { Droptimizer, NewDroptimizer, SimC } from "@/shared/models/simulation.model"
+import type { WowRaidDifficulty } from "@/shared/models/wow.model"
 
 export async function getDroptimizerList(): Promise<Droptimizer[]> {
     return await droptimizerRepo.getList()

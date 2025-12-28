@@ -19,8 +19,10 @@ import { WowCharacterIcon } from "@/components/wow/wow-character-icon"
 import { useBosses, useRosterProgression } from "@/lib/queries/bosses"
 import { defined } from "@/lib/utils"
 import { encounterIcon } from "@/lib/wow-icon"
-import type { RaiderioEncounter } from "@/shared/schemas/raiderio.schemas"
-import type { Boss, Character, WowRaidDifficulty } from "@/shared/types/types"
+import type { Boss } from "@/shared/models/boss.model"
+import type { Character } from "@/shared/models/character.model"
+import type { RaiderioEncounter } from "@/shared/models/raiderio.model"
+import type { WowRaidDifficulty } from "@/shared/models/wow.model"
 
 // Constants
 const ROLE_COLORS = {

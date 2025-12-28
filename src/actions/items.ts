@@ -7,8 +7,8 @@ import { db } from "@/db"
 import { itemNoteRepo, itemRepo } from "@/db/repositories/items"
 import { itemTable } from "@/db/schema"
 import { CURRENT_SEASON } from "@/shared/consts/wow.consts"
-import { itemSchema } from "@/shared/schemas/items.schema"
-import type { Item, ItemNote } from "@/shared/types/types"
+import type { ItemNote } from "@/shared/models/item-note.model"
+import { itemSchema, type Item } from "@/shared/models/item.model"
 
 export async function getItems(): Promise<Item[]> {
     return await itemRepo.getAll()

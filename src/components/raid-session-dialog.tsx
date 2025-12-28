@@ -22,13 +22,13 @@ import {
     formatUnixTimestampForDisplay,
     parseStringToUnixTimestamp,
 } from "@/shared/libs/date/date-utils"
+import type { PlayerWithCharacters } from "@/shared/models/character.model"
 import type {
     EditRaidSession,
     NewRaidSession,
-    PlayerWithCharacters,
     RaidSessionWithRoster,
-    WowClassName,
-} from "@/shared/types/types"
+} from "@/shared/models/raid-session.model"
+import type { WowClassName } from "@/shared/models/wow.model"
 
 import { Button } from "./ui/button"
 import {

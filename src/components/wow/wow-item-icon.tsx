@@ -7,7 +7,8 @@ import Image from "next/image"
 import { useItem } from "@/lib/queries/items"
 import { cn } from "@/lib/utils"
 import { isHealerSpecs, isTankSpecs } from "@/shared/libs/spec-parser/spec-utils"
-import type { Item, WowRaidDifficulty } from "@/shared/types/types"
+import type { Item } from "@/shared/models/item.model"
+import type { WowRaidDifficulty } from "@/shared/models/wow.model"
 
 import { useRefreshWowheadTooltips } from "./wowhead-tooltips"
 

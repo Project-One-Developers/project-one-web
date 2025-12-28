@@ -4,19 +4,17 @@ import { z } from "zod"
 import { db } from "@/db"
 import { lootTable } from "@/db/schema"
 import { newUUID } from "@/db/utils"
+import type { Character } from "@/shared/models/character.model"
 import {
     lootSchema,
     lootWithAssignedSchema,
     lootWithItemSchema,
-} from "@/shared/schemas/loot.schema"
-import type {
-    Character,
-    CharAssignmentHighlights,
-    Loot,
-    LootWithAssigned,
-    LootWithItem,
-    NewLoot,
-} from "@/shared/types/types"
+    type CharAssignmentHighlights,
+    type Loot,
+    type LootWithAssigned,
+    type LootWithItem,
+    type NewLoot,
+} from "@/shared/models/loot.model"
 
 export const lootRepo = {
     getById: async (lootId: string): Promise<Loot> => {

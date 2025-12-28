@@ -9,31 +9,36 @@ import {
 } from "@/shared/libs/items/item-bonus-utils"
 import { equippedSlotToSlot } from "@/shared/libs/items/item-slot-utils"
 import { getClassSpecsForRole } from "@/shared/libs/spec-parser/spec-utils"
-import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
-import { tierSetBonusSchema } from "@/shared/schemas/wow.schemas"
+import type { BisList } from "@/shared/models/bis-list.model"
+import type { BossWithItems } from "@/shared/models/boss.model"
+import type { Character } from "@/shared/models/character.model"
+import type { GearItem, Item } from "@/shared/models/item.model"
+import type {
+    CharAssignmentHighlights,
+    Loot,
+    LootWithAssigned,
+    LootWithItem,
+} from "@/shared/models/loot.model"
+import type { CharacterRaiderio } from "@/shared/models/raiderio.model"
+import type {
+    Droptimizer,
+    DroptimizerCurrency,
+    DroptimizerUpgrade,
+    SimC,
+} from "@/shared/models/simulation.model"
+import {
+    tierSetBonusSchema,
+    type TierSetBonus,
+    type WowItemSlotKey,
+    type WowRaidDifficulty,
+} from "@/shared/models/wow.model"
+import type { CharacterWowAudit } from "@/shared/models/wowaudit.model"
 import {
     DroptimizerWarn,
     RaiderioWarn,
     WowAuditWarn,
-    type BisList,
-    type BossWithItems,
-    type Character,
-    type CharacterWowAudit,
-    type CharAssignmentHighlights,
     type CharAssignmentInfo,
-    type Droptimizer,
-    type DroptimizerCurrency,
-    type DroptimizerUpgrade,
-    type GearItem,
-    type Item,
-    type Loot,
-    type LootWithAssigned,
-    type LootWithItem,
-    type SimC,
-    type TierSetBonus,
     type WowClass,
-    type WowItemSlotKey,
-    type WowRaidDifficulty,
     type WowSpec,
 } from "@/shared/types/types"
 

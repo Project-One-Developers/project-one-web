@@ -23,7 +23,7 @@ import type {
     CharAssignmentHighlights,
     NewLoot,
     NewLootManual,
-} from "@/shared/types/types"
+} from "@/shared/models/loot.model"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { queryKeys } from "./keys"

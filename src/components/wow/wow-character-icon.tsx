@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 
-import type { Character } from "@/shared/types/types"
+import type { Character } from "@/shared/models/character.model"
 
 import { WowClassIcon } from "./wow-class-icon"
 

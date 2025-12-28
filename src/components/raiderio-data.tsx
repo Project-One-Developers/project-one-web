@@ -1,7 +1,7 @@
 "use client"
 
-import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
-import type { WowItemEquippedSlotKey } from "@/shared/types/types"
+import type { CharacterRaiderio } from "@/shared/models/raiderio.model"
+import type { WowItemEquippedSlotKey } from "@/shared/models/wow.model"
 
 import CharacterPaperdoll from "./wow/character-paperdoll"
 import BaseGearSlot, { createGearSlotMapping } from "./wow/character-paperdoll-gearslot"

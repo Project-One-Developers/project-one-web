@@ -10,7 +10,7 @@ import SessionCard from "@/components/session-card"
 import { Input } from "@/components/ui/input"
 import { useRaidSessions } from "@/lib/queries/raid-sessions"
 import { unixTimestampToWowWeek } from "@/shared/libs/date/date-utils"
-import type { RaidSessionWithSummary } from "@/shared/types/types"
+import type { RaidSessionWithSummary } from "@/shared/models/raid-session.model"
 
 type GroupedSessions = Record<number, RaidSessionWithSummary[]>
 

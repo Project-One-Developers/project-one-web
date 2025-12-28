@@ -10,7 +10,7 @@ import {
     getDroptimizerList,
     syncDroptimizersFromDiscord,
 } from "@/actions/droptimizer"
-import type { WowRaidDifficulty } from "@/shared/types/types"
+import type { WowRaidDifficulty } from "@/shared/models/wow.model"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { queryKeys } from "./keys"

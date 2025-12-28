@@ -12,13 +12,15 @@ import {
 } from "@/db/schema"
 import { buildConflictUpdateColumns } from "@/db/utils"
 import { CURRENT_SEASON } from "@/shared/consts/wow.consts"
-import { itemNoteSchema } from "@/shared/schemas/itemNote.schema"
+import { itemNoteSchema, type ItemNote } from "@/shared/models/item-note.model"
 import {
     itemSchema,
     itemToCatalystArraySchema,
     itemToTiersetArraySchema,
-} from "@/shared/schemas/items.schema"
-import type { Item, ItemNote, ItemToCatalyst, ItemToTierset } from "@/shared/types/types"
+    type Item,
+    type ItemToCatalyst,
+    type ItemToTierset,
+} from "@/shared/models/item.model"
 
 const TIERSET_CACHE_TAG = "tierset-mapping"
 

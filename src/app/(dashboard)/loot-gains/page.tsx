@@ -14,12 +14,10 @@ import { useRaidLootTable } from "@/lib/queries/bosses"
 import { useLatestDroptimizers } from "@/lib/queries/droptimizers"
 import { useCharacters } from "@/lib/queries/players"
 import { encounterIcon } from "@/lib/wow-icon"
-import type {
-    BossWithItems,
-    Droptimizer,
-    Item,
-    WowRaidDifficulty,
-} from "@/shared/types/types"
+import type { BossWithItems } from "@/shared/models/boss.model"
+import type { Item } from "@/shared/models/item.model"
+import type { Droptimizer } from "@/shared/models/simulation.model"
+import type { WowRaidDifficulty } from "@/shared/models/wow.model"
 
 // Boss Panel Component
 type BossPanelProps = {

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"
 import { type JSX } from "react"
 
 import { useDeleteCharacter } from "@/lib/queries/players"
-import type { Character } from "@/shared/types/types"
+import type { Character } from "@/shared/models/character.model"
 
 import { Button } from "./ui/button"
 import {

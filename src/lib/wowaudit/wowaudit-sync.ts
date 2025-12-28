@@ -11,16 +11,14 @@ import {
     applyItemTrackByIlvlAndDiff,
     evalRealSeason,
 } from "@/shared/libs/items/item-bonus-utils"
-import { wowClassNameSchema } from "@/shared/schemas/wow.schemas"
-import type {
-    GearItem,
-    Item,
-    ItemTrack,
-    WowClassName,
-    WowItemEquippedSlotKey,
-    WowItemSlotKey,
-    WowRaidDifficulty,
-} from "@/shared/types/types"
+import type { GearItem, Item, ItemTrack } from "@/shared/models/item.model"
+import {
+    wowClassNameSchema,
+    type WowClassName,
+    type WowItemEquippedSlotKey,
+    type WowItemSlotKey,
+    type WowRaidDifficulty,
+} from "@/shared/models/wow.model"
 
 export async function fetchWowAuditData(apiKey: string): Promise<unknown> {
     const responseJson = await fetch(

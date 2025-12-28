@@ -15,13 +15,13 @@ import {
     getPlayersWithoutCharacters,
 } from "@/actions/characters"
 import { getPlayersWithSummaryCompact } from "@/actions/summary"
-import {
-    type EditCharacter,
-    type EditPlayer,
-    type NewCharacter,
-    type NewPlayer,
-    type PlayerWithSummaryCompact,
-} from "@/shared/types/types"
+import type {
+    EditCharacter,
+    EditPlayer,
+    NewCharacter,
+    NewPlayer,
+} from "@/shared/models/character.model"
+import type { PlayerWithSummaryCompact } from "@/shared/types/types"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { queryKeys } from "./keys"

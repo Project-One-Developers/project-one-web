@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react"
 
 import { getDpsHumanReadable } from "@/lib/utils"
 import { formatUnixTimestampToRelativeDays } from "@/shared/libs/date/date-utils"
-import type { GearItem } from "@/shared/types/types"
+import type { GearItem } from "@/shared/models/item.model"
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 import { WowGearIcon } from "./wow/wow-gear-icon"

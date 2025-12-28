@@ -3,8 +3,9 @@ import { match } from "ts-pattern"
 import {
     wowItemEquippedSlotKeySchema,
     wowItemSlotKeySchema,
-} from "@/shared/schemas/wow.schemas"
-import { WowItemEquippedSlotKey, WowItemSlotKey } from "@/shared/types/types"
+    type WowItemEquippedSlotKey,
+    type WowItemSlotKey,
+} from "@/shared/models/wow.model"
 
 export const equippedSlotToSlot = (equipped: WowItemEquippedSlotKey): WowItemSlotKey => {
     return wowItemSlotKeySchema.parse(equipped.replaceAll("1", "").replaceAll("2", ""))

@@ -1,7 +1,7 @@
 "use server"
 
 import { bossRepo } from "@/db/repositories/bosses"
-import type { Boss, BossWithItems } from "@/shared/types/types"
+import type { Boss, BossWithItems } from "@/shared/models/boss.model"
 
 export async function getBosses(raidId: number): Promise<Boss[]> {
     return await bossRepo.getAll(raidId)

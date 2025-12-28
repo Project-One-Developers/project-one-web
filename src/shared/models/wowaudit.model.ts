@@ -1,7 +1,7 @@
 import z from "zod"
 
-import { gearItemSchema } from "./items.schema"
-import { wowRaidDiffSchema } from "./wow.schemas"
+import { gearItemSchema } from "./item.model"
+import { wowRaidDiffSchema } from "./wow.model"
 
 export const wowauditEnchantSchema = z.object({
     name: z.string(),
@@ -56,3 +56,4 @@ export const charWowAuditSchema = z.object({
     itemsEquipped: z.array(gearItemSchema),
     tiersetInfo: z.array(gearItemSchema),
 })
+export type CharacterWowAudit = z.infer<typeof charWowAuditSchema>

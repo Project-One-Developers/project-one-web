@@ -3,8 +3,12 @@ import { z } from "zod"
 import { db } from "@/db"
 import { bossTable } from "@/db/schema"
 import { buildConflictUpdateColumns } from "@/db/utils"
-import { bossSchema, bossWithItemsSchema } from "@/shared/schemas/boss.schema"
-import type { Boss, BossWithItems } from "@/shared/types/types"
+import {
+    bossSchema,
+    bossWithItemsSchema,
+    type Boss,
+    type BossWithItems,
+} from "@/shared/models/boss.model"
 
 export const bossRepo = {
     upsert: async (bosses: Boss[]): Promise<void> => {

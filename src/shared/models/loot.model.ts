@@ -1,9 +1,9 @@
 import { z } from "zod"
 
-import { characterSchema } from "./characters.schemas"
-import { gearItemSchema, itemSchema } from "./items.schema"
-import { raidSessionWithRosterSchema } from "./raid.schemas"
-import { tierSetBonusSchema, wowRaidDiffSchema } from "./wow.schemas"
+import { characterSchema } from "./character.model"
+import { gearItemSchema, itemSchema } from "./item.model"
+import { raidSessionWithRosterSchema } from "./raid-session.model"
+import { tierSetBonusSchema, wowRaidDiffSchema } from "./wow.model"
 
 export const newLootSchema = z.object({
     gearItem: gearItemSchema,
@@ -13,6 +13,7 @@ export const newLootSchema = z.object({
     itemString: z.string().nullable(), // only in rc csv import
     addonId: z.string().nullable(), // only in rc csv/mrt import
 })
+export type NewLoot = z.infer<typeof newLootSchema>
 
 export const newLootManualSchema = z.object({
     itemId: itemSchema.shape.id,
@@ -22,6 +23,7 @@ export const newLootManualSchema = z.object({
     hasLeech: z.boolean(),
     hasSpeed: z.boolean(),
 })
+export type NewLootManual = z.infer<typeof newLootManualSchema>
 
 export const lootSchema = z.object({
     id: z.string(),
@@ -35,10 +37,12 @@ export const lootSchema = z.object({
     assignedCharacterId: characterSchema.shape.id.nullable(),
     tradedToAssigned: z.boolean(),
 })
+export type Loot = z.infer<typeof lootSchema>
 
 export const lootWithItemSchema = lootSchema.extend({
     item: itemSchema,
 })
+export type LootWithItem = z.infer<typeof lootWithItemSchema>
 
 export const charAssignmentHighlightsSchema = z.object({
     isMain: z.boolean(),
@@ -50,11 +54,13 @@ export const charAssignmentHighlightsSchema = z.object({
     score: z.number(),
     isTrackUpgrade: z.boolean(),
 })
+export type CharAssignmentHighlights = z.infer<typeof charAssignmentHighlightsSchema>
 
 export const lootWithAssignedSchema = lootSchema.extend({
     assignedCharacter: characterSchema.nullable(),
     assignedHighlights: charAssignmentHighlightsSchema.nullable(),
 })
+export type LootWithAssigned = z.infer<typeof lootWithAssignedSchema>
 
 export const newLootsFromManualInputSchema = z
     .object({

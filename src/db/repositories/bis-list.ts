@@ -5,7 +5,7 @@ import { unstable_cache, updateTag } from "next/cache"
 import { db } from "@/db"
 import { bisListTable } from "@/db/schema"
 import { newUUID } from "@/db/utils"
-import type { BisList } from "@/shared/types/types"
+import type { BisList } from "@/shared/models/bis-list.model"
 
 const CACHE_TAG = "bis-list"
 

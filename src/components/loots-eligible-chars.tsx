@@ -13,12 +13,9 @@ import {
 } from "@/lib/queries/loots"
 import { getDpsHumanReadable } from "@/lib/utils"
 import { ITEM_SLOTS_KEY_TIERSET } from "@/shared/consts/wow.consts"
-import { tierSetBonusSchema } from "@/shared/schemas/wow.schemas"
-import {
-    DroptimizerWarn,
-    type CharAssignmentInfo,
-    type LootWithAssigned,
-} from "@/shared/types/types"
+import type { LootWithAssigned } from "@/shared/models/loot.model"
+import { tierSetBonusSchema } from "@/shared/models/wow.model"
+import { DroptimizerWarn, type CharAssignmentInfo } from "@/shared/types/types"
 
 import { DroptimizerUpgradeForItemEquipped } from "./droptimizer-upgrade-for-item"
 import {

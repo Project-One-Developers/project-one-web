@@ -1,11 +1,11 @@
 import { z } from "zod"
 
-import { gearItemSchema, itemSchema } from "./items.schema"
+import { gearItemSchema, itemSchema } from "./item.model"
 import {
     wowClassNameSchema,
     wowItemEquippedSlotKeySchema,
     wowRaidDiffSchema,
-} from "./wow.schemas"
+} from "./wow.model"
 
 export const droptimizerUpgradeSchema = z.object({
     id: z.string(),
@@ -17,6 +17,7 @@ export const droptimizerUpgradeSchema = z.object({
     tiersetItemId: itemSchema.shape.id.nullable(),
     droptimizerId: z.string(),
 })
+export type DroptimizerUpgrade = z.infer<typeof droptimizerUpgradeSchema>
 
 export const newDroptimizerUpgradeSchema = droptimizerUpgradeSchema
     .omit({
@@ -27,12 +28,14 @@ export const newDroptimizerUpgradeSchema = droptimizerUpgradeSchema
     .extend({
         itemId: z.number(),
     })
+export type NewDroptimizerUpgrade = z.infer<typeof newDroptimizerUpgradeSchema>
 
 export const droptimizerCurrencySchema = z.object({
     id: z.number(),
     type: z.string(),
     amount: z.number(),
 })
+export type DroptimizerCurrency = z.infer<typeof droptimizerCurrencySchema>
 
 export const droptimizerSchema = z.object({
     url: z.url(),
@@ -67,10 +70,12 @@ export const droptimizerSchema = z.object({
     itemsEquipped: z.array(gearItemSchema),
     tiersetInfo: z.array(gearItemSchema),
 })
+export type Droptimizer = z.infer<typeof droptimizerSchema>
 
 export const newDroptimizerSchema = droptimizerSchema.omit({ upgrades: true }).extend({
     upgrades: z.array(newDroptimizerUpgradeSchema),
 })
+export type NewDroptimizer = z.infer<typeof newDroptimizerSchema>
 
 export const raidbotsURLSchema = z
     .url()
@@ -78,6 +83,7 @@ export const raidbotsURLSchema = z
         message: "URL must be a raidbots.com report URL",
     })
     .brand("RaidbotsURL")
+export type RaidbotsURL = z.infer<typeof raidbotsURLSchema>
 
 export const qeLiveURLSchema = z
     .url()
@@ -85,6 +91,7 @@ export const qeLiveURLSchema = z
         message: "URL must be a questionablyepic.com report URL",
     })
     .brand("QuestionableEpicURL")
+export type QELiveURL = z.infer<typeof qeLiveURLSchema>
 
 export const simcSchema = z.object({
     hash: z.string(),
@@ -97,3 +104,4 @@ export const simcSchema = z.object({
     itemsEquipped: z.array(gearItemSchema),
     tiersetInfo: z.array(gearItemSchema),
 })
+export type SimC = z.infer<typeof simcSchema>

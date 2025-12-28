@@ -22,20 +22,18 @@ import {
     getItemBonusString,
     parseItemString,
 } from "@/shared/libs/items/item-string-parser"
+import type { Character } from "@/shared/models/character.model"
+import type { GearItem, Item, ItemTrack } from "@/shared/models/item.model"
 import {
     rawLootRecordSchema,
     rawMrtRecordSchema,
-} from "@/shared/schemas/loot-import.schema"
-import { newLootSchema } from "@/shared/schemas/loot.schema"
-import type {
-    Character,
-    GearItem,
-    Item,
-    ItemTrack,
-    NewLoot,
-    NewLootManual,
-    WowRaidDifficulty,
-} from "@/shared/types/types"
+} from "@/shared/models/loot-import.model"
+import {
+    newLootSchema,
+    type NewLoot,
+    type NewLootManual,
+} from "@/shared/models/loot.model"
+import type { WowRaidDifficulty } from "@/shared/models/wow.model"
 
 const parseWowDiff = (wowDiff: number): WowRaidDifficulty => {
     return match(wowDiff)

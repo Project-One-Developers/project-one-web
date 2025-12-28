@@ -16,7 +16,7 @@ import {
     formaUnixTimestampToItalianDate,
     getUnixTimestamp,
 } from "@/shared/libs/date/date-utils"
-import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
+import type { CharacterRaiderio } from "@/shared/models/raiderio.model"
 
 /**
  * Sync all characters' Raider.io data

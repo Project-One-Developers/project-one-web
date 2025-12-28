@@ -11,13 +11,11 @@ import {
     wowArmorTypeSchema,
     wowClassNameSchema,
     wowItemSlotKeySchema,
-} from "@/shared/schemas/wow.schemas"
-import type {
-    WowArmorType,
-    WowClassName,
-    WowItemSlotKey,
-    WowRaidDifficulty,
-} from "@/shared/types/types"
+    type WowArmorType,
+    type WowClassName,
+    type WowItemSlotKey,
+    type WowRaidDifficulty,
+} from "@/shared/models/wow.model"
 
 type FiltersPanelProps = {
     filter: LootFilter
