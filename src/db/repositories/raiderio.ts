@@ -7,10 +7,6 @@ import { conflictUpdateAllExcept } from "@/db/utils"
 import { CharacterRaiderio, charRaiderioSchema } from "@/shared/schemas/raiderio.schemas"
 
 export const raiderioRepo = {
-    add: async (characters: CharacterRaiderio[]): Promise<void> => {
-        await db.insert(charRaiderioTable).values(characters)
-    },
-
     upsert: async (characters: CharacterRaiderio[]): Promise<void> => {
         await db
             .insert(charRaiderioTable)
@@ -45,10 +41,6 @@ export const raiderioRepo = {
     getAll: async (): Promise<CharacterRaiderio[]> => {
         const result = await db.query.charRaiderioTable.findMany()
         return z.array(charRaiderioSchema).parse(result)
-    },
-
-    deleteAll: async (): Promise<void> => {
-        await db.delete(charRaiderioTable)
     },
 
     getByChars: async (

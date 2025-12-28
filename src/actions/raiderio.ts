@@ -1,5 +1,8 @@
 "use server"
 
+import { partition } from "es-toolkit"
+import pLimit from "p-limit"
+
 import { characterRepo } from "@/db/repositories/characters"
 import { raiderioRepo } from "@/db/repositories/raiderio"
 import { logger } from "@/lib/logger"
@@ -19,42 +22,47 @@ import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
  * Sync all characters' Raider.io data
  * Fetches raid progress and equipped items for all roster characters
  */
+type SyncResult = { ok: true; data: CharacterRaiderio } | { ok: false; error: string }
+
 export async function syncAllCharactersRaiderio(): Promise<{
     synced: number
     errors: string[]
 }> {
     logger.info("Raiderio", "Start Full Sync")
-    resetItemsCache() // Reset cache for fresh data
+    resetItemsCache()
 
     const roster = await characterRepo.getList()
-    const errors: string[] = []
-    const results: CharacterRaiderio[] = []
+    const limit = pLimit(10)
 
-    // Fetch data for all characters in parallel
-    await Promise.all(
-        roster.map(async (character) => {
-            try {
-                const raiderioData = await fetchCharacterRaidProgress(
-                    character.name,
-                    character.realm
-                )
-                const parsed = await parseRaiderioData(
-                    character.name,
-                    character.realm,
-                    raiderioData
-                )
-                results.push(parsed)
-            } catch (error) {
-                const errorMsg = `Failed to sync ${character.name}-${character.realm}: ${error instanceof Error ? error.message : "Unknown error"}`
-                logger.error("Raiderio", errorMsg)
-                errors.push(errorMsg)
-            }
-        })
+    const syncResults = await Promise.all(
+        roster.map((character) =>
+            limit(async (): Promise<SyncResult> => {
+                try {
+                    const raiderioData = await fetchCharacterRaidProgress(
+                        character.name,
+                        character.realm
+                    )
+                    const data = await parseRaiderioData(
+                        character.name,
+                        character.realm,
+                        raiderioData
+                    )
+                    return { ok: true, data }
+                } catch (err) {
+                    const error = `Failed to sync ${character.name}-${character.realm}: ${s(err)}`
+                    logger.error("Raiderio", error)
+                    return { ok: false, error }
+                }
+            })
+        )
     )
 
+    const [successes, failures] = partition(syncResults, (r) => r.ok)
+    const results = successes.map((r) => r.data)
+    const errors = failures.map((r) => r.error)
+
     if (results.length > 0) {
-        await raiderioRepo.deleteAll()
-        await raiderioRepo.add(results)
+        await raiderioRepo.upsert(results)
     }
 
     logger.info(

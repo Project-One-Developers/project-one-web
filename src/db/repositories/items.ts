@@ -1,6 +1,8 @@
 import { and, eq, ilike } from "drizzle-orm"
 import { z } from "zod"
 
+import { unstable_cache, updateTag } from "next/cache"
+
 import { db } from "@/db"
 import {
     itemNoteTable,
@@ -17,6 +19,8 @@ import {
     itemToTiersetArraySchema,
 } from "@/shared/schemas/items.schema"
 import type { Item, ItemNote, ItemToCatalyst, ItemToTierset } from "@/shared/types/types"
+
+const TIERSET_CACHE_TAG = "tierset-mapping"
 
 export const itemRepo = {
     getAll: async (): Promise<Item[]> => {
@@ -38,10 +42,14 @@ export const itemRepo = {
         return z.array(itemSchema).parse(res)
     },
 
-    getTiersetMapping: async (): Promise<ItemToTierset[]> => {
-        const result = await db.query.itemToTiersetTable.findMany()
-        return itemToTiersetArraySchema.parse(result)
-    },
+    getTiersetMapping: unstable_cache(
+        async (): Promise<ItemToTierset[]> => {
+            const result = await db.query.itemToTiersetTable.findMany()
+            return itemToTiersetArraySchema.parse(result)
+        },
+        [TIERSET_CACHE_TAG],
+        { tags: [TIERSET_CACHE_TAG], revalidate: 300 }
+    ),
 
     getCatalystMapping: async (): Promise<ItemToCatalyst[]> => {
         const result = await db.query.itemToCatalystTable.findMany()
@@ -134,6 +142,8 @@ export const itemRepo = {
         }
         await db.delete(itemToTiersetTable)
         await db.insert(itemToTiersetTable).values(itemsToTierset)
+
+        updateTag(TIERSET_CACHE_TAG)
     },
 
     upsertCatalystMapping: async (itemsToCatalyst: ItemToCatalyst[]): Promise<void> => {

@@ -1,22 +1,28 @@
 import { eq, sql } from "drizzle-orm"
 
+import { unstable_cache, updateTag } from "next/cache"
+
 import { db } from "@/db"
 import { bisListTable } from "@/db/schema"
 import { newUUID } from "@/db/utils"
 import type { BisList } from "@/shared/types/types"
 
-export const bisListRepo = {
-    getAll: async (): Promise<BisList[]> => {
-        const results = await db
-            .select({
-                itemId: bisListTable.itemId,
-                specIds: sql<number[]>`array_agg(${bisListTable.specId})`,
-            })
-            .from(bisListTable)
-            .groupBy(bisListTable.itemId)
+const CACHE_TAG = "bis-list"
 
-        return results
-    },
+export const bisListRepo = {
+    getAll: unstable_cache(
+        async (): Promise<BisList[]> => {
+            return await db
+                .select({
+                    itemId: bisListTable.itemId,
+                    specIds: sql<number[]>`array_agg(${bisListTable.specId})`,
+                })
+                .from(bisListTable)
+                .groupBy(bisListTable.itemId)
+        },
+        [CACHE_TAG],
+        { tags: [CACHE_TAG], revalidate: 300 }
+    ),
 
     updateItemBisSpec: async (itemId: number, specIds: number[]): Promise<void> => {
         await db.delete(bisListTable).where(eq(bisListTable.itemId, itemId))
@@ -30,5 +36,7 @@ export const bisListRepo = {
 
             await db.insert(bisListTable).values(values)
         }
+
+        updateTag(CACHE_TAG)
     },
 }

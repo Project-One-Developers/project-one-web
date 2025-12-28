@@ -2,8 +2,12 @@
 
 import { groupBy, keyBy } from "es-toolkit"
 
+import {
+    characterGameInfoRepo,
+    type CharacterGameInfoCompact,
+} from "@/db/repositories/character-game-info"
 import { characterRepo, playerRepo } from "@/db/repositories/characters"
-import { droptimizerRepo, type DroptimizerCompact } from "@/db/repositories/droptimizer"
+import { droptimizerRepo } from "@/db/repositories/droptimizer"
 import { raiderioRepo } from "@/db/repositories/raiderio"
 import { wowauditRepo } from "@/db/repositories/wowaudit"
 import type { CharacterRaiderio } from "@/shared/schemas/raiderio.schemas"
@@ -161,53 +165,29 @@ export async function getRosterSummary(): Promise<CharacterSummary[]> {
     return res
 }
 
-// Compact version for roster page - only fetches item level and tierset count
-// Avoids loading full droptimizers with all upgrades, weekly chest, currencies, etc.
-function parseItemLevelCompact(
-    droptimizers: DroptimizerCompact[],
-    raiderio: CharacterRaiderio | null,
-    wowAudit: CharacterWowAudit | null
-): string {
-    // Prefer droptimizer data (most recent by simDate)
-    if (droptimizers.length > 0) {
-        const sorted = [...droptimizers].sort((a, b) => b.simDate - a.simDate)
-        const mostRecent = sorted[0]
-        const ilvl = mostRecent?.itemsAverageItemLevelEquipped
-        if (ilvl) {
-            return ilvl.toFixed(1)
-        }
-    }
-    if (raiderio?.averageItemLevel) {
-        return raiderio.averageItemLevel
-    }
-    if (wowAudit?.averageIlvl) {
-        return wowAudit.averageIlvl
-    }
-    return "?"
+function parseItemLevelCompact(gameInfo: CharacterGameInfoCompact | undefined): string {
+    return (
+        gameInfo?.droptimizerIlvl?.toFixed(1) ??
+        gameInfo?.raiderioAvgIlvl ??
+        gameInfo?.wowauditAvgIlvl ??
+        "?"
+    )
 }
 
 function parseTiersetCountCompact(
-    droptimizers: DroptimizerCompact[],
-    wowAudit: CharacterWowAudit | null,
-    raiderio: CharacterRaiderio | null
+    gameInfo: CharacterGameInfoCompact | undefined
 ): number {
-    if (droptimizers.length > 0) {
-        const sorted = [...droptimizers].sort((a, b) => b.simDate - a.simDate)
-        const mostRecent = sorted[0]
-        return mostRecent?.tiersetInfo?.length ?? 0
-    }
-    if (wowAudit?.tiersetInfo) {
-        return wowAudit.tiersetInfo.length
-    }
-    if (raiderio?.itemsEquipped) {
-        return raiderio.itemsEquipped.filter((item) => item.item.tierset).length
-    }
-    return 0
+    return (
+        gameInfo?.droptimizerTiersetInfo?.length ??
+        gameInfo?.wowauditTiersetInfo?.length ??
+        gameInfo?.raiderioItemsEquipped?.filter((item) => item.item.tierset).length ??
+        0
+    )
 }
 
 /**
- * Consolidated action for roster page - fetches all data in a single server call
- * This eliminates redundant character fetching and reduces HTTP round trips from 3 to 1
+ * Consolidated action for roster page - fetches all data in a single DB query
+ * Uses combined character game info query to reduce 3 DB round trips to 1
  */
 export async function getPlayersWithSummaryCompact(): Promise<
     PlayerWithSummaryCompact[]
@@ -215,24 +195,15 @@ export async function getPlayersWithSummaryCompact(): Promise<
     // Single fetch: get all players with their characters
     const playersWithChars = await playerRepo.getWithCharactersList()
 
-    // Extract all characters across all players for scoped external data queries
+    // Extract all characters across all players for combined query
     const allChars = playersWithChars.flatMap((p) => p.characters)
     const charList = allChars.map((c) => ({ name: c.name, realm: c.realm }))
 
-    // Fetch external data scoped to only these characters
-    const [latestDroptimizers, wowAuditData, raiderioData] = await Promise.all([
-        droptimizerRepo.getLatestByCharsCompact(charList),
-        wowauditRepo.getByChars(charList),
-        raiderioRepo.getByChars(charList),
-    ])
+    // Single combined query instead of 3 parallel queries
+    const gameInfoData = await characterGameInfoRepo.getByCharsCompact(charList)
 
-    // Build lookup maps for O(1) access
-    const droptimizerByChar = groupBy(
-        latestDroptimizers,
-        (d) => `${d.characterName}-${d.characterServer}`
-    )
-    const wowAuditByChar = keyBy(wowAuditData, (w) => `${w.name}-${w.realm}`)
-    const raiderioByChar = keyBy(raiderioData, (r) => `${r.name}-${r.realm}`)
+    // Build lookup map for O(1) access
+    const gameInfoByChar = keyBy(gameInfoData, (g) => `${g.charName}-${g.charRealm}`)
 
     // Build result grouped by player
     return playersWithChars.map((player) => ({
@@ -240,26 +211,15 @@ export async function getPlayersWithSummaryCompact(): Promise<
         name: player.name,
         charsSummary: player.characters.map((char) => {
             const charKey: `${string}-${string}` = `${char.name}-${char.realm}`
-
-            const charDroptimizers = droptimizerByChar[charKey] ?? []
-            const charWowAudit: CharacterWowAudit | null = wowAuditByChar[charKey] ?? null
-            const charRaiderio: CharacterRaiderio | null = raiderioByChar[charKey] ?? null
+            const gameInfo = gameInfoByChar[charKey]
 
             return {
                 character: {
                     ...char,
                     player: { id: player.id, name: player.name },
                 },
-                itemLevel: parseItemLevelCompact(
-                    charDroptimizers,
-                    charRaiderio,
-                    charWowAudit
-                ),
-                tiersetCount: parseTiersetCountCompact(
-                    charDroptimizers,
-                    charWowAudit,
-                    charRaiderio
-                ),
+                itemLevel: parseItemLevelCompact(gameInfo),
+                tiersetCount: parseTiersetCountCompact(gameInfo),
             }
         }),
     }))
