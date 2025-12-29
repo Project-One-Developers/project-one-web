@@ -5,8 +5,9 @@ import {
     characterGameInfoRepo,
     type CharacterGameInfoCompact,
 } from "@/db/repositories/character-game-info"
-import { characterRepo, playerRepo } from "@/db/repositories/characters"
+import { characterRepo } from "@/db/repositories/characters"
 import { droptimizerRepo } from "@/db/repositories/droptimizer"
+import { playerRepo } from "@/db/repositories/player.repo"
 import { raiderioRepo } from "@/db/repositories/raiderio"
 import { wowauditRepo } from "@/db/repositories/wowaudit"
 import type { GearItem } from "@/shared/models/item.model"
