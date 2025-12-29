@@ -142,7 +142,7 @@ const bonusIdsMatch = (
     if (!lootBonusIds && targetBonusIds.length === 0) {
         return true
     }
-    if (!lootBonusIds || lootBonusIds.length !== targetBonusIds.length) {
+    if (lootBonusIds?.length !== targetBonusIds.length) {
         return false
     }
 
