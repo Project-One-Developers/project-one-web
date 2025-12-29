@@ -1,6 +1,19 @@
+import { execSync } from "child_process"
+
 import type { NextConfig } from "next"
 
+const getGitSha = (): string => {
+    try {
+        return execSync("git rev-parse --short HEAD").toString().trim()
+    } catch {
+        return "unknown"
+    }
+}
+
 const nextConfig: NextConfig = {
+    env: {
+        NEXT_PUBLIC_BUILD_ID: getGitSha(),
+    },
     serverExternalPackages: ["discord.js", "zlib-sync", "@discordjs/ws"],
     images: {
         remotePatterns: [
