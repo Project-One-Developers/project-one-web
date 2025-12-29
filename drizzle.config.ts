@@ -1,15 +1,11 @@
 import { defineConfig } from "drizzle-kit"
-
-// TODO: parse env with zod
-if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL environment variable is required")
-}
+import { env } from "./src/env"
 
 export default defineConfig({
     dialect: "postgresql",
     schema: "./src/db/schema.ts",
     out: "./drizzle",
     dbCredentials: {
-        url: process.env.DATABASE_URL,
+        url: env.DATABASE_URL,
     },
 })
