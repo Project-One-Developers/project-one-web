@@ -1,4 +1,4 @@
-import { and, eq, ilike } from "drizzle-orm"
+import { and, eq, ilike, inArray, or } from "drizzle-orm"
 import { unstable_cache, updateTag } from "next/cache"
 import { z } from "zod"
 import { db } from "@/db"
@@ -24,27 +24,30 @@ const TIERSET_CACHE_TAG = "tierset-mapping"
 
 export const itemRepo = {
     getAll: async (): Promise<Item[]> => {
-        const items = await db.query.itemTable.findMany()
+        const items = await db.select().from(itemTable)
         return z.array(itemSchema).parse(items)
     },
 
     getById: async (id: number): Promise<Item | null> => {
-        const res = await db.query.itemTable.findFirst({
-            where: (itemTable, { eq }) => eq(itemTable.id, id),
-        })
+        const res = await db
+            .select()
+            .from(itemTable)
+            .where(eq(itemTable.id, id))
+            .then((r) => r.at(0))
         return res ? itemSchema.parse(res) : null
     },
 
     getByIds: async (ids: number[]): Promise<Item[]> => {
-        const res = await db.query.itemTable.findMany({
-            where: (itemTable, { inArray }) => inArray(itemTable.id, ids),
-        })
+        if (ids.length === 0) {
+            return []
+        }
+        const res = await db.select().from(itemTable).where(inArray(itemTable.id, ids))
         return z.array(itemSchema).parse(res)
     },
 
     getTiersetMapping: unstable_cache(
         async (): Promise<ItemToTierset[]> => {
-            const result = await db.query.itemToTiersetTable.findMany()
+            const result = await db.select().from(itemToTiersetTable)
             return itemToTiersetArraySchema.parse(result)
         },
         [TIERSET_CACHE_TAG],
@@ -52,18 +55,20 @@ export const itemRepo = {
     ),
 
     getCatalystMapping: async (): Promise<ItemToCatalyst[]> => {
-        const result = await db.query.itemToCatalystTable.findMany()
+        const result = await db.select().from(itemToCatalystTable)
         return itemToCatalystArraySchema.parse(result)
     },
 
     getTiersetAndTokenList: async (): Promise<Item[]> => {
-        const res = await db.query.itemTable.findMany({
-            where: (itemTable, { eq, or, and }) =>
+        const res = await db
+            .select()
+            .from(itemTable)
+            .where(
                 and(
                     eq(itemTable.season, CURRENT_SEASON),
                     or(eq(itemTable.tierset, true), eq(itemTable.token, true))
-                ),
-        })
+                )
+            )
         return z.array(itemSchema).parse(res)
     },
 
@@ -156,14 +161,16 @@ export const itemRepo = {
 
 export const itemNoteRepo = {
     getAll: async (): Promise<ItemNote[]> => {
-        const items = await db.query.itemNoteTable.findMany()
+        const items = await db.select().from(itemNoteTable)
         return z.array(itemNoteSchema).parse(items)
     },
 
     getById: async (id: number): Promise<ItemNote | null> => {
-        const res = await db.query.itemNoteTable.findFirst({
-            where: (itemNoteTable, { eq }) => eq(itemNoteTable.itemId, id),
-        })
+        const res = await db
+            .select()
+            .from(itemNoteTable)
+            .where(eq(itemNoteTable.itemId, id))
+            .then((r) => r.at(0))
         return res ? itemNoteSchema.parse(res) : null
     },
 

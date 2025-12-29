@@ -1,52 +1,40 @@
-import { eq, inArray, type InferSelectModel, type SQL } from "drizzle-orm"
+import { eq, inArray } from "drizzle-orm"
 import { db } from "@/db"
 import { charTable, playerTable } from "@/db/schema"
 import { identity, mapAndParse, newUUID } from "@/db/utils"
 import {
     characterSchema,
     characterWithPlayerSchema,
-    playerSchema,
     type Character,
     type CharacterWithPlayer,
     type EditCharacter,
     type NewCharacter,
 } from "@/shared/models/character.model"
 
-// DB type definitions for type-safe mapping
-type DbPlayer = InferSelectModel<typeof playerTable>
-type DbCharacter = InferSelectModel<typeof charTable>
-type DbCharacterWithPlayer = DbCharacter & { player: DbPlayer }
-
-function mapDbToCharacterWithPlayer(db: DbCharacterWithPlayer): CharacterWithPlayer {
-    return {
-        ...mapAndParse(db, identity<DbCharacter>, characterSchema),
-        player: mapAndParse(db.player, identity<DbPlayer>, playerSchema),
-    }
-}
-
 export const characterRepo = {
     getWithPlayerById: async (id: string): Promise<CharacterWithPlayer | null> => {
-        const result = await db.query.charTable.findFirst({
-            where: (char, { eq }) => eq(char.id, id),
-            with: {
-                player: true,
-            },
-        })
+        const result = await db
+            .select({ character: charTable, player: playerTable })
+            .from(charTable)
+            .innerJoin(playerTable, eq(charTable.playerId, playerTable.id))
+            .where(eq(charTable.id, id))
+            .then((r) => r.at(0))
 
         if (!result) {
             return null
         }
 
-        return mapAndParse(result, mapDbToCharacterWithPlayer, characterWithPlayerSchema)
+        return mapAndParse(result, (r) => ({ ...r.character, player: r.player }), characterWithPlayerSchema)
     },
 
     getWithPlayerList: async (): Promise<CharacterWithPlayer[]> => {
-        const result = await db.query.charTable.findMany({
-            with: {
-                player: true,
-            },
-        })
-        return mapAndParse(result, mapDbToCharacterWithPlayer, characterWithPlayerSchema)
+        const result = await db
+            .select({ character: charTable, player: playerTable })
+            .from(charTable)
+            .innerJoin(playerTable, eq(charTable.playerId, playerTable.id))
+
+        const mapped = result.map((r) => ({ ...r.character, player: r.player }))
+        return mapAndParse(mapped, identity, characterWithPlayerSchema)
     },
 
     getList: async (showMains = true, showAlts = true): Promise<Character[]> => {
@@ -55,13 +43,9 @@ export const characterRepo = {
             return []
         }
 
-        // Both true = no filter needed
-        const whereClause: SQL | undefined =
-            showMains && showAlts ? undefined : eq(charTable.main, showMains)
+        const filter = showMains && showAlts ? undefined : eq(charTable.main, showMains)
 
-        const result = await db.query.charTable.findMany({
-            where: whereClause,
-        })
+        const result = await db.select().from(charTable).where(filter)
         return mapAndParse(result, identity, characterSchema)
     },
 
@@ -102,10 +86,13 @@ export const characterRepo = {
         if (ids.length === 0) {
             return []
         }
-        const result = await db.query.charTable.findMany({
-            where: inArray(charTable.id, ids),
-            with: { player: true },
-        })
-        return mapAndParse(result, mapDbToCharacterWithPlayer, characterWithPlayerSchema)
+        const result = await db
+            .select({ character: charTable, player: playerTable })
+            .from(charTable)
+            .innerJoin(playerTable, eq(charTable.playerId, playerTable.id))
+            .where(inArray(charTable.id, ids))
+
+        const mapped = result.map((r) => ({ ...r.character, player: r.player }))
+        return mapAndParse(mapped, identity, characterWithPlayerSchema)
     },
 }

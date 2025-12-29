@@ -7,15 +7,18 @@ import { simcSchema, type SimC } from "@/shared/models/simulation.model"
 
 export const simcRepo = {
     getAll: async (): Promise<SimC[]> => {
-        const result = await db.query.simcTable.findMany()
+        const result = await db.select().from(simcTable)
         return z.array(simcSchema).parse(result)
     },
 
     getByChar: async (charName: string, charRealm: string): Promise<SimC | null> => {
-        const result = await db.query.simcTable.findFirst({
-            where: (t, { and, eq }) =>
-                and(eq(t.charName, charName), eq(t.charRealm, charRealm)),
-        })
+        const result = await db
+            .select()
+            .from(simcTable)
+            .where(
+                and(eq(simcTable.charName, charName), eq(simcTable.charRealm, charRealm))
+            )
+            .then((r) => r.at(0))
         return result ? simcSchema.parse(result) : null
     },
 
@@ -34,13 +37,19 @@ export const simcRepo = {
             return []
         }
 
-        const result = await db.query.simcTable.findMany({
-            where: or(
-                ...chars.map((c) =>
-                    and(eq(simcTable.charName, c.name), eq(simcTable.charRealm, c.realm))
+        const result = await db
+            .select()
+            .from(simcTable)
+            .where(
+                or(
+                    ...chars.map((c) =>
+                        and(
+                            eq(simcTable.charName, c.name),
+                            eq(simcTable.charRealm, c.realm)
+                        )
+                    )
                 )
-            ),
-        })
+            )
         return z.array(simcSchema).parse(result)
     },
 }

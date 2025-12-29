@@ -2,6 +2,7 @@ import {
     and,
     desc,
     eq,
+    inArray,
     type InferInsertModel,
     type InferSelectModel,
     lte,
@@ -87,46 +88,97 @@ export type DroptimizerCompact = {
     tiersetInfo: unknown[] | null // We only need the array length for counting
 }
 
+/**
+ * Helper to fetch upgrades with items for given droptimizer URLs.
+ */
+async function fetchUpgradesWithItems(
+    urls: string[]
+): Promise<Map<string, DbDroptimizerUpgradeWithItem[]>> {
+    if (urls.length === 0) {
+        return new Map()
+    }
+
+    const upgradesWithItems: DbDroptimizerUpgradeWithItem[] = await db
+        .select({
+            id: droptimizerUpgradesTable.id,
+            dps: droptimizerUpgradesTable.dps,
+            slot: droptimizerUpgradesTable.slot,
+            ilvl: droptimizerUpgradesTable.ilvl,
+            tiersetItemId: droptimizerUpgradesTable.tiersetItemId,
+            catalyzedItemId: droptimizerUpgradesTable.catalyzedItemId,
+            droptimizerId: droptimizerUpgradesTable.droptimizerId,
+            item: itemTable,
+        })
+        .from(droptimizerUpgradesTable)
+        .innerJoin(itemTable, eq(droptimizerUpgradesTable.itemId, itemTable.id))
+        .where(inArray(droptimizerUpgradesTable.droptimizerId, urls))
+
+    return Map.groupBy(upgradesWithItems, (u) => u.droptimizerId)
+}
+
+/**
+ * Attaches upgrades to a single droptimizer.
+ */
+async function withUpgrades(
+    droptimizer: DbDroptimizer
+): Promise<DbDroptimizerWithUpgrades> {
+    const upgradesByUrl = await fetchUpgradesWithItems([droptimizer.url])
+    return {
+        ...droptimizer,
+        upgrades: upgradesByUrl.get(droptimizer.url) ?? [],
+    }
+}
+
+/**
+ * Attaches upgrades to multiple droptimizers.
+ */
+async function withUpgradesMany(
+    droptimizers: DbDroptimizer[]
+): Promise<DbDroptimizerWithUpgrades[]> {
+    if (droptimizers.length === 0) {
+        return []
+    }
+
+    const urls = droptimizers.map((d) => d.url)
+    const upgradesByUrl = await fetchUpgradesWithItems(urls)
+
+    return droptimizers.map((d) => ({
+        ...d,
+        upgrades: upgradesByUrl.get(d.url) ?? [],
+    }))
+}
+
 export const droptimizerRepo = {
     get: async (url: string): Promise<Droptimizer | null> => {
-        const result = await db.query.droptimizerTable.findFirst({
-            where: (droptimizerTable, { eq }) => eq(droptimizerTable.url, url),
-            with: {
-                upgrades: {
-                    columns: { itemId: false },
-                    with: { item: true },
-                },
-            },
-        })
+        const droptimizer = await db
+            .select()
+            .from(droptimizerTable)
+            .where(eq(droptimizerTable.url, url))
+            .then((r) => r.at(0))
 
-        if (!result) {
+        if (!droptimizer) {
             return null
         }
+
+        const result = await withUpgrades(droptimizer)
         return mapAndParse(result, mapDbToDroptimizer, droptimizerSchema)
     },
 
     getList: async (): Promise<Droptimizer[]> => {
-        const result = await db.query.droptimizerTable.findMany({
-            with: {
-                upgrades: {
-                    columns: { itemId: false },
-                    with: { item: true },
-                },
-            },
-        })
+        const droptimizers = await db.select().from(droptimizerTable)
+        const result = await withUpgradesMany(droptimizers)
         return mapAndParse(result, mapDbToDroptimizer, droptimizerSchema)
     },
 
     getByIdsList: async (ids: string[]): Promise<Droptimizer[]> => {
-        const result = await db.query.droptimizerTable.findMany({
-            where: (droptimizerTable, { inArray }) => inArray(droptimizerTable.url, ids),
-            with: {
-                upgrades: {
-                    columns: { itemId: false },
-                    with: { item: true },
-                },
-            },
-        })
+        if (ids.length === 0) {
+            return []
+        }
+        const droptimizers = await db
+            .select()
+            .from(droptimizerTable)
+            .where(inArray(droptimizerTable.url, ids))
+        const result = await withUpgradesMany(droptimizers)
         return mapAndParse(result, mapDbToDroptimizer, droptimizerSchema)
     },
 
@@ -148,29 +200,35 @@ export const droptimizerRepo = {
         charRealm: string,
         raidDiff: WowRaidDifficulty
     ): Promise<Droptimizer | null> => {
-        const result = await db.query.droptimizerTable.findFirst({
-            where: (droptimizerTable, { eq, and }) =>
+        const droptimizer = await db
+            .select()
+            .from(droptimizerTable)
+            .where(
                 and(
                     eq(droptimizerTable.characterName, charName),
                     eq(droptimizerTable.characterServer, charRealm),
                     eq(droptimizerTable.raidDifficulty, raidDiff)
-                ),
-            orderBy: (droptimizerTable, { desc }) => desc(droptimizerTable.simDate),
-            with: {
-                upgrades: {
-                    columns: { itemId: false },
-                    with: { item: true },
-                },
-            },
-        })
-        return result ? mapAndParse(result, mapDbToDroptimizer, droptimizerSchema) : null
+                )
+            )
+            .orderBy(desc(droptimizerTable.simDate))
+            .limit(1)
+            .then((r) => r.at(0))
+
+        if (!droptimizer) {
+            return null
+        }
+
+        const result = await withUpgrades(droptimizer)
+        return mapAndParse(result, mapDbToDroptimizer, droptimizerSchema)
     },
 
     add: async (droptimizer: NewDroptimizer): Promise<Droptimizer> => {
         // Check for existing droptimizer with same ak
-        const alreadyPresent = await db.query.droptimizerTable.findFirst({
-            where: (droptimizerTable, { eq }) => eq(droptimizerTable.ak, droptimizer.ak),
-        })
+        const alreadyPresent = await db
+            .select()
+            .from(droptimizerTable)
+            .where(eq(droptimizerTable.ak, droptimizer.ak))
+            .then((r) => r.at(0))
 
         if (alreadyPresent) {
             if (alreadyPresent.simDate >= droptimizer.simInfo.date) {
@@ -255,9 +313,12 @@ export const droptimizerRepo = {
     },
 
     getLatestUnixTs: async (): Promise<number | null> => {
-        const result = await db.query.droptimizerTable.findFirst({
-            orderBy: (droptimizerTable, { desc }) => desc(droptimizerTable.simDate),
-        })
+        const result = await db
+            .select({ simDate: droptimizerTable.simDate })
+            .from(droptimizerTable)
+            .orderBy(desc(droptimizerTable.simDate))
+            .limit(1)
+            .then((r) => r.at(0))
         return result ? result.simDate : null
     },
 
@@ -265,21 +326,25 @@ export const droptimizerRepo = {
         charName: string,
         charRealm: string
     ): Promise<Droptimizer | null> => {
-        const result = await db.query.droptimizerTable.findFirst({
-            where: (droptimizerTable, { eq, and }) =>
+        const droptimizer = await db
+            .select()
+            .from(droptimizerTable)
+            .where(
                 and(
                     eq(droptimizerTable.characterName, charName),
                     eq(droptimizerTable.characterServer, charRealm)
-                ),
-            orderBy: (droptimizerTable, { desc }) => desc(droptimizerTable.simDate),
-            with: {
-                upgrades: {
-                    columns: { itemId: false },
-                    with: { item: true },
-                },
-            },
-        })
-        return result ? mapAndParse(result, mapDbToDroptimizer, droptimizerSchema) : null
+                )
+            )
+            .orderBy(desc(droptimizerTable.simDate))
+            .limit(1)
+            .then((r) => r.at(0))
+
+        if (!droptimizer) {
+            return null
+        }
+
+        const result = await withUpgrades(droptimizer)
+        return mapAndParse(result, mapDbToDroptimizer, droptimizerSchema)
     },
 
     getLatestByChars: async (

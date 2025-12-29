@@ -1,4 +1,3 @@
-import { relations } from "drizzle-orm"
 import {
     boolean,
     integer,
@@ -265,9 +264,9 @@ export const lootTable = pgTable("loots", {
     id: varchar("id").primaryKey(),
     dropDate: integer("drop_date").notNull(),
     itemString: varchar("item_string"),
-    gearItem: jsonb("gear_item").$type<GearItem>(),
+    gearItem: jsonb("gear_item").$type<GearItem>().notNull(),
     raidDifficulty: pgRaidDiffEnum("raid_difficulty").notNull(),
-    charsEligibility: text("chars_eligibility").array(), // array of IDs referencing RaidSession.Chars
+    charsEligibility: text("chars_eligibility").array().notNull(), // array of IDs referencing RaidSession.Chars
     assignedCharacterId: varchar("assigned_character_id").references(() => charTable.id, {
         onDelete: "set null",
     }),
@@ -399,91 +398,3 @@ export const allowedUsersTable = pgTable("allowed_users", {
     discordUsername: text("discord_username"),
     createdAt: timestamp("created_at").defaultNow(),
 })
-
-//////////////////////////////////////////////////////////
-//                     RELATIONS                        //
-//////////////////////////////////////////////////////////
-
-export const bossItemsRelations = relations(bossTable, ({ many }) => ({
-    items: many(itemTable),
-}))
-
-export const itemBossRelations = relations(itemTable, ({ one }) => ({
-    boss: one(bossTable, {
-        fields: [itemTable.bossId],
-        references: [bossTable.id],
-    }),
-}))
-
-export const charPlayerRelations = relations(charTable, ({ one }) => ({
-    player: one(playerTable, {
-        fields: [charTable.playerId],
-        references: [playerTable.id],
-    }),
-}))
-
-export const droptimizerUpgradesRelations = relations(
-    droptimizerUpgradesTable,
-    ({ one }) => ({
-        droptimizer: one(droptimizerTable, {
-            fields: [droptimizerUpgradesTable.droptimizerId],
-            references: [droptimizerTable.url],
-        }),
-        item: one(itemTable, {
-            fields: [droptimizerUpgradesTable.itemId],
-            references: [itemTable.id],
-        }),
-        catalyzedItem: one(itemTable, {
-            fields: [droptimizerUpgradesTable.catalyzedItemId],
-            references: [itemTable.id],
-        }),
-    })
-)
-
-export const droptimizerRelations = relations(droptimizerTable, ({ many }) => ({
-    upgrades: many(droptimizerUpgradesTable),
-}))
-
-export const playerCharRelations = relations(playerTable, ({ many }) => ({
-    characters: many(charTable),
-}))
-
-// Raid Sessions
-export const raidSessionTableRelations = relations(raidSessionTable, ({ many }) => ({
-    charPartecipation: many(raidSessionRosterTable),
-    lootedItems: many(lootTable),
-}))
-
-export const charTableRelations = relations(charTable, ({ one, many }) => ({
-    raidPartecipation: many(raidSessionRosterTable),
-    player: one(playerTable, {
-        fields: [charTable.playerId],
-        references: [playerTable.id],
-    }),
-}))
-
-export const raidSessionRosterRelations = relations(
-    raidSessionRosterTable,
-    ({ one }) => ({
-        raidSession: one(raidSessionTable, {
-            fields: [raidSessionRosterTable.raidSessionId],
-            references: [raidSessionTable.id],
-        }),
-        character: one(charTable, {
-            fields: [raidSessionRosterTable.charId],
-            references: [charTable.id],
-        }),
-    })
-)
-
-// Loot table
-export const lootsRelations = relations(lootTable, ({ one }) => ({
-    item: one(itemTable, {
-        fields: [lootTable.itemId],
-        references: [itemTable.id],
-    }),
-    assignedCharacter: one(charTable, {
-        fields: [lootTable.assignedCharacterId],
-        references: [charTable.id],
-    }),
-}))

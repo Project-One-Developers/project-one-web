@@ -1,4 +1,4 @@
-import { and, eq, inArray, or } from "drizzle-orm"
+import { and, desc, eq, inArray, or } from "drizzle-orm"
 import { z } from "zod"
 import { db } from "@/db"
 import { bossTable, characterEncounterTable, charRaiderioTable } from "@/db/schema"
@@ -140,9 +140,12 @@ export const raiderioRepo = {
     },
 
     getLastTimeSynced: async (): Promise<number | null> => {
-        const result = await db.query.charRaiderioTable.findFirst({
-            orderBy: (charRaiderioTable, { desc }) => desc(charRaiderioTable.p1SyncAt),
-        })
+        const result = await db
+            .select()
+            .from(charRaiderioTable)
+            .orderBy(desc(charRaiderioTable.p1SyncAt))
+            .limit(1)
+            .then((r) => r.at(0))
         return result ? result.p1SyncAt : null
     },
 
@@ -150,18 +153,21 @@ export const raiderioRepo = {
         charName: string,
         charRealm: string
     ): Promise<CharacterRaiderioDb | null> => {
-        const result = await db.query.charRaiderioTable.findFirst({
-            where: (charRaiderioTable, { eq, and }) =>
+        const result = await db
+            .select()
+            .from(charRaiderioTable)
+            .where(
                 and(
                     eq(charRaiderioTable.name, charName),
                     eq(charRaiderioTable.realm, charRealm)
-                ),
-        })
+                )
+            )
+            .then((r) => r.at(0))
         return result ? charRaiderioDbSchema.parse(result) : null
     },
 
     getAll: async (): Promise<CharacterRaiderioDb[]> => {
-        const result = await db.query.charRaiderioTable.findMany()
+        const result = await db.select().from(charRaiderioTable)
         return z.array(charRaiderioDbSchema).parse(result)
     },
 
@@ -172,16 +178,19 @@ export const raiderioRepo = {
             return []
         }
 
-        const result = await db.query.charRaiderioTable.findMany({
-            where: or(
-                ...chars.map((c) =>
-                    and(
-                        eq(charRaiderioTable.name, c.name),
-                        eq(charRaiderioTable.realm, c.realm)
+        const result = await db
+            .select()
+            .from(charRaiderioTable)
+            .where(
+                or(
+                    ...chars.map((c) =>
+                        and(
+                            eq(charRaiderioTable.name, c.name),
+                            eq(charRaiderioTable.realm, c.realm)
+                        )
                     )
                 )
-            ),
-        })
+            )
         return z.array(charRaiderioDbSchema).parse(result)
     },
 }

@@ -1,13 +1,13 @@
-import { count, desc, eq, InferInsertModel, sql } from "drizzle-orm"
-import { z } from "zod"
+import { count, desc, eq, type InferInsertModel, sql } from "drizzle-orm"
 import { db } from "@/db"
 import {
     charTable,
     lootTable,
+    playerTable,
     raidSessionRosterTable,
     raidSessionTable,
 } from "@/db/schema"
-import { newUUID } from "@/db/utils"
+import { identity, mapAndParse, newUUID } from "@/db/utils"
 import { characterSchema, type Character } from "@/shared/models/character.model"
 import {
     raidSessionSchema,
@@ -20,51 +20,47 @@ import {
     type RaidSessionWithSummary,
 } from "@/shared/models/raid-session.model"
 
-type RaidSessionWithCharPartecipation = RaidSession & {
-    charPartecipation?: { character: Character }[]
-}
-
-function flattenRaidPartecipation(
-    result: RaidSessionWithCharPartecipation
-): RaidSessionWithRoster {
-    return {
-        ...result,
-        roster: result.charPartecipation?.map((cp) => cp.character) ?? [],
-    }
-}
-
 export const raidSessionRepo = {
     getWithRoster: async (id: string): Promise<RaidSessionWithRoster> => {
-        const result = await db.query.raidSessionTable.findFirst({
-            where: (raidSessionTable, { eq }) => eq(raidSessionTable.id, id),
-            with: {
-                charPartecipation: {
-                    with: {
-                        character: {
-                            with: { player: true },
-                        },
-                    },
-                },
-            },
-        })
+        // Fetch the raid session
+        const session = await db
+            .select()
+            .from(raidSessionTable)
+            .where(eq(raidSessionTable.id, id))
+            .then((r) => r.at(0))
+
+        if (!session) {
+            throw new Error(`Raid session not found: ${id}`)
+        }
+
+        const rosterData = await db
+            .select({ character: charTable, player: playerTable })
+            .from(raidSessionRosterTable)
+            .innerJoin(charTable, eq(raidSessionRosterTable.charId, charTable.id))
+            .innerJoin(playerTable, eq(charTable.playerId, playerTable.id))
+            .where(eq(raidSessionRosterTable.raidSessionId, id))
+
+        const roster = rosterData.map((r) => ({ ...r.character, player: r.player }))
+        return mapAndParse({ ...session, roster }, identity, raidSessionWithRosterSchema)
+    },
+
+    getById: async (id: string): Promise<RaidSession> => {
+        const result = await db
+            .select()
+            .from(raidSessionTable)
+            .where(eq(raidSessionTable.id, id))
+            .then((r) => r.at(0))
 
         if (!result) {
             throw new Error(`Raid session not found: ${id}`)
         }
-        const processedResult = flattenRaidPartecipation(result)
-        return raidSessionWithRosterSchema.parse(processedResult)
-    },
 
-    getById: async (id: string): Promise<RaidSession> => {
-        const result = await db.query.raidSessionTable.findFirst({
-            where: (raidSessionTable, { eq }) => eq(raidSessionTable.id, id),
-        })
-        return raidSessionSchema.parse(result)
+        return mapAndParse(result, identity, raidSessionSchema)
     },
 
     getAll: async (): Promise<RaidSession[]> => {
-        const result = await db.query.raidSessionTable.findMany()
-        return z.array(raidSessionSchema).parse(result)
+        const result = await db.select().from(raidSessionTable)
+        return mapAndParse(result, identity, raidSessionSchema)
     },
 
     getWithSummaryList: async (): Promise<RaidSessionWithSummary[]> => {
@@ -90,17 +86,19 @@ export const raidSessionRepo = {
             .from(raidSessionTable)
             .orderBy(desc(raidSessionTable.raidDate))
 
-        const parsed = results.map((r) => ({
-            id: r.id,
-            name: r.name,
-            raidDate: r.raidDate,
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion -- PostgreSQL bigint comes as string
-            lootCount: Number(r.lootCount),
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion -- PostgreSQL bigint comes as string
-            rosterCount: Number(r.rosterCount),
-        }))
-
-        return z.array(raidSessionWithSummarySchema).parse(parsed)
+        return mapAndParse(
+            results,
+            (r) => ({
+                id: r.id,
+                name: r.name,
+                raidDate: r.raidDate,
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion -- PostgreSQL bigint comes as string
+                lootCount: Number(r.lootCount),
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion -- PostgreSQL bigint comes as string
+                rosterCount: Number(r.rosterCount),
+            }),
+            raidSessionWithSummarySchema
+        )
     },
 
     edit: async (editedRaidSession: EditRaidSession): Promise<string> => {
@@ -168,11 +166,11 @@ export const raidSessionRepo = {
 
     getRoster: async (id: string): Promise<Character[]> => {
         const result = await db
-            .select()
+            .select({ character: charTable })
             .from(raidSessionRosterTable)
             .innerJoin(charTable, eq(raidSessionRosterTable.charId, charTable.id))
             .where(eq(raidSessionRosterTable.raidSessionId, id))
 
-        return z.array(characterSchema).parse(result.flatMap((sr) => sr.characters))
+        return mapAndParse(result, (r) => r.character, characterSchema)
     },
 }

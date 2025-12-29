@@ -1,8 +1,7 @@
-import { eq, inArray, type InferInsertModel } from "drizzle-orm"
-import { z } from "zod"
+import { and, eq, inArray, type InferInsertModel, isNotNull } from "drizzle-orm"
 import { db } from "@/db"
-import { lootTable } from "@/db/schema"
-import { newUUID } from "@/db/utils"
+import { charTable, itemTable, lootTable } from "@/db/schema"
+import { identity, mapAndParse, newUUID } from "@/db/utils"
 import type { Character } from "@/shared/models/character.model"
 import {
     lootSchema,
@@ -15,66 +14,104 @@ import {
     type NewLoot,
 } from "@/shared/models/loot.model"
 
+type LootWithItemJoin = {
+    loot: typeof lootTable.$inferSelect
+    item: typeof itemTable.$inferSelect
+}
+type LootWithAssignedJoin = {
+    loot: typeof lootTable.$inferSelect
+    assignedCharacter: typeof charTable.$inferSelect | null
+}
+
+function mapJoinToLootWithItem(row: LootWithItemJoin): LootWithItem {
+    return { ...row.loot, item: row.item }
+}
+
+function mapJoinToLootWithAssigned(row: LootWithAssignedJoin): LootWithAssigned {
+    return { ...row.loot, assignedCharacter: row.assignedCharacter }
+}
+
 export const lootRepo = {
     getById: async (lootId: string): Promise<Loot> => {
-        const result = await db.query.lootTable.findFirst({
-            where: (lootTable, { eq }) => eq(lootTable.id, lootId),
-        })
-        return lootSchema.parse(result)
+        const result = await db
+            .select()
+            .from(lootTable)
+            .where(eq(lootTable.id, lootId))
+            .then((r) => r.at(0))
+
+        if (!result) {
+            throw new Error(`Loot not found: ${lootId}`)
+        }
+
+        return mapAndParse(result, identity, lootSchema)
     },
 
     getWithItemById: async (lootId: string): Promise<LootWithItem> => {
-        const result = await db.query.lootTable.findFirst({
-            where: (lootTable, { eq }) => eq(lootTable.id, lootId),
-            with: { item: true },
-        })
-        return lootWithItemSchema.parse(result)
+        const result = await db
+            .select({ loot: lootTable, item: itemTable })
+            .from(lootTable)
+            .innerJoin(itemTable, eq(lootTable.itemId, itemTable.id))
+            .where(eq(lootTable.id, lootId))
+            .then((r) => r.at(0))
+
+        if (!result) {
+            throw new Error(`Loot not found: ${lootId}`)
+        }
+        return mapAndParse(result, mapJoinToLootWithItem, lootWithItemSchema)
     },
 
     getAssigned: async (): Promise<Loot[]> => {
-        const result = await db.query.lootTable.findMany({
-            where: (lootTable, { isNotNull }) => isNotNull(lootTable.raidSessionId),
-        })
-        return z.array(lootSchema).parse(result)
+        const result = await db
+            .select()
+            .from(lootTable)
+            .where(isNotNull(lootTable.raidSessionId))
+        return mapAndParse(result, identity, lootSchema)
     },
 
     getAssignedByItemId: async (itemId: number): Promise<Loot[]> => {
-        const result = await db.query.lootTable.findMany({
-            where: (lootTable, { and, eq, isNotNull }) =>
+        const result = await db
+            .select()
+            .from(lootTable)
+            .where(
                 and(
                     eq(lootTable.itemId, itemId),
                     isNotNull(lootTable.assignedCharacterId)
-                ),
-        })
-        return z.array(lootSchema).parse(result)
+                )
+            )
+        return mapAndParse(result, identity, lootSchema)
     },
 
     getAssignedBySession: async (raidSessionId: string): Promise<Loot[]> => {
-        const result = await db.query.lootTable.findMany({
-            where: (lootTable, { eq, and, isNotNull }) =>
+        const result = await db
+            .select()
+            .from(lootTable)
+            .where(
                 and(
                     eq(lootTable.raidSessionId, raidSessionId),
                     isNotNull(lootTable.assignedCharacterId)
-                ),
-        })
-        return z.array(lootSchema).parse(result)
+                )
+            )
+        return mapAndParse(result, identity, lootSchema)
     },
 
     getByRaidSessionId: async (raidSessionId: string): Promise<Loot[]> => {
-        const result = await db.query.lootTable.findMany({
-            where: (lootTable, { eq }) => eq(lootTable.raidSessionId, raidSessionId),
-        })
-        return z.array(lootSchema).parse(result)
+        const result = await db
+            .select()
+            .from(lootTable)
+            .where(eq(lootTable.raidSessionId, raidSessionId))
+        return mapAndParse(result, identity, lootSchema)
     },
 
     getByRaidSessionIdWithAssigned: async (
         raidSessionId: string
     ): Promise<LootWithAssigned[]> => {
-        const result = await db.query.lootTable.findMany({
-            where: (lootTable, { eq }) => eq(lootTable.raidSessionId, raidSessionId),
-            with: { assignedCharacter: true },
-        })
-        return z.array(lootWithAssignedSchema).parse(result)
+        const result = await db
+            .select({ loot: lootTable, assignedCharacter: charTable })
+            .from(lootTable)
+            .leftJoin(charTable, eq(lootTable.assignedCharacterId, charTable.id))
+            .where(eq(lootTable.raidSessionId, raidSessionId))
+
+        return mapAndParse(result, mapJoinToLootWithAssigned, lootWithAssignedSchema)
     },
 
     getByRaidSessionIdsWithAssigned: async (
@@ -84,21 +121,25 @@ export const lootRepo = {
             return []
         }
 
-        const result = await db.query.lootTable.findMany({
-            where: inArray(lootTable.raidSessionId, raidSessionIds),
-            with: { assignedCharacter: true },
-        })
-        return z.array(lootWithAssignedSchema).parse(result)
+        const result = await db
+            .select({ loot: lootTable, assignedCharacter: charTable })
+            .from(lootTable)
+            .leftJoin(charTable, eq(lootTable.assignedCharacterId, charTable.id))
+            .where(inArray(lootTable.raidSessionId, raidSessionIds))
+
+        return mapAndParse(result, mapJoinToLootWithAssigned, lootWithAssignedSchema)
     },
 
     getByRaidSessionIdWithItem: async (
         raidSessionId: string
     ): Promise<LootWithItem[]> => {
-        const result = await db.query.lootTable.findMany({
-            where: (lootTable, { eq }) => eq(lootTable.raidSessionId, raidSessionId),
-            with: { item: true },
-        })
-        return z.array(lootWithItemSchema).parse(result)
+        const result = await db
+            .select({ loot: lootTable, item: itemTable })
+            .from(lootTable)
+            .innerJoin(itemTable, eq(lootTable.itemId, itemTable.id))
+            .where(eq(lootTable.raidSessionId, raidSessionId))
+
+        return mapAndParse(result, mapJoinToLootWithItem, lootWithItemSchema)
     },
 
     addMany: async (

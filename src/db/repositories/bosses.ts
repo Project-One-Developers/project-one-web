@@ -1,8 +1,7 @@
-import { eq } from "drizzle-orm"
-import { z } from "zod"
+import { eq, inArray } from "drizzle-orm"
 import { db } from "@/db"
-import { bossTable } from "@/db/schema"
-import { buildConflictUpdateColumns } from "@/db/utils"
+import { bossTable, itemTable } from "@/db/schema"
+import { buildConflictUpdateColumns, identity, mapAndParse } from "@/db/utils"
 import {
     bossSchema,
     bossWithItemsSchema,
@@ -18,8 +17,9 @@ export const bossRepo = {
             .from(bossTable)
             .where(eq(bossTable.raiderioEncounterSlug, slug))
             .limit(1)
+            .then((r) => r.at(0))
 
-        return result[0] ? bossSchema.parse(result[0]) : null
+        return result ? mapAndParse(result, identity, bossSchema) : null
     },
 
     // Get all bosses by raid slug (for bulk lookup)
@@ -29,8 +29,9 @@ export const bossRepo = {
             .from(bossTable)
             .where(eq(bossTable.raiderioRaidSlug, raidSlug))
 
-        return z.array(bossSchema).parse(result)
+        return mapAndParse(result, identity, bossSchema)
     },
+
     upsert: async (bosses: Boss[]): Promise<void> => {
         if (bosses.length === 0) {
             return
@@ -55,20 +56,40 @@ export const bossRepo = {
     },
 
     getLootTable: async (raidId: number): Promise<BossWithItems[]> => {
-        const result = await db.query.bossTable.findMany({
-            where: (bossTable, { eq }) => eq(bossTable.instanceId, raidId),
-            with: { items: true },
-        })
-        return z.array(bossWithItemsSchema).parse(result)
+        // Fetch bosses and items separately, then aggregate
+        const bosses = await db
+            .select()
+            .from(bossTable)
+            .where(eq(bossTable.instanceId, raidId))
+
+        if (bosses.length === 0) {
+            return []
+        }
+
+        const bossIds = bosses.map((b) => b.id)
+        const items = await db
+            .select()
+            .from(itemTable)
+            .where(inArray(itemTable.bossId, bossIds))
+
+        const itemsByBoss = Map.groupBy(items, (i) => i.bossId)
+
+        return mapAndParse(
+            bosses,
+            (boss) => ({ ...boss, items: itemsByBoss.get(boss.id) ?? [] }),
+            bossWithItemsSchema
+        )
     },
 
     getAll: async (raidId?: number): Promise<Boss[]> => {
-        const result = await db.query.bossTable.findMany({
-            where:
-                raidId !== undefined
-                    ? (bossTable, { eq }) => eq(bossTable.instanceId, raidId)
-                    : undefined,
-        })
-        return z.array(bossSchema).parse(result)
+        const result =
+            raidId !== undefined
+                ? await db
+                      .select()
+                      .from(bossTable)
+                      .where(eq(bossTable.instanceId, raidId))
+                : await db.select().from(bossTable)
+
+        return mapAndParse(result, identity, bossSchema)
     },
 }

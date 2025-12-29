@@ -1,9 +1,8 @@
-import { eq, isNull, type InferSelectModel } from "drizzle-orm"
+import { eq, isNull } from "drizzle-orm"
 import { db } from "@/db"
 import { charTable, playerTable } from "@/db/schema"
 import { identity, mapAndParse, newUUID } from "@/db/utils"
 import {
-    characterSchema,
     playerSchema,
     playerWithCharacterSchema,
     type EditPlayer,
@@ -12,26 +11,17 @@ import {
     type PlayerWithCharacters,
 } from "@/shared/models/character.model"
 
-// DB type definitions for type-safe mapping
-type DbPlayer = InferSelectModel<typeof playerTable>
-type DbCharacter = InferSelectModel<typeof charTable>
-type DbPlayerWithChars = DbPlayer & { characters: DbCharacter[] }
-
-function mapDbToPlayerWithCharacters(db: DbPlayerWithChars): PlayerWithCharacters {
-    return {
-        ...mapAndParse(db, identity<DbPlayer>, playerSchema),
-        characters: mapAndParse(db.characters, identity<DbCharacter>, characterSchema),
-    }
-}
-
 export const playerRepo = {
     getWithCharactersList: async (): Promise<PlayerWithCharacters[]> => {
-        const result = await db.query.playerTable.findMany({
-            with: {
-                characters: true,
-            },
-        })
-        return mapAndParse(result, mapDbToPlayerWithCharacters, playerWithCharacterSchema)
+        const players = await db.select().from(playerTable)
+        const characters = await db.select().from(charTable)
+        const charsByPlayer = Map.groupBy(characters, (c) => c.playerId)
+
+        return mapAndParse(
+            players,
+            (player) => ({ ...player, characters: charsByPlayer.get(player.id) ?? [] }),
+            playerWithCharacterSchema
+        )
     },
 
     getWithoutCharactersList: async (): Promise<Player[]> => {

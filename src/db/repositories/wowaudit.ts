@@ -1,4 +1,4 @@
-import { and, eq, type InferSelectModel, or } from "drizzle-orm"
+import { and, desc, eq, type InferSelectModel, or } from "drizzle-orm"
 import { db } from "@/db"
 import { charWowAuditTable } from "@/db/schema"
 import { mapAndParse } from "@/db/utils"
@@ -78,10 +78,12 @@ export const wowauditRepo = {
     },
 
     getLastTimeSynced: async (): Promise<number | null> => {
-        const result = await db.query.charWowAuditTable.findFirst({
-            orderBy: (charWowAuditTable, { desc }) =>
-                desc(charWowAuditTable.wowauditLastModifiedUnixTs),
-        })
+        const result = await db
+            .select()
+            .from(charWowAuditTable)
+            .orderBy(desc(charWowAuditTable.wowauditLastModifiedUnixTs))
+            .limit(1)
+            .then((r) => r.at(0))
         return result ? result.wowauditLastModifiedUnixTs : null
     },
 
@@ -89,20 +91,23 @@ export const wowauditRepo = {
         charName: string,
         charRealm: string
     ): Promise<CharacterWowAudit | null> => {
-        const result = await db.query.charWowAuditTable.findFirst({
-            where: (charWowAuditTable, { eq, and }) =>
+        const result = await db
+            .select()
+            .from(charWowAuditTable)
+            .where(
                 and(
                     eq(charWowAuditTable.name, charName),
                     eq(charWowAuditTable.realm, charRealm)
-                ),
-        })
+                )
+            )
+            .then((r) => r.at(0))
         return result
             ? mapAndParse(result, mapDbToCharWowAudit, charWowAuditSchema)
             : null
     },
 
     getAll: async (): Promise<CharacterWowAudit[]> => {
-        const result = await db.query.charWowAuditTable.findMany()
+        const result = await db.select().from(charWowAuditTable)
         return mapAndParse(result, mapDbToCharWowAudit, charWowAuditSchema)
     },
 
@@ -117,16 +122,19 @@ export const wowauditRepo = {
             return []
         }
 
-        const result = await db.query.charWowAuditTable.findMany({
-            where: or(
-                ...chars.map((c) =>
-                    and(
-                        eq(charWowAuditTable.name, c.name),
-                        eq(charWowAuditTable.realm, c.realm)
+        const result = await db
+            .select()
+            .from(charWowAuditTable)
+            .where(
+                or(
+                    ...chars.map((c) =>
+                        and(
+                            eq(charWowAuditTable.name, c.name),
+                            eq(charWowAuditTable.realm, c.realm)
+                        )
                     )
                 )
-            ),
-        })
+            )
         return mapAndParse(result, mapDbToCharWowAudit, charWowAuditSchema)
     },
 }
