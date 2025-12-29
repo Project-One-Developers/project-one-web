@@ -112,7 +112,6 @@ export const playerRepo = {
     },
 
     delete: async (id: string): Promise<void> => {
-        await db.delete(charTable).where(eq(charTable.playerId, id))
         await db.delete(playerTable).where(eq(playerTable.id, id))
     },
 }

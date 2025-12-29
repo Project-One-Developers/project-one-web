@@ -59,7 +59,7 @@ export const charTable = pgTable(
         role: pgRoleEnum().notNull(),
         main: boolean("main").notNull(), // consider player main char (for future me: dont put any constraint in case any player has more than one "main "char)
         playerId: varchar("player_id")
-            .references(() => playerTable.id)
+            .references(() => playerTable.id, { onDelete: "cascade" })
             .notNull(),
     },
     (t) => [
@@ -155,7 +155,9 @@ export const bisListTable = pgTable(
     "bis_list",
     {
         id: varchar("id").primaryKey(),
-        itemId: integer("item_id").notNull(),
+        itemId: integer("item_id")
+            .references(() => itemTable.id, { onDelete: "cascade" })
+            .notNull(),
         specId: integer("spec_id").notNull(),
     },
     (t) => [unique().on(t.itemId, t.specId)]
@@ -173,10 +175,14 @@ export const droptimizerUpgradesTable = pgTable(
         slot: pgItemEquippedSlotKeyEnum("slot").notNull(),
         ilvl: integer("ilvl").notNull(),
         itemId: integer("item_id")
-            .references(() => itemTable.id)
+            .references(() => itemTable.id, { onDelete: "cascade" })
             .notNull(),
-        tiersetItemId: integer("tierset_item_id").references(() => itemTable.id),
-        catalyzedItemId: integer("catalyzed_item_id").references(() => itemTable.id),
+        tiersetItemId: integer("tierset_item_id").references(() => itemTable.id, {
+            onDelete: "set null",
+        }),
+        catalyzedItemId: integer("catalyzed_item_id").references(() => itemTable.id, {
+            onDelete: "set null",
+        }),
         droptimizerId: varchar("droptimizer_id")
             .references(() => droptimizerTable.url, { onDelete: "cascade" })
             .notNull(),
@@ -262,7 +268,9 @@ export const lootTable = pgTable("loots", {
     gearItem: jsonb("gear_item").$type<GearItem>(),
     raidDifficulty: pgRaidDiffEnum("raid_difficulty").notNull(),
     charsEligibility: text("chars_eligibility").array(), // array of IDs referencing RaidSession.Chars
-    assignedCharacterId: varchar("assigned_character_id").references(() => charTable.id),
+    assignedCharacterId: varchar("assigned_character_id").references(() => charTable.id, {
+        onDelete: "set null",
+    }),
     assignedHighlights: jsonb("assigned_highlights").$type<CharAssignmentHighlights>(),
     tradedToAssigned: boolean("traded_to_assigned").notNull().default(false),
     raidSessionId: varchar("raid_session_id")
@@ -276,10 +284,10 @@ export const lootTable = pgTable("loots", {
 export const assignmentTable = pgTable("assignments", {
     id: varchar("id").primaryKey(),
     charId: varchar("char_id")
-        .references(() => charTable.id)
+        .references(() => charTable.id, { onDelete: "cascade" })
         .notNull(),
     lootId: varchar("loot_id")
-        .references(() => lootTable.id)
+        .references(() => lootTable.id, { onDelete: "cascade" })
         .unique("loot_assignment")
         .notNull(), // un loot può essere assegnato una sola volta
 })
@@ -342,7 +350,9 @@ export const itemTable = pgTable("items", {
 
 // Item Note ( user can write note about item, we isolate in a dedicated table to avoid data loss on item reload)
 export const itemNoteTable = pgTable("items_note", {
-    itemId: integer("item_id").primaryKey(),
+    itemId: integer("item_id")
+        .references(() => itemTable.id, { onDelete: "cascade" })
+        .primaryKey(),
     note: varchar("note").notNull(),
 })
 
@@ -351,7 +361,7 @@ export const itemToTiersetTable = pgTable("items_to_tierset", {
     itemId: integer("item_id").primaryKey(),
     classId: integer("class_id").notNull(),
     tokenId: integer("token_id")
-        .references(() => itemTable.id)
+        .references(() => itemTable.id, { onDelete: "cascade" })
         .notNull(),
 })
 
