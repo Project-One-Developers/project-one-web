@@ -7,3 +7,11 @@ updates:
       target-branch: "main"
       labels:
           - "dependencies"
+
+    - package-ecosystem: "docker-compose"
+      directory: "/"
+      schedule:
+          interval: "weekly"
+      target-branch: "main"
+      labels:
+          - "dependencies"
