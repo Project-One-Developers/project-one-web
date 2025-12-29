@@ -1,6 +1,7 @@
 "use server"
 
 import { groupBy, keyBy } from "es-toolkit"
+import { Duration } from "luxon"
 import { bisListRepo } from "@/db/repositories/bis-list"
 import { characterRepo } from "@/db/repositories/characters"
 import { droptimizerRepo } from "@/db/repositories/droptimizer"
@@ -42,6 +43,8 @@ import type { CharacterRaiderio } from "@/shared/models/raiderio.model"
 import type { SimC } from "@/shared/models/simulation.model"
 import type { CharacterWowAudit } from "@/shared/models/wowaudit.model"
 import type { CharAssignmentInfo, LootAssignmentInfo } from "@/shared/types/types"
+
+const RAID_SESSION_TIME_WINDOW = Duration.fromObject({ hours: 12 }).as("seconds")
 
 export async function getLootsBySessionId(raidSessionId: string): Promise<Loot[]> {
     return await lootRepo.getByRaidSessionId(raidSessionId)
@@ -111,8 +114,8 @@ export async function importRcLootCsv(
     const session = await raidSessionRepo.getById(raidSessionId)
 
     // Date bounds: session date ± 12 hours
-    const dateLowerBound = session.raidDate - 12 * 60 * 60
-    const dateUpperBound = session.raidDate + 12 * 60 * 60
+    const dateLowerBound = session.raidDate - RAID_SESSION_TIME_WINDOW
+    const dateUpperBound = session.raidDate + RAID_SESSION_TIME_WINDOW
 
     const allItems = await itemRepo.getAll()
     const allCharacters = importAssignedCharacter ? await characterRepo.getList() : []
@@ -163,8 +166,6 @@ export async function importRcLootAssignments(
 ): Promise<{ assigned: number; warnings: string[] }> {
     const session = await raidSessionRepo.getById(raidSessionId)
 
-    const RAID_SESSION_UPPER_BOUND_DELTA = 12 * 60 * 60
-
     const allItems = await itemRepo.getAll()
     const allCharacters = await characterRepo.getList()
 
@@ -173,7 +174,7 @@ export async function importRcLootAssignments(
             parseRcLoots(
                 csv,
                 session.raidDate,
-                session.raidDate + RAID_SESSION_UPPER_BOUND_DELTA,
+                session.raidDate + RAID_SESSION_TIME_WINDOW,
                 true,
                 allItems,
                 allCharacters
@@ -265,8 +266,8 @@ export async function importMrtLoot(
     const session = await raidSessionRepo.getById(raidSessionId)
 
     // Date bounds: session date ± 12 hours
-    const dateLowerBound = session.raidDate - 12 * 60 * 60
-    const dateUpperBound = session.raidDate + 12 * 60 * 60
+    const dateLowerBound = session.raidDate - RAID_SESSION_TIME_WINDOW
+    const dateUpperBound = session.raidDate + RAID_SESSION_TIME_WINDOW
 
     const allItems = await itemRepo.getAll()
 
