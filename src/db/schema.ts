@@ -403,15 +403,3 @@ export const appConfigTable = pgTable("app_config", {
     key: varchar("key").primaryKey(),
     value: varchar("value").notNull(),
 })
-
-//////////////////////////////////////////////////////////
-//                   ALLOWED USERS                      //
-//////////////////////////////////////////////////////////
-
-// Discord users allowed to access the application
-export const allowedUsersTable = pgTable("allowed_users", {
-    id: serial("id").primaryKey(),
-    discordId: text("discord_id").notNull().unique(),
-    discordUsername: text("discord_username"),
-    createdAt: timestamp("created_at").defaultNow(),
-})
