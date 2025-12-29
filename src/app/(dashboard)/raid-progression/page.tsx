@@ -1,6 +1,6 @@
 "use client"
 
-import { groupBy, partition } from "es-toolkit"
+import { groupBy, partition, sortBy } from "es-toolkit"
 import { LoaderCircle } from "lucide-react"
 import Image from "next/image"
 import { useEffect, useMemo, useState, type JSX } from "react"
@@ -35,13 +35,6 @@ type CharacterEncounterInfo = {
     encounter: RaiderioEncounter | null
 }
 
-type EncounterMap = Map<string, RaiderioEncounter>
-
-type CharacterWithEncounterMap = {
-    p1Character: Character
-    encounterMap: EncounterMap
-}
-
 type BossProgressData = {
     defeated: GroupedByRole<CharacterEncounterInfo>
     notDefeated: CharacterEncounterInfo[]
@@ -60,10 +53,6 @@ type BossPanelProps = {
     totalRosterSize: number
     selectedDifficulty: WowRaidDifficulty
 }
-
-// Utility: Sort by class within role groups
-const sortByClass = <T extends { character: { class: string } }>(items: T[]): T[] =>
-    items.toSorted((a, b) => a.character.class.localeCompare(b.character.class))
 
 // Components
 const CharacterTooltip = ({
@@ -263,7 +252,6 @@ export default function RaidProgressionPage(): JSX.Element {
 
     // Queries
     const bossesQuery = useBosses()
-    const rosterProgressionQuery = useRosterProgression(showMains, showAlts)
 
     // Debounce search input
     useEffect(() => {
@@ -288,77 +276,51 @@ export default function RaidProgressionPage(): JSX.Element {
             .sort((a, b) => a.order - b.order)
     }, [bossesQuery.data])
 
-    // Pre-process roster data: build encounter maps for O(1) boss lookups
-    const charactersWithEncounterMaps = useMemo((): CharacterWithEncounterMap[] => {
-        if (!rosterProgressionQuery.data || orderedBosses.length === 0) {
-            return []
-        }
+    // Get raid slug from first boss (all bosses in same raid)
+    const raidSlug = orderedBosses[0]?.raiderioRaidSlug ?? undefined
 
-        // Get the raid slug from first boss (all bosses in same raid)
-        const raidSlug = orderedBosses[0]?.raiderioRaidSlug
-        if (!raidSlug) {
-            return []
-        }
-
-        const difficulties = ["normal", "heroic", "mythic"] as const
-
-        return rosterProgressionQuery.data.map(({ p1Character, raiderIo }) => {
-            const currentRaid = raiderIo?.progress.raidProgress.find(
-                (rp) => rp.raid === raidSlug
-            )
-
-            // Build Map for O(1) encounter lookups: "difficulty-bossSlug" -> encounter
-            const encounterMap: EncounterMap = currentRaid
-                ? new Map<string, RaiderioEncounter>(
-                      difficulties.flatMap((diff) =>
-                          (currentRaid.encountersDefeated[diff] ?? []).map(
-                              (encounter) =>
-                                  [`${diff}-${encounter.slug}`, encounter] as const
-                          )
-                      )
-                  )
-                : new Map<string, RaiderioEncounter>()
-
-            return { p1Character, encounterMap }
-        })
-    }, [rosterProgressionQuery.data, orderedBosses])
+    // Fetch roster progression with pre-built encounter maps from server
+    const rosterProgressionQuery = useRosterProgression(showMains, showAlts, raidSlug)
 
     // Build set of filtered names for O(1) lookup
     const filteredNamesSet = useMemo(() => {
-        if (!debouncedSearchQuery) {
+        if (!debouncedSearchQuery || !rosterProgressionQuery.data) {
             return null // null means no filter active
         }
 
         const searchLower = debouncedSearchQuery.toLowerCase()
         return new Set(
-            charactersWithEncounterMaps
+            rosterProgressionQuery.data
                 .filter(({ p1Character }) =>
                     p1Character.name.toLowerCase().includes(searchLower)
                 )
                 .map(({ p1Character }) => p1Character.name)
         )
-    }, [charactersWithEncounterMaps, debouncedSearchQuery])
+    }, [rosterProgressionQuery.data, debouncedSearchQuery])
 
     // Pre-compute all boss progress data in a single pass
     const progressByBoss = useMemo(() => {
+        if (!rosterProgressionQuery.data) {
+            return new Map<number, BossProgressData>()
+        }
+
         const diffKey = selectedRaidDiff.toLowerCase()
 
         // Filter characters once if search is active
         const activeCharacters = filteredNamesSet
-            ? charactersWithEncounterMaps.filter(({ p1Character }) =>
+            ? rosterProgressionQuery.data.filter(({ p1Character }) =>
                   filteredNamesSet.has(p1Character.name)
               )
-            : charactersWithEncounterMaps
+            : rosterProgressionQuery.data
 
         return new Map(
             orderedBosses.map((boss) => {
                 const allWithEncounters = activeCharacters.map(
-                    ({ p1Character, encounterMap }) => ({
+                    ({ p1Character, encounters }) => ({
                         character: p1Character,
                         encounter:
-                            encounterMap.get(
-                                `${diffKey}-${boss.raiderioEncounterSlug}`
-                            ) ?? null,
+                            encounters[`${diffKey}-${boss.raiderioEncounterSlug}`] ??
+                            null,
                     })
                 )
 
@@ -372,31 +334,33 @@ export default function RaidProgressionPage(): JSX.Element {
                     defeated,
                     (item) => item.character.role
                 ) as Partial<Record<string, CharacterEncounterInfo[]>>
-                const groupedDefeated: GroupedByRole<CharacterEncounterInfo> = {
-                    Tank: sortByClass(defeatedByRole.Tank ?? []),
-                    Healer: sortByClass(defeatedByRole.Healer ?? []),
-                    DPS: sortByClass(defeatedByRole.DPS ?? []),
-                }
+
+                const byClass = (items: CharacterEncounterInfo[]) =>
+                    sortBy(items, [(item) => item.character.class])
 
                 return [
                     boss.id,
                     {
-                        defeated: groupedDefeated,
-                        notDefeated: sortByClass(notDefeated),
+                        defeated: {
+                            Tank: byClass(defeatedByRole.Tank ?? []),
+                            Healer: byClass(defeatedByRole.Healer ?? []),
+                            DPS: byClass(defeatedByRole.DPS ?? []),
+                        },
+                        notDefeated: byClass(notDefeated),
                         defeatedCount: defeated.length,
                     },
                 ] as const
             })
         )
-    }, [orderedBosses, charactersWithEncounterMaps, selectedRaidDiff, filteredNamesSet])
+    }, [orderedBosses, rosterProgressionQuery.data, selectedRaidDiff, filteredNamesSet])
 
     // Calculate total roster size (filtered or not)
     const totalRosterSize = useMemo(() => {
         if (filteredNamesSet) {
             return filteredNamesSet.size
         }
-        return charactersWithEncounterMaps.length
-    }, [charactersWithEncounterMaps, filteredNamesSet])
+        return rosterProgressionQuery.data?.length ?? 0
+    }, [rosterProgressionQuery.data, filteredNamesSet])
 
     if (bossesQuery.isLoading || rosterProgressionQuery.isLoading) {
         return (

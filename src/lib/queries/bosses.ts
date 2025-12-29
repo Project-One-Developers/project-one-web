@@ -1,10 +1,9 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
+import { skipToken, useQuery } from "@tanstack/react-query"
 import { getBosses, getRaidLootTable } from "@/actions/bosses"
 import { getRosterProgression } from "@/actions/raiderio"
 import { CURRENT_RAID_ID } from "@/shared/consts/wow.consts"
-import type { CharacterWithProgression } from "@/shared/models/character.model"
 import { queryKeys } from "./keys"
 
 export function useBosses(raidId: number = CURRENT_RAID_ID) {
@@ -23,13 +22,16 @@ export function useRaidLootTable(raidId: number = CURRENT_RAID_ID) {
     })
 }
 
-export function useRosterProgression(showMains: boolean, showAlts: boolean) {
+export function useRosterProgression(
+    showMains: boolean,
+    showAlts: boolean,
+    raidSlug: string | undefined
+) {
     return useQuery({
-        queryKey: [queryKeys.raidProgression, showMains, showAlts],
+        queryKey: [queryKeys.raidProgression, showMains, showAlts, raidSlug],
         staleTime: 60000, // 1 minute - progression updates infrequently
-        queryFn: async (): Promise<CharacterWithProgression[]> => {
-            const result = await getRosterProgression(showMains, showAlts)
-            return result as CharacterWithProgression[]
-        },
+        queryFn: raidSlug
+            ? () => getRosterProgression(showMains, showAlts, raidSlug)
+            : skipToken,
     })
 }

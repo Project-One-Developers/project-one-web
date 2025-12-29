@@ -15,6 +15,7 @@ import {
     formaUnixTimestampToItalianDate,
     getUnixTimestamp,
 } from "@/shared/libs/date/date-utils"
+import type { CharacterWithEncounters } from "@/shared/models/character.model"
 import type { CharacterRaiderio } from "@/shared/models/raiderio.model"
 
 /**
@@ -143,32 +144,44 @@ export async function getLastRaiderioSyncTime(): Promise<number | null> {
 }
 
 /**
- * Get roster progression data (characters with their Raider.io data)
+ * Get roster progression data with pre-built encounter lookup maps.
+ * Single DB query with LEFT JOIN, server-side preprocessing of encounters.
  */
 export async function getRosterProgression(
     showMains = true,
-    showAlts = true
-): Promise<
-    {
-        p1Character: Awaited<ReturnType<typeof characterRepo.getList>>[0]
-        raiderIo: CharacterRaiderio | null
-    }[]
-> {
-    const roster = await characterRepo.getList(showMains, showAlts)
+    showAlts = true,
+    raidSlug: string
+): Promise<CharacterWithEncounters[]> {
+    const roster = await characterRepo.getListWithRaiderio(showMains, showAlts)
     logger.info(
         "Raiderio",
-        `Fetching roster progression for ${s(roster.length)} characters (mains: ${s(showMains)}, alts: ${s(showAlts)})`
+        `Fetching roster progression for ${s(roster.length)} characters (mains: ${s(showMains)}, alts: ${s(showAlts)}, raid: ${raidSlug})`
     )
 
-    const allRaiderio = await raiderioRepo.getAll()
+    const difficulties = ["normal", "heroic", "mythic"] as const
 
-    const raiderioMap = new Map(allRaiderio.map((r) => [`${r.name}-${r.realm}`, r]))
+    return roster.map(({ progress, ...character }) => {
+        const currentRaid = progress?.raidProgress.find((rp) => rp.raid === raidSlug)
 
-    return roster.map((character) => {
-        const key = `${character.name}-${character.realm}`
+        const encounters = Object.fromEntries(
+            difficulties.flatMap((diff) =>
+                (currentRaid?.encountersDefeated[diff] ?? []).map(
+                    (enc) => [`${diff}-${enc.slug}`, enc] as const
+                )
+            )
+        )
+
         return {
-            p1Character: character,
-            raiderIo: raiderioMap.get(key) ?? null,
+            p1Character: {
+                id: character.id,
+                name: character.name,
+                realm: character.realm,
+                class: character.class,
+                role: character.role,
+                main: character.main,
+                playerId: character.playerId,
+            },
+            encounters,
         }
     })
 }

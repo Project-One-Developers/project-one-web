@@ -1,6 +1,6 @@
-import { eq, inArray, isNull, type InferSelectModel, type SQL } from "drizzle-orm"
+import { and, eq, inArray, isNull, type InferSelectModel, type SQL } from "drizzle-orm"
 import { db } from "@/db"
-import { charTable, playerTable } from "@/db/schema"
+import { charRaiderioTable, charTable, playerTable } from "@/db/schema"
 import { mapAndParse, newUUID } from "@/db/utils"
 import {
     characterSchema,
@@ -200,5 +200,43 @@ export const characterRepo = {
             with: { player: true },
         })
         return mapAndParse(result, mapDbToCharacterWithPlayer, characterWithPlayerSchema)
+    },
+
+    /**
+     * Get characters with their raiderio progress data via LEFT JOIN
+     * Single query instead of separate character + raiderio queries
+     */
+    getListWithRaiderio: async (showMains = true, showAlts = true) => {
+        // Both false = nothing to show
+        if (!showMains && !showAlts) {
+            return []
+        }
+
+        // Both true = no filter needed
+        const whereClause: SQL | undefined =
+            showMains && showAlts ? undefined : eq(charTable.main, showMains)
+
+        return db
+            .select({
+                // Character fields
+                id: charTable.id,
+                name: charTable.name,
+                realm: charTable.realm,
+                class: charTable.class,
+                role: charTable.role,
+                main: charTable.main,
+                playerId: charTable.playerId,
+                // Raiderio progress (JSONB) - null if no raiderio data
+                progress: charRaiderioTable.progress,
+            })
+            .from(charTable)
+            .leftJoin(
+                charRaiderioTable,
+                and(
+                    eq(charRaiderioTable.name, charTable.name),
+                    eq(charRaiderioTable.realm, charTable.realm)
+                )
+            )
+            .where(whereClause)
     },
 }

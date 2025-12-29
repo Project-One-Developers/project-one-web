@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { gearItemSchema } from "./item.model"
-import { charRaiderioSchema } from "./raiderio.model"
+import { charRaiderioSchema, encounterSchema } from "./raiderio.model"
 import { droptimizerSchema } from "./simulation.model"
 import { wowClassNameSchema, wowRolesSchema } from "./wow.model"
 import { charWowAuditSchema } from "./wowaudit.model"
@@ -73,3 +73,11 @@ export const characterWithGears = characterSchema.extend({
     gears: gearItemSchema.array(),
 })
 export type CharacterWithGears = z.infer<typeof characterWithGears>
+
+// Character with pre-built encounter lookup map (for raid progression page)
+export const characterWithEncountersSchema = z.object({
+    p1Character: characterSchema,
+    // Pre-built map: "difficulty-bossSlug" → RaiderioEncounter
+    encounters: z.record(z.string(), encounterSchema),
+})
+export type CharacterWithEncounters = z.infer<typeof characterWithEncountersSchema>
