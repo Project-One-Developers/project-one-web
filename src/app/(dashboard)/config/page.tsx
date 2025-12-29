@@ -1,12 +1,6 @@
 "use client"
 
-import {
-    Database,
-    ListRestart,
-    Loader2,
-    MessageSquare,
-    RefreshCcwDot,
-} from "lucide-react"
+import { ListRestart, Loader2, MessageSquare, RefreshCcwDot } from "lucide-react"
 import { useState, type JSX } from "react"
 import { toast } from "sonner"
 import { syncDroptimizersFromDiscord } from "@/actions/droptimizer"
@@ -75,17 +69,6 @@ export default function SettingsPage(): JSX.Element {
     return (
         <div className="w-full min-h-screen p-8 flex flex-col gap-6">
             <h1 className="text-3xl font-bold">Settings</h1>
-
-            {/* Database Configuration */}
-            <section className="bg-muted p-6 rounded-lg space-y-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                    <Database className="h-5 w-5" />
-                    Database Configuration
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                    Database is configured via environment variables in the web version.
-                </p>
-            </section>
 
             {/* Sync Actions */}
             <section className="bg-muted p-6 rounded-lg space-y-4">
