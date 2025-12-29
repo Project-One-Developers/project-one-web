@@ -1,6 +1,5 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-
 import { CLASSES_NAME } from "@/shared/consts/wow.consts"
 import type { WowClassName } from "@/shared/models/wow.model"
 

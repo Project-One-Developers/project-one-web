@@ -12,11 +12,9 @@ import {
     Trash2,
     Users,
 } from "lucide-react"
-import { toast } from "sonner"
-
 import { useParams, useRouter } from "next/navigation"
 import { useState } from "react"
-
+import { toast } from "sonner"
 import RaidSessionDialog from "@/components/raid-session-dialog"
 import SessionLootNewDialog from "@/components/session-loot-new-dialog"
 import { SessionLootsPanel } from "@/components/session-loots-panel"

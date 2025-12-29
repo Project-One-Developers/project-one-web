@@ -2,7 +2,6 @@ import { keyBy } from "es-toolkit"
 import { parse } from "papaparse"
 import { match } from "ts-pattern"
 import { z } from "zod"
-
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
 import { PROFESSION_TYPES } from "@/shared/consts/wow.consts"

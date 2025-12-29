@@ -1,7 +1,6 @@
 "use client"
 
 import type { ReactNode } from "react"
-
 import type { WowItemEquippedSlotKey } from "@/shared/models/wow.model"
 
 type CharacterPaperdollProps = {

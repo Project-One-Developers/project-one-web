@@ -1,10 +1,9 @@
 "use client"
 
+import { CheckedState } from "@radix-ui/react-checkbox"
 import { Loader2 } from "lucide-react"
-import { toast } from "sonner"
-
 import React, { useState, useMemo, type JSX } from "react"
-
+import { toast } from "sonner"
 import { useAddCharacter, useEditCharacter } from "@/lib/queries/players"
 import { REALMS, ROLES } from "@/shared/consts/wow.consts"
 import type { Character, NewCharacter, Player } from "@/shared/models/character.model"
@@ -13,8 +12,6 @@ import {
     type WowClassName,
     type WoWRole,
 } from "@/shared/models/wow.model"
-import { CheckedState } from "@radix-ui/react-checkbox"
-
 import { Button } from "./ui/button"
 import { Checkbox } from "./ui/checkbox"
 import {

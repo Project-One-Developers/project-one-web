@@ -1,5 +1,6 @@
 "use client"
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
     addCharacter,
     addPlayer,
@@ -22,8 +23,6 @@ import type {
     NewPlayer,
 } from "@/shared/models/character.model"
 import type { PlayerWithSummaryCompact } from "@/shared/types/types"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-
 import { queryKeys } from "./keys"
 
 // ============== QUERIES ==============

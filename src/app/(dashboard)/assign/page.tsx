@@ -8,10 +8,8 @@ import {
     LoaderCircle,
     ZapIcon,
 } from "lucide-react"
-
 import { useRouter, useSearchParams } from "next/navigation"
 import { Suspense, useEffect, useMemo, useState, type JSX } from "react"
-
 import LootsEligibleChars from "@/components/loots-eligible-chars"
 import LootsTabs from "@/components/loots-tabs"
 import LootsTradeHelperDialog from "@/components/loots-trade-helper"

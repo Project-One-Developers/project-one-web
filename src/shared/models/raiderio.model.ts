@@ -1,5 +1,4 @@
 import { z } from "zod"
-
 import { gearItemSchema } from "./item.model"
 
 export const encounterSchema = z.object({

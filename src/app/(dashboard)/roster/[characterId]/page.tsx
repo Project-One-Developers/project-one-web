@@ -1,10 +1,8 @@
 "use client"
 
 import { ArrowLeft, Edit, LoaderCircle, Trash2 } from "lucide-react"
-
 import { useParams, useRouter } from "next/navigation"
 import { useState } from "react"
-
 import CharacterDeleteDialog from "@/components/character-delete-dialog"
 import CharacterDialog from "@/components/character-dialog"
 import { CharGameInfoPanel } from "@/components/character-game-info-panel"

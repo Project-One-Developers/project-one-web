@@ -1,10 +1,8 @@
 "use client"
 
 import { LoaderCircle, PlusIcon, Search } from "lucide-react"
-
 import { useRouter } from "next/navigation"
 import { useMemo, useState, type JSX } from "react"
-
 import RaidSessionDialog from "@/components/raid-session-dialog"
 import SessionCard from "@/components/session-card"
 import { Input } from "@/components/ui/input"

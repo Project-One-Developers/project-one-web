@@ -1,10 +1,8 @@
 "use client"
 
 import { LoaderCircle, Edit, Search } from "lucide-react"
-
 import Image from "next/image"
 import { useState, useMemo, useEffect, type JSX } from "react"
-
 import { GlobalFilterUI } from "@/components/global-filter-ui"
 import ItemManagementDialog from "@/components/item-management-dialog"
 import { Input } from "@/components/ui/input"

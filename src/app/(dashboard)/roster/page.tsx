@@ -1,10 +1,8 @@
 "use client"
 
 import { Download, LoaderCircle, PlusIcon, UserRoundPlus, Users, X } from "lucide-react"
-
 import Image from "next/image"
 import { type JSX, useMemo, useState } from "react"
-
 import CharacterDialog from "@/components/character-dialog"
 import PlayerDeleteDialog from "@/components/player-delete-dialog"
 import PlayerDialog from "@/components/player-dialog"

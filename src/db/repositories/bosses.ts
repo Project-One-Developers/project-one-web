@@ -1,5 +1,4 @@
 import { z } from "zod"
-
 import { db } from "@/db"
 import { bossTable } from "@/db/schema"
 import { buildConflictUpdateColumns } from "@/db/utils"

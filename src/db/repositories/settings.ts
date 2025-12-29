@@ -1,5 +1,4 @@
 import { eq } from "drizzle-orm"
-
 import { db } from "@/db"
 import { appConfigTable } from "@/db/schema"
 

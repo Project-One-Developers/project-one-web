@@ -1,5 +1,4 @@
 import { z } from "zod"
-
 import {
     ARMOR_TYPES,
     CLASSES_NAME as CLASSES_NAME_VALUES,

@@ -1,10 +1,8 @@
 "use client"
 
 import { Loader2, PlusIcon, Recycle, RefreshCw, Upload } from "lucide-react"
-import { toast } from "sonner"
-
 import React, { useState, type JSX } from "react"
-
+import { toast } from "sonner"
 import {
     useAddSimC,
     useAddSimulationFromUrl,
@@ -12,7 +10,6 @@ import {
     useSyncDroptimizersFromDiscord,
 } from "@/lib/queries/droptimizers"
 import { cn } from "@/lib/utils"
-
 import { Button } from "./ui/button"
 import {
     Dialog,

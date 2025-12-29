@@ -1,8 +1,7 @@
 "use client"
 
-import { deleteConfig, getAllConfig, getConfig, setConfig } from "@/actions/settings"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-
+import { deleteConfig, getAllConfig, getConfig, setConfig } from "@/actions/settings"
 import { queryKeys } from "./keys"
 
 export function useConfig(key: string) {

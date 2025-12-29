@@ -1,5 +1,4 @@
 import { match } from "ts-pattern"
-
 import {
     wowItemEquippedSlotKeySchema,
     wowItemSlotKeySchema,

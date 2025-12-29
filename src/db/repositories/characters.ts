@@ -1,5 +1,4 @@
 import { eq, inArray, isNull, type InferSelectModel, type SQL } from "drizzle-orm"
-
 import { db } from "@/db"
 import { charTable, playerTable } from "@/db/schema"
 import { mapAndParse, newUUID } from "@/db/utils"

@@ -1,5 +1,4 @@
 import { z } from "zod"
-
 import { itemSchema } from "./item.model"
 
 export const bossSchema = z.object({

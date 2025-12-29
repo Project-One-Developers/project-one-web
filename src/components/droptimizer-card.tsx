@@ -1,17 +1,14 @@
 "use client"
 
 import { LoaderCircle, X } from "lucide-react"
-import { toast } from "sonner"
-
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-
+import { toast } from "sonner"
 import { useDeleteDroptimizer } from "@/lib/queries/droptimizers"
 import { getDpsHumanReadable } from "@/lib/utils"
 import { formatUnixTimestampToRelativeDays } from "@/shared/libs/date/date-utils"
 import type { Character } from "@/shared/models/character.model"
 import type { Droptimizer, DroptimizerUpgrade } from "@/shared/models/simulation.model"
-
 import DroptimizerDetailDialog from "./droptimizer-detail-dialog"
 import { Button } from "./ui/button"
 import { Dialog, DialogTrigger } from "./ui/dialog"

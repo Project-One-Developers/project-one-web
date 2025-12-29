@@ -1,7 +1,6 @@
 "use client"
 
 import Image from "next/image"
-
 import { Checkbox } from "@/components/ui/checkbox"
 import type { LootFilter } from "@/lib/filters"
 import { cn } from "@/lib/utils"

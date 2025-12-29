@@ -1,5 +1,4 @@
 import { execSync } from "child_process"
-
 import type { NextConfig } from "next"
 
 const getGitSha = (): string => {

@@ -2,7 +2,6 @@
 
 import type { WowItemEquippedSlotKey } from "@/shared/models/wow.model"
 import type { CharacterWowAudit } from "@/shared/models/wowaudit.model"
-
 import CharacterPaperdoll from "./wow/character-paperdoll"
 import BaseGearSlot from "./wow/character-paperdoll-gearslot"
 import { WowGearIcon } from "./wow/wow-gear-icon"

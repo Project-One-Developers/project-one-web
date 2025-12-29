@@ -1,10 +1,8 @@
 "use client"
 
 import { LoaderCircle } from "lucide-react"
-
 import Image from "next/image"
 import { useMemo, type JSX } from "react"
-
 import { DroptimizersForItem } from "@/components/droptimizers-for-item"
 import { GlobalFilterUI } from "@/components/global-filter-ui"
 import { WowItemIcon } from "@/components/wow/wow-item-icon"

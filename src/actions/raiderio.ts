@@ -2,7 +2,6 @@
 
 import { partition } from "es-toolkit"
 import pLimit from "p-limit"
-
 import { characterRepo } from "@/db/repositories/characters"
 import { raiderioRepo } from "@/db/repositories/raiderio"
 import { logger } from "@/lib/logger"

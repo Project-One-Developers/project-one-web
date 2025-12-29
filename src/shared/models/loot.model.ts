@@ -1,5 +1,4 @@
 import { z } from "zod"
-
 import { characterSchema } from "./character.model"
 import { gearItemSchema, itemSchema } from "./item.model"
 import { raidSessionWithRosterSchema } from "./raid-session.model"

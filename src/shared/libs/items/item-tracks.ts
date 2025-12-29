@@ -2,7 +2,6 @@
 // parse tww item tracks:
 // jq 'map(select(.upgrade.fullName != null and (.upgrade.seasonId == 24 or .upgrade.seasonId == 25)) | {id, level: .upgrade.level, max: .upgrade.max, name: .upgrade.name, fullName: .upgrade.fullName, itemLevel: .upgrade.itemLevel})' bonus.json > parsed_bonus.json
 import { match } from "ts-pattern"
-
 import type { WowItemTrackName, WowRaidDifficulty } from "@/shared/models/wow.model"
 
 type BonusItemTrack = {

@@ -1,6 +1,5 @@
 import { eq, inArray, type InferInsertModel } from "drizzle-orm"
 import { z } from "zod"
-
 import { db } from "@/db"
 import { lootTable } from "@/db/schema"
 import { newUUID } from "@/db/utils"

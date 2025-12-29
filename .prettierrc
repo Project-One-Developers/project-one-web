@@ -6,7 +6,6 @@
     "trailingComma": "es5",
     "printWidth": 90,
     "plugins": ["@trivago/prettier-plugin-sort-imports"],
-    "importOrder": ["^(react|next)", "^@", "^[./]"],
-    "importOrderSeparation": true,
+    "importOrder": ["<BUILTIN_MODULES>", "<THIRD_PARTY_MODULES>", "^@/", "^[./]"],
     "importOrderCaseInsensitive": true
 }

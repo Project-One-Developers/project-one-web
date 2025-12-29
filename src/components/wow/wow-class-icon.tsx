@@ -1,7 +1,6 @@
 "use client"
 
 import Image from "next/image"
-
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { classIcon } from "@/lib/wow-icon"

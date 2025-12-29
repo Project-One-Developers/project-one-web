@@ -1,10 +1,8 @@
 "use client"
 
 import { LoaderCircle, MoreVertical, StickyNote } from "lucide-react"
-import { toast } from "sonner"
-
 import { useMemo, useState, type JSX } from "react"
-
+import { toast } from "sonner"
 import { useItemNote } from "@/lib/queries/items"
 import {
     useAssignLoot,
@@ -16,7 +14,6 @@ import { ITEM_SLOTS_KEY_TIERSET } from "@/shared/consts/wow.consts"
 import type { LootWithAssigned } from "@/shared/models/loot.model"
 import { tierSetBonusSchema } from "@/shared/models/wow.model"
 import { DroptimizerWarn, type CharAssignmentInfo } from "@/shared/types/types"
-
 import { DroptimizerUpgradeForItemEquipped } from "./droptimizer-upgrade-for-item"
 import {
     DropdownMenu,

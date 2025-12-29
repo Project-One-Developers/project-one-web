@@ -4,7 +4,6 @@ import { getDpsHumanReadable } from "@/lib/utils"
 import { formatUnixTimestampToRelativeDays } from "@/shared/libs/date/date-utils"
 import type { Item } from "@/shared/models/item.model"
 import type { Droptimizer } from "@/shared/models/simulation.model"
-
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 import { WowSpecIcon } from "./wow/wow-spec-icon"
 

@@ -1,13 +1,10 @@
 "use client"
 
 import { Loader2 } from "lucide-react"
-import { toast } from "sonner"
-
 import { useState, useMemo, type JSX } from "react"
-
+import { toast } from "sonner"
 import { useAddPlayer, useEditPlayer } from "@/lib/queries/players"
 import type { NewPlayer, Player } from "@/shared/models/character.model"
-
 import { Button } from "./ui/button"
 import {
     Dialog,

@@ -12,7 +12,6 @@ import {
     unique,
     varchar,
 } from "drizzle-orm/pg-core"
-
 import {
     ARMOR_TYPES,
     CLASSES_NAME,

@@ -1,9 +1,7 @@
 "use client"
 
 import type React from "react"
-
 import type { GearItem } from "@/shared/models/item.model"
-
 import { WowGearIcon } from "./wow-gear-icon"
 
 export const createGearSlotMapping = (itemsEquipped: GearItem[]) => {

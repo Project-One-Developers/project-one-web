@@ -1,17 +1,14 @@
 "use client"
 
 import { Calendar, ExternalLink, Gem, Package, Users } from "lucide-react"
-
 import { useRouter } from "next/navigation"
 import type { MouseEvent } from "react"
-
 import { cn } from "@/lib/utils"
 import {
     formatUnixTimestampForDisplay,
     unixTimestampToWowWeek,
 } from "@/shared/libs/date/date-utils"
 import type { RaidSessionWithSummary } from "@/shared/models/raid-session.model"
-
 import { Button } from "./ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 

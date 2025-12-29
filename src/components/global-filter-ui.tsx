@@ -1,10 +1,8 @@
 "use client"
 
 import { Filter, X } from "lucide-react"
-
 import { useFilterContext } from "@/lib/filter-context"
 import { cn } from "@/lib/utils"
-
 import { FiltersPanel } from "./filter-panel"
 
 type GlobalFilterUIProps = {

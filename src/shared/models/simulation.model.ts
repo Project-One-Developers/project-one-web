@@ -1,5 +1,4 @@
 import { z } from "zod"
-
 import { gearItemSchema, itemSchema } from "./item.model"
 import {
     wowClassNameSchema,

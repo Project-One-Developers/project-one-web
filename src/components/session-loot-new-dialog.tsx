@@ -1,10 +1,10 @@
 "use client"
 
+import * as Tabs from "@radix-ui/react-tabs"
+import * as ToggleGroup from "@radix-ui/react-toggle-group"
 import { LoaderCircle, X } from "lucide-react"
-import { toast } from "sonner"
-
 import { useState, type JSX } from "react"
-
+import { toast } from "sonner"
 import { useSearchItems } from "@/lib/queries/items"
 import {
     useAddManualLoot,
@@ -16,9 +16,6 @@ import { RAID_DIFF } from "@/shared/consts/wow.consts"
 import type { Item } from "@/shared/models/item.model"
 import type { NewLootManual } from "@/shared/models/loot.model"
 import type { WowRaidDifficulty } from "@/shared/models/wow.model"
-import * as Tabs from "@radix-ui/react-tabs"
-import * as ToggleGroup from "@radix-ui/react-toggle-group"
-
 import { Button } from "./ui/button"
 import {
     Dialog,

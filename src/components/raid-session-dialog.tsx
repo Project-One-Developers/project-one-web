@@ -10,10 +10,8 @@ import {
     Swords,
     Users,
 } from "lucide-react"
-import { toast } from "sonner"
-
 import { useState, type JSX, useMemo } from "react"
-
+import { toast } from "sonner"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { usePlayersWithCharacters } from "@/lib/queries/players"
 import { useAddRaidSession, useEditRaidSession } from "@/lib/queries/raid-sessions"
@@ -29,7 +27,6 @@ import type {
     RaidSessionWithRoster,
 } from "@/shared/models/raid-session.model"
 import type { WowClassName } from "@/shared/models/wow.model"
-
 import { Button } from "./ui/button"
 import {
     Dialog,

@@ -2,7 +2,6 @@ import { s } from "@/lib/safe-stringify"
 import type { Item } from "@/shared/models/item.model"
 import type { WowClassName, WoWRole, WowSpecName } from "@/shared/models/wow.model"
 import type { WowClass, WowSpec } from "@/shared/types/types"
-
 import { WOW_CLASS_WITH_SPECS } from "./spec-utils.schemas"
 
 const tankSpecIds = [66, 73, 104, 250, 268, 581]

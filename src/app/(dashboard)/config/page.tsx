@@ -7,10 +7,8 @@ import {
     MessageSquare,
     RefreshCcwDot,
 } from "lucide-react"
-import { toast } from "sonner"
-
 import { useState, type JSX } from "react"
-
+import { toast } from "sonner"
 import { syncDroptimizersFromDiscord } from "@/actions/droptimizer"
 import { syncAllCharactersRaiderio } from "@/actions/raiderio"
 import { syncCharacterWowAudit } from "@/actions/wowaudit"

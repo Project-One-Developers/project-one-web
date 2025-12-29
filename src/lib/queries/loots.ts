@@ -1,5 +1,6 @@
 "use client"
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
     addLoots,
     addManualLoot,
@@ -24,8 +25,6 @@ import type {
     NewLoot,
     NewLootManual,
 } from "@/shared/models/loot.model"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-
 import { queryKeys } from "./keys"
 
 // ============== QUERIES ==============

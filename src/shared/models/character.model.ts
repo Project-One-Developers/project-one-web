@@ -1,5 +1,4 @@
 import { z } from "zod"
-
 import { gearItemSchema } from "./item.model"
 import { charRaiderioSchema } from "./raiderio.model"
 import { droptimizerSchema } from "./simulation.model"

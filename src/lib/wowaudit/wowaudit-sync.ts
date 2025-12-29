@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- External API parsing with known data structure */
 import { match } from "ts-pattern"
-
 import { itemRepo } from "@/db/repositories/items"
 import type { NewCharacterWowAudit } from "@/db/repositories/wowaudit"
 import { logger } from "@/lib/logger"

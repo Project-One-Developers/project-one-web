@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server"
-
 import { checkRaiderioUpdates } from "@/actions/raiderio"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"

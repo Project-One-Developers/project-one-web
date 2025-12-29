@@ -1,10 +1,8 @@
 "use client"
 
 import { LoaderCircle } from "lucide-react"
-
 import Image from "next/image"
 import { useMemo, type JSX } from "react"
-
 import { DroptimizerCard } from "@/components/droptimizer-card"
 import DroptimizerNewDialog from "@/components/droptimizer-new-dialog"
 import { GlobalFilterUI } from "@/components/global-filter-ui"
