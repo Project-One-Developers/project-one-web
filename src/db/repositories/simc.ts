@@ -1,14 +1,22 @@
 import { and, eq, or } from "drizzle-orm"
-import { z } from "zod"
 import { db } from "@/db"
 import { simcTable } from "@/db/schema"
-import { conflictUpdateAllExcept } from "@/db/utils"
+import { conflictUpdateAllExcept, mapAndParse } from "@/db/utils"
 import { simcSchema, type SimC } from "@/shared/models/simulation.model"
+
+// Mapper to handle nullable JSONB columns from DB -> non-nullable arrays in schema
+const mapSimcRow = (row: typeof simcTable.$inferSelect): SimC => ({
+    ...row,
+    weeklyChest: row.weeklyChest ?? [],
+    currencies: row.currencies ?? [],
+    itemsInBag: row.itemsInBag ?? [],
+    tiersetInfo: row.tiersetInfo ?? [],
+})
 
 export const simcRepo = {
     getAll: async (): Promise<SimC[]> => {
         const result = await db.select().from(simcTable)
-        return z.array(simcSchema).parse(result)
+        return mapAndParse(result, mapSimcRow, simcSchema)
     },
 
     getByChar: async (charName: string, charRealm: string): Promise<SimC | null> => {
@@ -19,7 +27,7 @@ export const simcRepo = {
                 and(eq(simcTable.charName, charName), eq(simcTable.charRealm, charRealm))
             )
             .then((r) => r.at(0))
-        return result ? simcSchema.parse(result) : null
+        return result ? mapAndParse(result, mapSimcRow, simcSchema) : null
     },
 
     add: async (simc: SimC): Promise<void> => {
@@ -50,6 +58,6 @@ export const simcRepo = {
                     )
                 )
             )
-        return z.array(simcSchema).parse(result)
+        return mapAndParse(result, mapSimcRow, simcSchema)
     },
 }

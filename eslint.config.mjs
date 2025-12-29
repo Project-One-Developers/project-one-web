@@ -4,6 +4,7 @@ import react from "eslint-plugin-react"
 import reactHooks from "eslint-plugin-react-hooks"
 import { defineConfig, globalIgnores } from "eslint/config"
 import tseslint from "typescript-eslint"
+import { noUnsafeZodParse } from "./eslint-rules/no-unsafe-zod-parse.mjs"
 
 const eslintConfig = defineConfig([
     ...nextVitals,
@@ -70,6 +71,20 @@ const eslintConfig = defineConfig([
     {
         files: ["**/*.mjs"],
         ...tseslint.configs.disableTypeChecked,
+    },
+    // Custom rule: prevent unsafe direct .parse() calls on DB results in repositories
+    {
+        files: ["src/db/repositories/**/*.ts"],
+        plugins: {
+            custom: {
+                rules: {
+                    "no-unsafe-zod-parse": noUnsafeZodParse,
+                },
+            },
+        },
+        rules: {
+            "custom/no-unsafe-zod-parse": "error",
+        },
     },
     // Override default ignores of eslint-config-next.
     globalIgnores([

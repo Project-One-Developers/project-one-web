@@ -24,7 +24,11 @@ export const characterRepo = {
             return null
         }
 
-        return mapAndParse(result, (r) => ({ ...r.character, player: r.player }), characterWithPlayerSchema)
+        return mapAndParse(
+            result,
+            (r) => ({ ...r.character, player: r.player }),
+            characterWithPlayerSchema
+        )
     },
 
     getWithPlayerList: async (): Promise<CharacterWithPlayer[]> => {

@@ -1,6 +1,5 @@
 import { and, eq, ilike, inArray, or } from "drizzle-orm"
 import { unstable_cache, updateTag } from "next/cache"
-import { z } from "zod"
 import { db } from "@/db"
 import {
     itemNoteTable,
@@ -8,13 +7,13 @@ import {
     itemToCatalystTable,
     itemToTiersetTable,
 } from "@/db/schema"
-import { buildConflictUpdateColumns } from "@/db/utils"
+import { buildConflictUpdateColumns, identity, mapAndParse } from "@/db/utils"
 import { CURRENT_SEASON } from "@/shared/consts/wow.consts"
 import { itemNoteSchema, type ItemNote } from "@/shared/models/item-note.model"
 import {
     itemSchema,
-    itemToCatalystArraySchema,
-    itemToTiersetArraySchema,
+    itemToCatalystSchema,
+    itemToTiersetSchema,
     type Item,
     type ItemToCatalyst,
     type ItemToTierset,
@@ -25,7 +24,7 @@ const TIERSET_CACHE_TAG = "tierset-mapping"
 export const itemRepo = {
     getAll: async (): Promise<Item[]> => {
         const items = await db.select().from(itemTable)
-        return z.array(itemSchema).parse(items)
+        return mapAndParse(items, identity, itemSchema)
     },
 
     getById: async (id: number): Promise<Item | null> => {
@@ -34,7 +33,7 @@ export const itemRepo = {
             .from(itemTable)
             .where(eq(itemTable.id, id))
             .then((r) => r.at(0))
-        return res ? itemSchema.parse(res) : null
+        return res ? mapAndParse(res, identity, itemSchema) : null
     },
 
     getByIds: async (ids: number[]): Promise<Item[]> => {
@@ -42,13 +41,13 @@ export const itemRepo = {
             return []
         }
         const res = await db.select().from(itemTable).where(inArray(itemTable.id, ids))
-        return z.array(itemSchema).parse(res)
+        return mapAndParse(res, identity, itemSchema)
     },
 
     getTiersetMapping: unstable_cache(
         async (): Promise<ItemToTierset[]> => {
             const result = await db.select().from(itemToTiersetTable)
-            return itemToTiersetArraySchema.parse(result)
+            return mapAndParse(result, identity, itemToTiersetSchema)
         },
         [TIERSET_CACHE_TAG],
         { tags: [TIERSET_CACHE_TAG], revalidate: 300 }
@@ -56,7 +55,7 @@ export const itemRepo = {
 
     getCatalystMapping: async (): Promise<ItemToCatalyst[]> => {
         const result = await db.select().from(itemToCatalystTable)
-        return itemToCatalystArraySchema.parse(result)
+        return mapAndParse(result, identity, itemToCatalystSchema)
     },
 
     getTiersetAndTokenList: async (): Promise<Item[]> => {
@@ -69,7 +68,7 @@ export const itemRepo = {
                     or(eq(itemTable.tierset, true), eq(itemTable.token, true))
                 )
             )
-        return z.array(itemSchema).parse(res)
+        return mapAndParse(res, identity, itemSchema)
     },
 
     search: async (searchTerm: string, limit: number): Promise<Item[]> => {
@@ -84,7 +83,7 @@ export const itemRepo = {
                 )
             )
             .limit(limit)
-        return z.array(itemSchema).parse(res)
+        return mapAndParse(res, identity, itemSchema)
     },
 
     upsert: async (items: Item[]): Promise<void> => {
@@ -162,7 +161,7 @@ export const itemRepo = {
 export const itemNoteRepo = {
     getAll: async (): Promise<ItemNote[]> => {
         const items = await db.select().from(itemNoteTable)
-        return z.array(itemNoteSchema).parse(items)
+        return mapAndParse(items, identity, itemNoteSchema)
     },
 
     getById: async (id: number): Promise<ItemNote | null> => {
@@ -171,7 +170,7 @@ export const itemNoteRepo = {
             .from(itemNoteTable)
             .where(eq(itemNoteTable.itemId, id))
             .then((r) => r.at(0))
-        return res ? itemNoteSchema.parse(res) : null
+        return res ? mapAndParse(res, identity, itemNoteSchema) : null
     },
 
     set: async (id: number, note: string): Promise<ItemNote> => {
@@ -184,7 +183,10 @@ export const itemNoteRepo = {
             })
             .returning()
 
-        return itemNoteSchema.parse(res)
+        if (!res) {
+            throw new Error(`Failed to upsert item note for item ${String(id)}`)
+        }
+        return mapAndParse(res, identity, itemNoteSchema)
     },
 
     delete: async (id: number): Promise<void> => {

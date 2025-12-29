@@ -2,7 +2,7 @@ import { and, desc, eq, inArray, or } from "drizzle-orm"
 import { z } from "zod"
 import { db } from "@/db"
 import { bossTable, characterEncounterTable, charRaiderioTable } from "@/db/schema"
-import { conflictUpdateAllExcept } from "@/db/utils"
+import { conflictUpdateAllExcept, identity, mapAndParse } from "@/db/utils"
 import type { WowRaidDifficulty } from "@/shared/models/wow.model"
 
 // Type for inserting encounters
@@ -163,12 +163,12 @@ export const raiderioRepo = {
                 )
             )
             .then((r) => r.at(0))
-        return result ? charRaiderioDbSchema.parse(result) : null
+        return result ? mapAndParse(result, identity, charRaiderioDbSchema) : null
     },
 
     getAll: async (): Promise<CharacterRaiderioDb[]> => {
         const result = await db.select().from(charRaiderioTable)
-        return z.array(charRaiderioDbSchema).parse(result)
+        return mapAndParse(result, identity, charRaiderioDbSchema)
     },
 
     getByChars: async (
@@ -191,6 +191,6 @@ export const raiderioRepo = {
                     )
                 )
             )
-        return z.array(charRaiderioDbSchema).parse(result)
+        return mapAndParse(result, identity, charRaiderioDbSchema)
     },
 }
