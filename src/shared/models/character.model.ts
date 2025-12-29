@@ -63,6 +63,35 @@ export const characterGameInfoSchema = z.object({
 })
 export type CharacterGameInfo = z.infer<typeof characterGameInfoSchema>
 
+// Compact schemas for summary display - fields nullable due to LEFT JOINs
+export const characterGameInfoCompactSchema = z.object({
+    charName: z.string(),
+    charRealm: z.string(),
+    droptimizer: z
+        .object({
+            simDate: z.number(),
+            itemsAverageItemLevelEquipped:
+                droptimizerSchema.shape.itemsAverageItemLevelEquipped,
+            tiersetInfo: droptimizerSchema.shape.tiersetInfo.nullable(),
+            weeklyChest: droptimizerSchema.shape.weeklyChest.nullable(),
+            currencies: droptimizerSchema.shape.currencies.nullable(),
+        })
+        .nullable(),
+    wowaudit: z
+        .object({
+            averageIlvl: charWowAuditSchema.shape.averageIlvl,
+            tiersetInfo: charWowAuditSchema.shape.tiersetInfo.nullable(),
+        })
+        .nullable(),
+    raiderio: z
+        .object({
+            averageItemLevel: charRaiderioSchema.shape.averageItemLevel,
+            itemsEquipped: charRaiderioSchema.shape.itemsEquipped.nullable(),
+        })
+        .nullable(),
+})
+export type CharacterGameInfoCompact = z.infer<typeof characterGameInfoCompactSchema>
+
 export const characterWithProgressionSchema = z.object({
     p1Character: characterSchema,
     raiderIo: charRaiderioSchema.nullable(),

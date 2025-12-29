@@ -1,5 +1,6 @@
 import {
     boolean,
+    index,
     integer,
     jsonb,
     pgEnum,
@@ -111,7 +112,10 @@ export const charWowAuditTable = pgTable(
         itemsEquipped: jsonb("items_equipped").$type<GearItem[]>().notNull(),
         tiersetInfo: jsonb("tierset_info").$type<GearItem[]>().notNull(),
     },
-    (t) => [primaryKey({ columns: [t.name, t.realm] })]
+    (t) => [
+        primaryKey({ columns: [t.name, t.realm] }),
+        index("idx_wowaudit_name_realm").on(t.name, t.realm),
+    ]
 )
 
 export const charRaiderioTable = pgTable(
@@ -127,7 +131,10 @@ export const charRaiderioTable = pgTable(
         averageItemLevel: varchar("average_item_level"), // item_level_equipped
         itemsEquipped: jsonb("items_equipped").$type<GearItem[]>().notNull(),
     },
-    (t) => [primaryKey({ columns: [t.name, t.realm] })]
+    (t) => [
+        primaryKey({ columns: [t.name, t.realm] }),
+        index("idx_raiderio_name_realm").on(t.name, t.realm),
+    ]
 )
 
 // Normalized raid encounter progression
@@ -191,33 +198,43 @@ export const droptimizerUpgradesTable = pgTable(
     ]
 )
 
-export const droptimizerTable = pgTable("droptimizers", {
-    url: text("url").primaryKey(),
-    ak: varchar("ak").notNull().unique(), // droptimizer identifier key eg: 1273,heroic,Tartesia,Nemesis,Devastation,Evoker
-    dateImported: integer("date_imported").notNull(), // imported unix timestamp in this app
-    simDate: integer("sim_date").notNull(), // droptimizer execution unix timestamp
-    simFightStyle: varchar("sim_fight_style", { length: 50 }).notNull(),
-    simDuration: integer("sim_duration").notNull(),
-    simNTargets: integer("sim_n_targets").notNull(),
-    simUpgradeEquipped: boolean("sim_upgrade_equipped"),
-    raidId: integer("raid_id").notNull(),
-    raidDifficulty: pgRaidDiffEnum("raid_difficulty").notNull(),
-    characterName: varchar("character_name", { length: 24 }).notNull(),
-    characterServer: varchar("character_server").notNull(),
-    characterClass: pgClassEnum("character_class").notNull(),
-    characterClassId: integer("character_classId").notNull(),
-    characterSpec: varchar("character_spec").notNull(),
-    characterSpecId: integer("character_specId").notNull(),
-    characterTalents: varchar("character_talents").notNull(),
-    weeklyChest: jsonb("weekly_chest").$type<GearItem[]>(),
-    currencies:
-        jsonb("currencies").$type<{ id: number; type: string; amount: number }[]>(),
-    itemsAverageItemLevel: integer("items_average_ilvl"),
-    itemsAverageItemLevelEquipped: integer("items_average_ilvl_equipped"),
-    itemsEquipped: jsonb("items_equipped").$type<GearItem[]>().notNull(),
-    itemsInBag: jsonb("items_in_bags").$type<GearItem[]>(),
-    tiersetInfo: jsonb("tierset_info").$type<GearItem[]>(),
-})
+export const droptimizerTable = pgTable(
+    "droptimizers",
+    {
+        url: text("url").primaryKey(),
+        ak: varchar("ak").notNull().unique(), // droptimizer identifier key eg: 1273,heroic,Tartesia,Nemesis,Devastation,Evoker
+        dateImported: integer("date_imported").notNull(), // imported unix timestamp in this app
+        simDate: integer("sim_date").notNull(), // droptimizer execution unix timestamp
+        simFightStyle: varchar("sim_fight_style", { length: 50 }).notNull(),
+        simDuration: integer("sim_duration").notNull(),
+        simNTargets: integer("sim_n_targets").notNull(),
+        simUpgradeEquipped: boolean("sim_upgrade_equipped"),
+        raidId: integer("raid_id").notNull(),
+        raidDifficulty: pgRaidDiffEnum("raid_difficulty").notNull(),
+        characterName: varchar("character_name", { length: 24 }).notNull(),
+        characterServer: varchar("character_server").notNull(),
+        characterClass: pgClassEnum("character_class").notNull(),
+        characterClassId: integer("character_classId").notNull(),
+        characterSpec: varchar("character_spec").notNull(),
+        characterSpecId: integer("character_specId").notNull(),
+        characterTalents: varchar("character_talents").notNull(),
+        weeklyChest: jsonb("weekly_chest").$type<GearItem[]>(),
+        currencies:
+            jsonb("currencies").$type<{ id: number; type: string; amount: number }[]>(),
+        itemsAverageItemLevel: integer("items_average_ilvl"),
+        itemsAverageItemLevelEquipped: integer("items_average_ilvl_equipped"),
+        itemsEquipped: jsonb("items_equipped").$type<GearItem[]>().notNull(),
+        itemsInBag: jsonb("items_in_bags").$type<GearItem[]>(),
+        tiersetInfo: jsonb("tierset_info").$type<GearItem[]>(),
+    },
+    (t) => [
+        index("idx_droptimizer_char_date").on(
+            t.characterName,
+            t.characterServer,
+            t.simDate
+        ),
+    ]
+)
 
 // SimC Table for import char info without droptimizer
 export const simcTable = pgTable(
