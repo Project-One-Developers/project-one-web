@@ -193,67 +193,78 @@ const GearInfo = ({ wowAudit, droptimizer, raiderio }: GearInfoProps) => {
     return (
         <div className="rounded-lg w-full relative bg-background shadow-lg p-4">
             <Tabs defaultValue={getDefaultTab()} className="w-full">
-                <TabsList className="flex justify-start space-x-4 border-b pb-2 mb-6 bg-transparent">
+                <TabsList className="flex justify-start gap-3 mb-6 bg-transparent h-auto p-0">
                     {hasRaiderioData && (
                         <TabsTrigger
                             value="raiderio"
-                            className="flex flex-col items-start gap-1 px-4 py-2 hover:bg-muted data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                            className="group relative flex items-center gap-3 px-4 py-3 rounded-xl border border-border/50 bg-muted/30 transition-all duration-200 hover:bg-muted/60 hover:border-border data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500/10 data-[state=active]:to-orange-500/10 data-[state=active]:border-amber-500/50 data-[state=active]:shadow-[0_0_12px_rgba(245,158,11,0.15)]"
                         >
-                            <div className="flex items-center gap-2">
+                            <div className="relative">
+                                <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 opacity-0 group-data-[state=active]:opacity-100 blur-sm transition-opacity" />
                                 <Image
                                     src="https://cdn.raiderio.net/images/mstile-150x150.png"
                                     alt="RaiderIO"
-                                    width={24}
-                                    height={24}
-                                    className="rounded-full"
+                                    width={28}
+                                    height={28}
+                                    className="relative rounded-lg ring-1 ring-border/50 group-data-[state=active]:ring-amber-500/50"
                                 />
-                                <span>RaiderIO</span>
                             </div>
-                            <span className="text-xs text-muted-foreground">
-                                {formatUnixTimestampForDisplay(raiderio.itemUpdateAt)}
-                            </span>
+                            <div className="flex flex-col items-start">
+                                <span className="font-medium text-sm">RaiderIO</span>
+                                <span className="text-[11px] text-muted-foreground">
+                                    {formatUnixTimestampForDisplay(raiderio.itemUpdateAt)}
+                                </span>
+                            </div>
                         </TabsTrigger>
                     )}
                     {hasDroptimizerData && (
                         <TabsTrigger
                             value="droptimizer"
-                            className="flex flex-col items-start gap-1 px-4 py-2 hover:bg-muted data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                            className="group relative flex items-center gap-3 px-4 py-3 rounded-xl border border-border/50 bg-muted/30 transition-all duration-200 hover:bg-muted/60 hover:border-border data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-500/10 data-[state=active]:to-cyan-500/10 data-[state=active]:border-blue-500/50 data-[state=active]:shadow-[0_0_12px_rgba(59,130,246,0.15)]"
                         >
-                            <div className="flex items-center gap-2">
+                            <div className="relative">
+                                <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 opacity-0 group-data-[state=active]:opacity-100 blur-sm transition-opacity" />
                                 <Image
                                     src="https://assets.rpglogs.com/img/warcraft/raidbots-icon.png"
                                     alt="Droptimizer"
-                                    width={24}
-                                    height={24}
-                                    className="rounded-full"
+                                    width={28}
+                                    height={28}
+                                    className="relative rounded-lg ring-1 ring-border/50 group-data-[state=active]:ring-blue-500/50"
                                 />
-                                <span>Droptimizer</span>
                             </div>
-                            <span className="text-xs text-muted-foreground">
-                                {formatUnixTimestampForDisplay(droptimizer.simInfo.date)}
-                            </span>
+                            <div className="flex flex-col items-start">
+                                <span className="font-medium text-sm">Droptimizer</span>
+                                <span className="text-[11px] text-muted-foreground">
+                                    {formatUnixTimestampForDisplay(
+                                        droptimizer.simInfo.date
+                                    )}
+                                </span>
+                            </div>
                         </TabsTrigger>
                     )}
                     {hasWowAuditData && (
                         <TabsTrigger
                             value="wowaudit"
-                            className="flex flex-col items-start gap-1 px-4 py-2 hover:bg-muted data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                            className="group relative flex items-center gap-3 px-4 py-3 rounded-xl border border-border/50 bg-muted/30 transition-all duration-200 hover:bg-muted/60 hover:border-border data-[state=active]:bg-gradient-to-br data-[state=active]:from-emerald-500/10 data-[state=active]:to-green-500/10 data-[state=active]:border-emerald-500/50 data-[state=active]:shadow-[0_0_12px_rgba(16,185,129,0.15)]"
                         >
-                            <div className="flex items-center gap-2">
+                            <div className="relative">
+                                <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-emerald-500/20 to-green-500/20 opacity-0 group-data-[state=active]:opacity-100 blur-sm transition-opacity" />
                                 <Image
                                     src="https://data.wowaudit.com/img/new-logo-icon.svg"
                                     alt="WoW Audit"
-                                    width={24}
-                                    height={24}
-                                    className="rounded-full"
+                                    width={28}
+                                    height={28}
+                                    className="relative rounded-lg ring-1 ring-border/50 group-data-[state=active]:ring-emerald-500/50"
                                 />
-                                <span>WoW Audit</span>
                             </div>
-                            <span className="text-xs text-muted-foreground">
-                                {formatUnixTimestampForDisplay(
-                                    wowAudit.wowauditLastModifiedUnixTs
-                                )}
-                            </span>
+                            <div className="flex flex-col items-start">
+                                <span className="font-medium text-sm">WoW Audit</span>
+                                <span className="text-[11px] text-muted-foreground">
+                                    {formatUnixTimestampForDisplay(
+                                        wowAudit.wowauditLastModifiedUnixTs
+                                    )}
+                                </span>
+                            </div>
                         </TabsTrigger>
                     )}
                 </TabsList>
