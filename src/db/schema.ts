@@ -23,7 +23,6 @@ import {
 } from "@/shared/consts/wow.consts"
 import type { GearItem } from "@/shared/models/item.model"
 import type { CharAssignmentHighlights } from "@/shared/models/loot.model"
-import { RaiderioProgress } from "@/shared/models/raiderio.model"
 
 //////////////////////////////////////////////////////////
 //                      ENUMS                           //
@@ -128,9 +127,28 @@ export const charRaiderioTable = pgTable(
         itemUpdateAt: integer("item_update_at").notNull(), // 2025-07-29T06:00:12.000Z
         averageItemLevel: varchar("average_item_level"), // item_level_equipped
         itemsEquipped: jsonb("items_equipped").$type<GearItem[]>().notNull(),
-        progress: jsonb("progress").$type<RaiderioProgress>().notNull(),
     },
     (t) => [primaryKey({ columns: [t.name, t.realm] })]
+)
+
+// Normalized raid encounter progression
+export const characterEncounterTable = pgTable(
+    "character_encounters",
+    {
+        id: serial("id").primaryKey(),
+        characterId: varchar("character_id")
+            .references(() => charTable.id, { onDelete: "cascade" })
+            .notNull(),
+        bossId: integer("boss_id")
+            .references(() => bossTable.id)
+            .notNull(),
+        difficulty: pgRaidDiffEnum("difficulty").notNull(),
+        itemLevel: integer("item_level").notNull(),
+        numKills: integer("num_kills").notNull(),
+        firstDefeated: timestamp("first_defeated", { withTimezone: true }),
+        lastDefeated: timestamp("last_defeated", { withTimezone: true }),
+    },
+    (t) => [unique("char_boss_diff_unique").on(t.characterId, t.bossId, t.difficulty)]
 )
 
 export const bisListTable = pgTable(

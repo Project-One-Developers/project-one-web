@@ -304,8 +304,6 @@ export default function RaidProgressionPage(): JSX.Element {
             return new Map<number, BossProgressData>()
         }
 
-        const diffKey = selectedRaidDiff.toLowerCase()
-
         // Filter characters once if search is active
         const activeCharacters = filteredNamesSet
             ? rosterProgressionQuery.data.filter(({ p1Character }) =>
@@ -319,8 +317,9 @@ export default function RaidProgressionPage(): JSX.Element {
                     ({ p1Character, encounters }) => ({
                         character: p1Character,
                         encounter:
-                            encounters[`${diffKey}-${boss.raiderioEncounterSlug}`] ??
-                            null,
+                            encounters[
+                                `${selectedRaidDiff}-${boss.raiderioEncounterSlug}`
+                            ] ?? null,
                     })
                 )
 

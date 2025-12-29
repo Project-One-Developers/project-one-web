@@ -1,28 +1,36 @@
 "use server"
 
-import { partition } from "es-toolkit"
+import { groupBy, keyBy, partition } from "es-toolkit"
 import pLimit from "p-limit"
+import { bossRepo } from "@/db/repositories/bosses"
 import { characterRepo } from "@/db/repositories/characters"
-import { raiderioRepo } from "@/db/repositories/raiderio"
+import {
+    CharacterEncounterInsert,
+    raiderioRepo,
+    type CharacterRaiderioDb,
+} from "@/db/repositories/raiderio"
 import { logger } from "@/lib/logger"
 import {
     fetchCharacterRaidProgress,
     parseRaiderioData,
     resetItemsCache,
+    type ParsedRaiderioData,
 } from "@/lib/raiderio/raiderio-sync"
 import { s } from "@/lib/safe-stringify"
+import { defined } from "@/lib/utils"
 import {
     formaUnixTimestampToItalianDate,
     getUnixTimestamp,
 } from "@/shared/libs/date/date-utils"
+import type { Boss } from "@/shared/models/boss.model"
 import type { CharacterWithEncounters } from "@/shared/models/character.model"
-import type { CharacterRaiderio } from "@/shared/models/raiderio.model"
+import type { RaiderioEncounter } from "@/shared/models/raiderio.model"
 
 /**
  * Sync all characters' Raider.io data
  * Fetches raid progress and equipped items for all roster characters
  */
-type SyncResult = { ok: true; data: CharacterRaiderio } | { ok: false; error: string }
+type SyncResult = { ok: true; data: ParsedRaiderioData } | { ok: false; error: string }
 
 export async function syncAllCharactersRaiderio(): Promise<{
     synced: number
@@ -32,6 +40,17 @@ export async function syncAllCharactersRaiderio(): Promise<{
     resetItemsCache()
 
     const roster = await characterRepo.getList()
+
+    // Build boss lookup (slug -> boss)
+    const allBosses = await bossRepo.getAll()
+    const bossLookup = keyBy(
+        allBosses.filter(
+            (boss): boss is Boss & { raiderioEncounterSlug: string } =>
+                boss.raiderioEncounterSlug !== null
+        ),
+        (boss) => boss.raiderioEncounterSlug
+    )
+
     const limit = pLimit(10)
 
     const syncResults = await Promise.all(
@@ -43,9 +62,11 @@ export async function syncAllCharactersRaiderio(): Promise<{
                         character.realm
                     )
                     const data = await parseRaiderioData(
+                        character.id, // FK to charTable
                         character.name,
                         character.realm,
-                        raiderioData
+                        raiderioData,
+                        bossLookup
                     )
                     return { ok: true, data }
                 } catch (err) {
@@ -62,7 +83,25 @@ export async function syncAllCharactersRaiderio(): Promise<{
     const errors = failures.map((r) => r.error)
 
     if (results.length > 0) {
-        await raiderioRepo.upsert(results)
+        // Build roster lookup for O(1) access
+        const rosterLookup = new Map(roster.map((c) => [`${c.name}-${c.realm}`, c.id]))
+
+        const characters = results.map((r) => r.character)
+        const encountersByCharacter = new Map(
+            results
+                .map((r): [string, CharacterEncounterInsert[]] | null => {
+                    const charId = rosterLookup.get(
+                        `${r.character.name}-${r.character.realm}`
+                    )
+                    return charId ? [charId, r.encounters] : null
+                })
+                .filter(defined)
+        )
+
+        await Promise.all([
+            raiderioRepo.upsert(characters),
+            raiderioRepo.upsertAllEncounters(encountersByCharacter),
+        ])
     }
 
     logger.info(
@@ -77,6 +116,7 @@ export async function syncAllCharactersRaiderio(): Promise<{
  * Sync a single character's Raider.io data
  */
 export async function syncCharacterRaiderio(
+    characterId: string,
     characterName: string,
     characterRealm: string
 ): Promise<void> {
@@ -85,10 +125,27 @@ export async function syncCharacterRaiderio(
         `Start Single Character Sync: ${characterName} - ${characterRealm}`
     )
 
-    const raiderioData = await fetchCharacterRaidProgress(characterName, characterRealm)
-    const result = await parseRaiderioData(characterName, characterRealm, raiderioData)
+    // Build boss lookup
+    const allBosses = await bossRepo.getAll()
+    const bossLookup = keyBy(
+        allBosses.filter(
+            (boss): boss is Boss & { raiderioEncounterSlug: string } =>
+                boss.raiderioEncounterSlug !== null
+        ),
+        (boss) => boss.raiderioEncounterSlug
+    )
 
-    await raiderioRepo.upsert([result])
+    const raiderioData = await fetchCharacterRaidProgress(characterName, characterRealm)
+    const result = await parseRaiderioData(
+        characterId,
+        characterName,
+        characterRealm,
+        raiderioData,
+        bossLookup
+    )
+
+    await raiderioRepo.upsert([result.character])
+    await raiderioRepo.upsertEncounters(characterId, result.encounters)
 
     logger.info(
         "Raiderio",
@@ -132,7 +189,7 @@ export async function checkRaiderioUpdates(): Promise<{
 /**
  * Get all stored Raider.io data
  */
-export async function getAllCharacterRaiderio(): Promise<CharacterRaiderio[]> {
+export async function getAllCharacterRaiderio(): Promise<CharacterRaiderioDb[]> {
     return await raiderioRepo.getAll()
 }
 
@@ -144,43 +201,60 @@ export async function getLastRaiderioSyncTime(): Promise<number | null> {
 }
 
 /**
- * Get roster progression data with pre-built encounter lookup maps.
- * Single DB query with LEFT JOIN, server-side preprocessing of encounters.
+ * Get roster progression data with encounters from normalized table.
  */
 export async function getRosterProgression(
     showMains = true,
     showAlts = true,
     raidSlug: string
 ): Promise<CharacterWithEncounters[]> {
-    const roster = await characterRepo.getListWithRaiderio(showMains, showAlts)
+    const roster = await characterRepo.getList(showMains, showAlts)
     logger.info(
         "Raiderio",
         `Fetching roster progression for ${s(roster.length)} characters (mains: ${s(showMains)}, alts: ${s(showAlts)}, raid: ${raidSlug})`
     )
 
-    const difficulties = ["normal", "heroic", "mythic"] as const
+    if (roster.length === 0) {
+        return []
+    }
 
-    return roster.map(({ progress, ...character }) => {
-        const currentRaid = progress?.raidProgress.find((rp) => rp.raid === raidSlug)
+    // Get encounters for all roster characters
+    const characterIds = roster.map((c) => c.id)
+    const allEncounters = await raiderioRepo.getEncountersForRoster(
+        characterIds,
+        raidSlug
+    )
 
+    // Group encounters by character ID
+    const encountersByCharacter = groupBy(allEncounters, (enc) => enc.characterId)
+
+    return roster.map((character) => {
+        const charEncounters = encountersByCharacter[character.id] ?? []
+
+        // Build encounter lookup: "Difficulty-bossSlug" -> encounter
         const encounters = Object.fromEntries(
-            difficulties.flatMap((diff) =>
-                (currentRaid?.encountersDefeated[diff] ?? []).map(
-                    (enc) => [`${diff}-${enc.slug}`, enc] as const
-                )
-            )
+            charEncounters
+                .map((enc): [string, RaiderioEncounter] | null => {
+                    const slug = enc.boss.raiderioEncounterSlug
+                    if (!slug) {
+                        return null
+                    }
+                    return [
+                        `${enc.difficulty}-${slug}`,
+                        {
+                            slug,
+                            itemLevel: enc.itemLevel,
+                            numKills: enc.numKills,
+                            firstDefeated: enc.firstDefeated?.toISOString() ?? null,
+                            lastDefeated: enc.lastDefeated?.toISOString() ?? null,
+                        },
+                    ]
+                })
+                .filter(defined)
         )
 
         return {
-            p1Character: {
-                id: character.id,
-                name: character.name,
-                realm: character.realm,
-                class: character.class,
-                role: character.role,
-                main: character.main,
-                playerId: character.playerId,
-            },
+            p1Character: character,
             encounters,
         }
     })

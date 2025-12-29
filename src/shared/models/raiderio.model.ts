@@ -1,16 +1,16 @@
 import { z } from "zod"
 import { gearItemSchema } from "./item.model"
 
+// Encounter schema - Zod strips extra fields from API response
 export const encounterSchema = z.object({
     slug: z.string(),
     itemLevel: z.number(),
-    artifactTraits: z.number(),
     numKills: z.number(),
-    firstDefeated: z.string().nullable(), // ISO date string
-    lastDefeated: z.string().nullable(), // ISO date string
-    bossIcon: z.string(),
+    firstDefeated: z.string().nullable(),
+    lastDefeated: z.string().nullable(),
 })
 
+// API response schemas (lowercase keys from Raider.io)
 export const encountersDefeatedSchema = z.object({
     normal: z.array(encounterSchema).optional(),
     heroic: z.array(encounterSchema).optional(),
@@ -27,17 +27,17 @@ export const raiderIoProgressSchema = z.object({
     raidProgress: z.array(raidProgressSchema),
 })
 
+// Character raiderio schema (without progress - now in character_encounters table)
 export const charRaiderioSchema = z.object({
     name: z.string().max(24),
     realm: z.string(),
     race: z.string().nullable(),
     characterId: z.number(),
-    p1SyncAt: z.number(), // 2025-07-29T06:00:12.000Z
-    loggedOutAt: z.number(), // 2025-07-29T06:00:12.000Z
-    itemUpdateAt: z.number(), // 2025-07-29T06:00:12.000Z
-    averageItemLevel: z.string(),
+    p1SyncAt: z.number(),
+    loggedOutAt: z.number(),
+    itemUpdateAt: z.number(),
+    averageItemLevel: z.string().nullable(),
     itemsEquipped: z.array(gearItemSchema),
-    progress: raiderIoProgressSchema,
 })
 
 // Types

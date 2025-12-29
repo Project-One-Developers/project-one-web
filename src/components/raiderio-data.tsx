@@ -28,38 +28,6 @@ export default function RaiderioData({ data }: { data: CharacterRaiderio }) {
     return (
         <div className="w-full space-y-8">
             <CharacterPaperdoll renderGearSlot={renderGearSlot} />
-
-            {/* Raid Progress Section - Unique to RaiderIO */}
-            <div className="bg-background/50 rounded-lg p-6">
-                <h3 className="font-bold mb-4">Raid Progress</h3>
-                <div className="space-y-3">
-                    {data.progress.raidProgress.map((raid) => (
-                        <div
-                            key={raid.raid}
-                            className="flex items-center justify-between"
-                        >
-                            <span className="font-medium">{raid.raid}</span>
-                            <div className="flex gap-2 text-sm">
-                                {raid.encountersDefeated.normal && (
-                                    <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded">
-                                        N: {raid.encountersDefeated.normal.length}
-                                    </span>
-                                )}
-                                {raid.encountersDefeated.heroic && (
-                                    <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded">
-                                        H: {raid.encountersDefeated.heroic.length}
-                                    </span>
-                                )}
-                                {raid.encountersDefeated.mythic && (
-                                    <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded">
-                                        M: {raid.encountersDefeated.mythic.length}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
         </div>
     )
 }

@@ -1,16 +1,26 @@
+import { match } from "ts-pattern"
 import { itemRepo } from "@/db/repositories/items"
+import type {
+    CharacterEncounterInsert,
+    CharacterRaiderioDb,
+} from "@/db/repositories/raiderio"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import { evalRealSeason, parseItemTrack } from "@/shared/libs/items/item-bonus-utils"
+import type { Boss } from "@/shared/models/boss.model"
 import type { GearItem, Item } from "@/shared/models/item.model"
 import {
     raiderioResponseSchema,
     type RaiderioItems,
     type RaiderioResponse,
 } from "@/shared/models/raiderio-response.model"
-import { CharacterRaiderio } from "@/shared/models/raiderio.model"
-import type { WowItemEquippedSlotKey } from "@/shared/models/wow.model"
+import type { WowItemEquippedSlotKey, WowRaidDifficulty } from "@/shared/models/wow.model"
+
+export type ParsedRaiderioData = {
+    character: CharacterRaiderioDb
+    encounters: CharacterEncounterInsert[]
+}
 
 export async function fetchCharacterRaidProgress(
     characterName: string,
@@ -41,13 +51,15 @@ export async function fetchCharacterRaidProgress(
 let itemsInDb: Item[] | null = null
 
 export async function parseRaiderioData(
+    characterId: string, // FK to charTable.id
     name: string,
     realm: string,
-    raiderioCharData: RaiderioResponse
-): Promise<CharacterRaiderio> {
+    raiderioCharData: RaiderioResponse,
+    bossLookup: Record<string, Boss> // slug -> boss
+): Promise<ParsedRaiderioData> {
     itemsInDb ??= await itemRepo.getAll()
 
-    const res: CharacterRaiderio = {
+    const character: CharacterRaiderioDb = {
         name: name,
         realm: realm,
         race: raiderioCharData.characterDetails.character.race.name,
@@ -65,10 +77,50 @@ export async function parseRaiderioData(
         itemsEquipped: createEquippedInfo(
             raiderioCharData.characterDetails.itemDetails.items
         ),
-        progress: raiderioCharData.characterRaidProgress,
     }
 
-    return res
+    // Parse encounters into normalized format
+    const encounters: CharacterEncounterInsert[] = []
+    const progress = raiderioCharData.characterRaidProgress
+
+    for (const raidProgress of progress.raidProgress) {
+        for (const [rawDiff, bossEncounters] of Object.entries(
+            raidProgress.encountersDefeated
+        )) {
+            const difficulty = match(rawDiff)
+                .returnType<WowRaidDifficulty | null>()
+                .with("normal", () => "Normal")
+                .with("heroic", () => "Heroic")
+                .with("mythic", () => "Mythic")
+                .otherwise(() => null)
+            if (!difficulty) {
+                continue
+            }
+
+            for (const enc of bossEncounters) {
+                const boss = bossLookup[enc.slug]
+                if (!boss) {
+                    logger.debug(
+                        "Raiderio",
+                        `Skipping encounter with unknown boss slug: ${enc.slug}`
+                    )
+                    continue
+                }
+
+                encounters.push({
+                    characterId,
+                    bossId: boss.id,
+                    difficulty,
+                    itemLevel: enc.itemLevel,
+                    numKills: enc.numKills,
+                    firstDefeated: enc.firstDefeated ? new Date(enc.firstDefeated) : null,
+                    lastDefeated: enc.lastDefeated ? new Date(enc.lastDefeated) : null,
+                })
+            }
+        }
+    }
+
+    return { character, encounters }
 }
 
 function createEquippedInfo(itemsEquipped: RaiderioItems): GearItem[] {

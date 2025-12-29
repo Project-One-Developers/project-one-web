@@ -221,7 +221,7 @@ export function evalRealSeason(item: Item, ilvl: number) {
         if (ilvl > 636 && ilvl <= 681) {
             return 2
         }
-        if (ilvl > 681 && ilvl <= 720) {
+        if (ilvl > 681 && ilvl <= 730) {
             return 3
         }
         throw new Error(
