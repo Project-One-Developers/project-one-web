@@ -1,12 +1,16 @@
 "use client"
 
-import { ArrowLeft, Crown, Edit, LoaderCircle, Trash2, Users } from "lucide-react"
+import { ArrowLeft, Crown, Edit, Trash2, Users } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
 import { useState } from "react"
 import CharacterDeleteDialog from "@/components/character-delete-dialog"
 import CharacterDialog from "@/components/character-dialog"
 import { CharGameInfoPanel } from "@/components/character-game-info-panel"
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/empty-state"
+import { GlassCard } from "@/components/ui/glass-card"
+import { IconButton } from "@/components/ui/icon-button"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { WowCharacterLink } from "@/components/wow/wow-character-links"
 import { WowClassIcon } from "@/components/wow/wow-class-icon"
 import { useCharacter } from "@/lib/queries/players"
@@ -23,56 +27,46 @@ export default function CharacterPage() {
     const character = characterQuery.data
 
     if (characterQuery.isLoading) {
-        return (
-            <div className="flex flex-col items-center w-full justify-center min-h-[50vh]">
-                <div className="relative">
-                    <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-pulse" />
-                    <LoaderCircle className="relative animate-spin w-12 h-12 text-primary" />
-                </div>
-                <p className="mt-4 text-muted-foreground text-sm">
-                    Loading character...
-                </p>
-            </div>
-        )
+        return <LoadingSpinner size="lg" iconSize="lg" text="Loading character..." />
     }
 
     if (!character) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
-                <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
-                    <Users className="w-8 h-8 text-muted-foreground/50" />
-                </div>
-                <h3 className="text-lg font-medium mb-1">Character not found</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                    This character may have been deleted or doesn&apos;t exist
-                </p>
-                <Button
-                    variant="outline"
-                    onClick={() => {
-                        router.push("/roster")
-                    }}
-                    className="rounded-xl"
-                >
-                    <ArrowLeft className="h-4 w-4 mr-2" /> Back to Roster
-                </Button>
-            </div>
+            <EmptyState
+                size="full"
+                icon={<Users className="w-8 h-8" />}
+                title="Character not found"
+                description="This character may have been deleted or doesn't exist"
+                action={
+                    <Button
+                        variant="outline"
+                        onClick={() => {
+                            router.push("/roster")
+                        }}
+                        className="rounded-xl"
+                    >
+                        <ArrowLeft className="h-4 w-4 mr-2" /> Back to Roster
+                    </Button>
+                }
+            />
         )
     }
 
     return (
         <div className="w-full h-full flex flex-col gap-4 p-6 md:p-8">
             {/* Page Header */}
-            <div className="bg-card/40 backdrop-blur-sm border border-border/40 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
+            <GlassCard
+                padding="default"
+                className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0"
+            >
                 <div className="flex items-center gap-4">
                     {/* Back Button */}
-                    <button
+                    <IconButton
+                        icon={<ArrowLeft className="h-4 w-4" />}
                         onClick={() => {
                             router.back()
                         }}
-                        className="flex items-center justify-center w-10 h-10 rounded-xl bg-card/50 border border-border/50 hover:bg-card hover:border-primary/30 transition-all"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                    </button>
+                    />
 
                     {/* Character Icon */}
                     <div className="relative">
@@ -148,7 +142,7 @@ export default function CharacterPage() {
                         <Trash2 className="h-4 w-4" />
                     </Button>
                 </div>
-            </div>
+            </GlassCard>
 
             {/* Character Game Info Panel */}
             <div className="flex-1 min-h-0">

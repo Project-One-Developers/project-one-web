@@ -1,6 +1,6 @@
 "use client"
 
-import { LoaderCircle, PanelLeftClose, PanelLeftOpen } from "lucide-react"
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react"
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
 import { match, P } from "ts-pattern"
@@ -11,6 +11,10 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import { EmptyState } from "@/components/ui/empty-state"
+import { GlassCard } from "@/components/ui/glass-card"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { SectionHeader } from "@/components/ui/section-header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useCharacterGameInfo } from "@/lib/queries/players"
 import { getClassBackgroundStyle } from "@/shared/libs/class-backgrounds"
@@ -52,15 +56,7 @@ export const CharGameInfoPanel = ({ character }: CharGameInfoPanelProps) => {
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(hasSidebarData)
 
     if (charGameInfoQuery.isLoading) {
-        return (
-            <div className="flex flex-col items-center w-full justify-center min-h-[40vh]">
-                <div className="relative">
-                    <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-pulse" />
-                    <LoaderCircle className="relative animate-spin w-10 h-10 text-primary" />
-                </div>
-                <p className="mt-4 text-muted-foreground text-sm">Loading gear data...</p>
-            </div>
-        )
+        return <LoadingSpinner size="default" text="Loading gear data..." />
     }
 
     return (
@@ -89,7 +85,7 @@ export const CharGameInfoPanel = ({ character }: CharGameInfoPanelProps) => {
 
             {/* Main Content - Character Gear */}
             <div className="flex-1 min-w-0 h-full">
-                <div className="bg-card/40 backdrop-blur-sm border border-border/40 rounded-2xl relative h-full overflow-hidden">
+                <GlassCard padding="none" className="relative h-full overflow-hidden">
                     <GearInfo
                         blizzard={blizzardData}
                         droptimizer={droptimizer}
@@ -97,7 +93,7 @@ export const CharGameInfoPanel = ({ character }: CharGameInfoPanelProps) => {
                         realm={character.realm}
                         characterClass={character.class}
                     />
-                </div>
+                </GlassCard>
             </div>
         </div>
     )
@@ -122,10 +118,8 @@ export const CurrenciesPanel = ({ currencies }: CurrenciesPanelProps) => {
         .sort((a, b) => a.id - b.id)
 
     return (
-        <div className="flex flex-col p-4 bg-card/40 backdrop-blur-sm border border-border/40 rounded-2xl">
-            <h4 className="text-xs font-medium mb-3 text-muted-foreground uppercase tracking-wider">
-                Currencies
-            </h4>
+        <GlassCard className="flex flex-col">
+            <SectionHeader className="mb-3">Currencies</SectionHeader>
             <div className="flex gap-3 flex-wrap">
                 {relevantCurrencies.length === 0 ? (
                     <div className="text-sm text-muted-foreground/60">
@@ -145,7 +139,7 @@ export const CurrenciesPanel = ({ currencies }: CurrenciesPanelProps) => {
                     ))
                 )}
             </div>
-        </div>
+        </GlassCard>
     )
 }
 
@@ -243,15 +237,12 @@ const GearInfo = ({
 
     if (defaultTab === null) {
         return (
-            <div className="flex flex-col items-center justify-center h-full py-16 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
-                    <span className="text-2xl opacity-50">⚔</span>
-                </div>
-                <h3 className="text-base font-medium mb-1">No gear data available</h3>
-                <p className="text-sm text-muted-foreground">
-                    Import a Droptimizer report or sync from the Armory
-                </p>
-            </div>
+            <EmptyState
+                size="default"
+                icon={<span className="text-2xl">⚔</span>}
+                title="No gear data available"
+                description="Import a Droptimizer report or sync from the Armory"
+            />
         )
     }
 

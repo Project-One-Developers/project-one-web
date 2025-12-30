@@ -21,7 +21,9 @@ const CharacterTooltip = ({
 }) => (
     <div className="flex flex-col gap-2 min-w-[180px]">
         <div className="flex items-center gap-2">
-            <span className="font-semibold text-foreground">{summary.character.name}</span>
+            <span className="font-semibold text-foreground">
+                {summary.character.name}
+            </span>
             {summary.character.main && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-medium">
                     MAIN
@@ -135,7 +137,10 @@ export const CharacterOverviewIcon = ({
                                 </div>
                             </button>
                         </TooltipTrigger>
-                        <TooltipContent side="top" className="bg-popover/95 backdrop-blur-sm">
+                        <TooltipContent
+                            side="top"
+                            className="bg-popover/95 backdrop-blur-sm"
+                        >
                             <CharacterTooltip summary={item} isLowItemLevel={isLow} />
                         </TooltipContent>
                     </Tooltip>

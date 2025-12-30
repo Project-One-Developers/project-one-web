@@ -3,7 +3,6 @@
 import {
     AlertTriangle,
     Download,
-    LoaderCircle,
     PlusIcon,
     Search,
     Trash2,
@@ -16,11 +15,16 @@ import CharacterDialog from "@/components/character-dialog"
 import PlayerDeleteDialog from "@/components/player-delete-dialog"
 import PlayerDialog from "@/components/player-dialog"
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/empty-state"
+import { GlassCard } from "@/components/ui/glass-card"
+import { IconButton } from "@/components/ui/icon-button"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { StatBadge } from "@/components/ui/stat-badge"
 import { CharacterOverviewIcon } from "@/components/wow/character-overview-icon"
 import { usePlayersSummaryCompact } from "@/lib/queries/players"
+import { s } from "@/lib/safe-stringify"
 import type { Player } from "@/shared/models/character.model"
 import type { PlayerWithSummaryCompact } from "@/shared/types/types"
-import { s } from "@/lib/safe-stringify"
 
 type ItemLevelStats = {
     mean: number
@@ -115,15 +119,7 @@ export default function RosterPage(): JSX.Element {
     }
 
     if (playersQuery.isLoading) {
-        return (
-            <div className="flex flex-col items-center w-full justify-center min-h-[50vh]">
-                <div className="relative">
-                    <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-pulse" />
-                    <LoaderCircle className="relative animate-spin w-12 h-12 text-primary" />
-                </div>
-                <p className="mt-4 text-muted-foreground text-sm">Loading roster...</p>
-            </div>
-        )
+        return <LoadingSpinner size="lg" iconSize="lg" text="Loading roster..." />
     }
 
     const filteredPlayers = players
@@ -206,33 +202,31 @@ export default function RosterPage(): JSX.Element {
 
                 {/* Stats Row */}
                 <div className="flex flex-wrap gap-3">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-card/30 backdrop-blur-sm rounded-full border border-border/30 text-sm">
-                        <Users className="w-4 h-4 text-primary" />
-                        <span className="text-muted-foreground">Players</span>
-                        <span className="font-semibold">{s(players.length)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-card/30 backdrop-blur-sm rounded-full border border-border/30 text-sm">
-                        <span className="w-4 h-4 text-center text-primary font-bold">⚔</span>
-                        <span className="text-muted-foreground">Characters</span>
-                        <span className="font-semibold">{s(totalCharacters)}</span>
-                    </div>
+                    <StatBadge
+                        icon={<Users className="w-4 h-4 text-primary" />}
+                        label="Players"
+                        value={s(players.length)}
+                    />
+                    <StatBadge
+                        icon={<span className="text-primary font-bold">⚔</span>}
+                        label="Characters"
+                        value={s(totalCharacters)}
+                    />
                     {itemLevelStats.mean > 0 && (
-                        <div className="flex items-center gap-2 px-4 py-2 bg-card/30 backdrop-blur-sm rounded-full border border-border/30 text-sm">
-                            <span className="w-4 h-4 text-center text-blue-400 font-bold">◆</span>
-                            <span className="text-muted-foreground">Avg iLvl</span>
-                            <span className="font-semibold text-blue-400">
-                                {Math.round(itemLevelStats.mean)}
-                            </span>
-                        </div>
+                        <StatBadge
+                            variant="info"
+                            icon={<span className="text-blue-400 font-bold">◆</span>}
+                            label="Avg iLvl"
+                            value={Math.round(itemLevelStats.mean)}
+                        />
                     )}
                     {itemLevelStats.lowCount > 0 && (
-                        <div className="flex items-center gap-2 px-4 py-2 bg-orange-500/10 backdrop-blur-sm rounded-full border border-orange-500/30 text-sm">
-                            <AlertTriangle className="w-4 h-4 text-orange-400" />
-                            <span className="text-orange-300/80">Low Gear</span>
-                            <span className="font-semibold text-orange-400">
-                                {s(itemLevelStats.lowCount)}
-                            </span>
-                        </div>
+                        <StatBadge
+                            variant="warning"
+                            icon={<AlertTriangle className="w-4 h-4 text-orange-400" />}
+                            label="Low Gear"
+                            value={s(itemLevelStats.lowCount)}
+                        />
                     )}
                 </div>
             </div>
@@ -240,9 +234,11 @@ export default function RosterPage(): JSX.Element {
             {/* Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                 {filteredPlayers.map((player) => (
-                    <div
+                    <GlassCard
                         key={player.id}
-                        className="group relative flex flex-col p-5 bg-card/40 backdrop-blur-sm border border-border/40 rounded-2xl hover:border-primary/30 hover:bg-card/60 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+                        interactive
+                        padding="lg"
+                        className="group relative flex flex-col"
                     >
                         {/* Hover Actions */}
                         <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -259,7 +255,9 @@ export default function RosterPage(): JSX.Element {
                         </div>
 
                         {/* Player Name */}
-                        <h2 className="font-bold text-lg mb-4 pr-10 truncate">{player.name}</h2>
+                        <h2 className="font-bold text-lg mb-4 pr-10 truncate">
+                            {player.name}
+                        </h2>
 
                         {/* Characters Row */}
                         <div className="flex items-end gap-2 mt-auto">
@@ -291,43 +289,41 @@ export default function RosterPage(): JSX.Element {
                                 </div>
                             </button>
                         </div>
-                    </div>
+                    </GlassCard>
                 ))}
             </div>
 
             {/* Empty State */}
             {filteredPlayers.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
-                        <Users className="w-8 h-8 text-muted-foreground/50" />
-                    </div>
-                    <h3 className="text-lg font-medium mb-1">No players found</h3>
-                    <p className="text-sm text-muted-foreground">
-                        {searchQuery
+                <EmptyState
+                    icon={<Users className="w-8 h-8" />}
+                    title="No players found"
+                    description={
+                        searchQuery
                             ? "Try adjusting your search"
-                            : "Add your first player to get started"}
-                    </p>
-                </div>
+                            : "Add your first player to get started"
+                    }
+                />
             )}
 
             {/* Floating Action Buttons */}
             <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
-                <button
+                <IconButton
+                    icon={<Download className="w-5 h-5" />}
+                    variant="secondary"
+                    size="lg"
                     onClick={handleExportCsv}
-                    className="group w-12 h-12 rounded-xl bg-card/80 backdrop-blur-sm border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/50 hover:bg-card shadow-lg transition-all duration-200 flex items-center justify-center"
                     title="Export Roster as CSV"
-                >
-                    <Download className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                </button>
-                <button
+                />
+                <IconButton
+                    icon={<UserRoundPlus className="w-5 h-5" />}
+                    variant="primary"
+                    size="lg"
                     onClick={() => {
                         setIsAddDialogOpen(true)
                     }}
-                    className="group w-12 h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200 flex items-center justify-center"
                     title="Add Player"
-                >
-                    <UserRoundPlus className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                </button>
+                />
             </div>
 
             {/* Page Dialogs */}

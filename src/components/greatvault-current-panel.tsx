@@ -1,6 +1,8 @@
 "use client"
 
 import { useMemo } from "react"
+import { GlassCard } from "@/components/ui/glass-card"
+import { SectionHeader } from "@/components/ui/section-header"
 import { isInCurrentWowWeek } from "@/shared/libs/date/date-utils"
 import type { Droptimizer } from "@/shared/models/simulation.model"
 import { WowGearIcon } from "./wow/wow-gear-icon"
@@ -19,10 +21,8 @@ export const CurrentGreatVaultPanel = ({ droptimizer }: CurrentGreatVaultPanelPr
     }, [droptimizer])
 
     return (
-        <div className="flex flex-col p-4 bg-card/40 backdrop-blur-sm border border-border/40 rounded-2xl">
-            <h4 className="text-xs font-medium mb-3 text-muted-foreground uppercase tracking-wider">
-                Current Great Vault
-            </h4>
+        <GlassCard className="flex flex-col">
+            <SectionHeader className="mb-3">Current Great Vault</SectionHeader>
             <div className="flex flex-wrap gap-2">
                 {hasData && weeklyChests ? (
                     weeklyChests.map((gear) => (
@@ -34,6 +34,6 @@ export const CurrentGreatVaultPanel = ({ droptimizer }: CurrentGreatVaultPanelPr
                     </div>
                 )}
             </div>
-        </div>
+        </GlassCard>
     )
 }
