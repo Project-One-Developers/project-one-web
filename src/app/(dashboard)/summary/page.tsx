@@ -5,6 +5,7 @@ import { AlertTriangle, CheckCircle, LoaderCircle, XCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useMemo, useState, type JSX } from "react"
 import { match } from "ts-pattern"
+import { GlobalFilterUI } from "@/components/global-filter-ui"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import {
@@ -19,6 +20,7 @@ import { TiersetInfo } from "@/components/wow/tierset-info"
 import { WowClassIcon } from "@/components/wow/wow-class-icon"
 import { WowCurrencyIcon } from "@/components/wow/wow-currency-icon"
 import { WowGearIcon } from "@/components/wow/wow-gear-icon"
+import { FilterProvider, useFilterContext } from "@/lib/filter-context"
 import { useRosterSummary } from "@/lib/queries/summary"
 import { isRelevantCurrency } from "@/shared/libs/currency/currency-utils"
 import {
@@ -189,19 +191,11 @@ const FilterControls = ({
     onTierToggle,
     showOnlyWithVaultTier,
     onVaultFilterChange,
-    showMains,
-    showAlts,
-    onMainsChange,
-    onAltsChange,
 }: {
     tierCompletionFilter: TierCompletionFilterType
     onTierToggle: (completion: TierSetCompletion) => void
     showOnlyWithVaultTier: boolean
     onVaultFilterChange: (checked: boolean) => void
-    showMains: boolean
-    showAlts: boolean
-    onMainsChange: (checked: boolean) => void
-    onAltsChange: (checked: boolean) => void
 }) => (
     <div className="flex flex-wrap gap-4 items-center">
         <div className="flex flex-wrap gap-2 items-center">
@@ -227,27 +221,6 @@ const FilterControls = ({
                 }}
             />
             <span className="text-sm text-gray-300">Tierset in vault</span>
-        </div>
-
-        <div className="flex items-center space-x-4">
-            <label className="flex items-center space-x-1 cursor-pointer">
-                <Checkbox
-                    checked={showMains}
-                    onCheckedChange={(checked) => {
-                        onMainsChange(checked === true)
-                    }}
-                />
-                <span className="text-sm text-gray-300">Mains</span>
-            </label>
-            <label className="flex items-center space-x-1 cursor-pointer">
-                <Checkbox
-                    checked={showAlts}
-                    onCheckedChange={(checked) => {
-                        onAltsChange(checked === true)
-                    }}
-                />
-                <span className="text-sm text-gray-300">Alts</span>
-            </label>
         </div>
     </div>
 )
@@ -345,13 +318,21 @@ const PlayerRow = ({ summary }: { summary: CharacterSummary }) => {
 
 // Main component
 export default function SummaryPage(): JSX.Element {
-    // Local state for filters
+    return (
+        <FilterProvider>
+            <SummaryPageContent />
+        </FilterProvider>
+    )
+}
+
+function SummaryPageContent(): JSX.Element {
+    const { filter } = useFilterContext()
+
+    // Local state for page-specific filters
     const [tierCompletionFilter, setTierCompletionFilter] =
         useState<TierCompletionFilterType>(DEFAULT_TIER_COMPLETION_FILTER)
     const [showOnlyWithVaultTier, setShowOnlyWithVaultTier] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
-    const [showMains, setShowMains] = useState(true)
-    const [showAlts, setShowAlts] = useState(true)
 
     // Query
     const characterQuery = useRosterSummary()
@@ -376,7 +357,8 @@ export default function SummaryPage(): JSX.Element {
                     .toLowerCase()
                     .includes(searchQuery.toLowerCase())
 
-                const passesMainAltFilter = (showMains && isMain) || (showAlts && !isMain)
+                const passesMainAltFilter =
+                    (filter.showMains && isMain) || (filter.showAlts && !isMain)
                 const tierCompletion = summary.tierset.length
                 const passesTierFilter =
                     tierCompletionFilter[tierCompletion as TierSetCompletion]
@@ -394,8 +376,8 @@ export default function SummaryPage(): JSX.Element {
     }, [
         characterQuery.data,
         searchQuery,
-        showMains,
-        showAlts,
+        filter.showMains,
+        filter.showAlts,
         tierCompletionFilter,
         showOnlyWithVaultTier,
     ])
@@ -416,10 +398,6 @@ export default function SummaryPage(): JSX.Element {
                     onTierToggle={toggleTierCompletion}
                     showOnlyWithVaultTier={showOnlyWithVaultTier}
                     onVaultFilterChange={setShowOnlyWithVaultTier}
-                    showMains={showMains}
-                    showAlts={showAlts}
-                    onMainsChange={setShowMains}
-                    onAltsChange={setShowAlts}
                 />
             </div>
 
@@ -456,6 +434,16 @@ export default function SummaryPage(): JSX.Element {
                     ))}
                 </TableBody>
             </Table>
+
+            {/* Bottom Right Filter button */}
+            <GlobalFilterUI
+                showMainsAlts={true}
+                showRaidDifficulty={false}
+                showDroptimizerFilters={false}
+                showClassFilter={false}
+                showSlotFilter={false}
+                showArmorTypeFilter={false}
+            />
         </div>
     )
 }

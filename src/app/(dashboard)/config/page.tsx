@@ -1,9 +1,16 @@
 "use client"
 
-import { ListRestart, Loader2, MessageSquare, RefreshCcwDot } from "lucide-react"
+import {
+    Database,
+    ListRestart,
+    Loader2,
+    MessageSquare,
+    RefreshCcwDot,
+} from "lucide-react"
 import { useState, type JSX } from "react"
 import { toast } from "sonner"
 import { syncDroptimizersFromDiscord } from "@/actions/droptimizer"
+import { syncItemsFromJson } from "@/actions/items"
 import { syncAllCharactersRaiderio } from "@/actions/raiderio"
 import { syncCharacterWowAudit } from "@/actions/wowaudit"
 import { Button } from "@/components/ui/button"
@@ -13,6 +20,7 @@ export default function SettingsPage(): JSX.Element {
     const [isSyncingWowAudit, setIsSyncingWowAudit] = useState(false)
     const [isSyncingRaiderio, setIsSyncingRaiderio] = useState(false)
     const [isSyncingDiscord, setIsSyncingDiscord] = useState(false)
+    const [isSyncingItems, setIsSyncingItems] = useState(false)
 
     const handleSyncWowAudit = async () => {
         setIsSyncingWowAudit(true)
@@ -66,6 +74,33 @@ export default function SettingsPage(): JSX.Element {
         }
     }
 
+    const handleSyncItems = async () => {
+        setIsSyncingItems(true)
+        try {
+            const result = await syncItemsFromJson()
+            const totalCount =
+                result.bosses.count +
+                result.items.count +
+                result.itemsToTierset.count +
+                result.itemsToCatalyst.count
+            toast.success(`Items sync completed: ${s(totalCount)} records synced`)
+            if (
+                result.bosses.error ??
+                result.items.error ??
+                result.itemsToTierset.error ??
+                result.itemsToCatalyst.error
+            ) {
+                toast.warning("Some errors occurred during sync, check logs")
+            }
+        } catch (error) {
+            toast.error(
+                `Items sync failed: ${error instanceof Error ? error.message : "Unknown error"}`
+            )
+        } finally {
+            setIsSyncingItems(false)
+        }
+    }
+
     return (
         <div className="w-full min-h-screen p-8 flex flex-col gap-6">
             <h1 className="text-3xl font-bold">Settings</h1>
@@ -112,6 +147,18 @@ export default function SettingsPage(): JSX.Element {
                             <MessageSquare className="mr-2 h-4 w-4" />
                         )}
                         Sync Droptimizers from Discord
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        onClick={() => void handleSyncItems()}
+                        disabled={isSyncingItems}
+                    >
+                        {isSyncingItems ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Database className="mr-2 h-4 w-4" />
+                        )}
+                        Sync Items Data
                     </Button>
                 </div>
             </section>

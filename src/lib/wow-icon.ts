@@ -155,9 +155,9 @@ export const armorTypesIcon = new Map<WowArmorType, string>([
 ])
 
 export const raidDiffIcon = new Map<WowRaidDifficulty, string>([
-    ["Normal", "https://wow.zamimg.com/images/wow/icons/large/inv_misc_coin_01.jpg"],
-    ["Heroic", "https://wow.zamimg.com/images/wow/icons/large/inv_misc_coin_02.jpg"],
-    ["Mythic", "https://wow.zamimg.com/images/wow/icons/large/inv_misc_coin_03.jpg"],
+    ["Normal", "/icons/diff-normal.png"],
+    ["Heroic", "/icons/diff-heroic.png"],
+    ["Mythic", "/icons/diff-mythic.png"],
 ])
 
 export const encounterIcon = new Map<number, string>([

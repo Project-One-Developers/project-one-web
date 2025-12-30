@@ -4,16 +4,11 @@ import { groupBy, partition, sortBy } from "es-toolkit"
 import { LoaderCircle } from "lucide-react"
 import Image from "next/image"
 import { useEffect, useMemo, useState, type JSX } from "react"
+import { GlobalFilterUI } from "@/components/global-filter-ui"
 import { Input } from "@/components/ui/input"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { WowCharacterIcon } from "@/components/wow/wow-character-icon"
+import { FilterProvider, useFilterContext } from "@/lib/filter-context"
 import { useBosses, useRosterProgression } from "@/lib/queries/bosses"
 import { defined } from "@/lib/utils"
 import { encounterIcon } from "@/lib/wow-icon"
@@ -243,10 +238,15 @@ const BossPanel = ({
 
 // Main Component
 export default function RaidProgressionPage(): JSX.Element {
-    // Local state for filters
-    const [showMains, setShowMains] = useState(true)
-    const [showAlts, setShowAlts] = useState(true)
-    const [selectedRaidDiff, setSelectedRaidDiff] = useState<WowRaidDifficulty>("Heroic")
+    return (
+        <FilterProvider defaultFilter={{ selectedRaidDiff: "Heroic" }}>
+            <RaidProgressionPageContent />
+        </FilterProvider>
+    )
+}
+
+function RaidProgressionPageContent(): JSX.Element {
+    const { filter } = useFilterContext()
     const [searchQuery, setSearchQuery] = useState("")
     const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
 
@@ -280,7 +280,11 @@ export default function RaidProgressionPage(): JSX.Element {
     const raidSlug = orderedBosses[0]?.raiderioRaidSlug ?? undefined
 
     // Fetch roster progression with pre-built encounter maps from server
-    const rosterProgressionQuery = useRosterProgression(showMains, showAlts, raidSlug)
+    const rosterProgressionQuery = useRosterProgression(
+        filter.showMains,
+        filter.showAlts,
+        raidSlug
+    )
 
     // Build set of filtered names for O(1) lookup
     const filteredNamesSet = useMemo(() => {
@@ -318,7 +322,7 @@ export default function RaidProgressionPage(): JSX.Element {
                         character: p1Character,
                         encounter:
                             encounters[
-                                `${selectedRaidDiff}-${boss.raiderioEncounterSlug}`
+                                `${filter.selectedRaidDiff}-${boss.raiderioEncounterSlug}`
                             ] ?? null,
                     })
                 )
@@ -351,7 +355,12 @@ export default function RaidProgressionPage(): JSX.Element {
                 ] as const
             })
         )
-    }, [orderedBosses, rosterProgressionQuery.data, selectedRaidDiff, filteredNamesSet])
+    }, [
+        orderedBosses,
+        rosterProgressionQuery.data,
+        filter.selectedRaidDiff,
+        filteredNamesSet,
+    ])
 
     // Calculate total roster size (filtered or not)
     const totalRosterSize = useMemo(() => {
@@ -375,7 +384,7 @@ export default function RaidProgressionPage(): JSX.Element {
             <div className="text-center mb-4">
                 <h1 className="text-2xl font-bold">Raid Progression</h1>
                 <p className="text-gray-400">
-                    Showing {selectedRaidDiff} difficulty progression for{" "}
+                    Showing {filter.selectedRaidDiff} difficulty progression for{" "}
                     {(rosterProgressionQuery.data ?? []).length} characters
                     {debouncedSearchQuery && (
                         <span className="text-blue-400">
@@ -386,66 +395,17 @@ export default function RaidProgressionPage(): JSX.Element {
                 </p>
             </div>
 
-            {/* Filters */}
-            <div className="flex flex-wrap gap-4 items-center justify-center">
-                {/* Search Bar */}
-                <div className="w-full max-w-md">
-                    <Input
-                        type="text"
-                        placeholder="Search player names..."
-                        value={searchQuery}
-                        onChange={(e) => {
-                            setSearchQuery(e.target.value)
-                        }}
-                        className="w-full"
-                    />
-                </div>
-
-                {/* Difficulty Select */}
-                <Select
-                    value={selectedRaidDiff}
-                    onValueChange={(value) => {
-                        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Select options match type
-                        setSelectedRaidDiff(value as WowRaidDifficulty)
+            {/* Search Bar */}
+            <div className="w-full max-w-md">
+                <Input
+                    type="text"
+                    placeholder="Search player names..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value)
                     }}
-                >
-                    <SelectTrigger className="w-[140px]">
-                        <SelectValue placeholder="Difficulty" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Normal">Normal</SelectItem>
-                        <SelectItem value="Heroic">Heroic</SelectItem>
-                        <SelectItem value="Mythic">Mythic</SelectItem>
-                    </SelectContent>
-                </Select>
-
-                {/* Mains/Alts filter */}
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => {
-                            setShowMains(!showMains)
-                        }}
-                        className={`px-3 py-1 rounded text-sm ${
-                            showMains
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-700 text-gray-400"
-                        }`}
-                    >
-                        Mains
-                    </button>
-                    <button
-                        onClick={() => {
-                            setShowAlts(!showAlts)
-                        }}
-                        className={`px-3 py-1 rounded text-sm ${
-                            showAlts
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-700 text-gray-400"
-                        }`}
-                    >
-                        Alts
-                    </button>
-                </div>
+                    className="w-full"
+                />
             </div>
 
             {/* Boss List */}
@@ -462,11 +422,21 @@ export default function RaidProgressionPage(): JSX.Element {
                             boss={boss}
                             progressData={progressData}
                             totalRosterSize={totalRosterSize}
-                            selectedDifficulty={selectedRaidDiff}
+                            selectedDifficulty={filter.selectedRaidDiff}
                         />
                     )
                 })}
             </div>
+
+            {/* Bottom Right Filter button */}
+            <GlobalFilterUI
+                showRaidDifficulty={true}
+                showMainsAlts={true}
+                showDroptimizerFilters={false}
+                showClassFilter={false}
+                showSlotFilter={false}
+                showArmorTypeFilter={false}
+            />
         </div>
     )
 }
