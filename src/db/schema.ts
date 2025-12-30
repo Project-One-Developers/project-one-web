@@ -63,7 +63,7 @@ export const charTable = pgTable(
             .notNull(),
     },
     (t) => [
-        unique("name_realm").on(t.name, t.realm), // coppia nome-realm unique
+        unique("name_realm").on(t.name, t.realm),
         index("idx_characters_player_id").on(t.playerId),
     ]
 )
@@ -141,7 +141,7 @@ export const droptimizerUpgradesTable = pgTable(
             .notNull(),
     },
     (t) => [
-        unique("item_upgrade_in_droptimizer").on(t.itemId, t.droptimizerId), // un itemid per droptimizer
+        unique("item_upgrade_in_droptimizer").on(t.itemId, t.droptimizerId), // one item per droptimizer
     ]
 )
 
@@ -276,7 +276,7 @@ export const assignmentTable = pgTable("assignments", {
     lootId: varchar("loot_id")
         .references(() => lootTable.id, { onDelete: "cascade" })
         .unique("loot_assignment")
-        .notNull(), // un loot può essere assegnato una sola volta
+        .notNull(), // a loot can only be assigned once
 })
 
 //////////////////////////////////////////////////////////
@@ -286,7 +286,7 @@ export const assignmentTable = pgTable("assignments", {
 export const bossTable = pgTable(
     "bosses",
     {
-        id: integer("id").primaryKey(), // // ricicliamo journal_encounter_id fornito da wow api
+        id: integer("id").primaryKey(), // reuses journal_encounter_id from WoW API
         name: varchar("name", { length: 255 }).notNull(),
         instanceId: integer("instance_id").notNull(),
         instanceName: varchar("instance_name").notNull(),
@@ -302,9 +302,9 @@ export const bossTable = pgTable(
     ]
 )
 
-// Sono gli item lootabili dal raid - contiene l'import di public/items.csv
+// Raid loot items
 export const itemTable = pgTable("items", {
-    id: integer("id").primaryKey(), // ricicliamo id fornito da wow api
+    id: integer("id").primaryKey(), // reuses item id from WoW API
     name: varchar("name", { length: 255 }).notNull(),
     ilvlBase: integer("ilvl_base").notNull(),
     ilvlMythic: integer("ilvl_mythic").notNull(),
@@ -315,14 +315,14 @@ export const itemTable = pgTable("items", {
     slotKey: pgItemSlotKeyEnum("slot_key").notNull(),
     armorType: pgItemArmorTypeEnum("armor_type"),
     itemSubclass: varchar("item_subclass", { length: 50 }),
-    token: boolean("token").notNull(), // se è un item che genera tierset
-    tokenPrefix: varchar("token_prefix", { length: 50 }), // es: Dreadful
-    tierset: boolean("tierset").notNull(), // se è un item tierset
+    token: boolean("token").notNull(), // whether this item generates a tierset piece
+    tokenPrefix: varchar("token_prefix", { length: 50 }), // e.g. Dreadful
+    tierset: boolean("tierset").notNull(), // whether this is a tierset item
     tiersetPrefix: varchar("tierset_prefix", { length: 50 }),
     veryRare: boolean("very_rare").notNull(),
     boe: boolean("boe").notNull(),
     onUseTrinket: boolean("on_use_trinket").notNull(),
-    specs: text("specs").array(), // null == tutte le spec
+    specs: text("specs").array(), // null means all specs
     specIds: integer("spec_ids").array(),
     classes: text("classes").array(),
     classesId: integer("classes_id").array(),
@@ -332,11 +332,11 @@ export const itemTable = pgTable("items", {
     wowheadUrl: text("wowhead_url").notNull(),
     iconName: varchar("icon_name", { length: 255 }).notNull(),
     iconUrl: text("icon_url").notNull(),
-    catalyzed: boolean("catalyzed").notNull().default(false), // se questo item è ottenibile solo tramite catalyst
+    catalyzed: boolean("catalyzed").notNull().default(false), // only obtainable via catalyst
     sourceId: integer("source_id").notNull(),
     sourceName: varchar("source_name").notNull(),
     sourceType: varchar("source_type").notNull(),
-    bossName: varchar("boss_name", { length: 255 }).notNull(), // ridondante ma utile
+    bossName: varchar("boss_name", { length: 255 }).notNull(), // denormalized for convenience
     season: integer("season").notNull(),
     bossId: integer("boss_id")
         .references(() => bossTable.id)
@@ -351,7 +351,7 @@ export const itemNoteTable = pgTable("items_note", {
     note: varchar("note").notNull(),
 })
 
-// Mapping tra itemId e Tier Token che lo genera - contiene l'import di public/items_to_tierset.csv
+// Maps tierset items to the token that generates them
 export const itemToTiersetTable = pgTable("items_to_tierset", {
     itemId: integer("item_id").primaryKey(),
     classId: integer("class_id").notNull(),
@@ -360,9 +360,9 @@ export const itemToTiersetTable = pgTable("items_to_tierset", {
         .notNull(),
 })
 
-// Mapping tra itemId e relativi catalyst (preso da public/items_to_catalyst.json)
-// La logica è: catalyzedItemId è l'item id ottenuto se dovessi catalizzare l'itemId lootato da un certo boss (encounter id)
-// encounterId ci server per il reverse lookup: da catalyzedItemId + encounterId risalgo all'itemId originale
+// Maps items to their catalyzed variants
+// catalyzedItemId is the item obtained by catalyzing itemId from a boss (encounterId)
+// encounterId enables reverse lookup: catalyzedItemId + encounterId -> original itemId
 export const itemToCatalystTable = pgTable(
     "items_to_catalyst",
     {
@@ -370,7 +370,5 @@ export const itemToCatalystTable = pgTable(
         encounterId: integer("encounter_id").notNull(),
         catalyzedItemId: integer("catalyzed_item_id").notNull(),
     },
-    (t) => [
-        primaryKey({ columns: [t.itemId, t.encounterId, t.catalyzedItemId] }), // todo: non va UPDATE BY ZORBY: fixed in this commit?
-    ]
+    (t) => [primaryKey({ columns: [t.itemId, t.encounterId, t.catalyzedItemId] })]
 )
