@@ -10,6 +10,7 @@ import {
 } from "@/shared/libs/date/date-utils"
 import type { RaidSessionWithSummary } from "@/shared/models/raid-session.model"
 import { Button } from "./ui/button"
+import { GlassCard } from "./ui/glass-card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 
 type SessionCardProps = {
@@ -55,12 +56,12 @@ const SessionCard = ({
     }
 
     return (
-        <div
+        <GlassCard
+            interactive
+            padding="none"
             className={cn(
-                "group flex flex-col w-52 rounded-lg cursor-pointer transition-all duration-150",
-                "bg-card border border-border/50 hover:border-border",
-                "hover:bg-accent/50",
-                isSelected && "ring-1 ring-primary border-primary bg-accent/30",
+                "group flex flex-col w-52 cursor-pointer",
+                isSelected && "ring-1 ring-primary border-primary",
                 className
             )}
             onClick={handleCardClick}
@@ -100,7 +101,7 @@ const SessionCard = ({
 
             {/* Actions */}
             {showActions && (
-                <div className="border-t border-border/50 px-1 py-1">
+                <div className="border-t border-border/30 px-1 py-1">
                     <TooltipProvider delayDuration={200}>
                         <div className="flex justify-around">
                             <Tooltip>
@@ -152,7 +153,7 @@ const SessionCard = ({
                     </TooltipProvider>
                 </div>
             )}
-        </div>
+        </GlassCard>
     )
 }
 

@@ -1,11 +1,9 @@
 "use client"
 
 import {
-    ArrowLeft,
     Calendar,
     Copy,
     Edit,
-    LoaderCircle,
     LucideMedal,
     PlusIcon,
     ShoppingBag,
@@ -20,6 +18,11 @@ import SessionLootNewDialog from "@/components/session-loot-new-dialog"
 import { SessionLootsPanel } from "@/components/session-loots-panel"
 import SessionRosterImportDialog from "@/components/session-roster-dialog"
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/empty-state"
+import { GlassCard } from "@/components/ui/glass-card"
+import { IconButton } from "@/components/ui/icon-button"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { SectionHeader } from "@/components/ui/section-header"
 import { WowClassIcon } from "@/components/wow/wow-class-icon"
 import { useLootsBySessionWithItem } from "@/lib/queries/loots"
 import {
@@ -27,6 +30,7 @@ import {
     useDeleteRaidSession,
     useRaidSession,
 } from "@/lib/queries/raid-sessions"
+import { s } from "@/lib/safe-stringify"
 import { formaUnixTimestampToItalianDate } from "@/shared/libs/date/date-utils"
 
 export default function RaidSessionPage() {
@@ -45,27 +49,26 @@ export default function RaidSessionPage() {
     const deleteMutation = useDeleteRaidSession()
 
     if (isLoading) {
-        return (
-            <div className="flex flex-col items-center w-full justify-center mt-10 mb-10">
-                <LoaderCircle className="animate-spin text-5xl" />
-            </div>
-        )
+        return <LoadingSpinner size="lg" iconSize="lg" text="Loading session..." />
     }
 
     if (!raidSession) {
         return (
-            <div className="flex flex-col items-center w-full justify-center mt-10 mb-10">
-                <p className="text-muted-foreground">Raid session not found</p>
-                <Button
-                    variant="outline"
-                    onClick={() => {
-                        router.push("/raid-session")
-                    }}
-                    className="mt-4"
-                >
-                    <ArrowLeft className="h-4 w-4 mr-2" /> Back to Sessions
-                </Button>
-            </div>
+            <EmptyState
+                icon={<Calendar className="w-8 h-8" />}
+                title="Session not found"
+                description="This raid session doesn't exist or has been deleted"
+                action={
+                    <Button
+                        variant="outline"
+                        onClick={() => {
+                            router.push("/raid-session")
+                        }}
+                    >
+                        Back to Sessions
+                    </Button>
+                }
+            />
         )
     }
 
@@ -110,47 +113,51 @@ export default function RaidSessionPage() {
     return (
         <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-5 p-8 relative">
             {/* Page Header */}
-            <div className="bg-muted rounded-lg p-6 shadow-lg flex justify-between items-center">
+            <GlassCard padding="lg" className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                    <Button
-                        variant="ghost"
+                    <IconButton
+                        icon={<Calendar className="w-4 h-4" />}
                         onClick={() => {
                             router.back()
                         }}
-                        className="hover:bg-gray-800 p-2"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                    </Button>
+                        variant="default"
+                    />
                     <div>
-                        <h1 className="text-3xl font-bold mb-2 text-blue-400">
+                        <h1 className="text-2xl font-bold mb-1 text-primary">
                             {raidSession.name}
                         </h1>
-                        <div className="flex items-center text-gray-400">
-                            <Calendar className="mr-2 h-4 w-4" />
-                            <span>
-                                {formaUnixTimestampToItalianDate(raidSession.raidDate)}
-                            </span>
-                        </div>
-                        <div className="flex items-center text-gray-400">
-                            <Users className="w-4 h-4 mr-2" />
-                            <span>
-                                {raidSession.roster.length} ({tanks.length}/
-                                {healers.length}/{dps.length})
-                            </span>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center">
+                                <Calendar className="mr-2 h-4 w-4" />
+                                <span>
+                                    {formaUnixTimestampToItalianDate(
+                                        raidSession.raidDate
+                                    )}
+                                </span>
+                            </div>
+                            <div className="flex items-center">
+                                <Users className="w-4 h-4 mr-2" />
+                                <span>
+                                    {s(raidSession.roster.length)} ({s(tanks.length)}/
+                                    {s(healers.length)}/{s(dps.length)})
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex gap-2">
                     <Button
                         variant="secondary"
+                        size="sm"
                         onClick={() => {
                             setIsEditDialogOpen(true)
                         }}
                     >
-                        <Edit className="mr-2 h-4 w-4" /> Edit Session
+                        <Edit className="mr-2 h-4 w-4" /> Edit
                     </Button>
                     <Button
                         variant="secondary"
+                        size="sm"
                         onClick={handleClone}
                         disabled={cloneMutation.isPending}
                     >
@@ -158,22 +165,24 @@ export default function RaidSessionPage() {
                     </Button>
                     <Button
                         variant="destructive"
+                        size="sm"
                         onClick={handleDelete}
                         disabled={deleteMutation.isPending}
                     >
                         <Trash2 className="mr-2 h-4 w-4" /> Delete
                     </Button>
                 </div>
-            </div>
+            </GlassCard>
 
             {/* Roster Panel */}
-            <div className="bg-muted p-6 rounded-lg shadow-md">
+            <GlassCard padding="lg">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold flex items-center">
-                        <Users className="mr-2" /> Roster
-                    </h2>
+                    <SectionHeader icon={<Users className="w-4 h-4" />}>
+                        Roster
+                    </SectionHeader>
                     <Button
                         variant="secondary"
+                        size="sm"
                         onClick={() => {
                             setIsImportRosterDialogOpen(true)
                         }}
@@ -188,25 +197,27 @@ export default function RaidSessionPage() {
                         { characters: dps, label: "DPS" },
                     ].map(({ characters, label }) => (
                         <div key={label} className="mb-4">
-                            <p className="text-sm text-muted-foreground mb-2">{label}</p>
+                            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
+                                {label}
+                            </p>
                             <div className="flex gap-2 flex-wrap">
                                 {characters.map((character) => (
                                     <div
                                         key={character.id}
-                                        className="flex items-center gap-2 bg-background/50 px-2 py-1 rounded cursor-pointer hover:bg-background"
+                                        className="flex items-center gap-2 bg-card/50 border border-border/50 px-3 py-1.5 rounded-xl cursor-pointer hover:bg-card hover:border-primary/30 transition-all"
                                         onClick={() => {
                                             router.push(`/roster/${character.id}`)
                                         }}
                                     >
                                         <WowClassIcon
                                             wowClassName={character.class}
-                                            className="h-6 w-6 rounded"
+                                            className="h-6 w-6 rounded-lg"
                                         />
                                         <span className="text-sm">{character.name}</span>
                                     </div>
                                 ))}
                                 {characters.length === 0 && (
-                                    <span className="text-muted-foreground text-sm">
+                                    <span className="text-muted-foreground/60 text-sm italic">
                                         None
                                     </span>
                                 )}
@@ -214,20 +225,23 @@ export default function RaidSessionPage() {
                         </div>
                     ))}
                 </div>
-            </div>
+            </GlassCard>
 
             {/* Loots Panel */}
-            <div className="bg-muted p-6 rounded-lg shadow-md">
+            <GlassCard padding="lg">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold flex items-center text-yellow-400">
-                        <ShoppingBag className="mr-2" /> Loots
-                        <span className="ml-2 text-sm font-normal text-muted-foreground">
-                            ({loots?.length ?? 0} items)
+                    <div className="flex items-center gap-3">
+                        <SectionHeader icon={<ShoppingBag className="w-4 h-4" />}>
+                            Loots
+                        </SectionHeader>
+                        <span className="text-sm text-muted-foreground">
+                            ({s(loots?.length ?? 0)} items)
                         </span>
-                    </h2>
+                    </div>
                     <div className="flex gap-2">
                         <Button
                             variant="secondary"
+                            size="sm"
                             onClick={() => {
                                 router.push(`/assign?sessionId=${raidSession.id}`)
                             }}
@@ -236,6 +250,7 @@ export default function RaidSessionPage() {
                         </Button>
                         <Button
                             variant="secondary"
+                            size="sm"
                             onClick={() => {
                                 setIsAddLootDialogOpen(true)
                             }}
@@ -245,7 +260,7 @@ export default function RaidSessionPage() {
                     </div>
                 </div>
                 <SessionLootsPanel raidSessionId={raidSession.id} />
-            </div>
+            </GlassCard>
 
             {/* Dialogs */}
             <RaidSessionDialog

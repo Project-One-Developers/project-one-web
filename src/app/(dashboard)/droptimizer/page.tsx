@@ -1,11 +1,12 @@
 "use client"
 
-import { LoaderCircle } from "lucide-react"
-import Image from "next/image"
+import { FileSpreadsheet } from "lucide-react"
 import { useMemo, type JSX } from "react"
 import { DroptimizerCard } from "@/components/droptimizer-card"
 import DroptimizerNewDialog from "@/components/droptimizer-new-dialog"
 import { GlobalFilterUI } from "@/components/global-filter-ui"
+import { EmptyState } from "@/components/ui/empty-state"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { FilterProvider, useFilterContext } from "@/lib/filter-context"
 import { filterDroptimizer } from "@/lib/filters"
 import { useLatestDroptimizers } from "@/lib/queries/droptimizers"
@@ -28,38 +29,28 @@ function DroptimizerPageContent(): JSX.Element {
     }, [charQuery.data])
 
     if (droptimizerQuery.isLoading || charQuery.isLoading) {
-        return (
-            <div className="flex flex-col items-center w-full justify-center mt-10 mb-10">
-                <LoaderCircle className="animate-spin text-5xl" />
-            </div>
-        )
+        return <LoadingSpinner size="lg" iconSize="lg" text="Loading droptimizers..." />
     }
 
     return (
         <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-8 items-center p-8 relative">
-            <div className="flex flex-wrap gap-4">
-                {filteredDroptimizers.length > 0 ? (
-                    filteredDroptimizers.map((dropt) => (
+            {filteredDroptimizers.length > 0 ? (
+                <div className="flex flex-wrap gap-4 justify-center">
+                    {filteredDroptimizers.map((dropt) => (
                         <DroptimizerCard
                             key={dropt.url}
                             droptimizer={dropt}
                             character={characters.find((c) => c.id === dropt.characterId)}
                         />
-                    ))
-                ) : (
-                    <div className="flex flex-col items-center gap-4">
-                        <Image
-                            src="https://media1.tenor.com/m/md1_j1SnRSkAAAAd/brian-david-gilbert-nothing-here.gif"
-                            alt="Empty"
-                            width={400}
-                            height={400}
-                            className="rounded-lg"
-                            unoptimized
-                        />
-                        <p className="text-muted-foreground">No droptimizers found</p>
-                    </div>
-                )}
-            </div>
+                    ))}
+                </div>
+            ) : (
+                <EmptyState
+                    icon={<FileSpreadsheet className="w-8 h-8" />}
+                    title="No droptimizers found"
+                    description="Import a droptimizer simulation to see upgrade recommendations"
+                />
+            )}
 
             {/* Bottom Right Filter button */}
             <GlobalFilterUI

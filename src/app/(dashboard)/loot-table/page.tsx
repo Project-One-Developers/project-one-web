@@ -1,11 +1,14 @@
 "use client"
 
-import { LoaderCircle, Edit, Search } from "lucide-react"
+import { Edit, Package, Search } from "lucide-react"
 import Image from "next/image"
 import { useState, useMemo, useEffect, type JSX } from "react"
 import { GlobalFilterUI } from "@/components/global-filter-ui"
 import ItemManagementDialog from "@/components/item-management-dialog"
+import { EmptyState } from "@/components/ui/empty-state"
+import { GlassCard } from "@/components/ui/glass-card"
 import { Input } from "@/components/ui/input"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { WowItemIcon } from "@/components/wow/wow-item-icon"
 import { WowSpecIcon } from "@/components/wow/wow-spec-icon"
@@ -87,7 +90,7 @@ const BossPanel = ({ boss, bisLists, itemNotes, onEdit, filter }: BossPanelProps
     const bossImage = encounterIcon.get(boss.id)
 
     return (
-        <div className="flex flex-col bg-muted rounded-lg overflow-hidden min-w-[350px]">
+        <GlassCard padding="none" className="flex flex-col overflow-hidden min-w-[350px]">
             {/* Boss header: cover + name */}
             <div className="flex flex-col gap-y-2">
                 {bossImage && (
@@ -100,10 +103,10 @@ const BossPanel = ({ boss, bisLists, itemNotes, onEdit, filter }: BossPanelProps
                         unoptimized
                     />
                 )}
-                <h2 className="text-center text-xs font-bold">{boss.name}</h2>
+                <h2 className="text-center text-xs font-bold py-2">{boss.name}</h2>
             </div>
             {/* Boss items */}
-            <div className="flex flex-col gap-y-3 p-6">
+            <div className="flex flex-col gap-y-3 p-5">
                 {filteredItems
                     .sort((a, b) => {
                         const aHasBis = bisLists.some((bis) => bis.itemId === a.id)
@@ -128,7 +131,7 @@ const BossPanel = ({ boss, bisLists, itemNotes, onEdit, filter }: BossPanelProps
                             <div
                                 key={item.id}
                                 className={cn(
-                                    "flex flex-row gap-x-8 justify-between items-center p-1 hover:bg-gray-700 transition-colors duration-200 rounded-md cursor-pointer relative group",
+                                    "flex flex-row gap-x-8 justify-between items-center p-2 hover:bg-card/60 transition-all duration-200 rounded-xl cursor-pointer relative group border border-transparent hover:border-primary/20",
                                     !allSpecIds.length && "opacity-30"
                                 )}
                                 onClick={(e) => {
@@ -185,14 +188,14 @@ const BossPanel = ({ boss, bisLists, itemNotes, onEdit, filter }: BossPanelProps
                                     </div>
                                 </div>
 
-                                <button className="absolute -bottom-2 -right-2 hidden group-hover:flex items-center justify-center w-5 h-5 bg-red-500 text-white rounded-full">
-                                    <Edit size={14} />
+                                <button className="absolute -bottom-1 -right-1 hidden group-hover:flex items-center justify-center w-5 h-5 bg-primary text-primary-foreground rounded-full shadow-md">
+                                    <Edit size={12} />
                                 </button>
                             </div>
                         )
                     })}
             </div>
-        </div>
+        </GlassCard>
     )
 }
 
@@ -252,11 +255,7 @@ function LootTableContent(): JSX.Element {
     }, [bossesWithItemRes.data, debouncedSearchQuery])
 
     if (bossesWithItemRes.isLoading || bisRes.isLoading || itemNotesRes.isLoading) {
-        return (
-            <div className="flex flex-col items-center w-full justify-center mt-10 mb-10">
-                <LoaderCircle className="animate-spin text-5xl" />
-            </div>
-        )
+        return <LoadingSpinner size="lg" iconSize="lg" text="Loading loot table..." />
     }
 
     const bisLists = bisRes.data ?? []
@@ -271,7 +270,7 @@ function LootTableContent(): JSX.Element {
     return (
         <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-8 items-center p-8 relative">
             {/* Search Bar */}
-            <div className="w-full max-w-md">
+            <GlassCard padding="default" className="w-full max-w-md">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -281,33 +280,33 @@ function LootTableContent(): JSX.Element {
                         onChange={(e) => {
                             setSearchQuery(e.target.value)
                         }}
-                        className="w-full pl-10"
+                        className="w-full pl-10 bg-transparent border-0 focus-visible:ring-0"
                     />
                 </div>
-            </div>
+            </GlassCard>
 
             {/* Boss List */}
-            <div className="flex flex-wrap gap-x-4 gap-y-4 justify-center">
-                {filteredBosses
-                    .sort((a, b) => a.order - b.order)
-                    .map((boss) => (
-                        <BossPanel
-                            key={boss.id}
-                            boss={boss}
-                            bisLists={bisLists}
-                            itemNotes={itemNotes}
-                            onEdit={handleEditClick}
-                            filter={filter}
-                        />
-                    ))}
-            </div>
-
-            {filteredBosses.length === 0 && (
-                <div className="bg-muted p-8 rounded-lg text-center">
-                    <p className="text-muted-foreground">
-                        No items found matching your filters.
-                    </p>
+            {filteredBosses.length > 0 ? (
+                <div className="flex flex-wrap gap-4 justify-center">
+                    {filteredBosses
+                        .sort((a, b) => a.order - b.order)
+                        .map((boss) => (
+                            <BossPanel
+                                key={boss.id}
+                                boss={boss}
+                                bisLists={bisLists}
+                                itemNotes={itemNotes}
+                                onEdit={handleEditClick}
+                                filter={filter}
+                            />
+                        ))}
                 </div>
+            ) : (
+                <EmptyState
+                    icon={<Package className="w-8 h-8" />}
+                    title="No items found"
+                    description="No items match your current filters"
+                />
             )}
 
             {/* Bottom Right Filter button */}

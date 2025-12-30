@@ -16,6 +16,8 @@ import { importGuildMembers, syncAllCharactersBlizzard } from "@/actions/blizzar
 import { syncDroptimizersFromDiscord } from "@/actions/droptimizer"
 import { syncItemsFromJson } from "@/actions/items"
 import { Button } from "@/components/ui/button"
+import { GlassCard } from "@/components/ui/glass-card"
+import { SectionHeader } from "@/components/ui/section-header"
 import { queryKeys } from "@/lib/queries/keys"
 import { s } from "@/lib/safe-stringify"
 
@@ -126,19 +128,21 @@ export default function SettingsPage(): JSX.Element {
 
     return (
         <div className="w-full min-h-screen p-8 flex flex-col gap-6">
-            <h1 className="text-3xl font-bold">Settings</h1>
+            <GlassCard padding="lg">
+                <h1 className="text-2xl font-bold">Settings</h1>
+            </GlassCard>
 
             {/* Sync Actions */}
-            <section className="bg-muted p-6 rounded-lg space-y-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                    <RefreshCcwDot className="h-5 w-5" />
+            <GlassCard padding="lg" className="space-y-4">
+                <SectionHeader icon={<RefreshCcwDot className="w-4 h-4" />}>
                     Sync Actions
-                </h2>
-                <div className="grid gap-4">
+                </SectionHeader>
+                <div className="grid gap-3">
                     <Button
                         variant="secondary"
                         onClick={() => void handleSyncBlizzard()}
                         disabled={isSyncingBlizzard}
+                        className="justify-start"
                     >
                         {isSyncingBlizzard ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -151,6 +155,7 @@ export default function SettingsPage(): JSX.Element {
                         variant="secondary"
                         onClick={() => void handleSyncDiscord()}
                         disabled={isSyncingDiscord}
+                        className="justify-start"
                     >
                         {isSyncingDiscord ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -163,6 +168,7 @@ export default function SettingsPage(): JSX.Element {
                         variant="secondary"
                         onClick={() => void handleSyncItems()}
                         disabled={isSyncingItems}
+                        className="justify-start"
                     >
                         {isSyncingItems ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -175,6 +181,7 @@ export default function SettingsPage(): JSX.Element {
                         variant="secondary"
                         onClick={() => void handleImportGuild()}
                         disabled={isImportingGuild}
+                        className="justify-start"
                     >
                         {isImportingGuild ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -184,15 +191,15 @@ export default function SettingsPage(): JSX.Element {
                         Import Guild Members
                     </Button>
                 </div>
-            </section>
+            </GlassCard>
 
             {/* Info */}
-            <section className="bg-muted/50 p-6 rounded-lg">
+            <GlassCard variant="subtle" padding="lg">
                 <p className="text-sm text-muted-foreground">
                     Sync tasks also run automatically via cron jobs every few hours. Use
                     the buttons above to trigger a manual sync when needed.
                 </p>
-            </section>
+            </GlassCard>
         </div>
     )
 }

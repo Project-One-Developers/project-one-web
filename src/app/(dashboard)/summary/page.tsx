@@ -1,13 +1,15 @@
 "use client"
 
 import clsx from "clsx"
-import { AlertTriangle, CheckCircle, LoaderCircle, XCircle } from "lucide-react"
+import { AlertTriangle, CheckCircle, Search, XCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useMemo, useState, type JSX } from "react"
 import { match } from "ts-pattern"
 import { GlobalFilterUI } from "@/components/global-filter-ui"
 import { Checkbox } from "@/components/ui/checkbox"
+import { GlassCard } from "@/components/ui/glass-card"
 import { Input } from "@/components/ui/input"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import {
     Table,
     TableBody,
@@ -65,13 +67,6 @@ const getTierCompletionStyle = (tierCompletion: TierSetCompletion): string => {
 
 const sortPlayersByItemLevel = (a: CharacterSummary, b: CharacterSummary) =>
     parseFloat(b.itemLevel) - parseFloat(a.itemLevel)
-
-// Components
-const LoadingSpinner = () => (
-    <div className="flex flex-col items-center w-full justify-center mt-10 mb-10">
-        <LoaderCircle className="animate-spin text-5xl" />
-    </div>
-)
 
 const StatusIndicator = ({
     status,
@@ -175,15 +170,18 @@ const SearchBar = ({
     searchQuery: string
     onSearchChange: (value: string) => void
 }) => (
-    <Input
-        type="text"
-        placeholder="Search players or characters..."
-        value={searchQuery}
-        onChange={(e) => {
-            onSearchChange(e.target.value)
-        }}
-        className="w-full p-3 border border-gray-300 rounded-md"
-    />
+    <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+            type="text"
+            placeholder="Search players or characters..."
+            value={searchQuery}
+            onChange={(e) => {
+                onSearchChange(e.target.value)
+            }}
+            className="w-full pl-10"
+        />
+    </div>
 )
 
 const FilterControls = ({
@@ -230,11 +228,11 @@ const PlayerRow = ({ summary }: { summary: CharacterSummary }) => {
     const tierCompletion = summary.tierset.length
 
     return (
-        <TableRow className="hover:bg-gray-700">
+        <TableRow className="hover:bg-card/40 border-b border-border/30 transition-colors">
             <TableCell className="p-3">
                 <div className="flex space-x-10">
                     <div
-                        className="flex items-center space-x-3 cursor-pointer"
+                        className="flex items-center space-x-3 cursor-pointer group"
                         onClick={() => {
                             router.push(`/roster/${summary.character.id}`)
                         }}
@@ -243,13 +241,15 @@ const PlayerRow = ({ summary }: { summary: CharacterSummary }) => {
                             wowClassName={summary.character.class}
                             charname={summary.character.name}
                             showTooltip={false}
-                            className="h-8 w-8 border-2 border-background rounded-lg"
+                            className="h-8 w-8 border-2 border-border/50 rounded-lg"
                         />
                         <div>
-                            <h1 className="font-bold text-gray-100">
+                            <h1 className="font-bold text-foreground group-hover:text-primary transition-colors">
                                 {summary.character.name}
                             </h1>
-                            <p className="text-xs text-gray-400">{summary.itemLevel}</p>
+                            <p className="text-xs text-muted-foreground">
+                                {summary.itemLevel}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -383,15 +383,14 @@ function SummaryPageContent(): JSX.Element {
     ])
 
     if (characterQuery.isLoading) {
-        return <LoadingSpinner />
+        return <LoadingSpinner size="lg" iconSize="lg" text="Loading summary..." />
     }
 
     return (
-        <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-8 items-center p-8 relative">
-            <h1 className="text-2xl font-bold">Summary</h1>
-
-            {/* Search and Filters */}
-            <div className="w-full mb-4 space-y-4">
+        <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-6 p-8 relative">
+            {/* Header with Search and Filters */}
+            <GlassCard padding="lg" className="space-y-4">
+                <h1 className="text-2xl font-bold">Summary</h1>
                 <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
                 <FilterControls
                     tierCompletionFilter={tierCompletionFilter}
@@ -399,41 +398,43 @@ function SummaryPageContent(): JSX.Element {
                     showOnlyWithVaultTier={showOnlyWithVaultTier}
                     onVaultFilterChange={setShowOnlyWithVaultTier}
                 />
-            </div>
+            </GlassCard>
 
             {/* Players Table */}
-            <Table className="w-full">
-                <TableHeader className="bg-gray-800">
-                    <TableRow className="hover:bg-gray-800">
-                        <TableHead className="text-gray-300 font-semibold">
-                            Name
-                        </TableHead>
-                        <TableHead className="text-gray-300 font-semibold">
-                            Tierset
-                        </TableHead>
-                        <TableHead className="text-gray-300 font-semibold">
-                            Completion
-                        </TableHead>
-                        <TableHead className="text-gray-300 font-semibold">
-                            Vault
-                        </TableHead>
-                        <TableHead className="text-gray-300 font-semibold">
-                            Currency
-                        </TableHead>
-                        <TableHead className="text-gray-300 font-semibold">
-                            Droptimizer
-                        </TableHead>
-                        <TableHead className="text-gray-300 font-semibold">
-                            Blizzard
-                        </TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {filteredPlayers.map((summary) => (
-                        <PlayerRow key={summary.character.id} summary={summary} />
-                    ))}
-                </TableBody>
-            </Table>
+            <GlassCard padding="none" className="overflow-hidden">
+                <Table className="w-full">
+                    <TableHeader className="bg-card/60">
+                        <TableRow className="hover:bg-card/60 border-b border-border/50">
+                            <TableHead className="text-muted-foreground font-semibold">
+                                Name
+                            </TableHead>
+                            <TableHead className="text-muted-foreground font-semibold">
+                                Tierset
+                            </TableHead>
+                            <TableHead className="text-muted-foreground font-semibold">
+                                Completion
+                            </TableHead>
+                            <TableHead className="text-muted-foreground font-semibold">
+                                Vault
+                            </TableHead>
+                            <TableHead className="text-muted-foreground font-semibold">
+                                Currency
+                            </TableHead>
+                            <TableHead className="text-muted-foreground font-semibold">
+                                Droptimizer
+                            </TableHead>
+                            <TableHead className="text-muted-foreground font-semibold">
+                                Blizzard
+                            </TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {filteredPlayers.map((summary) => (
+                            <PlayerRow key={summary.character.id} summary={summary} />
+                        ))}
+                    </TableBody>
+                </Table>
+            </GlassCard>
 
             {/* Bottom Right Filter button */}
             <GlobalFilterUI

@@ -1,13 +1,6 @@
 "use client"
 
-import {
-    ArrowLeft,
-    BarChart,
-    DownloadIcon,
-    Eye,
-    LoaderCircle,
-    ZapIcon,
-} from "lucide-react"
+import { BarChart, DownloadIcon, Eye, Package, ZapIcon } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Suspense, useEffect, useMemo, useState, type JSX } from "react"
 import LootsEligibleChars from "@/components/loots-eligible-chars"
@@ -17,6 +10,9 @@ import SessionCard from "@/components/session-card"
 import SessionLootNewDialog from "@/components/session-loot-new-dialog"
 import SessionRosterImportDialog from "@/components/session-roster-dialog"
 import { Button } from "@/components/ui/button"
+import { GlassCard } from "@/components/ui/glass-card"
+import { IconButton } from "@/components/ui/icon-button"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import {
     convertToCSV,
     downloadCSV,
@@ -27,6 +23,7 @@ import {
 import { useRaidLootTable } from "@/lib/queries/bosses"
 import { useLootsBySessionsWithAssigned } from "@/lib/queries/loots"
 import { useRaidSessions } from "@/lib/queries/raid-sessions"
+import { s } from "@/lib/safe-stringify"
 import type { LootWithAssigned } from "@/shared/models/loot.model"
 
 function AssignContent(): JSX.Element {
@@ -118,38 +115,33 @@ function AssignContent(): JSX.Element {
 
     // Only show full-page loader for initial sessions load
     if (raidSessionsQuery.isLoading) {
-        return (
-            <div className="flex flex-col items-center w-full justify-center mt-10 mb-10">
-                <LoaderCircle className="animate-spin text-5xl" />
-            </div>
-        )
+        return <LoadingSpinner size="lg" iconSize="lg" text="Loading sessions..." />
     }
 
     // Only show blocking loading state on initial load, not during background refetches
     const isLootsLoading = lootsQuery.isLoading
 
     return (
-        <div className="w-full h-full flex flex-col gap-y-8 p-8 relative">
+        <div className="w-full h-full flex flex-col gap-y-6 p-8 relative">
             {/* Page Header with integrated back button */}
-            <div className="flex bg-muted rounded-lg p-6 shadow-lg items-center relative">
+            <GlassCard padding="lg" className="flex items-center relative">
                 {/* Back button */}
-                <Button
-                    variant="ghost"
+                <IconButton
+                    icon={<Package className="w-4 h-4" />}
                     onClick={() => {
                         router.back()
                     }}
-                    className="hover:bg-gray-800 p-2 mr-4"
-                >
-                    <ArrowLeft className="h-4 w-4" />
-                </Button>
+                    variant="default"
+                    className="mr-4"
+                />
 
                 <div className="flex flex-col flex-1 gap-4">
                     {/* Compact Actions Bar */}
                     <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             {selectedSessions.size > 0 && (
                                 <span>
-                                    {selectedSessions.size} session
+                                    {s(selectedSessions.size)} session
                                     {selectedSessions.size !== 1 ? "s" : ""} selected
                                 </span>
                             )}
@@ -222,23 +214,25 @@ function AssignContent(): JSX.Element {
                         ))}
                     </div>
                 </div>
-            </div>
+            </GlassCard>
 
             {selectedSessions.size > 0 ? (
                 isLootsLoading ? (
-                    <div className="flex flex-col items-center w-full justify-center py-20">
-                        <LoaderCircle className="animate-spin text-4xl" />
-                    </div>
+                    <LoadingSpinner
+                        size="sm"
+                        iconSize="default"
+                        text="Loading loots..."
+                    />
                 ) : (
-                    <div className="flex w-full">
-                        <div className="flex flex-col flex-grow max-w-[450px] pr-5">
+                    <div className="flex w-full gap-5">
+                        <div className="flex flex-col flex-grow max-w-[450px]">
                             <LootsTabs
                                 loots={loots}
                                 selectedLoot={selectedLoot}
                                 setSelectedLoot={setSelectedLoot}
                             />
                         </div>
-                        <div className="flex flex-col flex-grow bg-muted p-4 rounded-lg">
+                        <GlassCard padding="lg" className="flex flex-col flex-grow">
                             {selectedLoot ? (
                                 <LootsEligibleChars
                                     allLoots={loots}
@@ -246,19 +240,19 @@ function AssignContent(): JSX.Element {
                                     setSelectedLoot={setSelectedLoot}
                                 />
                             ) : (
-                                <p className="text-gray-400">
+                                <p className="text-muted-foreground">
                                     Select a loot to start assigning
                                 </p>
                             )}
-                        </div>
+                        </GlassCard>
                     </div>
                 )
             ) : (
-                <div className="flex flex-col w-full bg-muted p-4 rounded-lg">
-                    <p className="text-gray-400">
+                <GlassCard padding="lg">
+                    <p className="text-muted-foreground">
                         Select a session to start browsing loots
                     </p>
-                </div>
+                </GlassCard>
             )}
 
             {/* Single instance of dialogs at page level */}
@@ -288,13 +282,7 @@ function AssignContent(): JSX.Element {
 
 export default function AssignPage(): JSX.Element {
     return (
-        <Suspense
-            fallback={
-                <div className="flex flex-col items-center w-full justify-center mt-10 mb-10">
-                    <LoaderCircle className="animate-spin text-5xl" />
-                </div>
-            }
-        >
+        <Suspense fallback={<LoadingSpinner size="lg" iconSize="lg" text="Loading..." />}>
             <AssignContent />
         </Suspense>
     )

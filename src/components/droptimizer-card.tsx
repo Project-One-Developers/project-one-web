@@ -10,8 +10,9 @@ import { formatUnixTimestampToRelativeDays } from "@/shared/libs/date/date-utils
 import type { Character } from "@/shared/models/character.model"
 import type { Droptimizer, DroptimizerUpgrade } from "@/shared/models/simulation.model"
 import DroptimizerDetailDialog from "./droptimizer-detail-dialog"
-import { Button } from "./ui/button"
 import { Dialog, DialogTrigger } from "./ui/dialog"
+import { GlassCard } from "./ui/glass-card"
+import { IconButton } from "./ui/icon-button"
 import { WowItemIcon } from "./wow/wow-item-icon"
 import { WowSpecIcon } from "./wow/wow-spec-icon"
 
@@ -65,31 +66,35 @@ export const DroptimizerCard = ({
     const isStandard = dropt.simInfo.nTargets === 1 && dropt.simInfo.duration === 300
 
     return (
-        <div className="flex flex-col justify-between p-6 bg-muted h-[230px] w-[310px] rounded-lg relative">
+        <GlassCard
+            padding="lg"
+            className="flex flex-col justify-between h-[230px] w-[310px] relative group"
+        >
             {/* Delete Button */}
-            <Button
+            <IconButton
+                icon={
+                    deleteMutation.isPending ? (
+                        <LoaderCircle className="h-4 w-4 animate-spin" />
+                    ) : (
+                        <X className="h-4 w-4" />
+                    )
+                }
                 variant="ghost"
-                size="icon"
-                className="absolute top-3 right-2"
+                size="sm"
+                className="absolute top-3 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                 onClick={handleDelete}
                 disabled={deleteMutation.isPending}
-            >
-                {deleteMutation.isPending ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
-                ) : (
-                    <X className="h-4 w-4" />
-                )}
-            </Button>
+            />
 
             {/* Character Info */}
             <div className="flex items-center space-x-3">
                 <WowSpecIcon
                     specId={dropt.charInfo.specId}
-                    className="object-cover object-top rounded-md h-10 w-10 border border-background"
+                    className="object-cover object-top rounded-xl h-10 w-10 border-2 border-border/50"
                 />
                 {character?.id ? (
                     <div
-                        className="font-black cursor-pointer hover:text-primary"
+                        className="font-bold cursor-pointer hover:text-primary transition-colors"
                         onClick={() => {
                             router.push(`/roster/${character.id}`)
                         }}
@@ -97,30 +102,32 @@ export const DroptimizerCard = ({
                         {charName}
                     </div>
                 ) : (
-                    <h2 className="font-black">{charName}</h2>
+                    <h2 className="font-bold">{charName}</h2>
                 )}
             </div>
 
             {/* Sim Info */}
-            <div className="text-xs mt-3 space-y-1">
+            <div className="text-xs mt-3 space-y-1 text-muted-foreground">
                 <p>
-                    <strong>Raid:</strong> {dropt.raidInfo.difficulty}
+                    <span className="text-foreground font-medium">Raid:</span>{" "}
+                    {dropt.raidInfo.difficulty}
                 </p>
                 <p>
-                    <strong>Fight Style:</strong>{" "}
-                    <span className={isStandard ? "" : "text-red-500"}>
+                    <span className="text-foreground font-medium">Fight Style:</span>{" "}
+                    <span className={isStandard ? "" : "text-orange-400"}>
                         {dropt.simInfo.fightstyle} ({dropt.simInfo.nTargets}){" "}
                         {dropt.simInfo.duration}s
                     </span>
                 </p>
                 <p title={new Date(dropt.simInfo.date * 1000).toLocaleString()}>
-                    <strong>Date:</strong>{" "}
+                    <span className="text-foreground font-medium">Date:</span>{" "}
                     {formatUnixTimestampToRelativeDays(dropt.simInfo.date)}
                 </p>
                 <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
                     <DialogTrigger asChild>
-                        <p className="cursor-pointer text-blue-400 hover:underline">
-                            <strong>Upgrades:</strong> {dropt.upgrades.length}
+                        <p className="cursor-pointer text-primary hover:underline">
+                            <span className="font-medium">Upgrades:</span>{" "}
+                            {dropt.upgrades.length}
                         </p>
                     </DialogTrigger>
                     <DroptimizerDetailDialog
@@ -139,6 +146,6 @@ export const DroptimizerCard = ({
                         <UpgradeItem key={upgrade.item.id} upgrade={upgrade} />
                     ))}
             </div>
-        </div>
+        </GlassCard>
     )
 }
