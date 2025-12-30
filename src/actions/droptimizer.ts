@@ -2,7 +2,6 @@
 
 import pLimit from "p-limit"
 import { droptimizerRepo } from "@/db/repositories/droptimizer"
-import { settingsRepo } from "@/db/repositories/settings"
 import { simcRepo } from "@/db/repositories/simc"
 import { env } from "@/env"
 import { fetchDroptimizerFromQELiveURL } from "@/lib/droptimizer/qelive-parser"
@@ -79,10 +78,6 @@ export async function addSimulationFromUrl(url: string): Promise<Droptimizer[]> 
     return results
 }
 
-export async function getDiscordBotToken(): Promise<string | null> {
-    return await settingsRepo.get("DISCORD_BOT_TOKEN")
-}
-
 /**
  * Sync droptimizers from Discord channel
  * Fetches all messages from the droptimizers channel and imports any URLs found
@@ -94,12 +89,8 @@ export async function syncDroptimizersFromDiscord(
     const { readAllMessagesInDiscord, extractUrlsFromMessages } =
         await import("@/lib/discord/discord")
 
-    const botKey = await settingsRepo.get("DISCORD_BOT_TOKEN")
+    const botKey = env.DISCORD_BOT_TOKEN
     const channelId = env.DISCORD_DROPTIMIZER_CHANNEL_ID
-
-    if (!botKey) {
-        throw new Error("DISCORD_BOT_TOKEN not set in database")
-    }
 
     const messages = await readAllMessagesInDiscord(botKey, channelId)
     const upperBound = getUnixTimestamp() - hours * 60 * 60

@@ -395,11 +395,3 @@ export const itemToCatalystTable = pgTable(
         primaryKey({ columns: [t.itemId, t.encounterId, t.catalyzedItemId] }), // todo: non va UPDATE BY ZORBY: fixed in this commit?
     ]
 )
-
-// Project One Configuration
-// Contains Config and Secret that we cant distribute with the client application
-// eg: DISCORD_BOT_TOKEN
-export const appConfigTable = pgTable("app_config", {
-    key: varchar("key").primaryKey(),
-    value: varchar("value").notNull(),
-})

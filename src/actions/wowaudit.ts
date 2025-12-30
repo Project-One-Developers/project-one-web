@@ -1,7 +1,7 @@
 "use server"
 
-import { settingsRepo } from "@/db/repositories/settings"
 import { wowauditRepo } from "@/db/repositories/wowaudit"
+import { env } from "@/env"
 import { logger } from "@/lib/logger"
 import { fetchWowAuditData, parseWowAuditData } from "@/lib/wowaudit/wowaudit-sync"
 import {
@@ -22,15 +22,9 @@ export async function getLastWowAuditInfo(
 }
 
 export async function syncCharacterWowAudit(): Promise<void> {
-    const key = await settingsRepo.get("WOW_AUDIT_API_KEY")
-
-    if (key === null) {
-        throw new Error("WOW_AUDIT_API_KEY not set in database")
-    }
-
     logger.info("WowAudit", "Start Sync")
 
-    const json = await fetchWowAuditData(key)
+    const json = await fetchWowAuditData(env.WOW_AUDIT_API_KEY)
 
     if (json !== null) {
         const charsData = await parseWowAuditData(json)
