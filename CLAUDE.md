@@ -35,7 +35,7 @@ pnpm drizzle-kit push # Push database schema changes to PostgreSQL
     - `wow/` - WoW-specific display components
 - `src/lib/` - Utilities and integrations
     - `queries/` - React Query hooks for data fetching
-    - `discord/`, `raiderio/`, `wowaudit/`, `droptimizer/` - External API clients
+    - `blizzard/`, `discord/`, `droptimizer/` - External API clients
 - `src/shared/` - Shared domain logic
     - `schemas/` - Zod validation schemas
     - `consts/wow.consts.ts` - WoW game constants
@@ -52,6 +52,18 @@ pnpm drizzle-kit push # Push database schema changes to PostgreSQL
 **Authentication**: Auth.js with Discord OAuth, role-based access via Discord server roles
 
 **UI**: shadcn/ui components with Tailwind CSS 4, `cn()` utility for class merging, CVA for variants
+
+**Template Literals**: Use `s()` from `@/lib/safe-stringify` for non-string values in template literals (ESLint requires this):
+
+```typescript
+import { s } from "@/lib/safe-stringify"
+
+// ✓ Good
+logger.info(`Synced ${s(count)} characters`)
+
+// ✗ Bad - ESLint error
+logger.info(`Synced ${count} characters`)
+```
 
 **Database**: Drizzle ORM with PostgreSQL, lazy connection via Proxy pattern, pgEnum for WoW constants
 
@@ -74,7 +86,6 @@ env.DATABASE_URL // typed and validated
 
 ## External Integrations
 
+- **Blizzard API**: Character profiles, equipment, and raid progression (primary data source)
 - **RaidBots**: Droptimizer parsing for DPS upgrade calculations
-- **Raider.io**: Player progression and M+ data
-- **WowAudit**: Guild roster and character data sync
 - **Discord**: Bot integration for notifications and OAuth

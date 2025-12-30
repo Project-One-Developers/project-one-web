@@ -1,9 +1,8 @@
 import { z } from "zod"
+import { charBlizzardSchema, encounterSchema } from "./blizzard.model"
 import { gearItemSchema } from "./item.model"
-import { charRaiderioSchema, encounterSchema } from "./raiderio.model"
 import { droptimizerSchema } from "./simulation.model"
 import { wowClassNameSchema, wowRolesSchema } from "./wow.model"
-import { charWowAuditSchema } from "./wowaudit.model"
 
 export const playerSchema = z.object({
     id: z.uuid(),
@@ -58,8 +57,7 @@ export type EditCharacter = z.infer<typeof editCharacterSchema>
 
 export const characterGameInfoSchema = z.object({
     droptimizer: droptimizerSchema.nullable(),
-    wowaudit: charWowAuditSchema.nullable(),
-    raiderio: charRaiderioSchema.nullable(),
+    blizzard: charBlizzardSchema.nullable(),
 })
 export type CharacterGameInfo = z.infer<typeof characterGameInfoSchema>
 
@@ -77,16 +75,10 @@ export const characterGameInfoCompactSchema = z.object({
             currencies: droptimizerSchema.shape.currencies.nullable(),
         })
         .nullable(),
-    wowaudit: z
+    blizzard: z
         .object({
-            averageIlvl: charWowAuditSchema.shape.averageIlvl,
-            tiersetInfo: charWowAuditSchema.shape.tiersetInfo.nullable(),
-        })
-        .nullable(),
-    raiderio: z
-        .object({
-            averageItemLevel: charRaiderioSchema.shape.averageItemLevel,
-            itemsEquipped: charRaiderioSchema.shape.itemsEquipped.nullable(),
+            equippedItemLevel: charBlizzardSchema.shape.equippedItemLevel,
+            itemsEquipped: charBlizzardSchema.shape.itemsEquipped.nullable(),
         })
         .nullable(),
 })
@@ -94,7 +86,7 @@ export type CharacterGameInfoCompact = z.infer<typeof characterGameInfoCompactSc
 
 export const characterWithProgressionSchema = z.object({
     p1Character: characterSchema,
-    raiderIo: charRaiderioSchema.nullable(),
+    blizzard: charBlizzardSchema.nullable(),
 })
 export type CharacterWithProgression = z.infer<typeof characterWithProgressionSchema>
 
@@ -106,7 +98,7 @@ export type CharacterWithGears = z.infer<typeof characterWithGears>
 // Character with pre-built encounter lookup map (for raid progression page)
 export const characterWithEncountersSchema = z.object({
     p1Character: characterSchema,
-    // Pre-built map: "difficulty-bossSlug" → RaiderioEncounter
+    // Pre-built map: "difficulty-blizzardEncounterId" → BlizzardEncounter
     encounters: z.record(z.string(), encounterSchema),
 })
 export type CharacterWithEncounters = z.infer<typeof characterWithEncountersSchema>

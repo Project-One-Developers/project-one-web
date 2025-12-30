@@ -1,8 +1,11 @@
 import { and, desc, eq, inArray, or } from "drizzle-orm"
+import { chunk, uniqBy } from "es-toolkit"
 import { z } from "zod"
 import { db } from "@/db"
-import { bossTable, characterEncounterTable, charRaiderioTable } from "@/db/schema"
+import { bossTable, characterEncounterTable, charBlizzardTable } from "@/db/schema"
 import { conflictUpdateAllExcept, identity, mapAndParse } from "@/db/utils"
+import { logger } from "@/lib/logger"
+import { s } from "@/lib/safe-stringify"
 import type { WowRaidDifficulty } from "@/shared/models/wow.model"
 
 // Type for inserting encounters
@@ -27,38 +30,46 @@ export type CharacterEncounterWithBoss = {
     firstDefeated: Date | null
     lastDefeated: Date | null
     boss: {
-        raiderioEncounterSlug: string | null
-        raiderioRaidSlug: string | null
+        blizzardEncounterId: number | null
+        raidSlug: string | null
+        encounterSlug: string | null
     }
 }
 
-// Schema for raiderio character data (without progress JSONB)
-const charRaiderioDbSchema = z.object({
+// Schema for blizzard character data
+const charBlizzardDbSchema = z.object({
     name: z.string(),
     realm: z.string(),
     race: z.string().nullable(),
-    characterId: z.number(),
-    p1SyncAt: z.number(),
-    loggedOutAt: z.number(),
-    itemUpdateAt: z.number(),
-    averageItemLevel: z.string().nullable(),
+    blizzardCharacterId: z.number(),
+    syncedAt: z.number(),
+    lastLoginAt: z.number(),
+    averageItemLevel: z.number().nullable(),
+    equippedItemLevel: z.number().nullable(),
     itemsEquipped: z.array(z.any()),
 })
 
-export type CharacterRaiderioDb = z.infer<typeof charRaiderioDbSchema>
+export type CharacterBlizzardDb = z.infer<typeof charBlizzardDbSchema>
 
-export const raiderioRepo = {
-    upsert: async (characters: CharacterRaiderioDb[]): Promise<void> => {
+export const blizzardRepo = {
+    upsert: async (characters: CharacterBlizzardDb[]): Promise<void> => {
+        logger.info("Blizzard", `upsert: received ${s(characters.length)} characters`)
         if (characters.length === 0) {
             return
         }
-        await db
-            .insert(charRaiderioTable)
-            .values(characters)
-            .onConflictDoUpdate({
-                target: [charRaiderioTable.name, charRaiderioTable.realm],
-                set: conflictUpdateAllExcept(charRaiderioTable, ["name", "realm"]),
-            })
+        try {
+            await db
+                .insert(charBlizzardTable)
+                .values(characters)
+                .onConflictDoUpdate({
+                    target: [charBlizzardTable.name, charBlizzardTable.realm],
+                    set: conflictUpdateAllExcept(charBlizzardTable, ["name", "realm"]),
+                })
+            logger.info("Blizzard", `upsert: inserted ${s(characters.length)} characters`)
+        } catch (error) {
+            logger.error("Blizzard", `upsert failed: ${s(error)}`)
+            throw error
+        }
     },
 
     // Upsert encounters for a character (delete old + insert new)
@@ -95,10 +106,18 @@ export const raiderioRepo = {
                 .delete(characterEncounterTable)
                 .where(inArray(characterEncounterTable.characterId, characterIds))
 
-            // Flatten and insert all encounters
+            // Flatten and deduplicate encounters (by character-boss-difficulty)
             const allEncounters = Array.from(encountersByCharacter.values()).flat()
-            if (allEncounters.length > 0) {
-                await tx.insert(characterEncounterTable).values(allEncounters)
+            const uniqueEncounters = uniqBy(
+                allEncounters,
+                (e) => `${e.characterId}-${s(e.bossId)}-${e.difficulty}`
+            )
+
+            // Batch inserts to avoid PostgreSQL parameter limit (~32767 params)
+            // 7 columns per row = ~4000 rows max, use 500 for safety
+            const batches = chunk(uniqueEncounters, 500)
+            for (const batch of batches) {
+                await tx.insert(characterEncounterTable).values(batch)
             }
         })
     },
@@ -123,8 +142,9 @@ export const raiderioRepo = {
                 firstDefeated: characterEncounterTable.firstDefeated,
                 lastDefeated: characterEncounterTable.lastDefeated,
                 boss: {
-                    raiderioEncounterSlug: bossTable.raiderioEncounterSlug,
-                    raiderioRaidSlug: bossTable.raiderioRaidSlug,
+                    blizzardEncounterId: bossTable.blizzardEncounterId,
+                    raidSlug: bossTable.raidSlug,
+                    encounterSlug: bossTable.encounterSlug,
                 },
             })
             .from(characterEncounterTable)
@@ -132,7 +152,7 @@ export const raiderioRepo = {
             .where(
                 and(
                     inArray(characterEncounterTable.characterId, characterIds),
-                    eq(bossTable.raiderioRaidSlug, raidSlug)
+                    eq(bossTable.raidSlug, raidSlug)
                 )
             )
 
@@ -142,55 +162,55 @@ export const raiderioRepo = {
     getLastTimeSynced: async (): Promise<number | null> => {
         const result = await db
             .select()
-            .from(charRaiderioTable)
-            .orderBy(desc(charRaiderioTable.p1SyncAt))
+            .from(charBlizzardTable)
+            .orderBy(desc(charBlizzardTable.syncedAt))
             .limit(1)
             .then((r) => r.at(0))
-        return result ? result.p1SyncAt : null
+        return result ? result.syncedAt : null
     },
 
     getByChar: async (
         charName: string,
         charRealm: string
-    ): Promise<CharacterRaiderioDb | null> => {
+    ): Promise<CharacterBlizzardDb | null> => {
         const result = await db
             .select()
-            .from(charRaiderioTable)
+            .from(charBlizzardTable)
             .where(
                 and(
-                    eq(charRaiderioTable.name, charName),
-                    eq(charRaiderioTable.realm, charRealm)
+                    eq(charBlizzardTable.name, charName),
+                    eq(charBlizzardTable.realm, charRealm)
                 )
             )
             .then((r) => r.at(0))
-        return result ? mapAndParse(result, identity, charRaiderioDbSchema) : null
+        return result ? mapAndParse(result, identity, charBlizzardDbSchema) : null
     },
 
-    getAll: async (): Promise<CharacterRaiderioDb[]> => {
-        const result = await db.select().from(charRaiderioTable)
-        return mapAndParse(result, identity, charRaiderioDbSchema)
+    getAll: async (): Promise<CharacterBlizzardDb[]> => {
+        const result = await db.select().from(charBlizzardTable)
+        return mapAndParse(result, identity, charBlizzardDbSchema)
     },
 
     getByChars: async (
         chars: { name: string; realm: string }[]
-    ): Promise<CharacterRaiderioDb[]> => {
+    ): Promise<CharacterBlizzardDb[]> => {
         if (chars.length === 0) {
             return []
         }
 
         const result = await db
             .select()
-            .from(charRaiderioTable)
+            .from(charBlizzardTable)
             .where(
                 or(
                     ...chars.map((c) =>
                         and(
-                            eq(charRaiderioTable.name, c.name),
-                            eq(charRaiderioTable.realm, c.realm)
+                            eq(charBlizzardTable.name, c.name),
+                            eq(charBlizzardTable.realm, c.realm)
                         )
                     )
                 )
             )
-        return mapAndParse(result, identity, charRaiderioDbSchema)
+        return mapAndParse(result, identity, charBlizzardDbSchema)
     },
 }

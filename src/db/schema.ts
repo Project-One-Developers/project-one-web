@@ -67,73 +67,22 @@ export const charTable = pgTable(
     ]
 )
 
-export const charWowAuditTable = pgTable(
-    "characters_wowaudit",
+export const charBlizzardTable = pgTable(
+    "characters_blizzard",
     {
         name: varchar("name", { length: 24 }).notNull(),
         realm: varchar("realm").notNull(),
         race: varchar("race"),
-        guildRank: varchar("guild_rank"),
-        characterId: integer("character_id").notNull(),
-        blizzardLastModifiedUnixTs: integer("blizzard_last_modified_unix_ts").notNull(),
-        wowauditLastModifiedUnixTs: integer("wowaudit_last_modified_unix_ts").notNull(),
-        weekMythicDungeons: integer("week_mythic_dungeons"),
-        emptySockets: integer("empty_sockets"),
-        averageItemLevel: varchar("average_item_level"),
-        enchantQualityWrist: integer("enchant_quality_wrist"),
-        enchantQualityLegs: integer("enchant_quality_legs"),
-        enchantQualityMainHand: integer("enchant_quality_main_hand"),
-        enchantQualityOffHand: integer("enchant_quality_off_hand"),
-        enchantQualityFinger1: integer("enchant_quality_finger1"),
-        enchantQualityFinger2: integer("enchant_quality_finger2"),
-        enchantQualityBack: integer("enchant_quality_back"),
-        enchantQualityChest: integer("enchant_quality_chest"),
-        enchantQualityFeet: integer("enchant_quality_feet"),
-        enchantNameWrist: varchar("enchant_name_wrist"),
-        enchantNameLegs: varchar("enchant_name_legs"),
-        enchantNameMainHand: varchar("enchant_name_main_hand"),
-        enchantNameOffHand: varchar("enchant_name_off_hand"),
-        enchantNameFinger1: varchar("enchant_name_finger1"),
-        enchantNameFinger2: varchar("enchant_name_finger2"),
-        enchantNameBack: varchar("enchant_name_back"),
-        enchantNameChest: varchar("enchant_name_chest"),
-        enchantNameFeet: varchar("enchant_name_feet"),
-        greatVaultSlot1: integer("great_vault_slot1"),
-        greatVaultSlot2: integer("great_vault_slot2"),
-        greatVaultSlot3: integer("great_vault_slot3"),
-        greatVaultSlot4: integer("great_vault_slot4"),
-        greatVaultSlot5: integer("great_vault_slot5"),
-        greatVaultSlot6: integer("great_vault_slot6"),
-        greatVaultSlot7: integer("great_vault_slot7"),
-        greatVaultSlot8: integer("great_vault_slot8"),
-        greatVaultSlot9: integer("great_vault_slot9"),
-        highestIlvlEverEquipped: varchar("highest_ilvl_ever_equipped"),
-        bestItemsEquipped: jsonb("best_items_equipped").$type<GearItem[]>().notNull(),
-        itemsEquipped: jsonb("items_equipped").$type<GearItem[]>().notNull(),
-        tiersetInfo: jsonb("tierset_info").$type<GearItem[]>().notNull(),
-    },
-    (t) => [
-        primaryKey({ columns: [t.name, t.realm] }),
-        index("idx_wowaudit_name_realm").on(t.name, t.realm),
-    ]
-)
-
-export const charRaiderioTable = pgTable(
-    "characters_raiderio",
-    {
-        name: varchar("name", { length: 24 }).notNull(),
-        realm: varchar("realm").notNull(),
-        race: varchar("race"),
-        characterId: integer("character_id").notNull(),
-        p1SyncAt: integer("p1_sync_at").notNull(), // 2025-07-29T06:00:12.000Z
-        loggedOutAt: integer("logged_out_at").notNull(), // 2025-07-29T06:00:12.000Z
-        itemUpdateAt: integer("item_update_at").notNull(), // 2025-07-29T06:00:12.000Z
-        averageItemLevel: varchar("average_item_level"), // item_level_equipped
+        blizzardCharacterId: integer("blizzard_character_id").notNull(),
+        syncedAt: integer("synced_at").notNull(), // unix timestamp when we synced
+        lastLoginAt: integer("last_login_at").notNull(), // from Blizzard API
+        averageItemLevel: integer("average_item_level"),
+        equippedItemLevel: integer("equipped_item_level"),
         itemsEquipped: jsonb("items_equipped").$type<GearItem[]>().notNull(),
     },
     (t) => [
         primaryKey({ columns: [t.name, t.realm] }),
-        index("idx_raiderio_name_realm").on(t.name, t.realm),
+        index("idx_blizzard_name_realm").on(t.name, t.realm),
     ]
 )
 
@@ -319,8 +268,9 @@ export const bossTable = pgTable("bosses", {
     instanceName: varchar("instance_name").notNull(),
     instanceType: varchar("instance_type").notNull(),
     order: integer("order").notNull(),
-    raiderioEncounterSlug: varchar("raiderio_encounter_slug", { length: 50 }),
-    raiderioRaidSlug: varchar("raiderio_raid_slug", { length: 50 }),
+    encounterSlug: varchar("encounter_slug", { length: 50 }),
+    raidSlug: varchar("raid_slug", { length: 50 }),
+    blizzardEncounterId: integer("blizzard_encounter_id"), // Blizzard API encounter ID
 })
 
 // Sono gli item lootabili dal raid - contiene l'import di public/items.csv

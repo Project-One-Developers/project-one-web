@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { checkRaiderioUpdates } from "@/actions/raiderio"
+import { checkBlizzardUpdates } from "@/actions/blizzard"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
@@ -19,11 +19,11 @@ export async function GET(request: Request) {
     }
 
     try {
-        logger.info("Cron", `Raider.io sync started at ${new Date().toISOString()}`)
+        logger.info("Cron", `Blizzard sync started at ${new Date().toISOString()}`)
 
-        const result = await checkRaiderioUpdates()
+        const result = await checkBlizzardUpdates()
 
-        logger.info("Cron", `Raider.io sync completed: ${result.message}`)
+        logger.info("Cron", `Blizzard sync completed: ${result.message}`)
 
         return NextResponse.json({
             success: true,
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
             timestamp: new Date().toISOString(),
         })
     } catch (error) {
-        logger.error("Cron", `Raider.io sync failed: ${s(error)}`)
+        logger.error("Cron", `Blizzard sync failed: ${s(error)}`)
         return NextResponse.json(
             {
                 error: "Sync failed",

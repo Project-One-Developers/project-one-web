@@ -3,6 +3,7 @@
 import { LoaderCircle, PanelLeftClose, PanelLeftOpen } from "lucide-react"
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
+import { match, P } from "ts-pattern"
 import { z } from "zod"
 import { getCharacterRenderUrl } from "@/actions/characters"
 import {
@@ -12,23 +13,19 @@ import {
 } from "@/components/ui/collapsible"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useCharacterGameInfo } from "@/lib/queries/players"
-import { defined } from "@/lib/utils"
 import { getClassBackgroundStyle } from "@/shared/libs/class-backgrounds"
 import {
     isCurrencyBlacklisted,
     isRelevantCurrency,
 } from "@/shared/libs/currency/currency-utils"
 import { formatUnixTimestampForDisplay } from "@/shared/libs/date/date-utils"
+import type { CharacterBlizzard } from "@/shared/models/blizzard.model"
 import type { Character } from "@/shared/models/character.model"
-import type { CharacterRaiderio } from "@/shared/models/raiderio.model"
 import type { Droptimizer } from "@/shared/models/simulation.model"
 import type { WowClassName } from "@/shared/models/wow.model"
-import type { CharacterWowAudit } from "@/shared/models/wowaudit.model"
+import BlizzardData from "./blizzard-data"
 import DroptimizerData from "./droptimizer-data"
 import { CurrentGreatVaultPanel } from "./greatvault-current-panel"
-import { NextGreatVaultPanel } from "./greatvault-next-panel"
-import RaiderioData from "./raiderio-data"
-import WowAuditData from "./wow-audit-data"
 import { WowCurrencyIcon } from "./wow/wow-currency-icon"
 
 type CharGameInfoPanelProps = {
@@ -40,9 +37,7 @@ export const CharGameInfoPanel = ({ character }: CharGameInfoPanelProps) => {
 
     const droptimizer = charGameInfoQuery.data?.droptimizer ?? null
     const currencies = charGameInfoQuery.data?.droptimizer?.currencies ?? null
-    const wowauditData = charGameInfoQuery.data?.wowaudit ?? null
-    const raiderioData = charGameInfoQuery.data?.raiderio ?? null
-    const nextWeekChest = wowauditData?.greatVault ?? null
+    const blizzardData = charGameInfoQuery.data?.blizzard ?? null
 
     // Memoize sidebar data check to prevent unnecessary re-renders
     const hasSidebarData = useMemo(() => {
@@ -51,13 +46,8 @@ export const CharGameInfoPanel = ({ character }: CharGameInfoPanelProps) => {
             droptimizer?.weeklyChest && droptimizer.weeklyChest.length > 0
         )
 
-        // Check if nextWeekChest has any non-null values
-        const hasNextVault = Boolean(
-            nextWeekChest && Object.values(nextWeekChest).some((slot) => slot !== null)
-        )
-
-        return hasCurrencies || hasCurrentVault || hasNextVault
-    }, [currencies, droptimizer?.weeklyChest, nextWeekChest])
+        return hasCurrencies || hasCurrentVault
+    }, [currencies, droptimizer?.weeklyChest])
 
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(hasSidebarData)
 
@@ -88,7 +78,6 @@ export const CharGameInfoPanel = ({ character }: CharGameInfoPanelProps) => {
                         <div className="w-72 space-y-3 h-full">
                             <CurrenciesPanel currencies={currencies} />
                             <CurrentGreatVaultPanel droptimizer={droptimizer} />
-                            <NextGreatVaultPanel greatVault={nextWeekChest} />
                         </div>
                     </CollapsibleContent>
                 </div>
@@ -98,9 +87,8 @@ export const CharGameInfoPanel = ({ character }: CharGameInfoPanelProps) => {
             <div className="flex-1 min-w-0 h-full">
                 <div className="bg-muted rounded-lg relative h-full">
                     <GearInfo
-                        wowAudit={wowauditData}
+                        blizzard={blizzardData}
                         droptimizer={droptimizer}
-                        raiderio={raiderioData}
                         characterName={character.name}
                         realm={character.realm}
                         characterClass={character.class}
@@ -153,9 +141,8 @@ export const CurrenciesPanel = ({ currencies }: CurrenciesPanelProps) => {
 }
 
 type GearInfoProps = {
-    wowAudit: CharacterWowAudit | null
+    blizzard: CharacterBlizzard | null
     droptimizer: Droptimizer | null
-    raiderio: CharacterRaiderio | null
     characterName: string
     realm: string
     characterClass: WowClassName
@@ -218,9 +205,8 @@ function useCharacterRenderUrl(name: string, realm: string) {
 }
 
 const GearInfo = ({
-    wowAudit,
+    blizzard,
     droptimizer,
-    raiderio,
     characterName,
     realm,
     characterClass,
@@ -230,37 +216,23 @@ const GearInfo = ({
 
     // Get class-themed background style
     const classBackgroundStyle = getClassBackgroundStyle(characterClass)
-    let wowAuditNewer = defined(wowAudit)
-    if (droptimizer && wowAudit) {
-        if (droptimizer.simInfo.date > wowAudit.wowauditLastModifiedUnixTs) {
-            wowAuditNewer = false
-        }
-    }
 
-    // Determine which tabs have data
-    const hasRaiderioData = defined(raiderio)
-    const hasDroptimizerData = defined(droptimizer)
-    const hasWowAuditData = defined(wowAudit)
+    // Determine default tab or show empty state
+    const defaultTab = match({ blizzard, droptimizer })
+        .with({ blizzard: null, droptimizer: null }, () => null)
+        .with(
+            {
+                blizzard: { syncedAt: P.number },
+                droptimizer: { simInfo: { date: P.number } },
+            },
+            ({ blizzard: b, droptimizer: d }) =>
+                b.syncedAt > d.simInfo.date ? "blizzard" : "droptimizer"
+        )
+        .with({ blizzard: P.not(null) }, () => "blizzard")
+        .with({ droptimizer: P.not(null) }, () => "droptimizer")
+        .exhaustive()
 
-    // Determine default tab - prioritize the newest data
-    const getDefaultTab = () => {
-        if (hasRaiderioData) {
-            return "raiderio"
-        }
-        if (hasWowAuditData && wowAuditNewer) {
-            return "wowaudit"
-        }
-        if (hasDroptimizerData) {
-            return "droptimizer"
-        }
-        if (hasWowAuditData) {
-            return "wowaudit"
-        }
-        return "raiderio" // fallback
-    }
-
-    // If no data at all
-    if (!hasRaiderioData && !hasDroptimizerData && !hasWowAuditData) {
+    if (defaultTab === null) {
         return (
             <div className="p-6 text-center text-muted-foreground">
                 No gear data available from any source
@@ -295,34 +267,34 @@ const GearInfo = ({
                 </div>
             )}
             <Tabs
-                defaultValue={getDefaultTab()}
+                defaultValue={defaultTab}
                 className="w-full h-full relative z-10 flex flex-col"
             >
                 <TabsList className="flex justify-start gap-2 mb-3 bg-transparent h-auto p-0 shrink-0">
-                    {hasRaiderioData && (
+                    {blizzard && (
                         <TabsTrigger
-                            value="raiderio"
+                            value="blizzard"
                             className="group relative flex items-center gap-2 px-3 py-2 rounded-lg border border-border/50 bg-muted/30 transition-all duration-200 hover:bg-muted/60 hover:border-border data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500/10 data-[state=active]:to-orange-500/10 data-[state=active]:border-amber-500/50 data-[state=active]:shadow-[0_0_12px_rgba(245,158,11,0.15)]"
                         >
                             <div className="relative">
                                 <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 opacity-0 group-data-[state=active]:opacity-100 blur-sm transition-opacity" />
                                 <Image
-                                    src="https://cdn.raiderio.net/images/mstile-150x150.png"
-                                    alt="RaiderIO"
+                                    src="https://wow.zamimg.com/images/wow/icons/large/wow_token01.jpg"
+                                    alt="Blizzard"
                                     width={22}
                                     height={22}
                                     className="relative rounded ring-1 ring-border/50 group-data-[state=active]:ring-amber-500/50"
                                 />
                             </div>
                             <div className="flex flex-col items-start">
-                                <span className="font-medium text-xs">RaiderIO</span>
+                                <span className="font-medium text-xs">Armory</span>
                                 <span className="text-[10px] text-muted-foreground">
-                                    {formatUnixTimestampForDisplay(raiderio.itemUpdateAt)}
+                                    {formatUnixTimestampForDisplay(blizzard.syncedAt)}
                                 </span>
                             </div>
                         </TabsTrigger>
                     )}
-                    {hasDroptimizerData && (
+                    {droptimizer && (
                         <TabsTrigger
                             value="droptimizer"
                             className="group relative flex items-center gap-2 px-3 py-2 rounded-lg border border-border/50 bg-muted/30 transition-all duration-200 hover:bg-muted/60 hover:border-border data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-500/10 data-[state=active]:to-cyan-500/10 data-[state=active]:border-blue-500/50 data-[state=active]:shadow-[0_0_12px_rgba(59,130,246,0.15)]"
@@ -347,48 +319,17 @@ const GearInfo = ({
                             </div>
                         </TabsTrigger>
                     )}
-                    {hasWowAuditData && (
-                        <TabsTrigger
-                            value="wowaudit"
-                            className="group relative flex items-center gap-2 px-3 py-2 rounded-lg border border-border/50 bg-muted/30 transition-all duration-200 hover:bg-muted/60 hover:border-border data-[state=active]:bg-gradient-to-br data-[state=active]:from-emerald-500/10 data-[state=active]:to-green-500/10 data-[state=active]:border-emerald-500/50 data-[state=active]:shadow-[0_0_12px_rgba(16,185,129,0.15)]"
-                        >
-                            <div className="relative">
-                                <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-emerald-500/20 to-green-500/20 opacity-0 group-data-[state=active]:opacity-100 blur-sm transition-opacity" />
-                                <Image
-                                    src="https://data.wowaudit.com/img/new-logo-icon.svg"
-                                    alt="WoW Audit"
-                                    width={22}
-                                    height={22}
-                                    className="relative rounded ring-1 ring-border/50 group-data-[state=active]:ring-emerald-500/50"
-                                />
-                            </div>
-                            <div className="flex flex-col items-start">
-                                <span className="font-medium text-xs">WoW Audit</span>
-                                <span className="text-[10px] text-muted-foreground">
-                                    {formatUnixTimestampForDisplay(
-                                        wowAudit.wowauditLastModifiedUnixTs
-                                    )}
-                                </span>
-                            </div>
-                        </TabsTrigger>
-                    )}
                 </TabsList>
 
-                {hasRaiderioData && (
-                    <TabsContent value="raiderio" className="flex-1 min-h-0 mt-0">
-                        <RaiderioData data={raiderio} />
+                {blizzard && (
+                    <TabsContent value="blizzard" className="flex-1 min-h-0 mt-0">
+                        <BlizzardData data={blizzard} />
                     </TabsContent>
                 )}
 
-                {hasDroptimizerData && (
+                {droptimizer && (
                     <TabsContent value="droptimizer" className="flex-1 min-h-0 mt-0">
                         <DroptimizerData data={droptimizer} />
-                    </TabsContent>
-                )}
-
-                {hasWowAuditData && (
-                    <TabsContent value="wowaudit" className="flex-1 min-h-0 mt-0">
-                        <WowAuditData data={wowAudit} />
                     </TabsContent>
                 )}
             </Tabs>

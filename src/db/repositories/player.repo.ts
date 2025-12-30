@@ -47,6 +47,20 @@ export const playerRepo = {
         return mapAndParse(result, identity, playerSchema)
     },
 
+    getByName: async (name: string): Promise<Player | null> => {
+        const result = await db
+            .select()
+            .from(playerTable)
+            .where(eq(playerTable.name, name))
+            .then((r) => r.at(0))
+
+        if (!result) {
+            return null
+        }
+
+        return mapAndParse(result, identity, playerSchema)
+    },
+
     add: async (player: NewPlayer): Promise<string> => {
         const id = newUUID()
 

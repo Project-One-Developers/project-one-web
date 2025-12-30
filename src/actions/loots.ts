@@ -3,33 +3,32 @@
 import { groupBy, keyBy } from "es-toolkit"
 import { Duration } from "luxon"
 import { bisListRepo } from "@/db/repositories/bis-list"
+import { blizzardRepo } from "@/db/repositories/blizzard"
 import { characterRepo } from "@/db/repositories/characters"
 import { droptimizerRepo } from "@/db/repositories/droptimizer"
 import { itemRepo } from "@/db/repositories/items"
 import { lootRepo } from "@/db/repositories/loots"
 import { raidSessionRepo } from "@/db/repositories/raid-sessions"
-import { raiderioRepo } from "@/db/repositories/raiderio"
 import { simcRepo } from "@/db/repositories/simc"
-import { wowauditRepo } from "@/db/repositories/wowaudit"
 import {
     evalHighlightsAndScore,
     getLatestSyncDate,
     parseBestItemInSlot,
+    parseBlizzardWarn,
     parseCatalystCharge,
     parseDroptimizerWarn,
     parseDroptimizersInfo,
     parseGreatVault,
     parseLootAlreadyGotIt,
     parseLootBisSpecForChar,
-    parseRaiderioWarn,
     parseTiersetInfo,
-    parseWowAuditWarn,
 } from "@/lib/loot/loot-utils"
 import { parseManualLoots, parseMrtLoots, parseRcLoots } from "@/lib/loots/loot-parsers"
 import { s } from "@/lib/safe-stringify"
 import { isInCurrentWowWeek } from "@/shared/libs/date/date-utils"
 import { compareGearItem, gearAreTheSame } from "@/shared/libs/items/item-bonus-utils"
 import { getWowClassFromIdOrName } from "@/shared/libs/spec-parser/spec-utils"
+import type { CharacterBlizzard } from "@/shared/models/blizzard.model"
 import type { CharacterWithGears } from "@/shared/models/character.model"
 import type {
     CharAssignmentHighlights,
@@ -39,9 +38,7 @@ import type {
     NewLoot,
     NewLootManual,
 } from "@/shared/models/loot.model"
-import type { CharacterRaiderio } from "@/shared/models/raiderio.model"
 import type { SimC } from "@/shared/models/simulation.model"
-import type { CharacterWowAudit } from "@/shared/models/wowaudit.model"
 import type { CharAssignmentInfo, LootAssignmentInfo } from "@/shared/types/types"
 
 const RAID_SESSION_TIME_WINDOW = Duration.fromObject({ hours: 5 }).as("seconds")
@@ -324,16 +321,14 @@ export async function getLootAssignmentInfo(lootId: string): Promise<LootAssignm
     // Step 3: Fetch only data for eligible characters + session loots (not all historical)
     const [
         droptimizers,
-        wowAuditData,
-        raiderioData,
+        blizzardData,
         simcData,
         sessionLoots,
         bisList,
         itemToTiersetMapping,
     ] = await Promise.all([
         droptimizerRepo.getLatestByChars(charLookups),
-        wowauditRepo.getByChars(charLookups),
-        raiderioRepo.getByChars(charLookups),
+        blizzardRepo.getByChars(charLookups),
         simcRepo.getByChars(charLookups),
         lootRepo.getByRaidSessionIdWithAssigned(loot.raidSessionId),
         bisListRepo.getAll(),
@@ -345,8 +340,7 @@ export async function getLootAssignmentInfo(lootId: string): Promise<LootAssignm
         droptimizers,
         (d) => `${d.charInfo.name}-${d.charInfo.server}`
     )
-    const wowAuditByChar = keyBy(wowAuditData, (w) => `${w.name}-${w.realm}`)
-    const raiderioByChar = keyBy(raiderioData, (r) => `${r.name}-${r.realm}`)
+    const blizzardByChar = keyBy(blizzardData, (b) => `${b.name}-${b.realm}`)
     const simcByChar = keyBy(simcData, (s) => `${s.charName}-${s.charRealm}`)
 
     const maxGainFromAllDroptimizers = Math.max(
@@ -359,11 +353,10 @@ export async function getLootAssignmentInfo(lootId: string): Promise<LootAssignm
 
         // O(1) lookups instead of O(n) filtering
         const charDroptimizers = droptimizerByChar[charKey] ?? []
-        const charWowAudit = wowAuditByChar[charKey] ?? null
-        const charRaiderio = raiderioByChar[charKey] ?? null
+        const charBlizzard = blizzardByChar[charKey] ?? null
         const charSimc = simcByChar[charKey] ?? null
 
-        const lowerBound = getLatestSyncDate(charDroptimizers, null, null, charSimc)
+        const lowerBound = getLatestSyncDate(charDroptimizers, charBlizzard, charSimc)
 
         // Filter session loots for this character (much smaller dataset)
         const charAssignedLoots = !lowerBound
@@ -386,8 +379,7 @@ export async function getLootAssignmentInfo(lootId: string): Promise<LootAssignm
             tierset: parseTiersetInfo(
                 charDroptimizers,
                 charAssignedLoots,
-                charWowAudit,
-                charRaiderio,
+                charBlizzard,
                 charSimc
             ),
             catalystCharge: parseCatalystCharge(charDroptimizers),
@@ -395,22 +387,19 @@ export async function getLootAssignmentInfo(lootId: string): Promise<LootAssignm
                 loot.item.slotKey,
                 charDroptimizers,
                 charAssignedLoots,
-                charWowAudit,
-                charRaiderio
+                charBlizzard
             ),
             alreadyGotIt: parseLootAlreadyGotIt(
                 loot,
                 getWowClassFromIdOrName(char.class),
                 charDroptimizers,
                 charAssignedLoots,
-                charWowAudit,
-                charRaiderio,
+                charBlizzard,
                 itemToTiersetMapping
             ),
             bisForSpec: parseLootBisSpecForChar(bisList, loot.item.id, char),
             warnDroptimizer: parseDroptimizerWarn(charDroptimizers, charAssignedLoots),
-            warnWowAudit: parseWowAuditWarn(charWowAudit),
-            warnRaiderio: parseRaiderioWarn(charRaiderio),
+            warnBlizzard: parseBlizzardWarn(charBlizzard),
         }
 
         return {
@@ -448,37 +437,29 @@ export async function getCharactersWithLootsByItemId(
     const charLookups = filteredRoster.map((c) => ({ name: c.name, realm: c.realm }))
 
     // Stage 2: Fetch only data for eligible characters (not all tracked characters)
-    const [
-        latestDroptimizer,
-        assignedLootsForItem,
-        wowAuditData,
-        raiderioData,
-        simcData,
-    ] = await Promise.all([
-        droptimizerRepo.getLatestByChars(charLookups),
-        lootRepo.getAssignedByItemId(itemId),
-        wowauditRepo.getByChars(charLookups),
-        raiderioRepo.getByChars(charLookups),
-        simcRepo.getByChars(charLookups),
-    ])
+    const [latestDroptimizer, assignedLootsForItem, blizzardData, simcData] =
+        await Promise.all([
+            droptimizerRepo.getLatestByChars(charLookups),
+            lootRepo.getAssignedByItemId(itemId),
+            blizzardRepo.getByChars(charLookups),
+            simcRepo.getByChars(charLookups),
+        ])
 
     const droptimizerByChar = groupBy(
         latestDroptimizer,
         (d) => `${d.charInfo.name}-${d.charInfo.server}`
     )
-    const wowAuditByChar = keyBy(wowAuditData, (w) => `${w.name}-${w.realm}`)
-    const raiderioByChar = keyBy(raiderioData, (r) => `${r.name}-${r.realm}`)
+    const blizzardByChar = keyBy(blizzardData, (b) => `${b.name}-${b.realm}`)
     const simcByChar = keyBy(simcData, (s) => `${s.charName}-${s.charRealm}`)
 
     const res = filteredRoster.map((char) => {
         const charKey: `${string}-${string}` = `${char.name}-${char.realm}`
 
         const charDroptimizers = droptimizerByChar[charKey] ?? []
-        const charWowAudit: CharacterWowAudit | null = wowAuditByChar[charKey] ?? null
-        const charRaiderio: CharacterRaiderio | null = raiderioByChar[charKey] ?? null
+        const charBlizzard: CharacterBlizzard | null = blizzardByChar[charKey] ?? null
         const charSimc: SimC | null = simcByChar[charKey] ?? null
 
-        const lowerBound = getLatestSyncDate(charDroptimizers, null, null, charSimc)
+        const lowerBound = getLatestSyncDate(charDroptimizers, charBlizzard, charSimc)
 
         const charAssignedLoots = !lowerBound
             ? []
@@ -510,8 +491,7 @@ export async function getCharactersWithLootsByItemId(
             ...charAssignedLoots.flatMap((l) =>
                 l.gearItem.item.id === item.id ? [l.gearItem] : []
             ),
-            ...(charWowAudit?.itemsEquipped ?? []).filter((gi) => gi.item.id === item.id),
-            ...(charRaiderio?.itemsEquipped ?? []).filter((gi) => gi.item.id === item.id),
+            ...(charBlizzard?.itemsEquipped ?? []).filter((gi) => gi.item.id === item.id),
         ]
 
         // Remove duplicate items

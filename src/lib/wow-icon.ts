@@ -188,10 +188,10 @@ export const encounterIcon = new Map<number, string>([
 
     // Manaforge Omega
     [2684, "https://wow.zamimg.com/modelviewer/ptr2/webthumbs/npc/93/127837.webp"], // Plexus Sentinel
-    [2686, "https://wow.zamimg.com/images/wow/journal/ui-ej-boss-loombeast.png"], // Loom'ithar
+    [2686, "https://wow.zamimg.com/modelviewer/ptr2/webthumbs/npc/65/128577.webp"], // Loom'ithar
     [2685, "https://wow.zamimg.com/modelviewer/ptr2/webthumbs/npc/63/128319.webp"], // Soulbinder Naazindhri
-    [2687, "https://wow.zamimg.com/images/wow/journal/ui-ej-boss-highmanaforgeraraz.png"], // Forgeweaver Araz
-    [2688, "https://wow.zamimg.com/images/wow/journal/ui-ej-boss-thesoulhunters.png"], // The Soul Hunters
+    [2687, "https://wow.zamimg.com/modelviewer/ptr2/webthumbs/npc/38/127526.webp"], // Forgeweaver Araz
+    [2688, "https://wow.zamimg.com/modelviewer/ptr2/webthumbs/npc/74/127562.webp"], // The Soul Hunters (Adarus)
     [2747, "https://wow.zamimg.com/modelviewer/ptr2/webthumbs/npc/240/127984.webp"], // Fractillus
     [2690, "https://wow.zamimg.com/modelviewer/ptr2/webthumbs/npc/251/125691.webp"], // Nexus-King Salhadaar
     [2691, "https://wow.zamimg.com/modelviewer/ptr2/webthumbs/npc/99/128867.webp"], // Dimensius

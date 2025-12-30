@@ -7,10 +7,10 @@ import { characterGameInfoRepo } from "@/db/repositories/character-game-info"
 import { characterRepo } from "@/db/repositories/characters"
 import { playerRepo } from "@/db/repositories/player.repo"
 import type { CharacterGameInfoCompact } from "@/shared/models/character.model"
+import type { GearItem } from "@/shared/models/item.model"
 import {
+    BlizzardWarn,
     DroptimizerWarn,
-    RaiderioWarn,
-    WowAuditWarn,
     type CharacterSummary,
     type PlayerWithSummaryCompact,
 } from "@/shared/types/types"
@@ -26,18 +26,18 @@ export async function getRosterSummary(): Promise<CharacterSummary[]> {
         const charKey: `${string}-${string}` = `${char.name}-${char.realm}`
         const info = gameInfoByChar[charKey]
 
-        // Priority: droptimizer > raiderio > wowaudit
+        // Priority: droptimizer > blizzard
         const itemLevel =
             info?.droptimizer?.itemsAverageItemLevelEquipped?.toFixed(1) ??
-            info?.raiderio?.averageItemLevel ??
-            info?.wowaudit?.averageIlvl ??
+            info?.blizzard?.equippedItemLevel?.toString() ??
             "?"
 
-        // Priority: droptimizer > wowaudit > raiderio (filtered)
-        const tierset =
+        // Priority: droptimizer > blizzard (filtered)
+        const tierset: GearItem[] =
             info?.droptimizer?.tiersetInfo ??
-            info?.wowaudit?.tiersetInfo ??
-            info?.raiderio?.itemsEquipped?.filter((item) => item.item.tierset) ??
+            info?.blizzard?.itemsEquipped?.filter(
+                (item: GearItem) => item.item.tierset
+            ) ??
             []
 
         const warnDroptimizer = match(info?.droptimizer?.simDate)
@@ -48,13 +48,9 @@ export async function getRosterSummary(): Promise<CharacterSummary[]> {
             )
             .otherwise(() => DroptimizerWarn.None)
 
-        const warnWowAudit = match(info?.wowaudit)
-            .with(P.nullish, () => WowAuditWarn.NotTracked)
-            .otherwise(() => WowAuditWarn.None)
-
-        const warnRaiderio = match(info?.raiderio)
-            .with(P.nullish, () => RaiderioWarn.NotTracked)
-            .otherwise(() => RaiderioWarn.None)
+        const warnBlizzard = match(info?.blizzard)
+            .with(P.nullish, () => BlizzardWarn.NotTracked)
+            .otherwise(() => BlizzardWarn.None)
 
         return {
             character: char,
@@ -63,8 +59,7 @@ export async function getRosterSummary(): Promise<CharacterSummary[]> {
             tierset,
             currencies: info?.droptimizer?.currencies ?? [],
             warnDroptimizer,
-            warnWowAudit,
-            warnRaiderio,
+            warnBlizzard,
         }
     })
 }
@@ -72,8 +67,7 @@ export async function getRosterSummary(): Promise<CharacterSummary[]> {
 function parseItemLevelCompact(gameInfo: CharacterGameInfoCompact | undefined): string {
     return (
         gameInfo?.droptimizer?.itemsAverageItemLevelEquipped?.toFixed(1) ??
-        gameInfo?.raiderio?.averageItemLevel ??
-        gameInfo?.wowaudit?.averageIlvl ??
+        gameInfo?.blizzard?.equippedItemLevel?.toString() ??
         "?"
     )
 }
@@ -83,8 +77,8 @@ function parseTiersetCountCompact(
 ): number {
     return (
         gameInfo?.droptimizer?.tiersetInfo?.length ??
-        gameInfo?.wowaudit?.tiersetInfo?.length ??
-        gameInfo?.raiderio?.itemsEquipped?.filter((item) => item.item.tierset).length ??
+        gameInfo?.blizzard?.itemsEquipped?.filter((item: GearItem) => item.item.tierset)
+            .length ??
         0
     )
 }

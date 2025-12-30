@@ -8,8 +8,9 @@ export const bossSchema = z.object({
     instanceType: z.string(),
     instanceId: z.number(),
     order: z.number(),
-    raiderioRaidSlug: z.string().nullish(),
-    raiderioEncounterSlug: z.string().nullish(),
+    raidSlug: z.string().nullish(),
+    encounterSlug: z.string().nullish(),
+    blizzardEncounterId: z.number().nullish(),
 })
 export type Boss = z.infer<typeof bossSchema>
 

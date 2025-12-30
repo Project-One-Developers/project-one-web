@@ -10,12 +10,12 @@ import {
 } from "@/shared/models/boss.model"
 
 export const bossRepo = {
-    // Get boss ID by raiderio encounter slug
-    getByRaiderioSlug: async (slug: string): Promise<Boss | null> => {
+    // Get boss by encounter slug
+    getByEncounterSlug: async (slug: string): Promise<Boss | null> => {
         const result = await db
             .select()
             .from(bossTable)
-            .where(eq(bossTable.raiderioEncounterSlug, slug))
+            .where(eq(bossTable.encounterSlug, slug))
             .limit(1)
             .then((r) => r.at(0))
 
@@ -27,7 +27,7 @@ export const bossRepo = {
         const result = await db
             .select()
             .from(bossTable)
-            .where(eq(bossTable.raiderioRaidSlug, raidSlug))
+            .where(eq(bossTable.raidSlug, raidSlug))
 
         return mapAndParse(result, identity, bossSchema)
     },
@@ -49,8 +49,9 @@ export const bossRepo = {
                     "instanceName",
                     "instanceType",
                     "order",
-                    "raiderioEncounterSlug",
-                    "raiderioRaidSlug",
+                    "encounterSlug",
+                    "raidSlug",
+                    "blizzardEncounterId",
                 ]),
             })
     },

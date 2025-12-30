@@ -3,7 +3,6 @@ import {
     syncDroptimizersFromDiscord,
     deleteSimulationsOlderThanHours,
 } from "@/actions/droptimizer"
-import { checkWowAuditUpdates } from "@/actions/wowaudit"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
@@ -32,25 +31,8 @@ export async function GET(request: Request) {
         logger.info("Cron", `Full sync started at ${new Date().toISOString()}`)
 
         const results = {
-            wowaudit: {
-                success: false,
-                synced: false,
-                message: "",
-                error: null as string | null,
-            },
             discord: { success: false, imported: 0, errors: [] as string[] },
             cleanup: { success: false, error: null as string | null },
-        }
-
-        // WowAudit sync - syncs if data is older than 4 hours
-        try {
-            const wowauditResult = await checkWowAuditUpdates()
-            results.wowaudit.success = true
-            results.wowaudit.synced = wowauditResult.synced
-            results.wowaudit.message = wowauditResult.message
-        } catch (error) {
-            results.wowaudit.error =
-                error instanceof Error ? error.message : "Unknown error"
         }
 
         // Discord droptimizer sync

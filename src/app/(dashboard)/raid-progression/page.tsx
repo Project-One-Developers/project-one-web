@@ -10,11 +10,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { WowCharacterIcon } from "@/components/wow/wow-character-icon"
 import { FilterProvider, useFilterContext } from "@/lib/filter-context"
 import { useBosses, useRosterProgression } from "@/lib/queries/bosses"
+import { s } from "@/lib/safe-stringify"
 import { defined } from "@/lib/utils"
 import { encounterIcon } from "@/lib/wow-icon"
+import type { BlizzardEncounter } from "@/shared/models/blizzard.model"
 import type { Boss } from "@/shared/models/boss.model"
 import type { Character } from "@/shared/models/character.model"
-import type { RaiderioEncounter } from "@/shared/models/raiderio.model"
 import type { WowRaidDifficulty } from "@/shared/models/wow.model"
 
 // Constants
@@ -27,7 +28,7 @@ const ROLE_COLORS = {
 // Types
 type CharacterEncounterInfo = {
     character: Character
-    encounter: RaiderioEncounter | null
+    encounter: BlizzardEncounter | null
 }
 
 type BossProgressData = {
@@ -55,22 +56,13 @@ const CharacterTooltip = ({
     encounter,
 }: {
     character: Character
-    encounter?: RaiderioEncounter | WowRaidDifficulty | null
+    encounter?: BlizzardEncounter | WowRaidDifficulty | null
 }) => (
     <div className="flex flex-col gap-1">
         <div className="font-medium">{character.name}</div>
         {encounter && typeof encounter === "object" ? (
             <>
                 <div className="text-green-400">Kills: {encounter.numKills}</div>
-                <div className="text-zinc-300">
-                    First kill ilvl: {encounter.itemLevel}
-                </div>
-                {encounter.firstDefeated && (
-                    <div className="text-zinc-400">
-                        First Kill:{" "}
-                        {new Date(encounter.firstDefeated).toLocaleDateString()}
-                    </div>
-                )}
                 {encounter.lastDefeated && (
                     <div className="text-zinc-400">
                         Last Kill: {new Date(encounter.lastDefeated).toLocaleDateString()}
@@ -270,14 +262,14 @@ function RaidProgressionPageContent(): JSX.Element {
         }
         return bossesQuery.data
             .filter(
-                (b): b is Boss & { raiderioEncounterSlug: string } =>
-                    b.id > 0 && defined(b.raiderioEncounterSlug)
+                (b): b is Boss & { blizzardEncounterId: number } =>
+                    b.id > 0 && defined(b.blizzardEncounterId)
             )
             .sort((a, b) => a.order - b.order)
     }, [bossesQuery.data])
 
     // Get raid slug from first boss (all bosses in same raid)
-    const raidSlug = orderedBosses[0]?.raiderioRaidSlug ?? undefined
+    const raidSlug = orderedBosses[0]?.raidSlug ?? undefined
 
     // Fetch roster progression with pre-built encounter maps from server
     const rosterProgressionQuery = useRosterProgression(
@@ -322,7 +314,7 @@ function RaidProgressionPageContent(): JSX.Element {
                         character: p1Character,
                         encounter:
                             encounters[
-                                `${filter.selectedRaidDiff}-${boss.raiderioEncounterSlug}`
+                                `${filter.selectedRaidDiff}-${s(boss.blizzardEncounterId)}`
                             ] ?? null,
                     })
                 )

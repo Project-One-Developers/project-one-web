@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm"
+import { and, eq, inArray } from "drizzle-orm"
 import { db } from "@/db"
 import { charTable, playerTable } from "@/db/schema"
 import { identity, mapAndParse, newUUID } from "@/db/utils"
@@ -98,5 +98,14 @@ export const characterRepo = {
 
         const mapped = result.map((r) => ({ ...r.character, player: r.player }))
         return mapAndParse(mapped, identity, characterWithPlayerSchema)
+    },
+
+    hasMain: async (playerId: string): Promise<boolean> => {
+        const result = await db
+            .select({ id: charTable.id })
+            .from(charTable)
+            .where(and(eq(charTable.playerId, playerId), eq(charTable.main, true)))
+            .limit(1)
+        return result.length > 0
     },
 }

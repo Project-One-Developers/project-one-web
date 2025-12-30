@@ -1,6 +1,6 @@
 import { and, desc, eq, or } from "drizzle-orm"
 import { db } from "@/db"
-import { charRaiderioTable, charWowAuditTable, droptimizerTable } from "@/db/schema"
+import { charBlizzardTable, droptimizerTable } from "@/db/schema"
 import { mapAndParse } from "@/db/utils"
 import {
     characterGameInfoCompactSchema,
@@ -56,24 +56,15 @@ export const characterGameInfoRepo = {
                 droptimizerSimDate: latestDroptimizerSq.simDate,
                 droptimizerIlvl: latestDroptimizerSq.ilvl,
                 droptimizerTiersetInfo: latestDroptimizerSq.tiersetInfo,
-                wowauditAvgIlvl: charWowAuditTable.averageItemLevel,
-                wowauditTiersetInfo: charWowAuditTable.tiersetInfo,
-                raiderioAvgIlvl: charRaiderioTable.averageItemLevel,
-                raiderioItemsEquipped: charRaiderioTable.itemsEquipped,
+                blizzardEquippedIlvl: charBlizzardTable.equippedItemLevel,
+                blizzardItemsEquipped: charBlizzardTable.itemsEquipped,
             })
             .from(latestDroptimizerSq)
             .leftJoin(
-                charWowAuditTable,
+                charBlizzardTable,
                 and(
-                    eq(charWowAuditTable.name, latestDroptimizerSq.characterName),
-                    eq(charWowAuditTable.realm, latestDroptimizerSq.characterServer)
-                )
-            )
-            .leftJoin(
-                charRaiderioTable,
-                and(
-                    eq(charRaiderioTable.name, latestDroptimizerSq.characterName),
-                    eq(charRaiderioTable.realm, latestDroptimizerSq.characterServer)
+                    eq(charBlizzardTable.name, latestDroptimizerSq.characterName),
+                    eq(charBlizzardTable.realm, latestDroptimizerSq.characterServer)
                 )
             )
 
@@ -91,16 +82,10 @@ export const characterGameInfoRepo = {
                           currencies: null,
                       }
                     : null,
-                wowaudit: row.wowauditAvgIlvl
+                blizzard: row.blizzardEquippedIlvl
                     ? {
-                          averageIlvl: row.wowauditAvgIlvl,
-                          tiersetInfo: row.wowauditTiersetInfo,
-                      }
-                    : null,
-                raiderio: row.raiderioAvgIlvl
-                    ? {
-                          averageItemLevel: row.raiderioAvgIlvl,
-                          itemsEquipped: row.raiderioItemsEquipped,
+                          equippedItemLevel: row.blizzardEquippedIlvl,
+                          itemsEquipped: row.blizzardItemsEquipped,
                       }
                     : null,
             }),
@@ -155,24 +140,15 @@ export const characterGameInfoRepo = {
                 droptimizerTiersetInfo: latestDroptimizerSq.tiersetInfo,
                 droptimizerWeeklyChest: latestDroptimizerSq.weeklyChest,
                 droptimizerCurrencies: latestDroptimizerSq.currencies,
-                wowauditAvgIlvl: charWowAuditTable.averageItemLevel,
-                wowauditTiersetInfo: charWowAuditTable.tiersetInfo,
-                raiderioAvgIlvl: charRaiderioTable.averageItemLevel,
-                raiderioItemsEquipped: charRaiderioTable.itemsEquipped,
+                blizzardEquippedIlvl: charBlizzardTable.equippedItemLevel,
+                blizzardItemsEquipped: charBlizzardTable.itemsEquipped,
             })
             .from(latestDroptimizerSq)
             .leftJoin(
-                charWowAuditTable,
+                charBlizzardTable,
                 and(
-                    eq(charWowAuditTable.name, latestDroptimizerSq.characterName),
-                    eq(charWowAuditTable.realm, latestDroptimizerSq.characterServer)
-                )
-            )
-            .leftJoin(
-                charRaiderioTable,
-                and(
-                    eq(charRaiderioTable.name, latestDroptimizerSq.characterName),
-                    eq(charRaiderioTable.realm, latestDroptimizerSq.characterServer)
+                    eq(charBlizzardTable.name, latestDroptimizerSq.characterName),
+                    eq(charBlizzardTable.realm, latestDroptimizerSq.characterServer)
                 )
             )
 
@@ -190,16 +166,10 @@ export const characterGameInfoRepo = {
                           currencies: row.droptimizerCurrencies,
                       }
                     : null,
-                wowaudit: row.wowauditAvgIlvl
+                blizzard: row.blizzardEquippedIlvl
                     ? {
-                          averageIlvl: row.wowauditAvgIlvl,
-                          tiersetInfo: row.wowauditTiersetInfo,
-                      }
-                    : null,
-                raiderio: row.raiderioAvgIlvl
-                    ? {
-                          averageItemLevel: row.raiderioAvgIlvl,
-                          itemsEquipped: row.raiderioItemsEquipped,
+                          equippedItemLevel: row.blizzardEquippedIlvl,
+                          itemsEquipped: row.blizzardItemsEquipped,
                       }
                     : null,
             }),

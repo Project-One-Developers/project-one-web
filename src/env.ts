@@ -7,15 +7,14 @@ const envSchema = z.object({
     DISCORD_ALLOWED_ROLES: z.string().transform((v) => v.split(",")),
     DISCORD_DROPTIMIZER_CHANNEL_ID: z.string(),
     DISCORD_BOT_TOKEN: z.string(),
-    WOW_AUDIT_API_KEY: z.string(),
     CRON_SECRET: z.string().optional(),
     // Next-Auth (also validated by next-auth itself)
     AUTH_DISCORD_ID: z.string(),
     AUTH_DISCORD_SECRET: z.string(),
     AUTH_SECRET: z.string(),
-    // Battle.net API (for character renders)
-    BNET_CLIENT_ID: z.string().optional(),
-    BNET_CLIENT_SECRET: z.string().optional(),
+    // Battle.net API
+    BNET_CLIENT_ID: z.string(),
+    BNET_CLIENT_SECRET: z.string(),
 })
 
 export const env = envSchema.parse(process.env)

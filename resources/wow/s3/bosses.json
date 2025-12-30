@@ -6,8 +6,8 @@
         "instanceId": -1,
         "instanceName": "Mythic+ Dungeons",
         "instanceType": "mplus-chest",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": 1303,
@@ -16,8 +16,8 @@
         "instanceId": -1,
         "instanceName": "Mythic+ Dungeons",
         "instanceType": "mplus-chest",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": 1185,
@@ -26,8 +26,8 @@
         "instanceId": -1,
         "instanceName": "Mythic+ Dungeons",
         "instanceType": "mplus-chest",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": 1298,
@@ -36,8 +36,8 @@
         "instanceId": -1,
         "instanceName": "Mythic+ Dungeons",
         "instanceType": "mplus-chest",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": 1267,
@@ -46,8 +46,8 @@
         "instanceId": -1,
         "instanceName": "Mythic+ Dungeons",
         "instanceType": "mplus-chest",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": 1194,
@@ -56,8 +56,8 @@
         "instanceId": -1,
         "instanceName": "Mythic+ Dungeons",
         "instanceType": "mplus-chest",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": 1270,
@@ -66,8 +66,8 @@
         "instanceId": -1,
         "instanceName": "Mythic+ Dungeons",
         "instanceType": "mplus-chest",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": -70,
@@ -76,8 +76,8 @@
         "instanceId": -70,
         "instanceName": "Catalyst - Season 1",
         "instanceType": "catalyst",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": -71,
@@ -86,8 +86,8 @@
         "instanceId": -71,
         "instanceName": "Catalyst - Season 2",
         "instanceType": "catalyst",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": -82,
@@ -96,8 +96,8 @@
         "instanceId": -82,
         "instanceName": "Catalyst - Season 3",
         "instanceType": "catalyst",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": -43,
@@ -106,8 +106,8 @@
         "instanceId": -66,
         "instanceName": "Professions - Epic",
         "instanceType": "profession593",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": -33,
@@ -116,8 +116,8 @@
         "instanceId": -66,
         "instanceName": "Professions - Epic",
         "instanceType": "profession593",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": -34,
@@ -126,8 +126,8 @@
         "instanceId": -66,
         "instanceName": "Professions - Epic",
         "instanceType": "profession593",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": -35,
@@ -136,8 +136,8 @@
         "instanceId": -66,
         "instanceName": "Professions - Epic",
         "instanceType": "profession593",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": -36,
@@ -146,8 +146,8 @@
         "instanceId": -66,
         "instanceName": "Professions - Epic",
         "instanceType": "profession593",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": -37,
@@ -156,8 +156,8 @@
         "instanceId": -66,
         "instanceName": "Professions - Epic",
         "instanceType": "profession593",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": -38,
@@ -166,8 +166,8 @@
         "instanceId": -66,
         "instanceName": "Professions - Epic",
         "instanceType": "profession593",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": -39,
@@ -176,8 +176,8 @@
         "instanceId": -66,
         "instanceName": "Professions - Epic",
         "instanceType": "profession593",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": -69,
@@ -186,8 +186,8 @@
         "instanceId": -69,
         "instanceName": "Bountiful Delves - Season 3",
         "instanceType": "delve-epic",
-        "raiderioRaidSlug": null,
-        "raiderioEncounterSlug": null
+        "raidSlug": null,
+        "encounterSlug": null
     },
     {
         "id": 2639,
@@ -196,8 +196,8 @@
         "instanceId": 1296,
         "instanceName": "Liberation of Undermine",
         "instanceType": "raid",
-        "raiderioRaidSlug": "liberation-of-undermine",
-        "raiderioEncounterSlug": "vexie-and-the-geargrinders"
+        "raidSlug": "liberation-of-undermine",
+        "encounterSlug": "vexie-and-the-geargrinders"
     },
     {
         "id": 2640,
@@ -206,8 +206,8 @@
         "instanceId": 1296,
         "instanceName": "Liberation of Undermine",
         "instanceType": "raid",
-        "raiderioRaidSlug": "liberation-of-undermine",
-        "raiderioEncounterSlug": "cauldron-of-carnage"
+        "raidSlug": "liberation-of-undermine",
+        "encounterSlug": "cauldron-of-carnage"
     },
     {
         "id": 2641,
@@ -216,8 +216,8 @@
         "instanceId": 1296,
         "instanceName": "Liberation of Undermine",
         "instanceType": "raid",
-        "raiderioRaidSlug": "liberation-of-undermine",
-        "raiderioEncounterSlug": "rik-reverb"
+        "raidSlug": "liberation-of-undermine",
+        "encounterSlug": "rik-reverb"
     },
     {
         "id": 2642,
@@ -226,8 +226,8 @@
         "instanceId": 1296,
         "instanceName": "Liberation of Undermine",
         "instanceType": "raid",
-        "raiderioRaidSlug": "liberation-of-undermine",
-        "raiderioEncounterSlug": "stix-bunkjunker"
+        "raidSlug": "liberation-of-undermine",
+        "encounterSlug": "stix-bunkjunker"
     },
     {
         "id": 2653,
@@ -236,8 +236,8 @@
         "instanceId": 1296,
         "instanceName": "Liberation of Undermine",
         "instanceType": "raid",
-        "raiderioRaidSlug": "liberation-of-undermine",
-        "raiderioEncounterSlug": "sprocketmonger-lockenstock"
+        "raidSlug": "liberation-of-undermine",
+        "encounterSlug": "sprocketmonger-lockenstock"
     },
     {
         "id": 2644,
@@ -246,8 +246,8 @@
         "instanceId": 1296,
         "instanceName": "Liberation of Undermine",
         "instanceType": "raid",
-        "raiderioRaidSlug": "liberation-of-undermine",
-        "raiderioEncounterSlug": "onearmed-bandit"
+        "raidSlug": "liberation-of-undermine",
+        "encounterSlug": "onearmed-bandit"
     },
     {
         "id": 2645,
@@ -256,8 +256,8 @@
         "instanceId": 1296,
         "instanceName": "Liberation of Undermine",
         "instanceType": "raid",
-        "raiderioRaidSlug": "liberation-of-undermine",
-        "raiderioEncounterSlug": "mugzee-heads-of-security"
+        "raidSlug": "liberation-of-undermine",
+        "encounterSlug": "mugzee-heads-of-security"
     },
     {
         "id": 2646,
@@ -266,8 +266,8 @@
         "instanceId": 1296,
         "instanceName": "Liberation of Undermine",
         "instanceType": "raid",
-        "raiderioRaidSlug": "liberation-of-undermine",
-        "raiderioEncounterSlug": "chrome-king-gallywix"
+        "raidSlug": "liberation-of-undermine",
+        "encounterSlug": "chrome-king-gallywix"
     },
     {
         "id": -75,
@@ -276,8 +276,8 @@
         "instanceId": 1296,
         "instanceName": "Liberation of Undermine",
         "instanceType": "raid",
-        "raiderioRaidSlug": "liberation-of-undermine",
-        "raiderioEncounterSlug": null
+        "raidSlug": "liberation-of-undermine",
+        "encounterSlug": null
     },
     {
         "id": 2684,
@@ -286,8 +286,8 @@
         "instanceId": 1302,
         "instanceName": "Manaforge Omega",
         "instanceType": "raid",
-        "raiderioRaidSlug": "manaforge-omega",
-        "raiderioEncounterSlug": "plexus-sentinel"
+        "raidSlug": "manaforge-omega",
+        "encounterSlug": "plexus-sentinel"
     },
     {
         "id": 2686,
@@ -296,8 +296,8 @@
         "instanceId": 1302,
         "instanceName": "Manaforge Omega",
         "instanceType": "raid",
-        "raiderioRaidSlug": "manaforge-omega",
-        "raiderioEncounterSlug": "loomithar"
+        "raidSlug": "manaforge-omega",
+        "encounterSlug": "loomithar"
     },
     {
         "id": 2685,
@@ -306,8 +306,8 @@
         "instanceId": 1302,
         "instanceName": "Manaforge Omega",
         "instanceType": "raid",
-        "raiderioRaidSlug": "manaforge-omega",
-        "raiderioEncounterSlug": "soulbinder-naazindhri"
+        "raidSlug": "manaforge-omega",
+        "encounterSlug": "soulbinder-naazindhri"
     },
     {
         "id": 2687,
@@ -316,8 +316,8 @@
         "instanceId": 1302,
         "instanceName": "Manaforge Omega",
         "instanceType": "raid",
-        "raiderioRaidSlug": "manaforge-omega",
-        "raiderioEncounterSlug": "forgeweaver-araz"
+        "raidSlug": "manaforge-omega",
+        "encounterSlug": "forgeweaver-araz"
     },
     {
         "id": 2688,
@@ -326,8 +326,8 @@
         "instanceId": 1302,
         "instanceName": "Manaforge Omega",
         "instanceType": "raid",
-        "raiderioRaidSlug": "manaforge-omega",
-        "raiderioEncounterSlug": "the-soul-hunters"
+        "raidSlug": "manaforge-omega",
+        "encounterSlug": "the-soul-hunters"
     },
     {
         "id": 2747,
@@ -336,8 +336,8 @@
         "instanceId": 1302,
         "instanceName": "Manaforge Omega",
         "instanceType": "raid",
-        "raiderioRaidSlug": "manaforge-omega",
-        "raiderioEncounterSlug": "fractillus"
+        "raidSlug": "manaforge-omega",
+        "encounterSlug": "fractillus"
     },
     {
         "id": 2690,
@@ -346,8 +346,8 @@
         "instanceId": 1302,
         "instanceName": "Manaforge Omega",
         "instanceType": "raid",
-        "raiderioRaidSlug": "manaforge-omega",
-        "raiderioEncounterSlug": "nexus-king-salhadaar"
+        "raidSlug": "manaforge-omega",
+        "encounterSlug": "nexus-king-salhadaar"
     },
     {
         "id": 2691,
@@ -356,8 +356,8 @@
         "instanceId": 1302,
         "instanceName": "Manaforge Omega",
         "instanceType": "raid",
-        "raiderioRaidSlug": "manaforge-omega",
-        "raiderioEncounterSlug": "dimensius"
+        "raidSlug": "manaforge-omega",
+        "encounterSlug": "dimensius"
     },
     {
         "id": -78,
@@ -366,8 +366,8 @@
         "instanceId": 1302,
         "instanceName": "Manaforge Omega",
         "instanceType": "raid",
-        "raiderioRaidSlug": "manaforge-omega",
-        "raiderioEncounterSlug": null
+        "raidSlug": "manaforge-omega",
+        "encounterSlug": null
     },
     {
         "id": 2607,
@@ -376,8 +376,8 @@
         "instanceId": 1273,
         "instanceName": "Nerub-ar Palace",
         "instanceType": "raid",
-        "raiderioRaidSlug": "nerubar-palace",
-        "raiderioEncounterSlug": null
+        "raidSlug": "nerubar-palace",
+        "encounterSlug": null
     },
     {
         "id": 2611,
@@ -386,8 +386,8 @@
         "instanceId": 1273,
         "instanceName": "Nerub-ar Palace",
         "instanceType": "raid",
-        "raiderioRaidSlug": "nerubar-palace",
-        "raiderioEncounterSlug": null
+        "raidSlug": "nerubar-palace",
+        "encounterSlug": null
     },
     {
         "id": 2599,
@@ -396,8 +396,8 @@
         "instanceId": 1273,
         "instanceName": "Nerub-ar Palace",
         "instanceType": "raid",
-        "raiderioRaidSlug": "nerubar-palace",
-        "raiderioEncounterSlug": null
+        "raidSlug": "nerubar-palace",
+        "encounterSlug": null
     },
     {
         "id": 2609,
@@ -406,8 +406,8 @@
         "instanceId": 1273,
         "instanceName": "Nerub-ar Palace",
         "instanceType": "raid",
-        "raiderioRaidSlug": "nerubar-palace",
-        "raiderioEncounterSlug": null
+        "raidSlug": "nerubar-palace",
+        "encounterSlug": null
     },
     {
         "id": 2612,
@@ -416,8 +416,8 @@
         "instanceId": 1273,
         "instanceName": "Nerub-ar Palace",
         "instanceType": "raid",
-        "raiderioRaidSlug": "nerubar-palace",
-        "raiderioEncounterSlug": null
+        "raidSlug": "nerubar-palace",
+        "encounterSlug": null
     },
     {
         "id": 2601,
@@ -426,8 +426,8 @@
         "instanceId": 1273,
         "instanceName": "Nerub-ar Palace",
         "instanceType": "raid",
-        "raiderioRaidSlug": "nerubar-palace",
-        "raiderioEncounterSlug": null
+        "raidSlug": "nerubar-palace",
+        "encounterSlug": null
     },
     {
         "id": 2608,
@@ -436,8 +436,8 @@
         "instanceId": 1273,
         "instanceName": "Nerub-ar Palace",
         "instanceType": "raid",
-        "raiderioRaidSlug": "nerubar-palace",
-        "raiderioEncounterSlug": null
+        "raidSlug": "nerubar-palace",
+        "encounterSlug": null
     },
     {
         "id": 2602,
@@ -446,8 +446,8 @@
         "instanceId": 1273,
         "instanceName": "Nerub-ar Palace",
         "instanceType": "raid",
-        "raiderioRaidSlug": "nerubar-palace",
-        "raiderioEncounterSlug": null
+        "raidSlug": "nerubar-palace",
+        "encounterSlug": null
     },
     {
         "id": -67,
@@ -456,7 +456,7 @@
         "instanceId": 1273,
         "instanceName": "Nerub-ar Palace",
         "instanceType": "raid",
-        "raiderioRaidSlug": "nerubar-palace",
-        "raiderioEncounterSlug": null
+        "raidSlug": "nerubar-palace",
+        "encounterSlug": null
     }
 ]

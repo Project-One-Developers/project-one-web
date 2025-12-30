@@ -1,57 +1,52 @@
 "use client"
 
+import { useQueryClient } from "@tanstack/react-query"
 import {
     Database,
-    ListRestart,
     Loader2,
     MessageSquare,
     RefreshCcwDot,
+    Shield,
+    Users,
 } from "lucide-react"
 import { useState, type JSX } from "react"
 import { toast } from "sonner"
+import { importGuildMembers, syncAllCharactersBlizzard } from "@/actions/blizzard"
 import { syncDroptimizersFromDiscord } from "@/actions/droptimizer"
 import { syncItemsFromJson } from "@/actions/items"
-import { syncAllCharactersRaiderio } from "@/actions/raiderio"
-import { syncCharacterWowAudit } from "@/actions/wowaudit"
 import { Button } from "@/components/ui/button"
+import { queryKeys } from "@/lib/queries/keys"
 import { s } from "@/lib/safe-stringify"
 
 export default function SettingsPage(): JSX.Element {
-    const [isSyncingWowAudit, setIsSyncingWowAudit] = useState(false)
-    const [isSyncingRaiderio, setIsSyncingRaiderio] = useState(false)
+    const queryClient = useQueryClient()
+    const [isSyncingBlizzard, setIsSyncingBlizzard] = useState(false)
     const [isSyncingDiscord, setIsSyncingDiscord] = useState(false)
     const [isSyncingItems, setIsSyncingItems] = useState(false)
+    const [isImportingGuild, setIsImportingGuild] = useState(false)
 
-    const handleSyncWowAudit = async () => {
-        setIsSyncingWowAudit(true)
+    const handleSyncBlizzard = async () => {
+        setIsSyncingBlizzard(true)
         try {
-            await syncCharacterWowAudit()
-            toast.success("WowAudit sync completed successfully")
-        } catch (error) {
-            toast.error(
-                `WowAudit sync failed: ${error instanceof Error ? error.message : "Unknown error"}`
-            )
-        } finally {
-            setIsSyncingWowAudit(false)
-        }
-    }
-
-    const handleSyncRaiderio = async () => {
-        setIsSyncingRaiderio(true)
-        try {
-            const result = await syncAllCharactersRaiderio()
+            const result = await syncAllCharactersBlizzard()
             toast.success(
-                `Raider.io sync completed: ${s(result.synced)} characters synced`
+                `Blizzard sync completed: ${s(result.synced)} characters synced`
             )
             if (result.errors.length > 0) {
                 toast.warning(`${s(result.errors.length)} errors occurred during sync`)
             }
+            // Invalidate caches that depend on Blizzard data
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: [queryKeys.raidProgression] }),
+                queryClient.invalidateQueries({
+                    queryKey: [queryKeys.characterGameInfo],
+                }),
+                queryClient.invalidateQueries({ queryKey: [queryKeys.rosterSummary] }),
+            ])
         } catch (error) {
-            toast.error(
-                `Raider.io sync failed: ${error instanceof Error ? error.message : "Unknown error"}`
-            )
+            toast.error(`Blizzard sync failed: ${s(error)}`)
         } finally {
-            setIsSyncingRaiderio(false)
+            setIsSyncingBlizzard(false)
         }
     }
 
@@ -66,9 +61,7 @@ export default function SettingsPage(): JSX.Element {
                 toast.warning(`${s(result.errors.length)} errors occurred during import`)
             }
         } catch (error) {
-            toast.error(
-                `Discord sync failed: ${error instanceof Error ? error.message : "Unknown error"}`
-            )
+            toast.error(`Discord sync failed: ${s(error)}`)
         } finally {
             setIsSyncingDiscord(false)
         }
@@ -93,11 +86,38 @@ export default function SettingsPage(): JSX.Element {
                 toast.warning("Some errors occurred during sync, check logs")
             }
         } catch (error) {
-            toast.error(
-                `Items sync failed: ${error instanceof Error ? error.message : "Unknown error"}`
-            )
+            toast.error(`Items sync failed: ${s(error)}`)
         } finally {
             setIsSyncingItems(false)
+        }
+    }
+
+    const handleImportGuild = async () => {
+        setIsImportingGuild(true)
+        try {
+            const result = await importGuildMembers()
+            toast.success(
+                `Guild import completed: ${s(result.imported)} imported, ${s(result.skipped)} skipped`
+            )
+            if (result.errors.length > 0) {
+                toast.warning(`${s(result.errors.length)} errors occurred during import`)
+            }
+            // Invalidate roster-related caches
+            await Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: [queryKeys.playersWithCharacters],
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: [queryKeys.playersWithoutCharacters],
+                }),
+                queryClient.invalidateQueries({ queryKey: [queryKeys.characters] }),
+                queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] }),
+                queryClient.invalidateQueries({ queryKey: [queryKeys.rosterSummary] }),
+            ])
+        } catch (error) {
+            toast.error(`Guild import failed: ${s(error)}`)
+        } finally {
+            setIsImportingGuild(false)
         }
     }
 
@@ -114,27 +134,15 @@ export default function SettingsPage(): JSX.Element {
                 <div className="grid gap-4">
                     <Button
                         variant="secondary"
-                        onClick={() => void handleSyncWowAudit()}
-                        disabled={isSyncingWowAudit}
+                        onClick={() => void handleSyncBlizzard()}
+                        disabled={isSyncingBlizzard}
                     >
-                        {isSyncingWowAudit ? (
+                        {isSyncingBlizzard ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : (
-                            <ListRestart className="mr-2 h-4 w-4" />
+                            <Shield className="mr-2 h-4 w-4" />
                         )}
-                        Sync WowAudit
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        onClick={() => void handleSyncRaiderio()}
-                        disabled={isSyncingRaiderio}
-                    >
-                        {isSyncingRaiderio ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <ListRestart className="mr-2 h-4 w-4" />
-                        )}
-                        Sync Raider.io
+                        Sync Blizzard API
                     </Button>
                     <Button
                         variant="secondary"
@@ -159,6 +167,18 @@ export default function SettingsPage(): JSX.Element {
                             <Database className="mr-2 h-4 w-4" />
                         )}
                         Sync Items Data
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        onClick={() => void handleImportGuild()}
+                        disabled={isImportingGuild}
+                    >
+                        {isImportingGuild ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Users className="mr-2 h-4 w-4" />
+                        )}
+                        Import Guild Members
                     </Button>
                 </div>
             </section>

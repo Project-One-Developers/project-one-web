@@ -1,10 +1,9 @@
 "use server"
 
+import { blizzardRepo } from "@/db/repositories/blizzard"
 import { characterRepo } from "@/db/repositories/characters"
 import { droptimizerRepo } from "@/db/repositories/droptimizer"
 import { playerRepo } from "@/db/repositories/player.repo"
-import { raiderioRepo } from "@/db/repositories/raiderio"
-import { wowauditRepo } from "@/db/repositories/wowaudit"
 import { fetchCharacterMedia } from "@/lib/blizzard/blizzard-api"
 import type {
     Character,
@@ -80,16 +79,14 @@ export async function getCharLatestGameInfo(
     charName: string,
     charRealm: string
 ): Promise<CharacterGameInfo> {
-    const [lastDroptimizer, lastWowAudit, lastRaiderio] = await Promise.all([
+    const [lastDroptimizer, lastBlizzard] = await Promise.all([
         droptimizerRepo.getLastByChar(charName, charRealm),
-        wowauditRepo.getByChar(charName, charRealm),
-        raiderioRepo.getByChar(charName, charRealm),
+        blizzardRepo.getByChar(charName, charRealm),
     ])
 
     return {
         droptimizer: lastDroptimizer,
-        wowaudit: lastWowAudit,
-        raiderio: lastRaiderio,
+        blizzard: lastBlizzard,
     }
 }
 

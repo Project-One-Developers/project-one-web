@@ -42,13 +42,7 @@ export enum DroptimizerWarn {
     NotImported = "missing",
 }
 
-export enum WowAuditWarn {
-    None = "none",
-    Outdated = "outdated",
-    NotTracked = "not-tracked",
-}
-
-export enum RaiderioWarn {
+export enum BlizzardWarn {
     None = "none",
     Outdated = "outdated",
     NotTracked = "not-tracked",
@@ -61,8 +55,7 @@ export type CharacterSummary = {
     tierset: GearItem[]
     currencies: DroptimizerCurrency[]
     warnDroptimizer: DroptimizerWarn
-    warnWowAudit: WowAuditWarn
-    warnRaiderio: RaiderioWarn
+    warnBlizzard: BlizzardWarn
 }
 
 export type CharacterSummaryCompact = {
@@ -91,8 +84,7 @@ export type CharAssignmentInfo = {
     bisForSpec: WowSpec[]
     alreadyGotIt: boolean
     warnDroptimizer: DroptimizerWarn
-    warnWowAudit: WowAuditWarn
-    warnRaiderio: RaiderioWarn
+    warnBlizzard: BlizzardWarn
     highlights: CharAssignmentHighlights
 }
 

@@ -23,11 +23,6 @@ const nextConfig: NextConfig = {
             },
             {
                 protocol: "https",
-                hostname: "data.wowaudit.com",
-                pathname: "/**",
-            },
-            {
-                protocol: "https",
                 hostname: "render.worldofwarcraft.com",
                 pathname: "/**",
             },

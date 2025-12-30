@@ -24,9 +24,9 @@ import { FilterProvider, useFilterContext } from "@/lib/filter-context"
 import { useRosterSummary } from "@/lib/queries/summary"
 import { isRelevantCurrency } from "@/shared/libs/currency/currency-utils"
 import {
+    BlizzardWarn,
     DroptimizerWarn,
     TierSetCompletion,
-    WowAuditWarn,
     type CharacterSummary,
 } from "@/shared/types/types"
 
@@ -137,14 +137,14 @@ const DroptimizerStatus = ({ warn }: { warn: DroptimizerWarn }) => {
     return <StatusIndicator status={status} label={label} />
 }
 
-const WowAuditStatus = ({ warn }: { warn: WowAuditWarn }) => {
+const BlizzardStatus = ({ warn }: { warn: BlizzardWarn }) => {
     const { status, label } = match(warn)
-        .with(WowAuditWarn.None, () => ({ status: "success" as const, label: "Tracked" }))
-        .with(WowAuditWarn.Outdated, () => ({
+        .with(BlizzardWarn.None, () => ({ status: "success" as const, label: "Synced" }))
+        .with(BlizzardWarn.Outdated, () => ({
             status: "warning" as const,
             label: "Outdated",
         }))
-        .with(WowAuditWarn.NotTracked, () => ({
+        .with(BlizzardWarn.NotTracked, () => ({
             status: "error" as const,
             label: "Missing",
         }))
@@ -310,7 +310,7 @@ const PlayerRow = ({ summary }: { summary: CharacterSummary }) => {
             </TableCell>
 
             <TableCell className="p-3">
-                <WowAuditStatus warn={summary.warnWowAudit} />
+                <BlizzardStatus warn={summary.warnBlizzard} />
             </TableCell>
         </TableRow>
     )
@@ -424,7 +424,7 @@ function SummaryPageContent(): JSX.Element {
                             Droptimizer
                         </TableHead>
                         <TableHead className="text-gray-300 font-semibold">
-                            WoW Audit
+                            Blizzard
                         </TableHead>
                     </TableRow>
                 </TableHeader>

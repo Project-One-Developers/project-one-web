@@ -1,11 +1,11 @@
 "use client"
 
-import type { CharacterRaiderio } from "@/shared/models/raiderio.model"
+import type { CharacterBlizzard } from "@/shared/models/blizzard.model"
 import type { WowItemEquippedSlotKey } from "@/shared/models/wow.model"
 import CharacterGearLayout from "./character-gear-layout"
 import BaseGearSlot, { createGearSlotMapping } from "./wow/character-paperdoll-gearslot"
 
-export default function RaiderioData({ data }: { data: CharacterRaiderio }) {
+export default function BlizzardData({ data }: { data: CharacterBlizzard }) {
     const gearBySlot = createGearSlotMapping(data.itemsEquipped)
 
     const renderGearSlot = (
