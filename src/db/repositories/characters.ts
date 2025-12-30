@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm"
+import { and, eq, inArray, or } from "drizzle-orm"
 import { db } from "@/db"
 import { charTable, playerTable } from "@/db/schema"
 import { identity, mapAndParse, newUUID } from "@/db/utils"
@@ -116,5 +116,25 @@ export const characterRepo = {
             .where(and(eq(charTable.name, name), eq(charTable.realm, realm)))
             .then((r) => r.at(0))
         return result ? mapAndParse(result, identity, characterSchema) : null
+    },
+
+    getIdMapByNameRealm: async (
+        chars: { name: string; realm: string }[]
+    ): Promise<Map<string, string>> => {
+        if (chars.length === 0) {
+            return new Map()
+        }
+
+        const condition = or(
+            ...chars.map((c) =>
+                and(eq(charTable.name, c.name), eq(charTable.realm, c.realm))
+            )
+        )
+        const results = await db
+            .select({ id: charTable.id, name: charTable.name, realm: charTable.realm })
+            .from(charTable)
+            .where(condition)
+
+        return new Map(results.map((r) => [`${r.name}-${r.realm}`, r.id]))
     },
 }

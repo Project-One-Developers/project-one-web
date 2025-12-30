@@ -24,6 +24,7 @@ import type { BlizzardEncounter } from "@/shared/models/blizzard.model"
 import type { Boss } from "@/shared/models/boss.model"
 import type { CharacterWithEncounters } from "@/shared/models/character.model"
 import type { WowClassName } from "@/shared/models/wow.model"
+import type { Result } from "@/shared/types/types"
 
 // ============================================================================
 // Guild Import Config (hardcoded for now)
@@ -58,8 +59,6 @@ const mapBlizzardClass = (classId: number) =>
  * Sync all characters' Blizzard API data
  * Fetches profile, equipment, and raid progress for all roster characters
  */
-type SyncResult = { ok: true; data: ParsedBlizzardData } | { ok: false; error: string }
-
 export async function syncAllCharactersBlizzard(): Promise<{
     synced: number
     errors: string[]
@@ -82,7 +81,7 @@ export async function syncAllCharactersBlizzard(): Promise<{
 
     // Blizzard API rate limiting is handled in blizzard-api.ts (10 concurrent)
     const syncResults = await Promise.all(
-        roster.map(async (character): Promise<SyncResult> => {
+        roster.map(async (character): Promise<Result<ParsedBlizzardData>> => {
             try {
                 const data = await fetchAndParseCharacter(
                     character.id, // FK to charTable
@@ -92,20 +91,20 @@ export async function syncAllCharactersBlizzard(): Promise<{
                 )
                 if (!data) {
                     return {
-                        ok: false,
+                        success: false,
                         error: `Failed to fetch ${character.name}-${character.realm}: No data returned`,
                     }
                 }
-                return { ok: true, data }
+                return { success: true, data }
             } catch (err) {
                 const error = `Failed to sync ${character.name}-${character.realm}: ${s(err)}`
                 logger.error("Blizzard", error)
-                return { ok: false, error }
+                return { success: false, error }
             }
         })
     )
 
-    const [successes, failures] = partition(syncResults, (r) => r.ok)
+    const [successes, failures] = partition(syncResults, (r) => r.success)
     const results = successes.map((r) => r.data)
     const errors = failures.map((r) => r.error)
 

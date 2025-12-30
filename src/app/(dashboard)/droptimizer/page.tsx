@@ -43,9 +43,7 @@ function DroptimizerPageContent(): JSX.Element {
                         <DroptimizerCard
                             key={dropt.url}
                             droptimizer={dropt}
-                            character={characters.find(
-                                (c) => c.name === dropt.charInfo.name
-                            )}
+                            character={characters.find((c) => c.id === dropt.characterId)}
                         />
                     ))
                 ) : (

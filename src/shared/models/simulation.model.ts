@@ -36,6 +36,21 @@ export const droptimizerCurrencySchema = z.object({
 })
 export type DroptimizerCurrency = z.infer<typeof droptimizerCurrencySchema>
 
+// Char info from sim (class/spec/talents can differ from current character data)
+const charInfoSchema = z.object({
+    class: wowClassNameSchema,
+    classId: z.number().min(1).max(13), // https://wowpedia.fandom.com/wiki/ClassId
+    spec: z.string(),
+    specId: z.number(), // https://wowpedia.fandom.com/wiki/SpecializationID
+    talents: z.string(),
+})
+
+// Extended char info for parsing incoming data (includes name/server for character resolution)
+const newCharInfoSchema = charInfoSchema.extend({
+    name: z.string(),
+    server: z.string(),
+})
+
 export const droptimizerSchema = z.object({
     id: z.string(),
     url: z.url(),
@@ -52,15 +67,7 @@ export const droptimizerSchema = z.object({
         id: z.number(),
         difficulty: wowRaidDiffSchema,
     }),
-    charInfo: z.object({
-        name: z.string(),
-        server: z.string(),
-        class: wowClassNameSchema,
-        classId: z.number().min(1).max(13), // https://wowpedia.fandom.com/wiki/ClassId
-        spec: z.string(),
-        specId: z.number(), // https://wowpedia.fandom.com/wiki/SpecializationID
-        talents: z.string(),
-    }),
+    charInfo: charInfoSchema,
     upgrades: z.array(droptimizerUpgradeSchema),
     weeklyChest: z.array(gearItemSchema),
     currencies: z.array(droptimizerCurrencySchema),
@@ -73,8 +80,9 @@ export const droptimizerSchema = z.object({
 export type Droptimizer = z.infer<typeof droptimizerSchema>
 
 export const newDroptimizerSchema = droptimizerSchema
-    .omit({ id: true, characterId: true, upgrades: true })
+    .omit({ id: true, characterId: true, upgrades: true, charInfo: true })
     .extend({
+        charInfo: newCharInfoSchema,
         upgrades: z.array(newDroptimizerUpgradeSchema),
     })
 export type NewDroptimizer = z.infer<typeof newDroptimizerSchema>

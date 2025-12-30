@@ -63,8 +63,7 @@ export type CharacterGameInfo = z.infer<typeof characterGameInfoSchema>
 
 // Compact schemas for summary display - fields nullable due to LEFT JOINs
 export const characterGameInfoCompactSchema = z.object({
-    charName: z.string(),
-    charRealm: z.string(),
+    charId: z.string(),
     droptimizer: z
         .object({
             simDate: z.number(),

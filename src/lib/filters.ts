@@ -35,18 +35,9 @@ export function filterDroptimizer(
             }
 
             // filter by main/alt selection
-            const isMain = chars.some(
-                (c) =>
-                    c.name === dropt.charInfo.name &&
-                    c.realm === dropt.charInfo.server &&
-                    c.main
-            )
-            const isAlt = chars.some(
-                (c) =>
-                    c.name === dropt.charInfo.name &&
-                    c.realm === dropt.charInfo.server &&
-                    !c.main
-            )
+            const char = chars.find((c) => c.id === dropt.characterId)
+            const isMain = char?.main ?? false
+            const isAlt = char ? !char.main : false
 
             // If this is a main character but mains are not shown
             if (isMain && !filter.showMains) {

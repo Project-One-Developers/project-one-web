@@ -61,8 +61,6 @@ function mapDbToDroptimizer(dbRow: DbDroptimizerWithUpgrades): Droptimizer {
             difficulty: dbRow.raidDifficulty,
         },
         charInfo: {
-            name: dbRow.characterName,
-            server: dbRow.characterServer,
             class: dbRow.characterClass,
             classId: dbRow.characterClassId,
             spec: dbRow.characterSpec,
@@ -296,8 +294,6 @@ export const droptimizerRepo = {
                 simUpgradeEquipped: droptimizer.simInfo.upgradeEquipped,
                 raidId: droptimizer.raidInfo.id,
                 raidDifficulty: droptimizer.raidInfo.difficulty,
-                characterName: droptimizer.charInfo.name,
-                characterServer: droptimizer.charInfo.server,
                 characterClass: droptimizer.charInfo.class,
                 characterClassId: droptimizer.charInfo.classId,
                 characterSpec: droptimizer.charInfo.spec,

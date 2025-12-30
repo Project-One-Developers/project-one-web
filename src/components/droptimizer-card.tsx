@@ -44,12 +44,12 @@ export const DroptimizerCard = ({
     const deleteMutation = useDeleteDroptimizer()
     const [isDetailOpen, setIsDetailOpen] = useState(false)
 
+    const charName = character?.name ?? "Unknown"
+
     const handleDelete = (e: React.MouseEvent) => {
         e.stopPropagation()
         if (
-            window.confirm(
-                `Are you sure you want to delete ${dropt.charInfo.name}'s droptimizer?`
-            )
+            window.confirm(`Are you sure you want to delete ${charName}'s droptimizer?`)
         ) {
             deleteMutation.mutate(dropt.url, {
                 onSuccess: () => {
@@ -94,10 +94,10 @@ export const DroptimizerCard = ({
                             router.push(`/roster/${character.id}`)
                         }}
                     >
-                        {dropt.charInfo.name}
+                        {charName}
                     </div>
                 ) : (
-                    <h2 className="font-black">{dropt.charInfo.name}</h2>
+                    <h2 className="font-black">{charName}</h2>
                 )}
             </div>
 
@@ -123,7 +123,10 @@ export const DroptimizerCard = ({
                             <strong>Upgrades:</strong> {dropt.upgrades.length}
                         </p>
                     </DialogTrigger>
-                    <DroptimizerDetailDialog droptimizer={dropt} />
+                    <DroptimizerDetailDialog
+                        droptimizer={dropt}
+                        characterName={charName}
+                    />
                 </Dialog>
             </div>
 

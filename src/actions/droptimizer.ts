@@ -1,11 +1,14 @@
 "use server"
 
-import { Duration } from "luxon"
+import { partition } from "es-toolkit"
+import { DateTime, Duration } from "luxon"
 import pLimit from "p-limit"
+import { match } from "ts-pattern"
 import { characterRepo } from "@/db/repositories/characters"
 import { droptimizerRepo } from "@/db/repositories/droptimizer"
 import { simcRepo, type NewSimC } from "@/db/repositories/simc"
 import { env } from "@/env"
+import { extractUrlsFromMessages, readAllMessagesInDiscord } from "@/lib/discord/discord"
 import { fetchDroptimizerFromQELiveURL } from "@/lib/droptimizer/qelive-parser"
 import { fetchDroptimizerFromURL } from "@/lib/droptimizer/raidbots-parser"
 import { logger } from "@/lib/logger"
@@ -14,6 +17,7 @@ import { parseSimC } from "@/lib/simc/simc-parser"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import type { Droptimizer, NewDroptimizer, SimC } from "@/shared/models/simulation.model"
 import type { WowRaidDifficulty } from "@/shared/models/wow.model"
+import type { VoidResult } from "@/shared/types/types"
 
 /**
  * Resolve a character ID from name and realm.
@@ -70,36 +74,38 @@ export async function addSimC(simcData: string): Promise<SimC> {
 
 /**
  * Add a simulation from a URL (Raidbots or QE Live)
+ * Returns an array because QE Live can contain multiple difficulties
  */
 export async function addSimulationFromUrl(url: string): Promise<Droptimizer[]> {
     logger.info("Droptimizer", `Adding simulation from url ${url}`)
-    const results: Droptimizer[] = []
 
-    if (url.startsWith("https://questionablyepic.com/live/upgradereport/")) {
-        // QE Live report: healers
-        const droptimizers: NewDroptimizer[] = await fetchDroptimizerFromQELiveURL(url)
-        for (const dropt of droptimizers) {
-            const characterId = await resolveCharacterId(
-                dropt.charInfo.name,
-                dropt.charInfo.server
-            )
-            const result = await droptimizerRepo.add(dropt, characterId)
-            results.push(result)
-        }
-    } else if (url.startsWith("https://www.raidbots.com/simbot/")) {
-        // If the URL is a Raidbots simbot, fetch it
-        const droptimizer: NewDroptimizer = await fetchDroptimizerFromURL(url)
-        const characterId = await resolveCharacterId(
-            droptimizer.charInfo.name,
-            droptimizer.charInfo.server
+    const droptimizers = await match(url)
+        .when(
+            (u) => u.startsWith("https://questionablyepic.com/live/upgradereport/"),
+            () => fetchDroptimizerFromQELiveURL(url)
         )
-        const result = await droptimizerRepo.add(droptimizer, characterId)
-        results.push(result)
-    } else {
-        throw new Error("Invalid URL format for droptimizer")
-    }
+        .when(
+            (u) => u.startsWith("https://www.raidbots.com/simbot/"),
+            async () => [await fetchDroptimizerFromURL(url)]
+        )
+        .otherwise(() => {
+            throw new Error("Invalid URL format for droptimizer")
+        })
 
-    return results
+    const charIdMap = await characterRepo.getIdMapByNameRealm(
+        droptimizers.map((d) => ({ name: d.charInfo.name, realm: d.charInfo.server }))
+    )
+
+    return Promise.all(
+        droptimizers.map((dropt) => {
+            const charKey = `${dropt.charInfo.name}-${dropt.charInfo.server}`
+            const characterId = charIdMap.get(charKey)
+            if (!characterId) {
+                throw new Error(`Character not found: ${charKey}`)
+            }
+            return droptimizerRepo.add(dropt, characterId)
+        })
+    )
 }
 
 /**
@@ -109,16 +115,11 @@ export async function addSimulationFromUrl(url: string): Promise<Droptimizer[]> 
 export async function syncDroptimizersFromDiscord(
     lookback: Duration
 ): Promise<{ imported: number; errors: string[] }> {
-    // Dynamic import to avoid loading discord.js on client
-    const { readAllMessagesInDiscord, extractUrlsFromMessages } =
-        await import("@/lib/discord/discord")
-
     const botKey = env.DISCORD_BOT_TOKEN
     const channelId = env.DISCORD_DROPTIMIZER_CHANNEL_ID
 
     const messages = await readAllMessagesInDiscord(botKey, channelId)
-    const cutoffTimestamp = getUnixTimestamp() - (lookback.as("seconds") || 0)
-    const cutoffDate = new Date(cutoffTimestamp * 1000)
+    const cutoffDate = DateTime.now().minus(lookback).toJSDate()
 
     const uniqueUrls = extractUrlsFromMessages(messages, cutoffDate)
 
@@ -127,31 +128,31 @@ export async function syncDroptimizersFromDiscord(
         `Found ${s(uniqueUrls.size)} unique valid URLs since ${s(cutoffDate)}`
     )
 
-    const errors: string[] = []
-    let importedCount = 0
-
-    // Process URLs with concurrency limit
+    // Process URLs with concurrency limit, returning results
     const limit = pLimit(5)
 
-    await Promise.all(
+    const results = await Promise.all(
         Array.from(uniqueUrls).map((url) =>
-            limit(async () => {
+            limit(async (): Promise<VoidResult> => {
                 try {
                     await addSimulationFromUrl(url)
-                    importedCount++
+                    return { success: true }
                 } catch (error) {
-                    const errorMsg = `Failed to import ${url}: ${error instanceof Error ? error.message : "Unknown error"}`
+                    const errorMsg = `Failed to import ${url}: ${s(error)}`
                     logger.error("Droptimizer", errorMsg)
-                    errors.push(errorMsg)
+                    return { success: false, error: errorMsg }
                 }
             })
         )
     )
 
+    const [successes, failures] = partition(results, (r) => r.success)
+    const errors = failures.map((r) => r.error)
+
     logger.info(
         "Droptimizer",
-        `Discord sync completed: ${s(importedCount)} imported, ${s(errors.length)} errors`
+        `Discord sync completed: ${s(successes.length)} imported, ${s(errors.length)} errors`
     )
 
-    return { imported: importedCount, errors }
+    return { imported: successes.length, errors }
 }

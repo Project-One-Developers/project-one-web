@@ -1,4 +1,3 @@
-// Manual types (not derived from Zod schemas)
 import type { Character, CharacterWithPlayer } from "../models/character.model"
 import type { GearItem } from "../models/item.model"
 import type { CharAssignmentHighlights, LootWithItem } from "../models/loot.model"
@@ -13,6 +12,15 @@ import type {
     WoWRolePosition,
     WowSpecName,
 } from "../models/wow.model"
+
+// Manual types (not derived from Zod schemas)
+
+// Generic Result types for success/failure operations
+export type Result<T, E = string> =
+    | { success: true; data: T }
+    | { success: false; error: E }
+
+export type VoidResult<E = string> = { success: true } | { success: false; error: E }
 
 export type WowSpec = {
     id: number

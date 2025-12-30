@@ -10,10 +10,12 @@ import { WowItemIcon } from "./wow/wow-item-icon"
 
 type DroptimizerDetailDialogProps = {
     droptimizer: Droptimizer
+    characterName?: string
 }
 
 export default function DroptimizerDetailDialog({
     droptimizer,
+    characterName = "Unknown",
 }: DroptimizerDetailDialogProps): JSX.Element {
     const { data: bosses = [] } = useRaidLootTable(droptimizer.raidInfo.id)
 
@@ -56,7 +58,7 @@ export default function DroptimizerDetailDialog({
                         target="_blank"
                         className="text-blue-400 hover:underline"
                     >
-                        {droptimizer.charInfo.name} - {droptimizer.raidInfo.difficulty}
+                        {characterName} - {droptimizer.raidInfo.difficulty}
                     </a>
                 </DialogDescription>
             </DialogHeader>

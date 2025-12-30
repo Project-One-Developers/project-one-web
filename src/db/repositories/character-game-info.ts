@@ -1,4 +1,4 @@
-import { and, desc, eq, or } from "drizzle-orm"
+import { desc, eq, inArray } from "drizzle-orm"
 import { db } from "@/db"
 import { charBlizzardTable, charTable, droptimizerTable } from "@/db/schema"
 import { mapAndParse } from "@/db/utils"
@@ -7,73 +7,47 @@ import {
     type CharacterGameInfoCompact,
 } from "@/shared/models/character.model"
 
-export type CharLookup = { name: string; realm: string }
-
 export const characterGameInfoRepo = {
-    getByCharsCompact: async (
-        chars: CharLookup[]
-    ): Promise<CharacterGameInfoCompact[]> => {
-        if (chars.length === 0) {
+    getByCharsCompact: async (charIds: string[]): Promise<CharacterGameInfoCompact[]> => {
+        if (charIds.length === 0) {
             return []
         }
-
-        const charCondition = or(
-            ...chars.map((c) =>
-                and(
-                    eq(droptimizerTable.characterName, c.name),
-                    eq(droptimizerTable.characterServer, c.realm)
-                )
-            )
-        )
 
         // CTE for latest droptimizer per character
         const latestDroptimizerSq = db.$with("latest_droptimizer").as(
             db
-                .selectDistinctOn(
-                    [droptimizerTable.characterName, droptimizerTable.characterServer],
-                    {
-                        characterName: droptimizerTable.characterName,
-                        characterServer: droptimizerTable.characterServer,
-                        simDate: droptimizerTable.simDate,
-                        ilvl: droptimizerTable.itemsAverageItemLevelEquipped,
-                        tiersetInfo: droptimizerTable.tiersetInfo,
-                    }
-                )
+                .selectDistinctOn([droptimizerTable.characterId], {
+                    characterId: droptimizerTable.characterId,
+                    simDate: droptimizerTable.simDate,
+                    ilvl: droptimizerTable.itemsAverageItemLevelEquipped,
+                    tiersetInfo: droptimizerTable.tiersetInfo,
+                })
                 .from(droptimizerTable)
-                .where(charCondition)
-                .orderBy(
-                    droptimizerTable.characterName,
-                    droptimizerTable.characterServer,
-                    desc(droptimizerTable.simDate)
-                )
+                .orderBy(droptimizerTable.characterId, desc(droptimizerTable.simDate))
         )
 
         const results = await db
             .with(latestDroptimizerSq)
             .select({
-                charName: latestDroptimizerSq.characterName,
-                charRealm: latestDroptimizerSq.characterServer,
+                charId: charTable.id,
                 droptimizerSimDate: latestDroptimizerSq.simDate,
                 droptimizerIlvl: latestDroptimizerSq.ilvl,
                 droptimizerTiersetInfo: latestDroptimizerSq.tiersetInfo,
                 blizzardEquippedIlvl: charBlizzardTable.equippedItemLevel,
                 blizzardItemsEquipped: charBlizzardTable.itemsEquipped,
             })
-            .from(latestDroptimizerSq)
+            .from(charTable)
+            .where(inArray(charTable.id, charIds))
             .leftJoin(
-                charTable,
-                and(
-                    eq(charTable.name, latestDroptimizerSq.characterName),
-                    eq(charTable.realm, latestDroptimizerSq.characterServer)
-                )
+                latestDroptimizerSq,
+                eq(charTable.id, latestDroptimizerSq.characterId)
             )
             .leftJoin(charBlizzardTable, eq(charBlizzardTable.characterId, charTable.id))
 
         return mapAndParse(
             results,
             (row) => ({
-                charName: row.charName,
-                charRealm: row.charRealm,
+                charId: row.charId,
                 droptimizer: row.droptimizerSimDate
                     ? {
                           simDate: row.droptimizerSimDate,
@@ -94,48 +68,30 @@ export const characterGameInfoRepo = {
         )
     },
 
-    getByCharsFull: async (chars: CharLookup[]): Promise<CharacterGameInfoCompact[]> => {
-        if (chars.length === 0) {
+    getByCharsFull: async (charIds: string[]): Promise<CharacterGameInfoCompact[]> => {
+        if (charIds.length === 0) {
             return []
         }
 
-        const charCondition = or(
-            ...chars.map((c) =>
-                and(
-                    eq(droptimizerTable.characterName, c.name),
-                    eq(droptimizerTable.characterServer, c.realm)
-                )
-            )
-        )
-
+        // CTE for latest droptimizer per character
         const latestDroptimizerSq = db.$with("latest_droptimizer").as(
             db
-                .selectDistinctOn(
-                    [droptimizerTable.characterName, droptimizerTable.characterServer],
-                    {
-                        characterName: droptimizerTable.characterName,
-                        characterServer: droptimizerTable.characterServer,
-                        simDate: droptimizerTable.simDate,
-                        ilvl: droptimizerTable.itemsAverageItemLevelEquipped,
-                        tiersetInfo: droptimizerTable.tiersetInfo,
-                        weeklyChest: droptimizerTable.weeklyChest,
-                        currencies: droptimizerTable.currencies,
-                    }
-                )
+                .selectDistinctOn([droptimizerTable.characterId], {
+                    characterId: droptimizerTable.characterId,
+                    simDate: droptimizerTable.simDate,
+                    ilvl: droptimizerTable.itemsAverageItemLevelEquipped,
+                    tiersetInfo: droptimizerTable.tiersetInfo,
+                    weeklyChest: droptimizerTable.weeklyChest,
+                    currencies: droptimizerTable.currencies,
+                })
                 .from(droptimizerTable)
-                .where(charCondition)
-                .orderBy(
-                    droptimizerTable.characterName,
-                    droptimizerTable.characterServer,
-                    desc(droptimizerTable.simDate)
-                )
+                .orderBy(droptimizerTable.characterId, desc(droptimizerTable.simDate))
         )
 
         const results = await db
             .with(latestDroptimizerSq)
             .select({
-                charName: latestDroptimizerSq.characterName,
-                charRealm: latestDroptimizerSq.characterServer,
+                charId: charTable.id,
                 droptimizerSimDate: latestDroptimizerSq.simDate,
                 droptimizerIlvl: latestDroptimizerSq.ilvl,
                 droptimizerTiersetInfo: latestDroptimizerSq.tiersetInfo,
@@ -144,21 +100,18 @@ export const characterGameInfoRepo = {
                 blizzardEquippedIlvl: charBlizzardTable.equippedItemLevel,
                 blizzardItemsEquipped: charBlizzardTable.itemsEquipped,
             })
-            .from(latestDroptimizerSq)
+            .from(charTable)
+            .where(inArray(charTable.id, charIds))
             .leftJoin(
-                charTable,
-                and(
-                    eq(charTable.name, latestDroptimizerSq.characterName),
-                    eq(charTable.realm, latestDroptimizerSq.characterServer)
-                )
+                latestDroptimizerSq,
+                eq(charTable.id, latestDroptimizerSq.characterId)
             )
             .leftJoin(charBlizzardTable, eq(charBlizzardTable.characterId, charTable.id))
 
         return mapAndParse(
             results,
             (row) => ({
-                charName: row.charName,
-                charRealm: row.charRealm,
+                charId: row.charId,
                 droptimizer: row.droptimizerSimDate
                     ? {
                           simDate: row.droptimizerSimDate,

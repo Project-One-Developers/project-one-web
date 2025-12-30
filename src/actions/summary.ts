@@ -17,14 +17,13 @@ import {
 
 export async function getRosterSummary(): Promise<CharacterSummary[]> {
     const roster = await characterRepo.getWithPlayerList()
-    const charList = roster.map((char) => ({ name: char.name, realm: char.realm }))
-    const gameInfoData = await characterGameInfoRepo.getByCharsFull(charList)
-    const gameInfoByChar = keyBy(gameInfoData, (g) => `${g.charName}-${g.charRealm}`)
+    const charIds = roster.map((char) => char.id)
+    const gameInfoData = await characterGameInfoRepo.getByCharsFull(charIds)
+    const gameInfoByCharId = keyBy(gameInfoData, (g) => g.charId)
     const oneWeekAgo = DateTime.now().minus({ weeks: 1 }).toSeconds()
 
     return roster.map((char) => {
-        const charKey: `${string}-${string}` = `${char.name}-${char.realm}`
-        const info = gameInfoByChar[charKey]
+        const info = gameInfoByCharId[char.id]
 
         // Priority: droptimizer > blizzard
         const itemLevel =
@@ -88,16 +87,15 @@ export async function getPlayersWithSummaryCompact(): Promise<
 > {
     const playersWithChars = await playerRepo.getWithCharactersList()
     const allChars = playersWithChars.flatMap((p) => p.characters)
-    const charList = allChars.map((c) => ({ name: c.name, realm: c.realm }))
-    const gameInfoData = await characterGameInfoRepo.getByCharsCompact(charList)
-    const gameInfoByChar = keyBy(gameInfoData, (g) => `${g.charName}-${g.charRealm}`)
+    const charIds = allChars.map((c) => c.id)
+    const gameInfoData = await characterGameInfoRepo.getByCharsCompact(charIds)
+    const gameInfoByCharId = keyBy(gameInfoData, (g) => g.charId)
 
     return playersWithChars.map((player) => ({
         id: player.id,
         name: player.name,
         charsSummary: player.characters.map((char) => {
-            const charKey: `${string}-${string}` = `${char.name}-${char.realm}`
-            const gameInfo = gameInfoByChar[charKey]
+            const gameInfo = gameInfoByCharId[char.id]
 
             return {
                 character: {

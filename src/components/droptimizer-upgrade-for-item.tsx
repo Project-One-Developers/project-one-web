@@ -13,7 +13,7 @@ type DroptimizerUpgradeForItemEquippedProps = {
     itemEquipped: GearItem | null
     droptimizer: {
         url: string
-        charInfo: { specId: number; name: string }
+        charInfo: { specId: number }
         simInfo: { date: number }
     }
 }

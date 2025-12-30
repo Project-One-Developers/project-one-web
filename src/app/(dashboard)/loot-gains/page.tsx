@@ -13,6 +13,7 @@ import { useLatestDroptimizers } from "@/lib/queries/droptimizers"
 import { useCharacters } from "@/lib/queries/players"
 import { encounterIcon } from "@/lib/wow-icon"
 import type { BossWithItems } from "@/shared/models/boss.model"
+import type { Character } from "@/shared/models/character.model"
 import type { Item } from "@/shared/models/item.model"
 import type { Droptimizer } from "@/shared/models/simulation.model"
 import type { WowRaidDifficulty } from "@/shared/models/wow.model"
@@ -21,6 +22,7 @@ import type { WowRaidDifficulty } from "@/shared/models/wow.model"
 type BossPanelProps = {
     boss: BossWithItems
     droptimizers: Droptimizer[]
+    characters: Character[]
     diff: WowRaidDifficulty
     hideItemsWithoutDropt: boolean
 }
@@ -28,6 +30,7 @@ type BossPanelProps = {
 const BossPanel = ({
     boss,
     droptimizers,
+    characters,
     diff,
     hideItemsWithoutDropt,
 }: BossPanelProps) => {
@@ -85,6 +88,7 @@ const BossPanel = ({
                                     <DroptimizersForItem
                                         item={item}
                                         droptimizers={droptimizers}
+                                        characters={characters}
                                     />
                                 </div>
                             </div>
@@ -135,6 +139,7 @@ function LootGainsContent(): JSX.Element {
                             key={boss.id}
                             boss={boss}
                             droptimizers={filteredDroptimizers}
+                            characters={charRes.data ?? []}
                             diff={filter.selectedRaidDiff}
                             hideItemsWithoutDropt={filter.hideIfNoUpgrade}
                         />

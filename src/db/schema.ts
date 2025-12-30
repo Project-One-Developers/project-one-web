@@ -157,8 +157,6 @@ export const droptimizerTable = pgTable(
         simUpgradeEquipped: boolean("sim_upgrade_equipped"),
         raidId: integer("raid_id").notNull(),
         raidDifficulty: pgRaidDiffEnum("raid_difficulty").notNull(),
-        characterName: varchar("character_name", { length: 24 }).notNull(), // kept for display/audit
-        characterServer: varchar("character_server").notNull(), // kept for display/audit
         characterClass: pgClassEnum("character_class").notNull(),
         characterClassId: integer("character_class_id").notNull(),
         characterSpec: varchar("character_spec").notNull(),
