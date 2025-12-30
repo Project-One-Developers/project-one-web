@@ -44,7 +44,7 @@ import type { SimC } from "@/shared/models/simulation.model"
 import type { CharacterWowAudit } from "@/shared/models/wowaudit.model"
 import type { CharAssignmentInfo, LootAssignmentInfo } from "@/shared/types/types"
 
-const RAID_SESSION_TIME_WINDOW = Duration.fromObject({ hours: 12 }).as("seconds")
+const RAID_SESSION_TIME_WINDOW = Duration.fromObject({ hours: 5 }).as("seconds")
 
 export async function getLootsBySessionId(raidSessionId: string): Promise<Loot[]> {
     return await lootRepo.getByRaidSessionId(raidSessionId)
@@ -113,8 +113,8 @@ export async function importRcLootCsv(
 ): Promise<{ imported: number; errors: string[] }> {
     const session = await raidSessionRepo.getById(raidSessionId)
 
-    // Date bounds: session date ± 12 hours
-    const dateLowerBound = session.raidDate - RAID_SESSION_TIME_WINDOW
+    // Date bounds: session date +5 hours
+    const dateLowerBound = session.raidDate
     const dateUpperBound = session.raidDate + RAID_SESSION_TIME_WINDOW
 
     const allItems = await itemRepo.getAll()
@@ -265,8 +265,8 @@ export async function importMrtLoot(
 ): Promise<{ imported: number; errors: string[] }> {
     const session = await raidSessionRepo.getById(raidSessionId)
 
-    // Date bounds: session date ± 12 hours
-    const dateLowerBound = session.raidDate - RAID_SESSION_TIME_WINDOW
+    // Date bounds: session date +5 hours
+    const dateLowerBound = session.raidDate
     const dateUpperBound = session.raidDate + RAID_SESSION_TIME_WINDOW
 
     const allItems = await itemRepo.getAll()
