@@ -4,7 +4,7 @@ all:
 	pnpm typecheck && pnpm lint && pnpm format
 
 up:
-	docker compose up -d
+	docker compose up --remove-orphans -d
 
 down:
 	docker compose down
