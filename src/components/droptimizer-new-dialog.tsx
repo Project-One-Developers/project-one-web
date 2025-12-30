@@ -1,12 +1,13 @@
 "use client"
 
 import { Loader2, PlusIcon, Recycle, RefreshCw, Upload } from "lucide-react"
+import { Duration } from "luxon"
 import React, { useState, type JSX } from "react"
 import { toast } from "sonner"
 import {
     useAddSimC,
     useAddSimulationFromUrl,
-    useDeleteSimulationsOlderThanHours,
+    useDeleteSimulationsOlderThan,
     useSyncDroptimizersFromDiscord,
 } from "@/lib/queries/droptimizers"
 import { cn } from "@/lib/utils"
@@ -32,11 +33,11 @@ export default function DroptimizerNewDialog(): JSX.Element {
 
     const manualMutation = useAddSimulationFromUrl()
     const syncMutation = useSyncDroptimizersFromDiscord()
-    const cleanupMutation = useDeleteSimulationsOlderThanHours()
+    const cleanupMutation = useDeleteSimulationsOlderThan()
     const simcImportMutation = useAddSimC()
 
     const handleSyncFromDiscord = () => {
-        syncMutation.mutate(hoursValue, {
+        syncMutation.mutate(Duration.fromObject({ hours: hoursValue }), {
             onSuccess: () => {
                 toast.success("Droptimizers have been successfully synced from Discord.")
             },
@@ -49,7 +50,7 @@ export default function DroptimizerNewDialog(): JSX.Element {
     }
 
     const handleCleanup = () => {
-        cleanupMutation.mutate(hoursValue, {
+        cleanupMutation.mutate(Duration.fromObject({ hours: hoursValue }), {
             onSuccess: () => {
                 toast.success("Droptimizers have been successfully cleaned up")
             },

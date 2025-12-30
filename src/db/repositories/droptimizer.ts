@@ -6,12 +6,12 @@ import {
     type InferInsertModel,
     type InferSelectModel,
     lte,
-    or,
 } from "drizzle-orm"
 import { db } from "@/db"
 import { droptimizerTable, droptimizerUpgradesTable, itemTable } from "@/db/schema"
 import { mapAndParse, newUUID } from "@/db/utils"
 import { logger } from "@/lib/logger"
+import { s } from "@/lib/safe-stringify"
 import {
     droptimizerSchema,
     type Droptimizer,
@@ -30,71 +30,71 @@ type DbDroptimizerWithUpgrades = DbDroptimizer & {
     upgrades: DbDroptimizerUpgradeWithItem[]
 }
 
-function mapDbToUpgrade(db: DbDroptimizerUpgradeWithItem): DroptimizerUpgrade {
+function mapDbToUpgrade(dbRow: DbDroptimizerUpgradeWithItem): DroptimizerUpgrade {
     return {
-        id: db.id,
-        item: db.item,
-        dps: db.dps,
-        ilvl: db.ilvl,
-        slot: db.slot,
-        catalyzedItemId: db.catalyzedItemId,
-        tiersetItemId: db.tiersetItemId,
-        droptimizerId: db.droptimizerId,
+        id: dbRow.id,
+        item: dbRow.item,
+        dps: dbRow.dps,
+        ilvl: dbRow.ilvl,
+        slot: dbRow.slot,
+        catalyzedItemId: dbRow.catalyzedItemId,
+        tiersetItemId: dbRow.tiersetItemId,
+        droptimizerId: dbRow.droptimizerId,
     }
 }
 
-function mapDbToDroptimizer(db: DbDroptimizerWithUpgrades): Droptimizer {
+function mapDbToDroptimizer(dbRow: DbDroptimizerWithUpgrades): Droptimizer {
     return {
-        url: db.url,
-        ak: db.ak,
-        dateImported: db.dateImported,
+        id: dbRow.id,
+        url: dbRow.url,
+        characterId: dbRow.characterId,
+        dateImported: dbRow.dateImported,
         simInfo: {
-            date: db.simDate,
-            fightstyle: db.simFightStyle,
-            duration: db.simDuration,
-            nTargets: db.simNTargets,
-            upgradeEquipped: db.simUpgradeEquipped ?? false,
+            date: dbRow.simDate,
+            fightstyle: dbRow.simFightStyle,
+            duration: dbRow.simDuration,
+            nTargets: dbRow.simNTargets,
+            upgradeEquipped: dbRow.simUpgradeEquipped ?? false,
         },
         raidInfo: {
-            id: db.raidId,
-            difficulty: db.raidDifficulty,
+            id: dbRow.raidId,
+            difficulty: dbRow.raidDifficulty,
         },
         charInfo: {
-            name: db.characterName,
-            server: db.characterServer,
-            class: db.characterClass,
-            classId: db.characterClassId,
-            spec: db.characterSpec,
-            specId: db.characterSpecId,
-            talents: db.characterTalents,
+            name: dbRow.characterName,
+            server: dbRow.characterServer,
+            class: dbRow.characterClass,
+            classId: dbRow.characterClassId,
+            spec: dbRow.characterSpec,
+            specId: dbRow.characterSpecId,
+            talents: dbRow.characterTalents,
         },
-        upgrades: db.upgrades.map(mapDbToUpgrade),
-        weeklyChest: db.weeklyChest ?? [],
-        currencies: db.currencies ?? [],
-        itemsAverageItemLevel: db.itemsAverageItemLevel,
-        itemsAverageItemLevelEquipped: db.itemsAverageItemLevelEquipped,
-        itemsEquipped: db.itemsEquipped,
-        itemsInBag: db.itemsInBag ?? [],
-        tiersetInfo: db.tiersetInfo ?? [],
+        upgrades: dbRow.upgrades.map(mapDbToUpgrade),
+        weeklyChest: dbRow.weeklyChest ?? [],
+        currencies: dbRow.currencies ?? [],
+        itemsAverageItemLevel: dbRow.itemsAverageItemLevel,
+        itemsAverageItemLevelEquipped: dbRow.itemsAverageItemLevelEquipped,
+        itemsEquipped: dbRow.itemsEquipped,
+        itemsInBag: dbRow.itemsInBag ?? [],
+        tiersetInfo: dbRow.tiersetInfo ?? [],
     }
 }
 
 // Compact version for roster page - only fetches fields needed for item level display
 export type DroptimizerCompact = {
-    characterName: string
-    characterServer: string
+    characterId: string
     simDate: number
     itemsAverageItemLevelEquipped: number | null
     tiersetInfo: unknown[] | null // We only need the array length for counting
 }
 
 /**
- * Helper to fetch upgrades with items for given droptimizer URLs.
+ * Helper to fetch upgrades with items for given droptimizer IDs.
  */
 async function fetchUpgradesWithItems(
-    urls: string[]
+    droptimizerIds: string[]
 ): Promise<Map<string, DbDroptimizerUpgradeWithItem[]>> {
-    if (urls.length === 0) {
+    if (droptimizerIds.length === 0) {
         return new Map()
     }
 
@@ -111,7 +111,7 @@ async function fetchUpgradesWithItems(
         })
         .from(droptimizerUpgradesTable)
         .innerJoin(itemTable, eq(droptimizerUpgradesTable.itemId, itemTable.id))
-        .where(inArray(droptimizerUpgradesTable.droptimizerId, urls))
+        .where(inArray(droptimizerUpgradesTable.droptimizerId, droptimizerIds))
 
     return Map.groupBy(upgradesWithItems, (u) => u.droptimizerId)
 }
@@ -122,10 +122,10 @@ async function fetchUpgradesWithItems(
 async function withUpgrades(
     droptimizer: DbDroptimizer
 ): Promise<DbDroptimizerWithUpgrades> {
-    const upgradesByUrl = await fetchUpgradesWithItems([droptimizer.url])
+    const upgradesById = await fetchUpgradesWithItems([droptimizer.id])
     return {
         ...droptimizer,
-        upgrades: upgradesByUrl.get(droptimizer.url) ?? [],
+        upgrades: upgradesById.get(droptimizer.id) ?? [],
     }
 }
 
@@ -139,17 +139,40 @@ async function withUpgradesMany(
         return []
     }
 
-    const urls = droptimizers.map((d) => d.url)
-    const upgradesByUrl = await fetchUpgradesWithItems(urls)
+    const ids = droptimizers.map((d) => d.id)
+    const upgradesById = await fetchUpgradesWithItems(ids)
 
     return droptimizers.map((d) => ({
         ...d,
-        upgrades: upgradesByUrl.get(d.url) ?? [],
+        upgrades: upgradesById.get(d.id) ?? [],
     }))
 }
 
+// Columns for DISTINCT ON to get latest droptimizer per character+raid+difficulty+spec
+const distinctOnColumns = [
+    droptimizerTable.characterId,
+    droptimizerTable.raidId,
+    droptimizerTable.raidDifficulty,
+    droptimizerTable.characterSpecId,
+]
+
 export const droptimizerRepo = {
-    get: async (url: string): Promise<Droptimizer | null> => {
+    getById: async (id: string): Promise<Droptimizer | null> => {
+        const droptimizer = await db
+            .select()
+            .from(droptimizerTable)
+            .where(eq(droptimizerTable.id, id))
+            .then((r) => r.at(0))
+
+        if (!droptimizer) {
+            return null
+        }
+
+        const result = await withUpgrades(droptimizer)
+        return mapAndParse(result, mapDbToDroptimizer, droptimizerSchema)
+    },
+
+    getByUrl: async (url: string): Promise<Droptimizer | null> => {
         const droptimizer = await db
             .select()
             .from(droptimizerTable)
@@ -170,34 +193,33 @@ export const droptimizerRepo = {
         return mapAndParse(result, mapDbToDroptimizer, droptimizerSchema)
     },
 
-    getByIdsList: async (ids: string[]): Promise<Droptimizer[]> => {
+    getByIds: async (ids: string[]): Promise<Droptimizer[]> => {
         if (ids.length === 0) {
             return []
         }
         const droptimizers = await db
             .select()
             .from(droptimizerTable)
-            .where(inArray(droptimizerTable.url, ids))
+            .where(inArray(droptimizerTable.id, ids))
         const result = await withUpgradesMany(droptimizers)
         return mapAndParse(result, mapDbToDroptimizer, droptimizerSchema)
     },
 
     getLatestList: async (): Promise<Droptimizer[]> => {
-        // Use Drizzle's selectDistinctOn for PostgreSQL DISTINCT ON
+        // Use DISTINCT ON to get latest per character+raid+difficulty+spec
         const latestDroptimizers = await db
-            .selectDistinctOn([droptimizerTable.ak], {
-                url: droptimizerTable.url,
+            .selectDistinctOn(distinctOnColumns, {
+                id: droptimizerTable.id,
             })
             .from(droptimizerTable)
-            .orderBy(droptimizerTable.ak, desc(droptimizerTable.simDate))
+            .orderBy(...distinctOnColumns, desc(droptimizerTable.simDate))
 
-        const urls = latestDroptimizers.map((row) => row.url)
-        return droptimizerRepo.getByIdsList(urls)
+        const ids = latestDroptimizers.map((row) => row.id)
+        return droptimizerRepo.getByIds(ids)
     },
 
-    getLastByCharAndDiff: async (
-        charName: string,
-        charRealm: string,
+    getByCharacterIdAndDiff: async (
+        characterId: string,
         raidDiff: WowRaidDifficulty
     ): Promise<Droptimizer | null> => {
         const droptimizer = await db
@@ -205,8 +227,7 @@ export const droptimizerRepo = {
             .from(droptimizerTable)
             .where(
                 and(
-                    eq(droptimizerTable.characterName, charName),
-                    eq(droptimizerTable.characterServer, charRealm),
+                    eq(droptimizerTable.characterId, characterId),
                     eq(droptimizerTable.raidDifficulty, raidDiff)
                 )
             )
@@ -222,21 +243,31 @@ export const droptimizerRepo = {
         return mapAndParse(result, mapDbToDroptimizer, droptimizerSchema)
     },
 
-    add: async (droptimizer: NewDroptimizer): Promise<Droptimizer> => {
-        // Check for existing droptimizer with same ak
+    add: async (
+        droptimizer: NewDroptimizer,
+        characterId: string
+    ): Promise<Droptimizer> => {
+        // Check for existing droptimizer with same character+raid+difficulty+spec
         const alreadyPresent = await db
             .select()
             .from(droptimizerTable)
-            .where(eq(droptimizerTable.ak, droptimizer.ak))
+            .where(
+                and(
+                    eq(droptimizerTable.characterId, characterId),
+                    eq(droptimizerTable.raidId, droptimizer.raidInfo.id),
+                    eq(droptimizerTable.raidDifficulty, droptimizer.raidInfo.difficulty),
+                    eq(droptimizerTable.characterSpecId, droptimizer.charInfo.specId)
+                )
+            )
             .then((r) => r.at(0))
 
         if (alreadyPresent) {
             if (alreadyPresent.simDate >= droptimizer.simInfo.date) {
                 logger.debug(
                     "Droptimizer",
-                    `addDroptimizer: not importing - not newer than existing - ak: ${droptimizer.ak}`
+                    `addDroptimizer: not importing - not newer than existing - characterId: ${characterId}, raidId: ${s(droptimizer.raidInfo.id)}`
                 )
-                const existing = await droptimizerRepo.get(alreadyPresent.url)
+                const existing = await droptimizerRepo.getById(alreadyPresent.id)
                 if (!existing) {
                     throw new Error("Failed to get existing droptimizer")
                 }
@@ -245,15 +276,18 @@ export const droptimizerRepo = {
             // Delete older version
             await db
                 .delete(droptimizerTable)
-                .where(eq(droptimizerTable.url, alreadyPresent.url))
+                .where(eq(droptimizerTable.id, alreadyPresent.id))
         }
+
+        const id = newUUID()
 
         // Insert new droptimizer
         const droptimizerRes = await db
             .insert(droptimizerTable)
             .values({
+                id,
                 url: droptimizer.url,
-                ak: droptimizer.ak,
+                characterId,
                 dateImported: droptimizer.dateImported,
                 simDate: droptimizer.simInfo.date,
                 simFightStyle: droptimizer.simInfo.fightstyle,
@@ -275,7 +309,7 @@ export const droptimizerRepo = {
                 itemsInBag: droptimizer.itemsInBag,
                 tiersetInfo: droptimizer.tiersetInfo,
             })
-            .returning({ url: droptimizerTable.url })
+            .returning({ id: droptimizerTable.id })
             .then((r) => r.at(0))
 
         if (!droptimizerRes) {
@@ -288,7 +322,7 @@ export const droptimizerRepo = {
         const upgradesArray = droptimizer.upgrades.map(
             (up): InferInsertModel<typeof droptimizerUpgradesTable> => ({
                 id: newUUID(),
-                droptimizerId: droptimizerRes.url,
+                droptimizerId: droptimizerRes.id,
                 ...up,
             })
         )
@@ -297,15 +331,15 @@ export const droptimizerRepo = {
             await db.insert(droptimizerUpgradesTable).values(upgradesArray)
         }
 
-        const result = await droptimizerRepo.get(droptimizerRes.url)
+        const result = await droptimizerRepo.getById(droptimizerRes.id)
         if (!result) {
             throw new Error("Failed to get newly inserted droptimizer")
         }
         return result
     },
 
-    delete: async (url: string): Promise<void> => {
-        await db.delete(droptimizerTable).where(eq(droptimizerTable.url, url))
+    delete: async (id: string): Promise<void> => {
+        await db.delete(droptimizerTable).where(eq(droptimizerTable.id, id))
     },
 
     deleteOlderThanDate: async (dateUnixTs: number): Promise<void> => {
@@ -322,19 +356,11 @@ export const droptimizerRepo = {
         return result ? result.simDate : null
     },
 
-    getLastByChar: async (
-        charName: string,
-        charRealm: string
-    ): Promise<Droptimizer | null> => {
+    getByCharacterId: async (characterId: string): Promise<Droptimizer | null> => {
         const droptimizer = await db
             .select()
             .from(droptimizerTable)
-            .where(
-                and(
-                    eq(droptimizerTable.characterName, charName),
-                    eq(droptimizerTable.characterServer, charRealm)
-                )
-            )
+            .where(eq(droptimizerTable.characterId, characterId))
             .orderBy(desc(droptimizerTable.simDate))
             .limit(1)
             .then((r) => r.at(0))
@@ -347,67 +373,44 @@ export const droptimizerRepo = {
         return mapAndParse(result, mapDbToDroptimizer, droptimizerSchema)
     },
 
-    getLatestByChars: async (
-        chars: { name: string; realm: string }[]
-    ): Promise<Droptimizer[]> => {
-        if (chars.length === 0) {
+    getLatestByCharacterIds: async (characterIds: string[]): Promise<Droptimizer[]> => {
+        if (characterIds.length === 0) {
             return []
         }
 
-        // Build OR conditions for each character using Drizzle
-        const charCondition = or(
-            ...chars.map((c) =>
-                and(
-                    eq(droptimizerTable.characterName, c.name),
-                    eq(droptimizerTable.characterServer, c.realm)
-                )
-            )
-        )
-
-        // Use Drizzle's selectDistinctOn for PostgreSQL DISTINCT ON
+        // Use DISTINCT ON to get latest per character+raid+difficulty+spec
         const latestDroptimizers = await db
-            .selectDistinctOn([droptimizerTable.ak], {
-                url: droptimizerTable.url,
+            .selectDistinctOn(distinctOnColumns, {
+                id: droptimizerTable.id,
             })
             .from(droptimizerTable)
-            .where(charCondition)
-            .orderBy(droptimizerTable.ak, desc(droptimizerTable.simDate))
+            .where(inArray(droptimizerTable.characterId, characterIds))
+            .orderBy(...distinctOnColumns, desc(droptimizerTable.simDate))
 
-        const urls = latestDroptimizers.map((row) => row.url)
-        return droptimizerRepo.getByIdsList(urls)
+        const ids = latestDroptimizers.map((row) => row.id)
+        return droptimizerRepo.getByIds(ids)
     },
 
-    getLatestByCharsCompact: async (
-        chars: { name: string; realm: string }[]
+    getLatestByCharacterIdsCompact: async (
+        characterIds: string[]
     ): Promise<DroptimizerCompact[]> => {
-        if (chars.length === 0) {
+        if (characterIds.length === 0) {
             return []
         }
 
-        // Build OR conditions for each character using Drizzle
-        const charCondition = or(
-            ...chars.map((c) =>
-                and(
-                    eq(droptimizerTable.characterName, c.name),
-                    eq(droptimizerTable.characterServer, c.realm)
-                )
-            )
-        )
-
-        // Use Drizzle's selectDistinctOn for PostgreSQL DISTINCT ON
+        // Use DISTINCT ON to get latest per character+raid+difficulty+spec
         // Only select fields needed for roster display
         const result = await db
-            .selectDistinctOn([droptimizerTable.ak], {
-                characterName: droptimizerTable.characterName,
-                characterServer: droptimizerTable.characterServer,
+            .selectDistinctOn(distinctOnColumns, {
+                characterId: droptimizerTable.characterId,
                 simDate: droptimizerTable.simDate,
                 itemsAverageItemLevelEquipped:
                     droptimizerTable.itemsAverageItemLevelEquipped,
                 tiersetInfo: droptimizerTable.tiersetInfo,
             })
             .from(droptimizerTable)
-            .where(charCondition)
-            .orderBy(droptimizerTable.ak, desc(droptimizerTable.simDate))
+            .where(inArray(droptimizerTable.characterId, characterIds))
+            .orderBy(...distinctOnColumns, desc(droptimizerTable.simDate))
 
         return result
     },

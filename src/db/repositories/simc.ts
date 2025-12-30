@@ -1,8 +1,11 @@
-import { and, eq, or } from "drizzle-orm"
+import { eq, inArray } from "drizzle-orm"
 import { db } from "@/db"
 import { simcTable } from "@/db/schema"
-import { conflictUpdateAllExcept, mapAndParse } from "@/db/utils"
+import { conflictUpdateAllExcept, mapAndParse, newUUID } from "@/db/utils"
 import { simcSchema, type SimC } from "@/shared/models/simulation.model"
+
+/** Input type for adding SimC data (before we have id/characterId) */
+export type NewSimC = Omit<SimC, "id" | "characterId">
 
 // Mapper to handle nullable JSONB columns from DB -> non-nullable arrays in schema
 const mapSimcRow = (row: typeof simcTable.$inferSelect): SimC => ({
@@ -19,45 +22,41 @@ export const simcRepo = {
         return mapAndParse(result, mapSimcRow, simcSchema)
     },
 
-    getByChar: async (charName: string, charRealm: string): Promise<SimC | null> => {
+    getByCharacterId: async (characterId: string): Promise<SimC | null> => {
         const result = await db
             .select()
             .from(simcTable)
-            .where(
-                and(eq(simcTable.charName, charName), eq(simcTable.charRealm, charRealm))
-            )
+            .where(eq(simcTable.characterId, characterId))
             .then((r) => r.at(0))
         return result ? mapAndParse(result, mapSimcRow, simcSchema) : null
     },
 
-    add: async (simc: SimC): Promise<void> => {
-        await db
-            .insert(simcTable)
-            .values(simc)
-            .onConflictDoUpdate({
-                target: [simcTable.charName, simcTable.charRealm],
-                set: conflictUpdateAllExcept(simcTable, ["charName", "charRealm"]),
-            })
-    },
-
-    getByChars: async (chars: { name: string; realm: string }[]): Promise<SimC[]> => {
-        if (chars.length === 0) {
+    getByCharacterIds: async (characterIds: string[]): Promise<SimC[]> => {
+        if (characterIds.length === 0) {
             return []
         }
-
         const result = await db
             .select()
             .from(simcTable)
-            .where(
-                or(
-                    ...chars.map((c) =>
-                        and(
-                            eq(simcTable.charName, c.name),
-                            eq(simcTable.charRealm, c.realm)
-                        )
-                    )
-                )
-            )
+            .where(inArray(simcTable.characterId, characterIds))
         return mapAndParse(result, mapSimcRow, simcSchema)
+    },
+
+    add: async (simc: NewSimC, characterId: string): Promise<SimC> => {
+        const id = newUUID()
+        await db
+            .insert(simcTable)
+            .values({ ...simc, id, characterId })
+            .onConflictDoUpdate({
+                target: [simcTable.characterId],
+                set: conflictUpdateAllExcept(simcTable, ["id", "characterId"]),
+            })
+        const result = await simcRepo.getByCharacterId(characterId)
+        if (!result) {
+            throw new Error(
+                `Failed to get SimC after insert for characterId: ${characterId}`
+            )
+        }
+        return result
     },
 }

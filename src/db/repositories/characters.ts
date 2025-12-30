@@ -108,4 +108,13 @@ export const characterRepo = {
             .limit(1)
         return result.length > 0
     },
+
+    getByNameRealm: async (name: string, realm: string): Promise<Character | null> => {
+        const result = await db
+            .select()
+            .from(charTable)
+            .where(and(eq(charTable.name, name), eq(charTable.realm, realm)))
+            .then((r) => r.at(0))
+        return result ? mapAndParse(result, identity, characterSchema) : null
+    },
 }

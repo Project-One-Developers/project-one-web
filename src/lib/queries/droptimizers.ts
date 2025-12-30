@@ -1,12 +1,13 @@
 "use client"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Duration } from "luxon"
 import {
     addSimC,
     addSimulationFromUrl,
     deleteDroptimizer,
-    deleteSimulationsOlderThanHours,
-    getDroptimizerLastByCharAndDiff,
+    deleteSimulationsOlderThan,
+    getDroptimizerByCharacterIdAndDiff,
     getDroptimizerLatestList,
     getDroptimizerList,
     syncDroptimizersFromDiscord,
@@ -34,33 +35,26 @@ export function useDeleteDroptimizer() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (url: string) => deleteDroptimizer(url),
+        mutationFn: (id: string) => deleteDroptimizer(id),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
         },
     })
 }
 
-export function useDroptimizerLastByCharAndDiff(
-    charName: string | undefined,
-    charRealm: string | undefined,
+export function useDroptimizerByCharacterIdAndDiff(
+    characterId: string | undefined,
     raidDiff: WowRaidDifficulty | undefined
 ) {
     return useQuery({
-        queryKey: [
-            queryKeys.droptimizers,
-            "lastByCharAndDiff",
-            charName,
-            charRealm,
-            raidDiff,
-        ],
+        queryKey: [queryKeys.droptimizers, "byCharacterIdAndDiff", characterId, raidDiff],
         queryFn: () => {
-            if (!charName || !charRealm || !raidDiff) {
+            if (!characterId || !raidDiff) {
                 throw new Error("Missing parameters")
             }
-            return getDroptimizerLastByCharAndDiff(charName, charRealm, raidDiff)
+            return getDroptimizerByCharacterIdAndDiff(characterId, raidDiff)
         },
-        enabled: !!charName && !!charRealm && !!raidDiff,
+        enabled: !!characterId && !!raidDiff,
         staleTime: 30000,
     })
 }
@@ -91,18 +85,18 @@ export function useSyncDroptimizersFromDiscord() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (hours: number) => syncDroptimizersFromDiscord(hours),
+        mutationFn: (lookback: Duration) => syncDroptimizersFromDiscord(lookback),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
         },
     })
 }
 
-export function useDeleteSimulationsOlderThanHours() {
+export function useDeleteSimulationsOlderThan() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (hours: number) => deleteSimulationsOlderThanHours(hours),
+        mutationFn: (lookback: Duration) => deleteSimulationsOlderThan(lookback),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
         },

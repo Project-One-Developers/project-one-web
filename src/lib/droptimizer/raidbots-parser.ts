@@ -256,7 +256,6 @@ export const convertJsonToDroptimizer = async (
     const mergedCurrencies = [...upgradeCurrencies, ...catalystCurrencies]
 
     return {
-        ak: `${s(raidId)},${raidDiff},${charInfo.name},${charInfo.server},${charInfo.spec},${charInfo.class}`,
         url,
         charInfo,
         raidInfo: {

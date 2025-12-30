@@ -33,7 +33,7 @@ type CharGameInfoPanelProps = {
 }
 
 export const CharGameInfoPanel = ({ character }: CharGameInfoPanelProps) => {
-    const charGameInfoQuery = useCharacterGameInfo(character.name, character.realm)
+    const charGameInfoQuery = useCharacterGameInfo(character.id)
 
     const droptimizer = charGameInfoQuery.data?.droptimizer ?? null
     const currencies = charGameInfoQuery.data?.droptimizer?.currencies ?? null

@@ -72,16 +72,16 @@ export function useCharacter(id: string | undefined) {
     })
 }
 
-export function useCharacterGameInfo(name?: string, realm?: string) {
+export function useCharacterGameInfo(characterId?: string) {
     return useQuery({
-        queryKey: [queryKeys.characterGameInfo, name, realm],
+        queryKey: [queryKeys.characterGameInfo, characterId],
         queryFn: () => {
-            if (!name || !realm) {
-                throw new Error("Name and realm are required")
+            if (!characterId) {
+                throw new Error("Character ID is required")
             }
-            return getCharLatestGameInfo(name, realm)
+            return getCharLatestGameInfo(characterId)
         },
-        enabled: !!name && !!realm,
+        enabled: !!characterId,
     })
 }
 

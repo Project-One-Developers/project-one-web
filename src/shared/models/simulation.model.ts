@@ -37,8 +37,9 @@ export const droptimizerCurrencySchema = z.object({
 export type DroptimizerCurrency = z.infer<typeof droptimizerCurrencySchema>
 
 export const droptimizerSchema = z.object({
+    id: z.string(),
     url: z.url(),
-    ak: z.string(),
+    characterId: z.string(),
     dateImported: z.number(),
     simInfo: z.object({
         date: z.number(),
@@ -71,9 +72,11 @@ export const droptimizerSchema = z.object({
 })
 export type Droptimizer = z.infer<typeof droptimizerSchema>
 
-export const newDroptimizerSchema = droptimizerSchema.omit({ upgrades: true }).extend({
-    upgrades: z.array(newDroptimizerUpgradeSchema),
-})
+export const newDroptimizerSchema = droptimizerSchema
+    .omit({ id: true, characterId: true, upgrades: true })
+    .extend({
+        upgrades: z.array(newDroptimizerUpgradeSchema),
+    })
 export type NewDroptimizer = z.infer<typeof newDroptimizerSchema>
 
 export const raidbotsURLSchema = z
@@ -93,6 +96,8 @@ export const qeLiveURLSchema = z
 export type QELiveURL = z.infer<typeof qeLiveURLSchema>
 
 export const simcSchema = z.object({
+    id: z.string(),
+    characterId: z.string(),
     hash: z.string(),
     dateGenerated: z.number(),
     charName: z.string(),

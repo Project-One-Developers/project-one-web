@@ -133,7 +133,7 @@ export const droptimizerUpgradesTable = pgTable(
             onDelete: "set null",
         }),
         droptimizerId: varchar("droptimizer_id")
-            .references(() => droptimizerTable.url, { onDelete: "cascade" })
+            .references(() => droptimizerTable.id, { onDelete: "cascade" })
             .notNull(),
     },
     (t) => [
@@ -144,8 +144,11 @@ export const droptimizerUpgradesTable = pgTable(
 export const droptimizerTable = pgTable(
     "droptimizers",
     {
-        url: text("url").primaryKey(),
-        ak: varchar("ak").notNull().unique(), // droptimizer identifier key eg: 1273,heroic,Tartesia,Nemesis,Devastation,Evoker
+        id: varchar("id").primaryKey(),
+        url: text("url").notNull().unique(),
+        characterId: varchar("character_id")
+            .references(() => charTable.id, { onDelete: "cascade" })
+            .notNull(),
         dateImported: integer("date_imported").notNull(), // imported unix timestamp in this app
         simDate: integer("sim_date").notNull(), // droptimizer execution unix timestamp
         simFightStyle: varchar("sim_fight_style", { length: 50 }).notNull(),
@@ -154,12 +157,12 @@ export const droptimizerTable = pgTable(
         simUpgradeEquipped: boolean("sim_upgrade_equipped"),
         raidId: integer("raid_id").notNull(),
         raidDifficulty: pgRaidDiffEnum("raid_difficulty").notNull(),
-        characterName: varchar("character_name", { length: 24 }).notNull(),
-        characterServer: varchar("character_server").notNull(),
+        characterName: varchar("character_name", { length: 24 }).notNull(), // kept for display/audit
+        characterServer: varchar("character_server").notNull(), // kept for display/audit
         characterClass: pgClassEnum("character_class").notNull(),
-        characterClassId: integer("character_classId").notNull(),
+        characterClassId: integer("character_class_id").notNull(),
         characterSpec: varchar("character_spec").notNull(),
-        characterSpecId: integer("character_specId").notNull(),
+        characterSpecId: integer("character_spec_id").notNull(),
         characterTalents: varchar("character_talents").notNull(),
         weeklyChest: jsonb("weekly_chest").$type<GearItem[]>(),
         currencies:
@@ -171,10 +174,12 @@ export const droptimizerTable = pgTable(
         tiersetInfo: jsonb("tierset_info").$type<GearItem[]>(),
     },
     (t) => [
-        index("idx_droptimizer_char_date").on(
-            t.characterName,
-            t.characterServer,
-            t.simDate
+        index("idx_droptimizer_char_id_date").on(t.characterId, t.simDate),
+        unique("droptimizer_char_raid_diff_spec").on(
+            t.characterId,
+            t.raidId,
+            t.raidDifficulty,
+            t.characterSpecId
         ),
     ]
 )
@@ -183,8 +188,12 @@ export const droptimizerTable = pgTable(
 export const simcTable = pgTable(
     "simc",
     {
-        charName: varchar("character_name", { length: 24 }).notNull(),
-        charRealm: varchar("character_server").notNull(),
+        id: varchar("id").primaryKey(),
+        characterId: varchar("character_id")
+            .references(() => charTable.id, { onDelete: "cascade" })
+            .notNull(),
+        charName: varchar("character_name", { length: 24 }).notNull(), // kept for import parsing
+        charRealm: varchar("character_server").notNull(), // kept for import parsing
         hash: text("hash").notNull(),
         dateGenerated: integer("date_generated").notNull(), // imported unix timestamp in this app
         weeklyChest: jsonb("weekly_chest").$type<GearItem[]>(),
@@ -194,7 +203,10 @@ export const simcTable = pgTable(
         itemsInBag: jsonb("items_in_bags").$type<GearItem[]>(),
         tiersetInfo: jsonb("tierset_info").$type<GearItem[]>(),
     },
-    (t) => [primaryKey({ columns: [t.charName, t.charRealm] })]
+    (t) => [
+        unique("simc_character_unique").on(t.characterId),
+        index("idx_simc_character_id").on(t.characterId),
+    ]
 )
 
 //////////////////////////////////////////////////////////

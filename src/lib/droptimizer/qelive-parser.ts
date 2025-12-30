@@ -260,7 +260,6 @@ const convertJsonToDroptimizer = async (
         })
 
         const droptimizer: NewDroptimizer = {
-            ak: `${s(raidId)},${raidDiff},${charInfo.name},${charInfo.server},${charInfo.spec},${charInfo.class}`,
             url: `${url}&diff=${raidDiff}`, // in QE there are multiple report for the same url
             charInfo,
             raidInfo: {

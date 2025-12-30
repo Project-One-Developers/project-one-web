@@ -1,7 +1,8 @@
+import { Duration } from "luxon"
 import { NextResponse } from "next/server"
 import {
     syncDroptimizersFromDiscord,
-    deleteSimulationsOlderThanHours,
+    deleteSimulationsOlderThan,
 } from "@/actions/droptimizer"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
@@ -16,11 +17,11 @@ function verifyCronSecret(request: Request): boolean {
     return authHeader === `Bearer ${env.CRON_SECRET}`
 }
 
-// Hours to look back for Discord messages
-const DISCORD_SYNC_HOURS = 48
+// Lookback for Discord sync
+const DISCORD_SYNC_LOOKBACK = Duration.fromObject({ days: 2 })
 
-// Hours after which to delete old simulations
-const DELETE_OLD_SIMULATIONS_HOURS = 168 // 7 days
+// Delete simulations older than this
+const DELETE_OLD_SIMULATIONS_LOOKBACK = Duration.fromObject({ days: 7 })
 
 export async function GET(request: Request) {
     if (!verifyCronSecret(request)) {
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
 
         // Discord droptimizer sync
         try {
-            const discordResult = await syncDroptimizersFromDiscord(DISCORD_SYNC_HOURS)
+            const discordResult = await syncDroptimizersFromDiscord(DISCORD_SYNC_LOOKBACK)
             results.discord.success = true
             results.discord.imported = discordResult.imported
             results.discord.errors = discordResult.errors
@@ -50,7 +51,7 @@ export async function GET(request: Request) {
 
         // Cleanup old simulations
         try {
-            await deleteSimulationsOlderThanHours(DELETE_OLD_SIMULATIONS_HOURS)
+            await deleteSimulationsOlderThan(DELETE_OLD_SIMULATIONS_LOOKBACK)
             results.cleanup.success = true
         } catch (error) {
             results.cleanup.error =

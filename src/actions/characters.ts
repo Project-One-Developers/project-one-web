@@ -76,12 +76,11 @@ export async function getPlayersWithoutCharacters(): Promise<Player[]> {
 // ============== CHARACTER INFO ==============
 
 export async function getCharLatestGameInfo(
-    charName: string,
-    charRealm: string
+    characterId: string
 ): Promise<CharacterGameInfo> {
     const [lastDroptimizer, lastBlizzard] = await Promise.all([
-        droptimizerRepo.getLastByChar(charName, charRealm),
-        blizzardRepo.getByChar(charName, charRealm),
+        droptimizerRepo.getByCharacterId(characterId),
+        blizzardRepo.getByCharId(characterId),
     ])
 
     return {
