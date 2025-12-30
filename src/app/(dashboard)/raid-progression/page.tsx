@@ -1,18 +1,19 @@
 "use client"
 
 import { groupBy, partition, sortBy } from "es-toolkit"
-import { LoaderCircle } from "lucide-react"
-import Image from "next/image"
+import { Search } from "lucide-react"
 import { useEffect, useMemo, useState, type JSX } from "react"
 import { GlobalFilterUI } from "@/components/global-filter-ui"
+import { GlassCard } from "@/components/ui/glass-card"
 import { Input } from "@/components/ui/input"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { BossCard } from "@/components/wow/boss-card"
 import { WowCharacterIcon } from "@/components/wow/wow-character-icon"
 import { FilterProvider, useFilterContext } from "@/lib/filter-context"
 import { useBosses, useRosterProgression } from "@/lib/queries/bosses"
 import { s } from "@/lib/safe-stringify"
 import { defined } from "@/lib/utils"
-import { encounterIcon } from "@/lib/wow-icon"
 import type { BlizzardEncounter } from "@/shared/models/blizzard.model"
 import type { Boss } from "@/shared/models/boss.model"
 import type { Character } from "@/shared/models/character.model"
@@ -139,92 +140,80 @@ const BossPanel = ({
     const { defeated, notDefeated, defeatedCount } = progressData
 
     return (
-        <div className="flex flex-col bg-muted rounded-lg overflow-hidden min-w-[280px]">
-            {/* Boss header */}
-            <div className="flex flex-col gap-y-2">
-                <Image
-                    src={encounterIcon.get(boss.id) || ""}
-                    alt={`${boss.name} icon`}
-                    width={280}
-                    height={128}
-                    className="w-full h-32 object-scale-down"
-                />
-                <h2 className="text-center text-xs font-bold">{boss.name}</h2>
+        <BossCard
+            bossId={boss.id}
+            bossName={boss.name}
+            className="min-w-[280px]"
+            contentClassName="p-4"
+        >
+            <div className="text-xs text-center text-muted-foreground mb-3">
+                {defeatedCount} / {totalRosterSize} defeated
             </div>
 
-            {/* Character progression */}
-            <div className="flex flex-col gap-y-3 p-4">
-                <div className="text-xs text-center text-gray-400 mb-2">
-                    {defeatedCount} / {totalRosterSize} defeated
+            {/* Characters who have defeated the boss - grouped by role */}
+            {defeatedCount > 0 && (
+                <div className="flex flex-col gap-y-3">
+                    <CharacterGrid
+                        characters={defeated.Tank}
+                        title="Tanks"
+                        color={ROLE_COLORS.Tank}
+                        showRoleBadges={true}
+                        hasDefeatedBoss={true}
+                    />
+                    <CharacterGrid
+                        characters={defeated.Healer}
+                        title="Healers"
+                        color={ROLE_COLORS.Healer}
+                        showRoleBadges={true}
+                        hasDefeatedBoss={true}
+                    />
+                    <CharacterGrid
+                        characters={defeated.DPS}
+                        title="DPS"
+                        color={ROLE_COLORS.DPS}
+                        showRoleBadges={true}
+                        hasDefeatedBoss={true}
+                    />
                 </div>
+            )}
 
-                {/* Characters who have defeated the boss - grouped by role */}
-                {defeatedCount > 0 && (
-                    <div className="flex flex-col gap-y-3">
-                        <CharacterGrid
-                            characters={defeated.Tank}
-                            title="Tanks"
-                            color={ROLE_COLORS.Tank}
-                            showRoleBadges={true}
-                            hasDefeatedBoss={true}
-                        />
-                        <CharacterGrid
-                            characters={defeated.Healer}
-                            title="Healers"
-                            color={ROLE_COLORS.Healer}
-                            showRoleBadges={true}
-                            hasDefeatedBoss={true}
-                        />
-                        <CharacterGrid
-                            characters={defeated.DPS}
-                            title="DPS"
-                            color={ROLE_COLORS.DPS}
-                            showRoleBadges={true}
-                            hasDefeatedBoss={true}
-                        />
-                    </div>
-                )}
-
-                {/* Characters who have NOT defeated the boss */}
-                {notDefeated.length > 0 && (
-                    <div className="flex flex-col gap-y-2 mt-4">
-                        <h3 className="text-xs font-semibold text-red-400">
-                            Not Defeated
-                        </h3>
-                        <div className="grid grid-cols-8 gap-2 opacity-60">
-                            {notDefeated.map((item) => (
-                                <Tooltip key={item.character.id}>
-                                    <TooltipTrigger asChild>
-                                        <div className="flex justify-center grayscale">
-                                            <WowCharacterIcon
-                                                character={item.character}
-                                                showTooltip={false}
-                                                showRoleBadges={true}
-                                                showName={true}
-                                                showMainIndicator={false}
-                                            />
-                                        </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent sideOffset={5}>
-                                        <CharacterTooltip
+            {/* Characters who have NOT defeated the boss */}
+            {notDefeated.length > 0 && (
+                <div className="flex flex-col gap-y-2 mt-4">
+                    <h3 className="text-xs font-semibold text-red-400">Not Defeated</h3>
+                    <div className="grid grid-cols-8 gap-2 opacity-60">
+                        {notDefeated.map((item) => (
+                            <Tooltip key={item.character.id}>
+                                <TooltipTrigger asChild>
+                                    <div className="flex justify-center grayscale">
+                                        <WowCharacterIcon
                                             character={item.character}
-                                            encounter={selectedDifficulty}
+                                            showTooltip={false}
+                                            showRoleBadges={true}
+                                            showName={true}
+                                            showMainIndicator={false}
                                         />
-                                    </TooltipContent>
-                                </Tooltip>
-                            ))}
-                        </div>
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent sideOffset={5}>
+                                    <CharacterTooltip
+                                        character={item.character}
+                                        encounter={selectedDifficulty}
+                                    />
+                                </TooltipContent>
+                            </Tooltip>
+                        ))}
                     </div>
-                )}
+                </div>
+            )}
 
-                {/* Empty state */}
-                {defeatedCount === 0 && notDefeated.length === 0 && (
-                    <div className="text-center text-gray-500 text-sm py-4">
-                        No characters found
-                    </div>
-                )}
-            </div>
-        </div>
+            {/* Empty state */}
+            {defeatedCount === 0 && notDefeated.length === 0 && (
+                <div className="text-center text-muted-foreground text-sm py-4">
+                    No characters found
+                </div>
+            )}
+        </BossCard>
     )
 }
 
@@ -363,42 +352,41 @@ function RaidProgressionPageContent(): JSX.Element {
     }, [rosterProgressionQuery.data, filteredNamesSet])
 
     if (bossesQuery.isLoading || rosterProgressionQuery.isLoading) {
-        return (
-            <div className="flex flex-col items-center w-full justify-center mt-10 mb-10">
-                <LoaderCircle className="animate-spin text-5xl" />
-            </div>
-        )
+        return <LoadingSpinner size="lg" iconSize="lg" text="Loading progression..." />
     }
 
     return (
-        <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-8 items-center p-8 relative">
+        <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-6 p-8 relative">
             {/* Header */}
-            <div className="text-center mb-4">
-                <h1 className="text-2xl font-bold">Raid Progression</h1>
-                <p className="text-gray-400">
-                    Showing {filter.selectedRaidDiff} difficulty progression for{" "}
-                    {(rosterProgressionQuery.data ?? []).length} characters
-                    {debouncedSearchQuery && (
-                        <span className="text-blue-400">
-                            {" "}
-                            (filtered by &quot;{debouncedSearchQuery}&quot;)
-                        </span>
-                    )}
-                </p>
-            </div>
+            <GlassCard padding="lg" className="text-center space-y-4">
+                <div>
+                    <h1 className="text-2xl font-bold">Raid Progression</h1>
+                    <p className="text-muted-foreground text-sm mt-1">
+                        Showing {filter.selectedRaidDiff} difficulty for{" "}
+                        {s((rosterProgressionQuery.data ?? []).length)} characters
+                        {debouncedSearchQuery && (
+                            <span className="text-primary">
+                                {" "}
+                                (filtered by &quot;{debouncedSearchQuery}&quot;)
+                            </span>
+                        )}
+                    </p>
+                </div>
 
-            {/* Search Bar */}
-            <div className="w-full max-w-md">
-                <Input
-                    type="text"
-                    placeholder="Search player names..."
-                    value={searchQuery}
-                    onChange={(e) => {
-                        setSearchQuery(e.target.value)
-                    }}
-                    className="w-full"
-                />
-            </div>
+                {/* Search Bar */}
+                <div className="relative max-w-md mx-auto">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        type="text"
+                        placeholder="Search player names..."
+                        value={searchQuery}
+                        onChange={(e) => {
+                            setSearchQuery(e.target.value)
+                        }}
+                        className="w-full pl-10"
+                    />
+                </div>
+            </GlassCard>
 
             {/* Boss List */}
             <div className="flex flex-wrap gap-x-4 gap-y-4 justify-center">

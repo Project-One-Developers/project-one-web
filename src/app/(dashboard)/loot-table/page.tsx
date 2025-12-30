@@ -1,7 +1,6 @@
 "use client"
 
 import { Edit, Package, Search } from "lucide-react"
-import Image from "next/image"
 import { useState, useMemo, useEffect, type JSX } from "react"
 import { GlobalFilterUI } from "@/components/global-filter-ui"
 import ItemManagementDialog from "@/components/item-management-dialog"
@@ -10,6 +9,7 @@ import { GlassCard } from "@/components/ui/glass-card"
 import { Input } from "@/components/ui/input"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { BossCard } from "@/components/wow/boss-card"
 import { WowItemIcon } from "@/components/wow/wow-item-icon"
 import { WowSpecIcon } from "@/components/wow/wow-spec-icon"
 import { FilterProvider, useFilterContext } from "@/lib/filter-context"
@@ -18,7 +18,6 @@ import { useBisList } from "@/lib/queries/bis-list"
 import { useRaidLootTable } from "@/lib/queries/bosses"
 import { useItemNotes } from "@/lib/queries/items"
 import { cn, defined } from "@/lib/utils"
-import { encounterIcon } from "@/lib/wow-icon"
 import { getWowClassBySpecId } from "@/shared/libs/spec-parser/spec-utils"
 import type { BisList } from "@/shared/models/bis-list.model"
 import type { BossWithItems } from "@/shared/models/boss.model"
@@ -87,115 +86,94 @@ const BossPanel = ({ boss, bisLists, itemNotes, onEdit, filter }: BossPanelProps
         })
     }, [boss.items, bisLists, filter])
 
-    const bossImage = encounterIcon.get(boss.id)
-
     return (
-        <GlassCard padding="none" className="flex flex-col overflow-hidden min-w-[350px]">
-            {/* Boss header: cover + name */}
-            <div className="flex flex-col gap-y-2">
-                {bossImage && (
-                    <Image
-                        src={bossImage}
-                        alt={`${boss.name} icon`}
-                        width={350}
-                        height={128}
-                        className="w-full h-32 object-scale-down"
-                        unoptimized
-                    />
-                )}
-                <h2 className="text-center text-xs font-bold py-2">{boss.name}</h2>
-            </div>
-            {/* Boss items */}
-            <div className="flex flex-col gap-y-3 p-5">
-                {filteredItems
-                    .sort((a, b) => {
-                        const aHasBis = bisLists.some((bis) => bis.itemId === a.id)
-                        const bHasBis = bisLists.some((bis) => bis.itemId === b.id)
-                        if (aHasBis && !bHasBis) {
-                            return -1
-                        }
-                        if (!aHasBis && bHasBis) {
-                            return 1
-                        }
-                        return a.id - b.id
-                    })
-                    .map((item) => {
-                        const bisForItem = bisLists.filter(
-                            (bis) => bis.itemId === item.id
-                        )
-                        const allSpecIds = bisForItem.flatMap((bis) => bis.specIds)
-                        const itemNote =
-                            itemNotes.find((note) => note.itemId === item.id)?.note || ""
+        <BossCard bossId={boss.id} bossName={boss.name} className="min-w-[350px]">
+            {filteredItems
+                .sort((a, b) => {
+                    const aHasBis = bisLists.some((bis) => bis.itemId === a.id)
+                    const bHasBis = bisLists.some((bis) => bis.itemId === b.id)
+                    if (aHasBis && !bHasBis) {
+                        return -1
+                    }
+                    if (!aHasBis && bHasBis) {
+                        return 1
+                    }
+                    return a.id - b.id
+                })
+                .map((item) => {
+                    const bisForItem = bisLists.filter((bis) => bis.itemId === item.id)
+                    const allSpecIds = bisForItem.flatMap((bis) => bis.specIds)
+                    const itemNote =
+                        itemNotes.find((note) => note.itemId === item.id)?.note || ""
 
-                        return (
-                            <div
-                                key={item.id}
-                                className={cn(
-                                    "flex flex-row gap-x-8 justify-between items-center p-2 hover:bg-card/60 transition-all duration-200 rounded-xl cursor-pointer relative group border border-transparent hover:border-primary/20",
-                                    !allSpecIds.length && "opacity-30"
-                                )}
-                                onClick={(e) => {
-                                    e.preventDefault()
-                                    onEdit(item, itemNote)
-                                }}
-                            >
-                                <WowItemIcon
-                                    item={item}
-                                    iconOnly={false}
-                                    raidDiff="Mythic"
-                                    tierBanner={true}
-                                    showIlvl={false}
-                                    showRoleIcons={true}
-                                />
+                    return (
+                        <div
+                            key={item.id}
+                            className={cn(
+                                "flex flex-row gap-x-8 justify-between items-center p-2 hover:bg-card/60 transition-all duration-200 rounded-xl cursor-pointer relative group border border-transparent hover:border-primary/20",
+                                !allSpecIds.length && "opacity-30"
+                            )}
+                            onClick={(e) => {
+                                e.preventDefault()
+                                onEdit(item, itemNote)
+                            }}
+                        >
+                            <WowItemIcon
+                                item={item}
+                                iconOnly={false}
+                                raidDiff="Mythic"
+                                tierBanner={true}
+                                showIlvl={false}
+                                showRoleIcons={true}
+                            />
 
-                                <div className="flex flex-col items-center">
-                                    <div className="text-xs text-gray-400 flex items-center gap-1">
-                                        {allSpecIds.length ? (
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <span>
-                                                        {allSpecIds.length} spec
-                                                        {allSpecIds.length > 1 && "s"}
-                                                    </span>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <div className="flex flex-col gap-y-1">
-                                                        {allSpecIds.map((s) => (
-                                                            <WowSpecIcon
-                                                                key={s}
-                                                                specId={s}
-                                                                className="object-cover object-top rounded-md full h-5 w-5 border border-background"
-                                                            />
-                                                        ))}
-                                                    </div>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        ) : null}
+                            <div className="flex flex-col items-center">
+                                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                    {allSpecIds.length ? (
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <span>
+                                                    {allSpecIds.length} spec
+                                                    {allSpecIds.length > 1 && "s"}
+                                                </span>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <div className="flex flex-col gap-y-1">
+                                                    {allSpecIds.map((s) => (
+                                                        <WowSpecIcon
+                                                            key={s}
+                                                            specId={s}
+                                                            className="object-cover object-top rounded-md full h-5 w-5 border border-background"
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    ) : null}
 
-                                        {/* Note indicator */}
-                                        {itemNote && (
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <div className="text-blue-400">
-                                                        <Edit size={12} />
-                                                    </div>
-                                                </TooltipTrigger>
-                                                <TooltipContent className="max-w-xs">
-                                                    {itemNote}
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        )}
-                                    </div>
+                                    {/* Note indicator */}
+                                    {itemNote && (
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <div className="text-primary">
+                                                    <Edit size={12} />
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent className="max-w-xs">
+                                                {itemNote}
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    )}
                                 </div>
-
-                                <button className="absolute -bottom-1 -right-1 hidden group-hover:flex items-center justify-center w-5 h-5 bg-primary text-primary-foreground rounded-full shadow-md">
-                                    <Edit size={12} />
-                                </button>
                             </div>
-                        )
-                    })}
-            </div>
-        </GlassCard>
+
+                            <button className="absolute -bottom-1 -right-1 hidden group-hover:flex items-center justify-center w-5 h-5 bg-primary text-primary-foreground rounded-full shadow-md">
+                                <Edit size={12} />
+                            </button>
+                        </div>
+                    )
+                })}
+        </BossCard>
     )
 }
 

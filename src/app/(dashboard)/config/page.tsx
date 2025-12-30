@@ -2,23 +2,68 @@
 
 import { useQueryClient } from "@tanstack/react-query"
 import {
+    Clock,
     Database,
     Loader2,
     MessageSquare,
-    RefreshCcwDot,
+    Play,
+    Settings,
     Shield,
     Users,
 } from "lucide-react"
-import { useState, type JSX } from "react"
+import { useState, type JSX, type ReactNode } from "react"
 import { toast } from "sonner"
 import { importGuildMembers, syncAllCharactersBlizzard } from "@/actions/blizzard"
 import { syncDroptimizersFromDiscord } from "@/actions/droptimizer"
 import { syncItemsFromJson } from "@/actions/items"
 import { Button } from "@/components/ui/button"
 import { GlassCard } from "@/components/ui/glass-card"
-import { SectionHeader } from "@/components/ui/section-header"
 import { queryKeys } from "@/lib/queries/keys"
 import { s } from "@/lib/safe-stringify"
+
+type SyncActionCardProps = {
+    icon: ReactNode
+    title: string
+    description: string
+    isLoading: boolean
+    onSync: () => void
+}
+
+function SyncActionCard({
+    icon,
+    title,
+    description,
+    isLoading,
+    onSync,
+}: SyncActionCardProps) {
+    return (
+        <GlassCard
+            padding="lg"
+            className="flex items-start gap-4 hover:border-primary/30 transition-colors"
+        >
+            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                {icon}
+            </div>
+            <div className="flex-grow min-w-0">
+                <h3 className="font-medium text-foreground">{title}</h3>
+                <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
+            </div>
+            <Button
+                variant="secondary"
+                size="sm"
+                onClick={onSync}
+                disabled={isLoading}
+                className="flex-shrink-0"
+            >
+                {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                    <Play className="h-4 w-4" />
+                )}
+            </Button>
+        </GlassCard>
+    )
+}
 
 export default function SettingsPage(): JSX.Element {
     const queryClient = useQueryClient()
@@ -37,7 +82,6 @@ export default function SettingsPage(): JSX.Element {
             if (result.errors.length > 0) {
                 toast.warning(`${s(result.errors.length)} errors occurred during sync`)
             }
-            // Invalidate caches that depend on Blizzard data
             await Promise.all([
                 queryClient.invalidateQueries({ queryKey: [queryKeys.raidProgression] }),
                 queryClient.invalidateQueries({
@@ -104,7 +148,6 @@ export default function SettingsPage(): JSX.Element {
             if (result.errors.length > 0) {
                 toast.warning(`${s(result.errors.length)} errors occurred during import`)
             }
-            // Invalidate roster-related caches
             await Promise.all([
                 queryClient.invalidateQueries({
                     queryKey: [queryKeys.playersWithCharacters],
@@ -124,79 +167,63 @@ export default function SettingsPage(): JSX.Element {
     }
 
     return (
-        <div className="w-full min-h-screen p-8 flex flex-col gap-6">
-            <GlassCard padding="lg">
-                <h1 className="text-2xl font-bold">Settings</h1>
-            </GlassCard>
-
-            {/* Sync Actions */}
-            <GlassCard padding="lg" className="space-y-4">
-                <SectionHeader icon={<RefreshCcwDot className="w-4 h-4" />}>
-                    Sync Actions
-                </SectionHeader>
-                <div className="grid gap-3">
-                    <Button
-                        variant="secondary"
-                        onClick={() => void handleSyncBlizzard()}
-                        disabled={isSyncingBlizzard}
-                        className="justify-start"
-                    >
-                        {isSyncingBlizzard ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Shield className="mr-2 h-4 w-4" />
-                        )}
-                        Sync Blizzard API
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        onClick={() => void handleSyncDiscord()}
-                        disabled={isSyncingDiscord}
-                        className="justify-start"
-                    >
-                        {isSyncingDiscord ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <MessageSquare className="mr-2 h-4 w-4" />
-                        )}
-                        Sync Droptimizers from Discord
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        onClick={() => void handleSyncItems()}
-                        disabled={isSyncingItems}
-                        className="justify-start"
-                    >
-                        {isSyncingItems ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Database className="mr-2 h-4 w-4" />
-                        )}
-                        Sync Items Data
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        onClick={() => void handleImportGuild()}
-                        disabled={isImportingGuild}
-                        className="justify-start"
-                    >
-                        {isImportingGuild ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Users className="mr-2 h-4 w-4" />
-                        )}
-                        Import Guild Members
-                    </Button>
+        <div className="w-full min-h-screen p-8 flex flex-col gap-6 max-w-4xl mx-auto">
+            {/* Header */}
+            <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <Settings className="w-6 h-6 text-primary" />
                 </div>
-            </GlassCard>
+                <div>
+                    <h1 className="text-2xl font-bold">Settings</h1>
+                    <p className="text-sm text-muted-foreground">
+                        Manage sync operations and data imports
+                    </p>
+                </div>
+            </div>
 
-            {/* Info */}
-            <GlassCard variant="subtle" padding="lg">
-                <p className="text-sm text-muted-foreground">
-                    Sync tasks also run automatically via cron jobs every few hours. Use
-                    the buttons above to trigger a manual sync when needed.
+            {/* Sync Actions Grid */}
+            <div className="grid gap-4 md:grid-cols-2">
+                <SyncActionCard
+                    icon={<Shield className="w-5 h-5" />}
+                    title="Blizzard API"
+                    description="Sync character profiles, gear, and progression data"
+                    isLoading={isSyncingBlizzard}
+                    onSync={() => void handleSyncBlizzard()}
+                />
+
+                <SyncActionCard
+                    icon={<MessageSquare className="w-5 h-5" />}
+                    title="Discord Droptimizers"
+                    description="Import droptimizer reports from Discord (last 7 days)"
+                    isLoading={isSyncingDiscord}
+                    onSync={() => void handleSyncDiscord()}
+                />
+
+                <SyncActionCard
+                    icon={<Database className="w-5 h-5" />}
+                    title="Items Database"
+                    description="Update boss loot tables and item metadata"
+                    isLoading={isSyncingItems}
+                    onSync={() => void handleSyncItems()}
+                />
+
+                <SyncActionCard
+                    icon={<Users className="w-5 h-5" />}
+                    title="Guild Members"
+                    description="Import new members from the guild roster"
+                    isLoading={isImportingGuild}
+                    onSync={() => void handleImportGuild()}
+                />
+            </div>
+
+            {/* Info Footer */}
+            <div className="flex items-start gap-3 text-sm text-muted-foreground">
+                <Clock className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <p>
+                    These sync tasks also run automatically via scheduled jobs every few
+                    hours. Use manual sync when you need immediate updates.
                 </p>
-            </GlassCard>
+            </div>
         </div>
     )
 }

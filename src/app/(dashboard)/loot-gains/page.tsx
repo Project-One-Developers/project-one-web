@@ -1,17 +1,18 @@
 "use client"
 
-import { LoaderCircle } from "lucide-react"
-import Image from "next/image"
+import { Package } from "lucide-react"
 import { useMemo, type JSX } from "react"
 import { DroptimizersForItem } from "@/components/droptimizers-for-item"
 import { GlobalFilterUI } from "@/components/global-filter-ui"
+import { EmptyState } from "@/components/ui/empty-state"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { BossCard } from "@/components/wow/boss-card"
 import { WowItemIcon } from "@/components/wow/wow-item-icon"
 import { FilterProvider, useFilterContext } from "@/lib/filter-context"
 import { filterDroptimizer } from "@/lib/filters"
 import { useRaidLootTable } from "@/lib/queries/bosses"
 import { useLatestDroptimizers } from "@/lib/queries/droptimizers"
 import { useCharacters } from "@/lib/queries/players"
-import { encounterIcon } from "@/lib/wow-icon"
 import type { BossWithItems } from "@/shared/models/boss.model"
 import type { Character } from "@/shared/models/character.model"
 import type { Item } from "@/shared/models/item.model"
@@ -44,7 +45,6 @@ const BossPanel = ({
     }
 
     const filteredItems = boss.items.filter(itemHasDroptimizers)
-    const bossImage = encounterIcon.get(boss.id)
 
     // Don't render empty boss panels when hiding items without droptimizers
     if (hideItemsWithoutDropt && filteredItems.length === 0) {
@@ -52,54 +52,37 @@ const BossPanel = ({
     }
 
     return (
-        <div className="flex flex-col bg-muted rounded-lg overflow-hidden min-w-[300px]">
-            {/* Boss header: cover + name */}
-            <div className="flex flex-col gap-y-2">
-                {bossImage && (
-                    <Image
-                        src={bossImage}
-                        alt={`${boss.name} icon`}
-                        width={300}
-                        height={128}
-                        className="w-full h-32 object-scale-down"
-                        unoptimized
-                    />
-                )}
-                <h2 className="text-center text-xs font-bold">{boss.name}</h2>
-            </div>
-            {/* Boss items */}
-            <div className="flex flex-col gap-y-3 p-6">
-                {filteredItems.length > 0 ? (
-                    filteredItems
-                        .sort((a, b) => a.id - b.id)
-                        .map((item) => (
-                            <div
-                                key={item.id}
-                                className="flex flex-row gap-x-8 justify-between items-center p-1 hover:bg-gray-700 transition-colors duration-200 rounded-md"
-                            >
-                                <WowItemIcon
+        <BossCard bossId={boss.id} bossName={boss.name}>
+            {filteredItems.length > 0 ? (
+                filteredItems
+                    .sort((a, b) => a.id - b.id)
+                    .map((item) => (
+                        <div
+                            key={item.id}
+                            className="flex flex-row gap-x-8 justify-between items-center p-2 hover:bg-card/60 transition-all duration-200 rounded-xl border border-transparent hover:border-primary/20"
+                        >
+                            <WowItemIcon
+                                item={item}
+                                iconOnly={false}
+                                raidDiff={diff}
+                                tierBanner={true}
+                                showRoleIcons={true}
+                            />
+                            <div className="flex flex-row items-center gap-x-2">
+                                <DroptimizersForItem
                                     item={item}
-                                    iconOnly={false}
-                                    raidDiff={diff}
-                                    tierBanner={true}
-                                    showRoleIcons={true}
+                                    droptimizers={droptimizers}
+                                    characters={characters}
                                 />
-                                <div className="flex flex-row items-center gap-x-2">
-                                    <DroptimizersForItem
-                                        item={item}
-                                        droptimizers={droptimizers}
-                                        characters={characters}
-                                    />
-                                </div>
                             </div>
-                        ))
-                ) : (
-                    <p className="text-center text-sm text-gray-500">
-                        No upgrades available
-                    </p>
-                )}
-            </div>
-        </div>
+                        </div>
+                    ))
+            ) : (
+                <p className="text-center text-sm text-muted-foreground">
+                    No upgrades available
+                </p>
+            )}
+        </BossCard>
     )
 }
 
@@ -119,11 +102,7 @@ function LootGainsContent(): JSX.Element {
     }, [droptimizersRes.data, charRes.data, filter])
 
     if (raidLootTableRes.isLoading || droptimizersRes.isLoading || charRes.isLoading) {
-        return (
-            <div className="flex flex-col items-center w-full justify-center mt-10 mb-10">
-                <LoaderCircle className="animate-spin text-5xl" />
-            </div>
-        )
+        return <LoadingSpinner size="lg" iconSize="lg" text="Loading loot gains..." />
     }
 
     const encounterList = raidLootTableRes.data ?? []
@@ -147,11 +126,11 @@ function LootGainsContent(): JSX.Element {
             </div>
 
             {encounterList.length === 0 && (
-                <div className="bg-muted p-8 rounded-lg text-center">
-                    <p className="text-muted-foreground">
-                        No raid loot table data available.
-                    </p>
-                </div>
+                <EmptyState
+                    icon={<Package className="w-8 h-8" />}
+                    title="No loot data"
+                    description="No raid loot table data available"
+                />
             )}
 
             {/* Bottom Right Filter button */}
