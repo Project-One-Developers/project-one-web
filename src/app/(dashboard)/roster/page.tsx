@@ -1,22 +1,32 @@
 "use client"
 
-import { Download, LoaderCircle, PlusIcon, UserRoundPlus, Users, X } from "lucide-react"
+import {
+    AlertTriangle,
+    Download,
+    LoaderCircle,
+    PlusIcon,
+    Search,
+    Trash2,
+    UserRoundPlus,
+    Users,
+} from "lucide-react"
 import Image from "next/image"
 import { type JSX, useMemo, useState } from "react"
 import CharacterDialog from "@/components/character-dialog"
 import PlayerDeleteDialog from "@/components/player-delete-dialog"
 import PlayerDialog from "@/components/player-dialog"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { CharacterOverviewIcon } from "@/components/wow/character-overview-icon"
 import { usePlayersSummaryCompact } from "@/lib/queries/players"
 import type { Player } from "@/shared/models/character.model"
 import type { PlayerWithSummaryCompact } from "@/shared/types/types"
+import { s } from "@/lib/safe-stringify"
 
 type ItemLevelStats = {
     mean: number
     standardDeviation: number
     threshold: number
+    lowCount: number
 }
 
 export default function RosterPage(): JSX.Element {
@@ -38,7 +48,7 @@ export default function RosterPage(): JSX.Element {
             .filter((level) => !isNaN(level) && level > 0)
 
         if (validItemLevels.length === 0) {
-            return { mean: 0, standardDeviation: 0, threshold: 0 }
+            return { mean: 0, standardDeviation: 0, threshold: 0, lowCount: 0 }
         }
 
         const mean =
@@ -49,9 +59,15 @@ export default function RosterPage(): JSX.Element {
             validItemLevels.length
         const standardDeviation = Math.sqrt(variance)
         const threshold = mean - 1.0 * standardDeviation
+        const lowCount = validItemLevels.filter((level) => level < threshold).length
 
-        return { mean, standardDeviation, threshold }
+        return { mean, standardDeviation, threshold, lowCount }
     }, [players])
+
+    const totalCharacters = useMemo(
+        () => players.reduce((sum, p) => sum + p.charsSummary.length, 0),
+        [players]
+    )
 
     const isLowItemLevel = (itemLevel: string): boolean => {
         const level = parseInt(itemLevel)
@@ -100,8 +116,12 @@ export default function RosterPage(): JSX.Element {
 
     if (playersQuery.isLoading) {
         return (
-            <div className="flex flex-col items-center w-full justify-center mt-10 mb-10">
-                <LoaderCircle className="animate-spin text-5xl" />
+            <div className="flex flex-col items-center w-full justify-center min-h-[50vh]">
+                <div className="relative">
+                    <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-pulse" />
+                    <LoaderCircle className="relative animate-spin w-12 h-12 text-primary" />
+                </div>
+                <p className="mt-4 text-muted-foreground text-sm">Loading roster...</p>
             </div>
         )
     }
@@ -130,125 +150,183 @@ export default function RosterPage(): JSX.Element {
     }
 
     return (
-        <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-8 items-center p-8 relative">
-            {/* Search Bar with External Icons */}
-            <div className="w-full mb-4 flex items-center gap-4">
-                <Input
-                    type="text"
-                    placeholder="Search players or characters..."
-                    value={searchQuery}
-                    onChange={(e) => {
-                        setSearchQuery(e.target.value)
-                    }}
-                    className="flex-1 p-3 border border-gray-300 rounded-md"
-                />
-
-                {/* External Site Icons */}
-                <div className="flex items-center gap-2">
-                    {/* Raider.io */}
-                    <a
-                        href="https://raider.io/guilds/eu/pozzo-delleternit%C3%A0/Project%20One"
-                        rel="noreferrer"
-                        target="_blank"
-                        className="rounded-full bg-primary text-background hover:bg-primary/80 w-10 h-10 flex items-center justify-center cursor-pointer"
-                    >
-                        <Image
-                            src="https://cdn.raiderio.net/images/mstile-150x150.png"
-                            title="Project One Raider.io"
-                            alt="Raider.io"
-                            width={40}
-                            height={40}
-                            className="hover:scale-125 ease-linear transition-transform"
+        <div className="w-full min-h-screen flex flex-col p-6 md:p-8">
+            {/* Header Section */}
+            <div className="mb-8 space-y-6">
+                {/* Search and External Links Row */}
+                <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+                    {/* Search Bar */}
+                    <div className="relative flex-1 max-w-xl">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <input
+                            type="text"
+                            placeholder="Search players or characters..."
+                            value={searchQuery}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value)
+                            }}
+                            className="w-full pl-10 pr-4 py-2.5 bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
                         />
-                    </a>
+                    </div>
 
-                    {/* WarcraftLogs */}
-                    <a
-                        href="https://www.warcraftlogs.com/guild/reports-list/633223"
-                        rel="noreferrer"
-                        target="_blank"
-                        className="rounded-full bg-primary text-background hover:bg-primary/80 w-10 h-10 flex items-center justify-center cursor-pointer"
-                    >
-                        <Image
-                            src="https://assets.rpglogs.com/img/warcraft/favicon.png?v=4"
-                            title="WoW Progress Guild Page"
-                            alt="WarcraftLogs"
-                            width={40}
-                            height={40}
-                            className="hover:scale-125 ease-linear transition-transform"
-                        />
-                    </a>
+                    {/* External Site Icons */}
+                    <div className="flex items-center gap-2">
+                        <a
+                            href="https://raider.io/guilds/eu/pozzo-delleternit%C3%A0/Project%20One"
+                            rel="noreferrer"
+                            target="_blank"
+                            className="group relative rounded-xl bg-card/50 backdrop-blur-sm border border-border/50 w-10 h-10 flex items-center justify-center hover:border-primary/50 hover:bg-primary/10 transition-all duration-200"
+                            title="Raider.io"
+                        >
+                            <Image
+                                src="https://cdn.raiderio.net/images/mstile-150x150.png"
+                                alt="Raider.io"
+                                width={24}
+                                height={24}
+                                className="rounded group-hover:scale-110 transition-transform"
+                            />
+                        </a>
+                        <a
+                            href="https://www.warcraftlogs.com/guild/reports-list/633223"
+                            rel="noreferrer"
+                            target="_blank"
+                            className="group relative rounded-xl bg-card/50 backdrop-blur-sm border border-border/50 w-10 h-10 flex items-center justify-center hover:border-primary/50 hover:bg-primary/10 transition-all duration-200"
+                            title="WarcraftLogs"
+                        >
+                            <Image
+                                src="https://assets.rpglogs.com/img/warcraft/favicon.png?v=4"
+                                alt="WarcraftLogs"
+                                width={24}
+                                height={24}
+                                className="rounded group-hover:scale-110 transition-transform"
+                            />
+                        </a>
+                    </div>
+                </div>
+
+                {/* Stats Row */}
+                <div className="flex flex-wrap gap-3">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-card/30 backdrop-blur-sm rounded-full border border-border/30 text-sm">
+                        <Users className="w-4 h-4 text-primary" />
+                        <span className="text-muted-foreground">Players</span>
+                        <span className="font-semibold">{s(players.length)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-card/30 backdrop-blur-sm rounded-full border border-border/30 text-sm">
+                        <span className="w-4 h-4 text-center text-primary font-bold">⚔</span>
+                        <span className="text-muted-foreground">Characters</span>
+                        <span className="font-semibold">{s(totalCharacters)}</span>
+                    </div>
+                    {itemLevelStats.mean > 0 && (
+                        <div className="flex items-center gap-2 px-4 py-2 bg-card/30 backdrop-blur-sm rounded-full border border-border/30 text-sm">
+                            <span className="w-4 h-4 text-center text-blue-400 font-bold">◆</span>
+                            <span className="text-muted-foreground">Avg iLvl</span>
+                            <span className="font-semibold text-blue-400">
+                                {Math.round(itemLevelStats.mean)}
+                            </span>
+                        </div>
+                    )}
+                    {itemLevelStats.lowCount > 0 && (
+                        <div className="flex items-center gap-2 px-4 py-2 bg-orange-500/10 backdrop-blur-sm rounded-full border border-orange-500/30 text-sm">
+                            <AlertTriangle className="w-4 h-4 text-orange-400" />
+                            <span className="text-orange-300/80">Low Gear</span>
+                            <span className="font-semibold text-orange-400">
+                                {s(itemLevelStats.lowCount)}
+                            </span>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            <div className="flex flex-wrap gap-x-4 gap-y-4">
+            {/* Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                 {filteredPlayers.map((player) => (
                     <div
                         key={player.id}
-                        className="flex flex-col justify-between p-6 bg-muted h-[150px] w-[250px] rounded-lg relative"
+                        className="group relative flex flex-col p-5 bg-card/40 backdrop-blur-sm border border-border/40 rounded-2xl hover:border-primary/30 hover:bg-card/60 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
                     >
-                        {/* Top Right Menu */}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute top-3 right-2"
-                            onClick={() => {
-                                handleDeleteClick(player)
-                            }}
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
+                        {/* Hover Actions */}
+                        <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-lg hover:bg-destructive/20 hover:text-destructive"
+                                onClick={() => {
+                                    handleDeleteClick(player)
+                                }}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
 
-                        <h2 className="font-black text-2xl mb-2">{player.name}</h2>
-                        <div className="flex flex-row items-center">
+                        {/* Player Name */}
+                        <h2 className="font-bold text-lg mb-4 pr-10 truncate">{player.name}</h2>
+
+                        {/* Characters Row */}
+                        <div className="flex items-end gap-2 mt-auto">
                             {player.charsSummary.length > 0 ? (
                                 <CharacterOverviewIcon
                                     charsWithSummary={player.charsSummary}
                                     isLowItemLevel={isLowItemLevel}
                                 />
                             ) : (
-                                <div className="flex flex-col items-center">
-                                    <div className="flex items-center justify-center h-12 w-12 rounded-full bg-muted-foreground/20 border-2 border-dashed border-muted-foreground/40">
-                                        <Users className="w-6 h-6 text-muted-foreground/60" />
+                                <div className="flex flex-col items-center opacity-50">
+                                    <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-muted/50 border-2 border-dashed border-muted-foreground/30">
+                                        <Users className="w-5 h-5 text-muted-foreground/50" />
                                     </div>
-                                    <div className="text-xs text-center mt-1 font-medium text-muted-foreground/60">
+                                    <span className="text-[10px] mt-1.5 text-muted-foreground/50 font-medium">
                                         No chars
-                                    </div>
+                                    </span>
                                 </div>
                             )}
-                            <div
-                                className="ml-5 mb-3"
+
+                            {/* Add Character Button */}
+                            <button
                                 onClick={() => {
                                     handleNewCharClick(player)
                                 }}
+                                className="flex flex-col items-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-105"
                             >
-                                <PlusIcon className="w-5 h-5 cursor-pointer hover:text-primary transition-colors" />
-                            </div>
+                                <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10 border border-dashed border-primary/40 hover:bg-primary/20 hover:border-primary/60 transition-colors">
+                                    <PlusIcon className="w-4 h-4 text-primary" />
+                                </div>
+                            </button>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Floating Buttons */}
-            <div className="fixed bottom-5 right-6 flex flex-col gap-3 z-50">
-                {/* Export CSV Button */}
+            {/* Empty State */}
+            {filteredPlayers.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                        <Users className="w-8 h-8 text-muted-foreground/50" />
+                    </div>
+                    <h3 className="text-lg font-medium mb-1">No players found</h3>
+                    <p className="text-sm text-muted-foreground">
+                        {searchQuery
+                            ? "Try adjusting your search"
+                            : "Add your first player to get started"}
+                    </p>
+                </div>
+            )}
+
+            {/* Floating Action Buttons */}
+            <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
                 <button
                     onClick={handleExportCsv}
-                    className="w-14 h-14 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-lg transition-all duration-200 flex items-center justify-center"
+                    className="group w-12 h-12 rounded-xl bg-card/80 backdrop-blur-sm border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/50 hover:bg-card shadow-lg transition-all duration-200 flex items-center justify-center"
                     title="Export Roster as CSV"
                 >
-                    <Download className="w-6 h-6 hover:scale-110 ease-linear transition-transform" />
+                    <Download className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 </button>
-
-                {/* Add Player Button */}
                 <button
                     onClick={() => {
                         setIsAddDialogOpen(true)
                     }}
-                    className="w-14 h-14 rounded-full bg-primary text-background hover:bg-primary/80 shadow-lg transition-all duration-200 flex items-center justify-center"
+                    className="group w-12 h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200 flex items-center justify-center"
                     title="Add Player"
                 >
-                    <UserRoundPlus className="w-6 h-6" />
+                    <UserRoundPlus className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 </button>
             </div>
 

@@ -53,8 +53,12 @@ export const CharGameInfoPanel = ({ character }: CharGameInfoPanelProps) => {
 
     if (charGameInfoQuery.isLoading) {
         return (
-            <div className="flex flex-col items-center w-full justify-center mt-10 mb-10">
-                <LoaderCircle className="animate-spin text-5xl" />
+            <div className="flex flex-col items-center w-full justify-center min-h-[40vh]">
+                <div className="relative">
+                    <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-pulse" />
+                    <LoaderCircle className="relative animate-spin w-10 h-10 text-primary" />
+                </div>
+                <p className="mt-4 text-muted-foreground text-sm">Loading gear data...</p>
             </div>
         )
     }
@@ -65,7 +69,7 @@ export const CharGameInfoPanel = ({ character }: CharGameInfoPanelProps) => {
             <Collapsible open={sidebarOpen} onOpenChange={setSidebarOpen}>
                 <div className="flex items-start gap-2 h-full">
                     {/* Sidebar Toggle Button */}
-                    <CollapsibleTrigger className="sticky top-4 z-10 p-1.5 bg-muted hover:bg-muted/80 rounded-lg transition-colors">
+                    <CollapsibleTrigger className="sticky top-4 z-10 p-2 bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card hover:border-primary/30 rounded-xl transition-all">
                         {sidebarOpen ? (
                             <PanelLeftClose className="h-4 w-4" />
                         ) : (
@@ -85,7 +89,7 @@ export const CharGameInfoPanel = ({ character }: CharGameInfoPanelProps) => {
 
             {/* Main Content - Character Gear */}
             <div className="flex-1 min-w-0 h-full">
-                <div className="bg-muted rounded-lg relative h-full">
+                <div className="bg-card/40 backdrop-blur-sm border border-border/40 rounded-2xl relative h-full overflow-hidden">
                     <GearInfo
                         blizzard={blizzardData}
                         droptimizer={droptimizer}
@@ -118,19 +122,24 @@ export const CurrenciesPanel = ({ currencies }: CurrenciesPanelProps) => {
         .sort((a, b) => a.id - b.id)
 
     return (
-        <div className="flex flex-col p-4 bg-muted rounded-lg relative">
-            <h4 className="text-xs font-medium mb-2 text-muted-foreground">Currencies</h4>
-            <div className="flex gap-3">
+        <div className="flex flex-col p-4 bg-card/40 backdrop-blur-sm border border-border/40 rounded-2xl">
+            <h4 className="text-xs font-medium mb-3 text-muted-foreground uppercase tracking-wider">
+                Currencies
+            </h4>
+            <div className="flex gap-3 flex-wrap">
                 {relevantCurrencies.length === 0 ? (
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-muted-foreground/60">
                         No currency info found
                     </div>
                 ) : (
                     relevantCurrencies.map((currency) => (
-                        <div key={currency.id} className="flex items-center gap-2">
+                        <div
+                            key={currency.id}
+                            className="flex items-center gap-2 px-2 py-1 bg-card/30 rounded-lg border border-border/30"
+                        >
                             <WowCurrencyIcon
                                 currency={currency}
-                                iconClassName="object-cover object-top rounded-lg h-6 w-6 border border-background"
+                                iconClassName="object-cover object-top rounded-lg h-6 w-6 border border-border/50"
                             />
                         </div>
                     ))
@@ -234,15 +243,21 @@ const GearInfo = ({
 
     if (defaultTab === null) {
         return (
-            <div className="p-6 text-center text-muted-foreground">
-                No gear data available from any source
+            <div className="flex flex-col items-center justify-center h-full py-16 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                    <span className="text-2xl opacity-50">⚔</span>
+                </div>
+                <h3 className="text-base font-medium mb-1">No gear data available</h3>
+                <p className="text-sm text-muted-foreground">
+                    Import a Droptimizer report or sync from the Armory
+                </p>
             </div>
         )
     }
 
     return (
         <div
-            className="rounded-lg w-full h-full relative shadow-lg p-3 overflow-hidden flex flex-col"
+            className="rounded-2xl w-full h-full relative shadow-lg p-4 overflow-hidden flex flex-col"
             style={classBackgroundStyle}
         >
             {/* Noise texture overlay for premium feel */}

@@ -1,5 +1,6 @@
 "use client"
 
+import { Crown } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { type JSX } from "react"
@@ -18,23 +19,35 @@ const CharacterTooltip = ({
     summary: CharacterSummaryType
     isLowItemLevel: boolean
 }) => (
-    <div className="flex flex-col gap-1">
-        <div className="font-medium">
-            {summary.character.name} ({summary.character.main ? "Main" : "Alt"})
+    <div className="flex flex-col gap-2 min-w-[180px]">
+        <div className="flex items-center gap-2">
+            <span className="font-semibold text-foreground">{summary.character.name}</span>
+            {summary.character.main && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-medium">
+                    MAIN
+                </span>
+            )}
         </div>
-        <div className="text-zinc-400">
+        <div className="text-xs text-muted-foreground">
             {summary.character.realm.replaceAll("-", " ")}
         </div>
-        <div
-            className={cn(
-                "font-medium",
-                isLowItemLevel ? "text-red-400" : "text-blue-400"
+        <div className="flex items-center gap-2 pt-1 border-t border-border/50">
+            <span className="text-xs text-muted-foreground">Item Level</span>
+            <span
+                className={cn(
+                    "font-bold text-sm",
+                    isLowItemLevel ? "text-orange-400" : "text-blue-400"
+                )}
+            >
+                {summary.itemLevel}
+            </span>
+            {isLowItemLevel && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400">
+                    Low
+                </span>
             )}
-        >
-            Item Level: {summary.itemLevel}
-            {isLowItemLevel && " (Below Average)"}
         </div>
-        <div className="flex flex-row gap-2 pt-1">
+        <div className="flex flex-row gap-2 pt-2">
             <WowCharacterLink character={summary.character} site="raiderio" />
             <WowCharacterLink character={summary.character} site="warcraftlogs" />
             <WowCharacterLink character={summary.character} site="armory" />
@@ -53,75 +66,81 @@ export const CharacterOverviewIcon = ({
 }): JSX.Element => {
     const router = useRouter()
 
-    const getBorderColor = (char: CharacterSummaryType): string => {
-        if (char.character.main) {
-            return "border-red-500"
-        }
+    const sortedChars = charsWithSummary.sort(
+        (a, b) => (b.character.main ? 1 : 0) - (a.character.main ? 1 : 0)
+    )
 
-        if (isLowItemLevel?.(char.itemLevel)) {
-            return "border-orange-500"
-        }
-
-        return "border-background"
-    }
-
-    const getItemLevelTextColor = (char: CharacterSummaryType): string => {
-        if (isLowItemLevel?.(char.itemLevel)) {
-            return "text-orange-400"
-        }
-        return "text-foreground"
-    }
+    const totalChars = sortedChars.length
 
     return (
-        <div className={cn("flex items-center gap-2", className)}>
-            {charsWithSummary
-                .sort((a, b) => (b.character.main ? 1 : 0) - (a.character.main ? 1 : 0))
-                .map((item) => {
-                    const isLow = isLowItemLevel ? isLowItemLevel(item.itemLevel) : false
-                    return (
-                        <div className="-mr-4 relative group" key={item.character.id}>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <div
-                                        className="cursor-pointer flex flex-col items-center"
-                                        onClick={() => {
-                                            router.push(`/roster/${item.character.id}`)
-                                        }}
-                                    >
-                                        <Image
-                                            height={48}
-                                            width={48}
-                                            src={
-                                                classIcon.get(item.character.class) ?? ""
-                                            }
-                                            alt={item.character.class}
-                                            className={cn(
-                                                "object-cover !m-0 !p-0 object-top rounded-full border group-hover:scale-105 group-hover:z-30 relative transition duration-500",
-                                                getBorderColor(item),
-                                                isLow &&
-                                                    "ring-2 ring-orange-300 ring-opacity-50"
-                                            )}
-                                        />
-                                        <div
-                                            className={cn(
-                                                "text-xs text-center mt-1 font-medium",
-                                                getItemLevelTextColor(item)
-                                            )}
-                                        >
-                                            {Math.round(parseInt(item.itemLevel)) || "?"}
-                                        </div>
+        <div className={cn("flex items-end gap-1", className)}>
+            {sortedChars.map((item, index) => {
+                const isLow = isLowItemLevel ? isLowItemLevel(item.itemLevel) : false
+                const isMain = item.character.main
+                const iconSize = isMain ? 52 : 40
+                // Main (first) should be on top, then descending z-index for alts
+                const zIndex = totalChars - index
+
+                return (
+                    <Tooltip key={item.character.id}>
+                        <TooltipTrigger asChild>
+                            <button
+                                style={{ zIndex }}
+                                className={cn(
+                                    "relative flex flex-col items-center cursor-pointer transition-all duration-200 hover:!z-50",
+                                    index > 0 && "-ml-2",
+                                    "hover:scale-110"
+                                )}
+                                onClick={() => {
+                                    router.push(`/roster/${item.character.id}`)
+                                }}
+                            >
+                                {/* Main indicator */}
+                                {isMain && (
+                                    <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 z-10">
+                                        <Crown className="w-3 h-3 text-amber-400 fill-amber-400" />
                                     </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <CharacterTooltip
-                                        summary={item}
-                                        isLowItemLevel={isLow}
+                                )}
+
+                                {/* Character Icon */}
+                                <div
+                                    className={cn(
+                                        "relative rounded-xl overflow-hidden border-2 transition-all",
+                                        isMain
+                                            ? "border-amber-500/60 shadow-md shadow-amber-500/20"
+                                            : isLow
+                                              ? "border-orange-500/50"
+                                              : "border-border/50"
+                                    )}
+                                >
+                                    <Image
+                                        height={iconSize}
+                                        width={iconSize}
+                                        src={classIcon.get(item.character.class) ?? ""}
+                                        alt={item.character.class}
+                                        className="object-cover"
                                     />
-                                </TooltipContent>
-                            </Tooltip>
-                        </div>
-                    )
-                })}
+
+                                    {/* Item Level Badge */}
+                                    <div
+                                        className={cn(
+                                            "absolute -bottom-0 inset-x-0 text-center py-0.5 text-[10px] font-bold backdrop-blur-sm",
+                                            isLow
+                                                ? "bg-orange-500/80 text-white"
+                                                : "bg-black/60 text-white"
+                                        )}
+                                    >
+                                        {Math.round(parseInt(item.itemLevel)) || "?"}
+                                    </div>
+                                </div>
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="bg-popover/95 backdrop-blur-sm">
+                            <CharacterTooltip summary={item} isLowItemLevel={isLow} />
+                        </TooltipContent>
+                    </Tooltip>
+                )
+            })}
         </div>
     )
 }

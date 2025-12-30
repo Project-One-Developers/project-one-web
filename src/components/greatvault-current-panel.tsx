@@ -19,8 +19,8 @@ export const CurrentGreatVaultPanel = ({ droptimizer }: CurrentGreatVaultPanelPr
     }, [droptimizer])
 
     return (
-        <div className="flex flex-col p-6 bg-muted rounded-lg relative">
-            <h4 className="text-sm font-medium mb-3 text-muted-foreground">
+        <div className="flex flex-col p-4 bg-card/40 backdrop-blur-sm border border-border/40 rounded-2xl">
+            <h4 className="text-xs font-medium mb-3 text-muted-foreground uppercase tracking-wider">
                 Current Great Vault
             </h4>
             <div className="flex flex-wrap gap-2">
@@ -29,7 +29,7 @@ export const CurrentGreatVaultPanel = ({ droptimizer }: CurrentGreatVaultPanelPr
                         <WowGearIcon key={gear.item.id} gearItem={gear} />
                     ))
                 ) : (
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-muted-foreground/60">
                         No great vault info for this week
                     </div>
                 )}
