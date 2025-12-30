@@ -81,7 +81,7 @@ export default function CharacterDialog({
         }
         return {
             name: "",
-            realm: "pozzo-delleternità",
+            realm: "Pozzo dell'Eternità",
             class: "Death Knight",
             role: "DPS",
             main: false,
@@ -108,7 +108,7 @@ export default function CharacterDialog({
     const resetForm = () => {
         setFormData({
             name: "",
-            realm: "pozzo-delleternità",
+            realm: "Pozzo dell'Eternità",
             class: "Death Knight",
             role: "DPS",
             main: false,
@@ -252,7 +252,7 @@ export default function CharacterDialog({
                             </SelectTrigger>
                             <SelectContent>
                                 {REALMS.EU.map((r) => (
-                                    <SelectItem key={r.slug} value={r.slug}>
+                                    <SelectItem key={r.slug} value={r.name}>
                                         {r.name}
                                     </SelectItem>
                                 ))}

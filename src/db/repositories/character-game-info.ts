@@ -1,6 +1,6 @@
 import { and, desc, eq, or } from "drizzle-orm"
 import { db } from "@/db"
-import { charBlizzardTable, droptimizerTable } from "@/db/schema"
+import { charBlizzardTable, charTable, droptimizerTable } from "@/db/schema"
 import { mapAndParse } from "@/db/utils"
 import {
     characterGameInfoCompactSchema,
@@ -61,12 +61,13 @@ export const characterGameInfoRepo = {
             })
             .from(latestDroptimizerSq)
             .leftJoin(
-                charBlizzardTable,
+                charTable,
                 and(
-                    eq(charBlizzardTable.name, latestDroptimizerSq.characterName),
-                    eq(charBlizzardTable.realm, latestDroptimizerSq.characterServer)
+                    eq(charTable.name, latestDroptimizerSq.characterName),
+                    eq(charTable.realm, latestDroptimizerSq.characterServer)
                 )
             )
+            .leftJoin(charBlizzardTable, eq(charBlizzardTable.characterId, charTable.id))
 
         return mapAndParse(
             results,
@@ -145,12 +146,13 @@ export const characterGameInfoRepo = {
             })
             .from(latestDroptimizerSq)
             .leftJoin(
-                charBlizzardTable,
+                charTable,
                 and(
-                    eq(charBlizzardTable.name, latestDroptimizerSq.characterName),
-                    eq(charBlizzardTable.realm, latestDroptimizerSq.characterServer)
+                    eq(charTable.name, latestDroptimizerSq.characterName),
+                    eq(charTable.realm, latestDroptimizerSq.characterServer)
                 )
             )
+            .leftJoin(charBlizzardTable, eq(charBlizzardTable.characterId, charTable.id))
 
         return mapAndParse(
             results,

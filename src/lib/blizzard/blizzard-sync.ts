@@ -1,3 +1,4 @@
+import type { CharacterBlizzardInsert } from "@/db/repositories/blizzard"
 import { bossRepo } from "@/db/repositories/bosses"
 import { itemRepo } from "@/db/repositories/items"
 import { logger } from "@/lib/logger"
@@ -30,18 +31,6 @@ import {
 // Types
 // ============================================================================
 
-export type CharacterBlizzardDb = {
-    name: string
-    realm: string
-    race: string | null
-    blizzardCharacterId: number
-    syncedAt: number
-    lastLoginAt: number
-    averageItemLevel: number | null
-    equippedItemLevel: number | null
-    itemsEquipped: GearItem[]
-}
-
 export type CharacterEncounterInsert = {
     characterId: string
     bossId: number
@@ -53,7 +42,7 @@ export type CharacterEncounterInsert = {
 }
 
 export type ParsedBlizzardData = {
-    character: CharacterBlizzardDb
+    character: CharacterBlizzardInsert
     encounters: CharacterEncounterInsert[]
 }
 
@@ -192,7 +181,7 @@ export async function fetchAndParseCharacter(
     // Load items from DB if not cached
     itemsInDb ??= await itemRepo.getAll()
 
-    const character = await parseCharacterData(name, realm, profile, equipment)
+    const character = await parseCharacterData(characterId, profile, equipment)
     const encounters = await parseEncounterData(characterId, raids, bossLookup)
 
     return { character, encounters }
@@ -202,14 +191,12 @@ export async function fetchAndParseCharacter(
  * Parse character profile and equipment into our data model
  */
 async function parseCharacterData(
-    name: string,
-    realm: string,
+    characterId: string,
     profile: CharacterProfileResponse,
     equipment: EquipmentResponse | null
-): Promise<CharacterBlizzardDb> {
+): Promise<CharacterBlizzardInsert> {
     return {
-        name,
-        realm,
+        characterId,
         race: profile.race.name,
         blizzardCharacterId: profile.id,
         syncedAt: getUnixTimestamp(),

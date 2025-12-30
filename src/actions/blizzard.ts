@@ -2,11 +2,7 @@
 
 import { groupBy, keyBy, partition } from "es-toolkit"
 import { match } from "ts-pattern"
-import {
-    blizzardRepo,
-    type CharacterBlizzardDb,
-    type CharacterEncounterInsert,
-} from "@/db/repositories/blizzard"
+import { blizzardRepo, type CharacterBlizzardDb } from "@/db/repositories/blizzard"
 import { bossRepo } from "@/db/repositories/bosses"
 import { characterRepo } from "@/db/repositories/characters"
 import { playerRepo } from "@/db/repositories/player.repo"
@@ -114,19 +110,9 @@ export async function syncAllCharactersBlizzard(): Promise<{
     const errors = failures.map((r) => r.error)
 
     if (results.length > 0) {
-        // Build roster lookup for O(1) access
-        const rosterLookup = new Map(roster.map((c) => [`${c.name}-${c.realm}`, c.id]))
-
         const characters = results.map((r) => r.character)
-        const encountersByCharacter = new Map(
-            results
-                .map((r): [string, CharacterEncounterInsert[]] | null => {
-                    const charId = rosterLookup.get(
-                        `${r.character.name}-${r.character.realm}`
-                    )
-                    return charId ? [charId, r.encounters] : null
-                })
-                .filter(defined)
+        const encountersByCharacter = Object.fromEntries(
+            results.map((r) => [r.character.characterId, r.encounters])
         )
 
         await Promise.all([

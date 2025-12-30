@@ -67,24 +67,18 @@ export const charTable = pgTable(
     ]
 )
 
-export const charBlizzardTable = pgTable(
-    "characters_blizzard",
-    {
-        name: varchar("name", { length: 24 }).notNull(),
-        realm: varchar("realm").notNull(),
-        race: varchar("race"),
-        blizzardCharacterId: integer("blizzard_character_id").notNull(),
-        syncedAt: integer("synced_at").notNull(), // unix timestamp when we synced
-        lastLoginAt: integer("last_login_at").notNull(), // from Blizzard API
-        averageItemLevel: integer("average_item_level"),
-        equippedItemLevel: integer("equipped_item_level"),
-        itemsEquipped: jsonb("items_equipped").$type<GearItem[]>().notNull(),
-    },
-    (t) => [
-        primaryKey({ columns: [t.name, t.realm] }),
-        index("idx_blizzard_name_realm").on(t.name, t.realm),
-    ]
-)
+export const charBlizzardTable = pgTable("characters_blizzard", {
+    characterId: varchar("character_id")
+        .references(() => charTable.id, { onDelete: "cascade" })
+        .primaryKey(),
+    race: varchar("race"),
+    blizzardCharacterId: integer("blizzard_character_id").notNull(),
+    syncedAt: integer("synced_at").notNull(), // unix timestamp when we synced
+    lastLoginAt: integer("last_login_at").notNull(), // from Blizzard API
+    averageItemLevel: integer("average_item_level"),
+    equippedItemLevel: integer("equipped_item_level"),
+    itemsEquipped: jsonb("items_equipped").$type<GearItem[]>().notNull(),
+})
 
 // Normalized raid encounter progression
 export const characterEncounterTable = pgTable(

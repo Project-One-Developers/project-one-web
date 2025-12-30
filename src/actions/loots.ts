@@ -315,7 +315,8 @@ export async function getLootAssignmentInfo(lootId: string): Promise<LootAssignm
             loot.item.classes === null || loot.item.classes.includes(character.class)
     )
 
-    // Build char lookup for scoped queries
+    // Build lookups for scoped queries
+    const charIds = filteredRoster.map((c) => c.id)
     const charLookups = filteredRoster.map((c) => ({ name: c.name, realm: c.realm }))
 
     // Step 3: Fetch only data for eligible characters + session loots (not all historical)
@@ -328,19 +329,19 @@ export async function getLootAssignmentInfo(lootId: string): Promise<LootAssignm
         itemToTiersetMapping,
     ] = await Promise.all([
         droptimizerRepo.getLatestByChars(charLookups),
-        blizzardRepo.getByChars(charLookups),
+        blizzardRepo.getByCharIds(charIds),
         simcRepo.getByChars(charLookups),
         lootRepo.getByRaidSessionIdWithAssigned(loot.raidSessionId),
         bisListRepo.getAll(),
         itemRepo.getTiersetMapping(),
     ])
 
-    // Step 4: Build lookup objects O(n) once instead of O(n²) filtering
+    // Step 4: Build lookup objects O(1) access by characterId or name-realm
     const droptimizerByChar = groupBy(
         droptimizers,
         (d) => `${d.charInfo.name}-${d.charInfo.server}`
     )
-    const blizzardByChar = keyBy(blizzardData, (b) => `${b.name}-${b.realm}`)
+    const blizzardByCharId = keyBy(blizzardData, (b) => b.characterId)
     const simcByChar = keyBy(simcData, (s) => `${s.charName}-${s.charRealm}`)
 
     const maxGainFromAllDroptimizers = Math.max(
@@ -353,7 +354,7 @@ export async function getLootAssignmentInfo(lootId: string): Promise<LootAssignm
 
         // O(1) lookups instead of O(n) filtering
         const charDroptimizers = droptimizerByChar[charKey] ?? []
-        const charBlizzard = blizzardByChar[charKey] ?? null
+        const charBlizzard = blizzardByCharId[char.id] ?? null
         const charSimc = simcByChar[charKey] ?? null
 
         const lowerBound = getLatestSyncDate(charDroptimizers, charBlizzard, charSimc)
@@ -434,6 +435,7 @@ export async function getCharactersWithLootsByItemId(
     const filteredRoster = roster.filter(
         (character) => item.classes === null || item.classes.includes(character.class)
     )
+    const charIds = filteredRoster.map((c) => c.id)
     const charLookups = filteredRoster.map((c) => ({ name: c.name, realm: c.realm }))
 
     // Stage 2: Fetch only data for eligible characters (not all tracked characters)
@@ -441,7 +443,7 @@ export async function getCharactersWithLootsByItemId(
         await Promise.all([
             droptimizerRepo.getLatestByChars(charLookups),
             lootRepo.getAssignedByItemId(itemId),
-            blizzardRepo.getByChars(charLookups),
+            blizzardRepo.getByCharIds(charIds),
             simcRepo.getByChars(charLookups),
         ])
 
@@ -449,14 +451,14 @@ export async function getCharactersWithLootsByItemId(
         latestDroptimizer,
         (d) => `${d.charInfo.name}-${d.charInfo.server}`
     )
-    const blizzardByChar = keyBy(blizzardData, (b) => `${b.name}-${b.realm}`)
+    const blizzardByCharId = keyBy(blizzardData, (b) => b.characterId)
     const simcByChar = keyBy(simcData, (s) => `${s.charName}-${s.charRealm}`)
 
     const res = filteredRoster.map((char) => {
         const charKey: `${string}-${string}` = `${char.name}-${char.realm}`
 
         const charDroptimizers = droptimizerByChar[charKey] ?? []
-        const charBlizzard: CharacterBlizzard | null = blizzardByChar[charKey] ?? null
+        const charBlizzard: CharacterBlizzard | null = blizzardByCharId[char.id] ?? null
         const charSimc: SimC | null = simcByChar[charKey] ?? null
 
         const lowerBound = getLatestSyncDate(charDroptimizers, charBlizzard, charSimc)

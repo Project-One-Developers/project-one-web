@@ -1,8 +1,13 @@
-import { and, desc, eq, inArray, or } from "drizzle-orm"
+import { and, desc, eq, inArray } from "drizzle-orm"
 import { chunk, uniqBy } from "es-toolkit"
 import { z } from "zod"
 import { db } from "@/db"
-import { bossTable, characterEncounterTable, charBlizzardTable } from "@/db/schema"
+import {
+    bossTable,
+    characterEncounterTable,
+    charBlizzardTable,
+    charTable,
+} from "@/db/schema"
 import { conflictUpdateAllExcept, identity, mapAndParse } from "@/db/utils"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
@@ -36,8 +41,12 @@ export type CharacterEncounterWithBoss = {
     }
 }
 
-// Schema for blizzard character data
+// Infer insert type from schema
+export type CharacterBlizzardInsert = typeof charBlizzardTable.$inferInsert
+
+// Schema for blizzard character data (with name/realm from join)
 const charBlizzardDbSchema = z.object({
+    characterId: z.string(),
     name: z.string(),
     realm: z.string(),
     race: z.string().nullable(),
@@ -52,7 +61,7 @@ const charBlizzardDbSchema = z.object({
 export type CharacterBlizzardDb = z.infer<typeof charBlizzardDbSchema>
 
 export const blizzardRepo = {
-    upsert: async (characters: CharacterBlizzardDb[]): Promise<void> => {
+    upsert: async (characters: CharacterBlizzardInsert[]): Promise<void> => {
         logger.info("Blizzard", `upsert: received ${s(characters.length)} characters`)
         if (characters.length === 0) {
             return
@@ -62,8 +71,8 @@ export const blizzardRepo = {
                 .insert(charBlizzardTable)
                 .values(characters)
                 .onConflictDoUpdate({
-                    target: [charBlizzardTable.name, charBlizzardTable.realm],
-                    set: conflictUpdateAllExcept(charBlizzardTable, ["name", "realm"]),
+                    target: charBlizzardTable.characterId,
+                    set: conflictUpdateAllExcept(charBlizzardTable, ["characterId"]),
                 })
             logger.info("Blizzard", `upsert: inserted ${s(characters.length)} characters`)
         } catch (error) {
@@ -92,22 +101,21 @@ export const blizzardRepo = {
 
     // Bulk upsert encounters for multiple characters
     upsertAllEncounters: async (
-        encountersByCharacter: Map<string, CharacterEncounterInsert[]>
+        encountersByCharacter: Record<string, CharacterEncounterInsert[]>
     ): Promise<void> => {
-        if (encountersByCharacter.size === 0) {
+        const characterIds = Object.keys(encountersByCharacter)
+        if (characterIds.length === 0) {
             return
         }
 
         await db.transaction(async (tx) => {
-            const characterIds = Array.from(encountersByCharacter.keys())
-
             // Delete all existing encounters for these characters
             await tx
                 .delete(characterEncounterTable)
                 .where(inArray(characterEncounterTable.characterId, characterIds))
 
             // Flatten and deduplicate encounters (by character-boss-difficulty)
-            const allEncounters = Array.from(encountersByCharacter.values()).flat()
+            const allEncounters = Object.values(encountersByCharacter).flat()
             const uniqueEncounters = uniqBy(
                 allEncounters,
                 (e) => `${e.characterId}-${s(e.bossId)}-${e.difficulty}`
@@ -161,12 +169,12 @@ export const blizzardRepo = {
 
     getLastTimeSynced: async (): Promise<number | null> => {
         const result = await db
-            .select()
+            .select({ syncedAt: charBlizzardTable.syncedAt })
             .from(charBlizzardTable)
             .orderBy(desc(charBlizzardTable.syncedAt))
             .limit(1)
             .then((r) => r.at(0))
-        return result ? result.syncedAt : null
+        return result?.syncedAt ?? null
     },
 
     getByChar: async (
@@ -174,43 +182,86 @@ export const blizzardRepo = {
         charRealm: string
     ): Promise<CharacterBlizzardDb | null> => {
         const result = await db
-            .select()
+            .select({
+                characterId: charBlizzardTable.characterId,
+                name: charTable.name,
+                realm: charTable.realm,
+                race: charBlizzardTable.race,
+                blizzardCharacterId: charBlizzardTable.blizzardCharacterId,
+                syncedAt: charBlizzardTable.syncedAt,
+                lastLoginAt: charBlizzardTable.lastLoginAt,
+                averageItemLevel: charBlizzardTable.averageItemLevel,
+                equippedItemLevel: charBlizzardTable.equippedItemLevel,
+                itemsEquipped: charBlizzardTable.itemsEquipped,
+            })
             .from(charBlizzardTable)
-            .where(
-                and(
-                    eq(charBlizzardTable.name, charName),
-                    eq(charBlizzardTable.realm, charRealm)
-                )
-            )
+            .innerJoin(charTable, eq(charBlizzardTable.characterId, charTable.id))
+            .where(and(eq(charTable.name, charName), eq(charTable.realm, charRealm)))
+            .then((r) => r.at(0))
+        return result ? mapAndParse(result, identity, charBlizzardDbSchema) : null
+    },
+
+    getByCharId: async (characterId: string): Promise<CharacterBlizzardDb | null> => {
+        const result = await db
+            .select({
+                characterId: charBlizzardTable.characterId,
+                name: charTable.name,
+                realm: charTable.realm,
+                race: charBlizzardTable.race,
+                blizzardCharacterId: charBlizzardTable.blizzardCharacterId,
+                syncedAt: charBlizzardTable.syncedAt,
+                lastLoginAt: charBlizzardTable.lastLoginAt,
+                averageItemLevel: charBlizzardTable.averageItemLevel,
+                equippedItemLevel: charBlizzardTable.equippedItemLevel,
+                itemsEquipped: charBlizzardTable.itemsEquipped,
+            })
+            .from(charBlizzardTable)
+            .innerJoin(charTable, eq(charBlizzardTable.characterId, charTable.id))
+            .where(eq(charBlizzardTable.characterId, characterId))
             .then((r) => r.at(0))
         return result ? mapAndParse(result, identity, charBlizzardDbSchema) : null
     },
 
     getAll: async (): Promise<CharacterBlizzardDb[]> => {
-        const result = await db.select().from(charBlizzardTable)
+        const result = await db
+            .select({
+                characterId: charBlizzardTable.characterId,
+                name: charTable.name,
+                realm: charTable.realm,
+                race: charBlizzardTable.race,
+                blizzardCharacterId: charBlizzardTable.blizzardCharacterId,
+                syncedAt: charBlizzardTable.syncedAt,
+                lastLoginAt: charBlizzardTable.lastLoginAt,
+                averageItemLevel: charBlizzardTable.averageItemLevel,
+                equippedItemLevel: charBlizzardTable.equippedItemLevel,
+                itemsEquipped: charBlizzardTable.itemsEquipped,
+            })
+            .from(charBlizzardTable)
+            .innerJoin(charTable, eq(charBlizzardTable.characterId, charTable.id))
         return mapAndParse(result, identity, charBlizzardDbSchema)
     },
 
-    getByChars: async (
-        chars: { name: string; realm: string }[]
-    ): Promise<CharacterBlizzardDb[]> => {
-        if (chars.length === 0) {
+    getByCharIds: async (characterIds: string[]): Promise<CharacterBlizzardDb[]> => {
+        if (characterIds.length === 0) {
             return []
         }
 
         const result = await db
-            .select()
+            .select({
+                characterId: charBlizzardTable.characterId,
+                name: charTable.name,
+                realm: charTable.realm,
+                race: charBlizzardTable.race,
+                blizzardCharacterId: charBlizzardTable.blizzardCharacterId,
+                syncedAt: charBlizzardTable.syncedAt,
+                lastLoginAt: charBlizzardTable.lastLoginAt,
+                averageItemLevel: charBlizzardTable.averageItemLevel,
+                equippedItemLevel: charBlizzardTable.equippedItemLevel,
+                itemsEquipped: charBlizzardTable.itemsEquipped,
+            })
             .from(charBlizzardTable)
-            .where(
-                or(
-                    ...chars.map((c) =>
-                        and(
-                            eq(charBlizzardTable.name, c.name),
-                            eq(charBlizzardTable.realm, c.realm)
-                        )
-                    )
-                )
-            )
+            .innerJoin(charTable, eq(charBlizzardTable.characterId, charTable.id))
+            .where(inArray(charBlizzardTable.characterId, characterIds))
         return mapAndParse(result, identity, charBlizzardDbSchema)
     },
 }

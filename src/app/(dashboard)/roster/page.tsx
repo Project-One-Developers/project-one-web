@@ -154,7 +154,7 @@ export default function RosterPage(): JSX.Element {
                     >
                         <Image
                             src="https://cdn.raiderio.net/images/mstile-150x150.png"
-                            title="ProjectOne Raider.io"
+                            title="Project One Raider.io"
                             alt="Raider.io"
                             width={40}
                             height={40}
