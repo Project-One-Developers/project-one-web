@@ -1,7 +1,7 @@
 "use server"
 
 import { partition } from "es-toolkit"
-import { DateTime, Duration } from "luxon"
+import { DateTime } from "luxon"
 import pLimit from "p-limit"
 import { match } from "ts-pattern"
 import { characterRepo } from "@/db/repositories/characters"
@@ -14,10 +14,11 @@ import { fetchDroptimizerFromURL } from "@/lib/droptimizer/raidbots-parser"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
 import { parseSimC } from "@/lib/simc/simc-parser"
-import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import type { Droptimizer, NewDroptimizer, SimC } from "@/shared/models/simulation.model"
 import type { WowRaidDifficulty } from "@/shared/models/wow.model"
 import type { VoidResult } from "@/shared/types/types"
+
+type DurationInput = { days?: number; hours?: number }
 
 /**
  * Resolve a character ID from name and realm.
@@ -57,10 +58,13 @@ export async function addDroptimizer(
     return await droptimizerRepo.add(droptimizer, characterId)
 }
 
-export async function deleteSimulationsOlderThan(lookback: Duration): Promise<void> {
-    const currentTimeStamp = getUnixTimestamp()
-    const cutoffTimestamp = currentTimeStamp - (lookback.as("seconds") || 0)
-    await droptimizerRepo.deleteOlderThanDate(cutoffTimestamp)
+/**
+ * Delete simulations older than the specified duration
+ * @param lookback - Duration object (e.g., { hours: 12 } or { days: 7 })
+ */
+export async function deleteSimulationsOlderThan(lookback: DurationInput): Promise<void> {
+    const cutoffDate = DateTime.now().minus(lookback)
+    await droptimizerRepo.deleteOlderThanDate(cutoffDate.toUnixInteger())
 }
 
 /**
@@ -111,9 +115,10 @@ export async function addSimulationFromUrl(url: string): Promise<Droptimizer[]> 
 /**
  * Sync droptimizers from Discord channel
  * Fetches all messages from the droptimizers channel and imports any URLs found
+ * @param lookback - Duration object (e.g., { hours: 12 } or { days: 7 })
  */
 export async function syncDroptimizersFromDiscord(
-    lookback: Duration
+    lookback: DurationInput
 ): Promise<{ imported: number; errors: string[] }> {
     const botKey = env.DISCORD_BOT_TOKEN
     const channelId = env.DISCORD_DROPTIMIZER_CHANNEL_ID

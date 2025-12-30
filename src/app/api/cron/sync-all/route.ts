@@ -1,4 +1,3 @@
-import { Duration } from "luxon"
 import { NextResponse } from "next/server"
 import {
     syncDroptimizersFromDiscord,
@@ -17,12 +16,6 @@ function verifyCronSecret(request: Request): boolean {
     return authHeader === `Bearer ${env.CRON_SECRET}`
 }
 
-// Lookback for Discord sync
-const DISCORD_SYNC_LOOKBACK = Duration.fromObject({ days: 2 })
-
-// Delete simulations older than this
-const DELETE_OLD_SIMULATIONS_LOOKBACK = Duration.fromObject({ days: 7 })
-
 export async function GET(request: Request) {
     if (!verifyCronSecret(request)) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -38,7 +31,7 @@ export async function GET(request: Request) {
 
         // Discord droptimizer sync
         try {
-            const discordResult = await syncDroptimizersFromDiscord(DISCORD_SYNC_LOOKBACK)
+            const discordResult = await syncDroptimizersFromDiscord({ days: 2 })
             results.discord.success = true
             results.discord.imported = discordResult.imported
             results.discord.errors = discordResult.errors
@@ -51,7 +44,7 @@ export async function GET(request: Request) {
 
         // Cleanup old simulations
         try {
-            await deleteSimulationsOlderThan(DELETE_OLD_SIMULATIONS_LOOKBACK)
+            await deleteSimulationsOlderThan({ days: 7 })
             results.cleanup.success = true
         } catch (error) {
             results.cleanup.error =

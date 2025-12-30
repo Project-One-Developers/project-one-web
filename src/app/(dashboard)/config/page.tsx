@@ -9,7 +9,6 @@ import {
     Shield,
     Users,
 } from "lucide-react"
-import { Duration } from "luxon"
 import { useState, type JSX } from "react"
 import { toast } from "sonner"
 import { importGuildMembers, syncAllCharactersBlizzard } from "@/actions/blizzard"
@@ -56,9 +55,7 @@ export default function SettingsPage(): JSX.Element {
     const handleSyncDiscord = async () => {
         setIsSyncingDiscord(true)
         try {
-            const result = await syncDroptimizersFromDiscord(
-                Duration.fromObject({ days: 7 })
-            )
+            const result = await syncDroptimizersFromDiscord({ days: 7 })
             toast.success(
                 `Discord sync completed: ${s(result.imported)} droptimizers imported`
             )

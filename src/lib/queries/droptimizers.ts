@@ -1,7 +1,6 @@
 "use client"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Duration } from "luxon"
 import {
     addSimC,
     addSimulationFromUrl,
@@ -81,11 +80,13 @@ export function useAddSimulationFromUrl() {
     })
 }
 
+type DurationInput = { days?: number; hours?: number }
+
 export function useSyncDroptimizersFromDiscord() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (lookback: Duration) => syncDroptimizersFromDiscord(lookback),
+        mutationFn: (lookback: DurationInput) => syncDroptimizersFromDiscord(lookback),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
         },
@@ -96,7 +97,7 @@ export function useDeleteSimulationsOlderThan() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (lookback: Duration) => deleteSimulationsOlderThan(lookback),
+        mutationFn: (lookback: DurationInput) => deleteSimulationsOlderThan(lookback),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
         },

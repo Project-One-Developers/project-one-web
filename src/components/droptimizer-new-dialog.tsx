@@ -1,7 +1,6 @@
 "use client"
 
 import { Loader2, PlusIcon, Recycle, RefreshCw, Upload } from "lucide-react"
-import { Duration } from "luxon"
 import React, { useState, type JSX } from "react"
 import { toast } from "sonner"
 import {
@@ -37,27 +36,35 @@ export default function DroptimizerNewDialog(): JSX.Element {
     const simcImportMutation = useAddSimC()
 
     const handleSyncFromDiscord = () => {
-        syncMutation.mutate(Duration.fromObject({ hours: hoursValue }), {
-            onSuccess: () => {
-                toast.success("Droptimizers have been successfully synced from Discord.")
-            },
-            onError: (error: Error) => {
-                toast.error(
-                    `Unable to sync droptimizers from Discord. Error: ${error.message}`
-                )
-            },
-        })
+        syncMutation.mutate(
+            { hours: hoursValue },
+            {
+                onSuccess: () => {
+                    toast.success(
+                        "Droptimizers have been successfully synced from Discord."
+                    )
+                },
+                onError: (error: Error) => {
+                    toast.error(
+                        `Unable to sync droptimizers from Discord. Error: ${error.message}`
+                    )
+                },
+            }
+        )
     }
 
     const handleCleanup = () => {
-        cleanupMutation.mutate(Duration.fromObject({ hours: hoursValue }), {
-            onSuccess: () => {
-                toast.success("Droptimizers have been successfully cleaned up")
-            },
-            onError: (error: Error) => {
-                toast.error(`Unable to cleanup droptimizers. Error: ${error.message}`)
-            },
-        })
+        cleanupMutation.mutate(
+            { hours: hoursValue },
+            {
+                onSuccess: () => {
+                    toast.success("Droptimizers have been successfully cleaned up")
+                },
+                onError: (error: Error) => {
+                    toast.error(`Unable to cleanup droptimizers. Error: ${error.message}`)
+                },
+            }
+        )
     }
 
     const handleManualSubmit = (e: React.FormEvent) => {
