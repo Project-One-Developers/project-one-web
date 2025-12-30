@@ -64,6 +64,7 @@ export const charTable = pgTable(
     },
     (t) => [
         unique("name_realm").on(t.name, t.realm), // coppia nome-realm unique
+        index("idx_characters_player_id").on(t.playerId),
     ]
 )
 
@@ -97,7 +98,10 @@ export const characterEncounterTable = pgTable(
         firstDefeated: timestamp("first_defeated", { withTimezone: true }),
         lastDefeated: timestamp("last_defeated", { withTimezone: true }),
     },
-    (t) => [unique("char_boss_diff_unique").on(t.characterId, t.bossId, t.difficulty)]
+    (t) => [
+        unique("char_boss_diff_unique").on(t.characterId, t.bossId, t.difficulty),
+        index("idx_character_encounters_char_id").on(t.characterId),
+    ]
 )
 
 export const bisListTable = pgTable(
@@ -230,25 +234,39 @@ export const raidSessionRosterTable = pgTable(
     (t) => [primaryKey({ columns: [t.raidSessionId, t.charId] })]
 )
 
-export const lootTable = pgTable("loots", {
-    id: varchar("id").primaryKey(),
-    dropDate: integer("drop_date").notNull(),
-    itemString: varchar("item_string"),
-    gearItem: jsonb("gear_item").$type<GearItem>().notNull(),
-    raidDifficulty: pgRaidDiffEnum("raid_difficulty").notNull(),
-    charsEligibility: text("chars_eligibility").array().notNull(), // array of IDs referencing RaidSession.Chars
-    assignedCharacterId: varchar("assigned_character_id").references(() => charTable.id, {
-        onDelete: "set null",
-    }),
-    assignedHighlights: jsonb("assigned_highlights").$type<CharAssignmentHighlights>(),
-    tradedToAssigned: boolean("traded_to_assigned").notNull().default(false),
-    raidSessionId: varchar("raid_session_id")
-        .references(() => raidSessionTable.id, { onDelete: "cascade" })
-        .notNull(),
-    itemId: integer("item_id")
-        .references(() => itemTable.id)
-        .notNull(),
-})
+export const lootTable = pgTable(
+    "loots",
+    {
+        id: varchar("id").primaryKey(),
+        dropDate: integer("drop_date").notNull(),
+        itemString: varchar("item_string"),
+        gearItem: jsonb("gear_item").$type<GearItem>().notNull(),
+        raidDifficulty: pgRaidDiffEnum("raid_difficulty").notNull(),
+        charsEligibility: text("chars_eligibility").array().notNull(), // array of IDs referencing RaidSession.Chars
+        assignedCharacterId: varchar("assigned_character_id").references(
+            () => charTable.id,
+            {
+                onDelete: "set null",
+            }
+        ),
+        assignedHighlights:
+            jsonb("assigned_highlights").$type<CharAssignmentHighlights>(),
+        tradedToAssigned: boolean("traded_to_assigned").notNull().default(false),
+        raidSessionId: varchar("raid_session_id")
+            .references(() => raidSessionTable.id, { onDelete: "cascade" })
+            .notNull(),
+        itemId: integer("item_id")
+            .references(() => itemTable.id)
+            .notNull(),
+    },
+    (t) => [
+        index("idx_loots_raid_session").on(
+            t.raidSessionId,
+            t.assignedCharacterId,
+            t.itemId
+        ),
+    ]
+)
 
 export const assignmentTable = pgTable("assignments", {
     id: varchar("id").primaryKey(),
@@ -265,17 +283,24 @@ export const assignmentTable = pgTable("assignments", {
 //                     JSON DATA                        //
 //////////////////////////////////////////////////////////
 
-export const bossTable = pgTable("bosses", {
-    id: integer("id").primaryKey(), // // ricicliamo journal_encounter_id fornito da wow api
-    name: varchar("name", { length: 255 }).notNull(),
-    instanceId: integer("instance_id").notNull(),
-    instanceName: varchar("instance_name").notNull(),
-    instanceType: varchar("instance_type").notNull(),
-    order: integer("order").notNull(),
-    encounterSlug: varchar("encounter_slug", { length: 50 }),
-    raidSlug: varchar("raid_slug", { length: 50 }),
-    blizzardEncounterId: integer("blizzard_encounter_id"), // Blizzard API encounter ID
-})
+export const bossTable = pgTable(
+    "bosses",
+    {
+        id: integer("id").primaryKey(), // // ricicliamo journal_encounter_id fornito da wow api
+        name: varchar("name", { length: 255 }).notNull(),
+        instanceId: integer("instance_id").notNull(),
+        instanceName: varchar("instance_name").notNull(),
+        instanceType: varchar("instance_type").notNull(),
+        order: integer("order").notNull(),
+        encounterSlug: varchar("encounter_slug", { length: 50 }),
+        raidSlug: varchar("raid_slug", { length: 50 }),
+        blizzardEncounterId: integer("blizzard_encounter_id"), // Blizzard API encounter ID
+    },
+    (t) => [
+        index("idx_bosses_instance_id").on(t.instanceId),
+        index("idx_bosses_raid_slug").on(t.raidSlug),
+    ]
+)
 
 // Sono gli item lootabili dal raid - contiene l'import di public/items.csv
 export const itemTable = pgTable("items", {
