@@ -145,6 +145,8 @@ export const ITEM_EQUIPPED_SLOTS_KEY = [
     "shoulder",
     "back",
     "chest",
+    "shirt",
+    "tabard",
     "wrist",
     "hands",
     "waist",

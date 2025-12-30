@@ -10,37 +10,64 @@ type CharacterPaperdollProps = {
     ) => ReactNode
 }
 
+// WoW Armory slot order
+const LEFT_SLOTS: WowItemEquippedSlotKey[] = [
+    "head",
+    "neck",
+    "shoulder",
+    "back",
+    "chest",
+    "shirt",
+    "tabard",
+    "wrist",
+]
+
+const RIGHT_SLOTS: WowItemEquippedSlotKey[] = [
+    "hands",
+    "waist",
+    "legs",
+    "feet",
+    "finger1",
+    "finger2",
+    "trinket1",
+    "trinket2",
+]
+
 export default function CharacterPaperdoll({ renderGearSlot }: CharacterPaperdollProps) {
     return (
-        <div className="relative max-w-4xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
-                {/* Left Side */}
-                <div className="flex flex-col gap-6 items-start">
-                    {renderGearSlot("head")}
-                    {renderGearSlot("neck")}
-                    {renderGearSlot("shoulder")}
-                    {renderGearSlot("back")}
-                    {renderGearSlot("chest")}
-                    {renderGearSlot("wrist")}
+        <div className="relative w-full h-full flex flex-col">
+            {/* Main gear area - left and right columns */}
+            <div className="flex-1 flex">
+                {/* Left Column - fixed to left edge */}
+                <div className="flex flex-col justify-between py-2 w-[280px] shrink-0">
+                    {LEFT_SLOTS.map((slot) => (
+                        <div key={slot} className="flex justify-start">
+                            {renderGearSlot(slot, { rightSide: false })}
+                        </div>
+                    ))}
                 </div>
 
-                {/* Right Side */}
-                <div className="flex flex-col gap-6 items-end">
-                    {renderGearSlot("hands", { rightSide: true })}
-                    {renderGearSlot("waist", { rightSide: true })}
-                    {renderGearSlot("legs", { rightSide: true })}
-                    {renderGearSlot("feet", { rightSide: true })}
-                    {renderGearSlot("finger1", { rightSide: true })}
-                    {renderGearSlot("finger2", { rightSide: true })}
+                {/* Center spacer - character render area */}
+                <div className="flex-1" />
+
+                {/* Right Column - fixed to right edge */}
+                <div className="flex flex-col justify-between py-2 w-[280px] shrink-0">
+                    {RIGHT_SLOTS.map((slot) => (
+                        <div key={slot} className="flex justify-end">
+                            {renderGearSlot(slot, { rightSide: true })}
+                        </div>
+                    ))}
                 </div>
             </div>
 
-            {/* Bottom Row - Weapons */}
-            <div className="flex justify-center items-start gap-12">
-                {renderGearSlot("main_hand")}
-                {renderGearSlot("off_hand")}
-                {renderGearSlot("trinket1")}
-                {renderGearSlot("trinket2")}
+            {/* Bottom Row - Weapons centered in the middle area (between columns) */}
+            <div className="flex py-3 shrink-0">
+                <div className="w-[280px] shrink-0" />
+                <div className="flex-1 flex justify-center items-center gap-8">
+                    <div>{renderGearSlot("main_hand", { rightSide: true })}</div>
+                    <div>{renderGearSlot("off_hand", { rightSide: false })}</div>
+                </div>
+                <div className="w-[280px] shrink-0" />
             </div>
         </div>
     )

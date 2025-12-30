@@ -5,6 +5,7 @@ import { droptimizerRepo } from "@/db/repositories/droptimizer"
 import { playerRepo } from "@/db/repositories/player.repo"
 import { raiderioRepo } from "@/db/repositories/raiderio"
 import { wowauditRepo } from "@/db/repositories/wowaudit"
+import { fetchCharacterMedia } from "@/lib/blizzard/blizzard-api"
 import type {
     Character,
     CharacterGameInfo,
@@ -90,4 +91,17 @@ export async function getCharLatestGameInfo(
         wowaudit: lastWowAudit,
         raiderio: lastRaiderio,
     }
+}
+
+// ============== CHARACTER MEDIA ==============
+
+/**
+ * Fetch character render URL from Battle.net API
+ * Returns the main-raw URL (transparent full body render) or null if not available
+ */
+export async function getCharacterRenderUrl(
+    name: string,
+    realm: string
+): Promise<string | null> {
+    return await fetchCharacterMedia(name, realm)
 }

@@ -11,6 +11,9 @@ const envSchema = z.object({
     AUTH_DISCORD_ID: z.string(),
     AUTH_DISCORD_SECRET: z.string(),
     AUTH_SECRET: z.string(),
+    // Battle.net API (for character renders)
+    BNET_CLIENT_ID: z.string().optional(),
+    BNET_CLIENT_SECRET: z.string().optional(),
 })
 
 export const env = envSchema.parse(process.env)

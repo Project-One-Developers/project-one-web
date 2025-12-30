@@ -2,9 +2,8 @@
 
 import type { WowItemEquippedSlotKey } from "@/shared/models/wow.model"
 import type { CharacterWowAudit } from "@/shared/models/wowaudit.model"
-import CharacterPaperdoll from "./wow/character-paperdoll"
+import CharacterGearLayout from "./character-gear-layout"
 import BaseGearSlot from "./wow/character-paperdoll-gearslot"
-import { WowGearIcon } from "./wow/wow-gear-icon"
 
 export default function WowAuditData({ data: wowAudit }: { data: CharacterWowAudit }) {
     // Create a mapping of slot keys to items
@@ -35,26 +34,9 @@ export default function WowAuditData({ data: wowAudit }: { data: CharacterWowAud
     }
 
     return (
-        <div className="w-full space-y-8">
-            {/* Character Paperdoll Layout */}
-            <CharacterPaperdoll renderGearSlot={renderGearSlot} />
-
-            {/* Tier Set Section */}
-            {wowAudit.tiersetInfo.length > 0 && (
-                <div className="bg-background/50 rounded-lg p-6">
-                    <h3 className="font-bold mb-4">Tier Set Pieces</h3>
-                    <div className="flex flex-wrap gap-4 justify-center">
-                        {wowAudit.tiersetInfo.map((tierItem) => (
-                            <WowGearIcon
-                                key={tierItem.item.id}
-                                gearItem={tierItem}
-                                showTiersetLine={false}
-                                iconClassName="rounded-lg h-12 w-12 border border-orange-500/50 shadow-md"
-                            />
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
+        <CharacterGearLayout
+            renderGearSlot={renderGearSlot}
+            tiersetInfo={wowAudit.tiersetInfo}
+        />
     )
 }

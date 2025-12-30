@@ -48,9 +48,9 @@ export default function CharacterPage() {
     }
 
     return (
-        <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-8 p-8 relative">
+        <div className="w-full h-full flex flex-col gap-y-3 p-4 relative">
             {/* Page Header */}
-            <div className="bg-muted rounded-lg p-6 mb-2 shadow-lg flex justify-between items-center">
+            <div className="bg-muted rounded-lg p-3 shadow-lg flex justify-between items-center shrink-0">
                 <div className="flex items-center gap-4">
                     <Button
                         variant="ghost"
@@ -61,21 +61,25 @@ export default function CharacterPage() {
                     >
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
-                    <div>
-                        <div className="flex flex-row space-x-4 items-center">
-                            <WowClassIcon
-                                wowClassName={character.class}
-                                charname={character.name}
-                                showTooltip={false}
-                                className="h-10 w-10 border-2 border-background rounded-lg"
-                            />
-                            <h1 className="text-3xl font-bold">{character.name}</h1>
-                        </div>
-                        <div className="flex flex-row mt-2 gap-1">
-                            <WowCharacterLink character={character} site="warcraftlogs" />
-                            <WowCharacterLink character={character} site="raiderio" />
-                            <WowCharacterLink character={character} site="armory" />
-                        </div>
+                    <WowClassIcon
+                        wowClassName={character.class}
+                        charname={character.name}
+                        showTooltip={false}
+                        className="h-10 w-10 border-2 border-background rounded-lg"
+                    />
+                    <div className="flex flex-col">
+                        <h1 className="text-2xl font-bold leading-tight">
+                            {character.name}
+                        </h1>
+                        <span className="text-sm text-muted-foreground">
+                            {character.realm}
+                        </span>
+                    </div>
+                    <div className="h-8 w-px bg-border mx-2" />
+                    <div className="flex items-center gap-3">
+                        <WowCharacterLink character={character} site="raiderio" />
+                        <WowCharacterLink character={character} site="warcraftlogs" />
+                        <WowCharacterLink character={character} site="armory" />
                     </div>
                 </div>
                 <div className="flex space-x-2">
@@ -101,7 +105,9 @@ export default function CharacterPage() {
             </div>
 
             {/* Character Game Info Panel */}
-            <CharGameInfoPanel character={character} />
+            <div className="flex-1 min-h-0">
+                <CharGameInfoPanel character={character} />
+            </div>
 
             {/* Dialogs */}
             <CharacterDialog

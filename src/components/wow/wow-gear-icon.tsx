@@ -37,6 +37,9 @@ const TOKEN_CLASS_MAP = {
     Zenith: "W/R/M/E",
 } as const
 
+// Default icon size when iconClassName is not provided
+const DEFAULT_ICON_CLASS = "h-8 w-8 rounded-lg border border-background"
+
 export function WowGearIcon({
     gearItem,
     showTiersetLine = false,
@@ -107,13 +110,17 @@ export function WowGearIcon({
     const extendedInfoElement = showExtendedInfo ? (
         <div
             id="item-info"
-            className={cn("flex flex-col space-y-1", flipExtendedInfo ? "mr-3" : "ml-3")}
+            className={cn(
+                "flex flex-col space-y-0.5 max-w-[300px]",
+                flipExtendedInfo ? "mr-3" : "ml-3"
+            )}
         >
             <p
                 className={cn(
-                    "font-semibold text-sm text-gray-100 leading-tight",
+                    "font-semibold text-sm text-gray-100 leading-tight truncate",
                     flipExtendedInfo && "text-right"
                 )}
+                title={name}
             >
                 {name}
             </p>
@@ -176,20 +183,20 @@ export function WowGearIcon({
                             {source}
                         </span>
                     )}
-                    <div className="relative inline-block">
+                    {/* Fixed-size container for icon and all overlays */}
+                    <div className={cn("relative", iconClassName ?? DEFAULT_ICON_CLASS)}>
                         <Image
                             src={iconUrl}
                             alt=""
-                            width={32}
-                            height={32}
+                            width={48}
+                            height={48}
                             className={cn(
-                                "object-cover object-top rounded-lg border border-background",
-                                hasSpecials && "border-white",
-                                iconClassName
+                                "w-full h-full object-cover object-top",
+                                hasSpecials && "border-white"
                             )}
                         />
                         {showTiersetLine && (tierset || token) && (
-                            <div className="absolute -bottom-1 left-0 right-0 h-[1px] bg-red-600"></div>
+                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-red-600"></div>
                         )}
                         {showTiersetRibbon && tierset && (
                             <div className="absolute -top-1 left-0 right-0 h-2 bg-gradient-to-r from-purple-400 via-purple-500 to-purple-400 flex items-center justify-center">

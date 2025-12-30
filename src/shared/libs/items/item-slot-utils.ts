@@ -46,5 +46,7 @@ export function formatWowEquippedSlotKey(slot: WowItemEquippedSlotKey): string {
         .with("finger2", () => "Finger")
         .with("trinket1", () => "Trinket")
         .with("trinket2", () => "Trinket")
+        .with("shirt", () => "Shirt")
+        .with("tabard", () => "Tabard")
         .otherwise((s) => formatWowSlotKey(s))
 }

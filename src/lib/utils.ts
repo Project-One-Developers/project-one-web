@@ -1,21 +1,11 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { CLASSES_NAME } from "@/shared/consts/wow.consts"
-import type { WowClassName } from "@/shared/models/wow.model"
 
 export const defined = <T>(value: T | null | undefined): value is T =>
     value !== null && value !== undefined
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
-}
-
-export function getClassColor(className: WowClassName): string {
-    const classColor = CLASSES_NAME.find((classItem) => classItem === className)
-    if (classColor) {
-        return `bg-${classColor.replace(" ", "").toLowerCase()}`
-    }
-    return "bg-deathknight"
 }
 
 export function getDpsHumanReadable(dps: number): string {

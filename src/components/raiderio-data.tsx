@@ -2,7 +2,7 @@
 
 import type { CharacterRaiderio } from "@/shared/models/raiderio.model"
 import type { WowItemEquippedSlotKey } from "@/shared/models/wow.model"
-import CharacterPaperdoll from "./wow/character-paperdoll"
+import CharacterGearLayout from "./character-gear-layout"
 import BaseGearSlot, { createGearSlotMapping } from "./wow/character-paperdoll-gearslot"
 
 export default function RaiderioData({ data }: { data: CharacterRaiderio }) {
@@ -25,9 +25,5 @@ export default function RaiderioData({ data }: { data: CharacterRaiderio }) {
         )
     }
 
-    return (
-        <div className="w-full space-y-8">
-            <CharacterPaperdoll renderGearSlot={renderGearSlot} />
-        </div>
-    )
+    return <CharacterGearLayout renderGearSlot={renderGearSlot} />
 }
