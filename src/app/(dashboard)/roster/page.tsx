@@ -1,10 +1,12 @@
 "use client"
 
+import { median } from "es-toolkit"
 import {
     AlertTriangle,
     Download,
     PlusIcon,
     Search,
+    Swords,
     Trash2,
     UserRoundPlus,
     Users,
@@ -26,8 +28,9 @@ import type { Player } from "@/shared/models/character.model"
 import type { PlayerWithSummaryCompact } from "@/shared/types/types"
 
 type ItemLevelStats = {
-    mean: number
-    standardDeviation: number
+    median: number
+    mainMedian: number
+    mad: number
     threshold: number
     lowCount: number
 }
@@ -50,21 +53,45 @@ export default function RosterPage(): JSX.Element {
             .map((char) => parseInt(char.itemLevel))
             .filter((level) => !isNaN(level) && level > 0)
 
+        // Calculate median for main characters only
+        const mainCharacters = allCharacters.filter((char) => char.character.main)
+        const mainItemLevels = mainCharacters
+            .map((char) => parseInt(char.itemLevel))
+            .filter((level) => !isNaN(level) && level > 0)
+        const mainMedianValue = mainItemLevels.length > 0 ? median(mainItemLevels) : 0
+
         if (validItemLevels.length === 0) {
-            return { mean: 0, standardDeviation: 0, threshold: 0, lowCount: 0 }
+            return { median: 0, mainMedian: 0, mad: 0, threshold: 0, lowCount: 0 }
         }
 
-        const mean =
-            validItemLevels.reduce((sum, level) => sum + level, 0) /
-            validItemLevels.length
-        const variance =
-            validItemLevels.reduce((sum, level) => sum + Math.pow(level - mean, 2), 0) /
-            validItemLevels.length
-        const standardDeviation = Math.sqrt(variance)
-        const threshold = mean - 1.0 * standardDeviation
+        const medianValue = median(validItemLevels)
+
+        // No mains = can't calculate threshold
+        if (mainMedianValue === 0) {
+            return {
+                median: medianValue,
+                mainMedian: 0,
+                mad: 0,
+                threshold: 0,
+                lowCount: 0,
+            }
+        }
+
+        // MAD based on mains median - the raid team's expected gear level
+        const absoluteDeviations = validItemLevels.map((level) =>
+            Math.abs(level - mainMedianValue)
+        )
+        const mad = median(absoluteDeviations)
+        const threshold = mainMedianValue - 1.5 * mad
         const lowCount = validItemLevels.filter((level) => level < threshold).length
 
-        return { mean, standardDeviation, threshold, lowCount }
+        return {
+            median: medianValue,
+            mainMedian: mainMedianValue,
+            mad,
+            threshold,
+            lowCount,
+        }
     }, [players])
 
     const totalCharacters = useMemo(
@@ -230,21 +257,30 @@ export default function RosterPage(): JSX.Element {
             {/* Stats Row */}
             <div className="flex flex-wrap gap-3">
                 <StatBadge
+                    variant="primary"
                     icon={<Users className="w-4 h-4 text-primary" />}
                     label="Players"
                     value={s(players.length)}
                 />
                 <StatBadge
-                    icon={<span className="text-primary font-bold">⚔</span>}
+                    variant="primary"
+                    icon={<Swords className="w-4 h-4 text-primary" />}
                     label="Characters"
                     value={s(totalCharacters)}
                 />
-                {itemLevelStats.mean > 0 && (
+                {itemLevelStats.mainMedian > 0 && (
                     <StatBadge
                         variant="info"
                         icon={<span className="text-blue-400 font-bold">◆</span>}
-                        label="Avg iLvl"
-                        value={Math.round(itemLevelStats.mean)}
+                        label="Median iLvl (Mains)"
+                        value={Math.round(itemLevelStats.mainMedian)}
+                    />
+                )}
+                {itemLevelStats.median > 0 && (
+                    <StatBadge
+                        icon={<span className="text-muted-foreground font-bold">◆</span>}
+                        label="Median iLvl (All)"
+                        value={Math.round(itemLevelStats.median)}
                     />
                 )}
                 {itemLevelStats.lowCount > 0 && (
