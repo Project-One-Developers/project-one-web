@@ -254,8 +254,8 @@ function RaidSessionDialogContent({
         () => new Set(existingSession?.roster.map((c) => c.id) ?? [])
     )
 
-    const addMutation = useAddRaidSession()
-    const editMutation = useEditRaidSession()
+    const { executeAsync: addSession, isExecuting: isAdding } = useAddRaidSession()
+    const { executeAsync: editSession, isExecuting: isEditing } = useEditRaidSession()
 
     const validateForm = (): boolean => {
         let isValid = true
@@ -281,7 +281,7 @@ function RaidSessionDialogContent({
         return isValid
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
         if (!validateForm()) {
@@ -296,11 +296,10 @@ function RaidSessionDialogContent({
                 roster: Array.from(selectedCharacters),
             }
 
-            editMutation.mutate(sessionData, {
-                onSuccess: () => {
-                    setOpen(false)
-                },
-            })
+            const result = await editSession(sessionData)
+            if (result.data) {
+                setOpen(false)
+            }
         } else {
             const sessionData: NewRaidSession = {
                 name: sessionName.trim(),
@@ -308,11 +307,10 @@ function RaidSessionDialogContent({
                 roster: Array.from(selectedCharacters),
             }
 
-            addMutation.mutate(sessionData, {
-                onSuccess: () => {
-                    setOpen(false)
-                },
-            })
+            const result = await addSession(sessionData)
+            if (result.data) {
+                setOpen(false)
+            }
         }
     }
 
@@ -335,7 +333,7 @@ function RaidSessionDialogContent({
         })
     }
 
-    const isLoading = addMutation.isPending || editMutation.isPending
+    const isLoading = isAdding || isEditing
 
     return (
         <>
@@ -350,7 +348,10 @@ function RaidSessionDialogContent({
                 </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-y-4">
+            <form
+                onSubmit={(e) => void handleSubmit(e)}
+                className="flex flex-col gap-y-4"
+            >
                 {/* Name and Date row */}
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">

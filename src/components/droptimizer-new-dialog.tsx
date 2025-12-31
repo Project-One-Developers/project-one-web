@@ -2,7 +2,6 @@
 
 import { Loader2, PlusIcon, Recycle, RefreshCw, Upload } from "lucide-react"
 import React, { useState, type JSX } from "react"
-import { toast } from "sonner"
 import {
     useAddSimC,
     useAddSimulationFromUrl,
@@ -30,41 +29,20 @@ export default function DroptimizerNewDialog(): JSX.Element {
     const [url, setUrl] = useState("")
     const [simcData, setSimcData] = useState("")
 
-    const manualMutation = useAddSimulationFromUrl()
-    const syncMutation = useSyncDroptimizersFromDiscord()
-    const cleanupMutation = useDeleteSimulationsOlderThan()
-    const simcImportMutation = useAddSimC()
+    const { execute: addSimulation, isExecuting: isAddingSimulation } =
+        useAddSimulationFromUrl()
+    const { execute: syncFromDiscord, isExecuting: isSyncing } =
+        useSyncDroptimizersFromDiscord()
+    const { execute: deleteOldSimulations, isExecuting: isDeleting } =
+        useDeleteSimulationsOlderThan()
+    const { execute: addSimC, isExecuting: isAddingSimC } = useAddSimC()
 
     const handleSyncFromDiscord = () => {
-        syncMutation.mutate(
-            { hours: hoursValue },
-            {
-                onSuccess: () => {
-                    toast.success(
-                        "Droptimizers have been successfully synced from Discord."
-                    )
-                },
-                onError: (error: Error) => {
-                    toast.error(
-                        `Unable to sync droptimizers from Discord. Error: ${error.message}`
-                    )
-                },
-            }
-        )
+        syncFromDiscord({ lookback: { hours: hoursValue } })
     }
 
     const handleCleanup = () => {
-        cleanupMutation.mutate(
-            { hours: hoursValue },
-            {
-                onSuccess: () => {
-                    toast.success("Droptimizers have been successfully cleaned up")
-                },
-                onError: (error: Error) => {
-                    toast.error(`Unable to cleanup droptimizers. Error: ${error.message}`)
-                },
-            }
-        )
+        deleteOldSimulations({ lookback: { hours: hoursValue } })
     }
 
     const handleManualSubmit = (e: React.FormEvent) => {
@@ -72,15 +50,8 @@ export default function DroptimizerNewDialog(): JSX.Element {
         if (!url.trim()) {
             return
         }
-        manualMutation.mutate(url, {
-            onSuccess: () => {
-                setUrl("")
-                toast.success("The droptimizer has been successfully added.")
-            },
-            onError: (error: Error) => {
-                toast.error(`Unable to add the droptimizer. Error: ${error.message}`)
-            },
-        })
+        addSimulation({ url })
+        setUrl("")
     }
 
     const handleSimcSubmit = (e: React.FormEvent) => {
@@ -88,15 +59,8 @@ export default function DroptimizerNewDialog(): JSX.Element {
         if (!simcData.trim()) {
             return
         }
-        simcImportMutation.mutate(simcData, {
-            onSuccess: () => {
-                setSimcData("")
-                toast.success("Successfully imported SimC data.")
-            },
-            onError: (error: Error) => {
-                toast.error(`Unable to import SimC data. Error: ${error.message}`)
-            },
-        })
+        addSimC({ simcData })
+        setSimcData("")
     }
 
     return (
@@ -136,20 +100,18 @@ export default function DroptimizerNewDialog(): JSX.Element {
                                 <Button
                                     onClick={handleSyncFromDiscord}
                                     className="w-full"
-                                    disabled={syncMutation.isPending}
+                                    disabled={isSyncing}
                                 >
                                     <div className="flex items-center justify-center w-full">
                                         <div className="flex-none w-6 flex justify-start">
-                                            {syncMutation.isPending ? (
+                                            {isSyncing ? (
                                                 <Loader2 className="h-4 w-4 animate-spin" />
                                             ) : (
                                                 <RefreshCw className="h-4 w-4" />
                                             )}
                                         </div>
                                         <div className="flex-grow text-center">
-                                            {syncMutation.isPending
-                                                ? "Syncing..."
-                                                : "Sync last"}
+                                            {isSyncing ? "Syncing..." : "Sync last"}
                                         </div>
                                     </div>
                                 </Button>
@@ -190,8 +152,8 @@ export default function DroptimizerNewDialog(): JSX.Element {
                                     placeholder="Enter droptimizer URL..."
                                 />
                             </div>
-                            <Button disabled={manualMutation.isPending} type="submit">
-                                {manualMutation.isPending ? (
+                            <Button disabled={isAddingSimulation} type="submit">
+                                {isAddingSimulation ? (
                                     <Loader2 className="animate-spin" />
                                 ) : (
                                     "Add"
@@ -216,8 +178,8 @@ export default function DroptimizerNewDialog(): JSX.Element {
                                     className="min-h-[200px] resize-y"
                                 />
                             </div>
-                            <Button disabled={simcImportMutation.isPending} type="submit">
-                                {simcImportMutation.isPending ? (
+                            <Button disabled={isAddingSimC} type="submit">
+                                {isAddingSimC ? (
                                     <>
                                         <Loader2 className="animate-spin mr-2" />
                                         Importing...
@@ -235,22 +197,20 @@ export default function DroptimizerNewDialog(): JSX.Element {
                         <div className="flex items-center gap-x-4">
                             <div className="flex-1">
                                 <Button
-                                    onClick={() => {
-                                        handleCleanup()
-                                    }}
-                                    disabled={cleanupMutation.isPending}
+                                    onClick={handleCleanup}
+                                    disabled={isDeleting}
                                     className="w-full"
                                 >
                                     <div className="flex items-center justify-center w-full">
                                         <div className="flex-none w-6 flex justify-start">
-                                            {cleanupMutation.isPending ? (
+                                            {isDeleting ? (
                                                 <Loader2 className="h-4 w-4 animate-spin" />
                                             ) : (
                                                 <Recycle className="h-4 w-4" />
                                             )}
                                         </div>
                                         <div className="flex-grow text-center">
-                                            {cleanupMutation.isPending
+                                            {isDeleting
                                                 ? "Cleaning..."
                                                 : "Clean older than"}
                                         </div>

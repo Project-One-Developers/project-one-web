@@ -1,19 +1,18 @@
 "use server"
 
+import { z } from "zod"
 import { characterRepo } from "@/db/repositories/characters"
 import { raidSessionRepo } from "@/db/repositories/raid-sessions"
 import { newUUID } from "@/db/utils"
-import { tryCatch, tryCatchVoid } from "@/lib/result"
+import { authActionClient } from "@/lib/safe-action"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import type { Character } from "@/shared/models/character.model"
-import type {
-    EditRaidSession,
-    NewRaidSession,
-    RaidSession,
-    RaidSessionWithRoster,
-    RaidSessionWithSummary,
+import {
+    editRaidSessionSchema,
+    newRaidSessionSchema,
+    type RaidSessionWithRoster,
+    type RaidSessionWithSummary,
 } from "@/shared/models/raid-session.model"
-import type { Result, VoidResult } from "@/shared/types/types"
 
 export async function getRaidSessionWithRoster(
     id: string
@@ -25,55 +24,47 @@ export async function getRaidSessionWithSummaryList(): Promise<RaidSessionWithSu
     return await raidSessionRepo.getWithSummaryList()
 }
 
-export async function addRaidSession(
-    raidSession: NewRaidSession
-): Promise<Result<RaidSession>> {
-    return tryCatch(async () => {
-        const id = await raidSessionRepo.add(raidSession)
+export const addRaidSession = authActionClient
+    .inputSchema(newRaidSessionSchema)
+    .action(async ({ parsedInput }) => {
+        const id = await raidSessionRepo.add(parsedInput)
         return await raidSessionRepo.getById(id)
-    }, "RaidSessions")
-}
+    })
 
-export async function editRaidSession(
-    editedRaidSession: EditRaidSession
-): Promise<Result<RaidSession>> {
-    return tryCatch(async () => {
-        await raidSessionRepo.edit(editedRaidSession)
-        return await raidSessionRepo.getById(editedRaidSession.id)
-    }, "RaidSessions")
-}
+export const editRaidSession = authActionClient
+    .inputSchema(editRaidSessionSchema)
+    .action(async ({ parsedInput }) => {
+        await raidSessionRepo.edit(parsedInput)
+        return await raidSessionRepo.getById(parsedInput.id)
+    })
 
-export async function deleteRaidSession(id: string): Promise<VoidResult> {
-    return tryCatchVoid(
-        () => raidSessionRepo.delete(id),
-        "RaidSessions",
-        "Failed to delete raid session"
-    )
-}
+export const deleteRaidSession = authActionClient
+    .inputSchema(z.object({ id: z.uuid() }))
+    .action(async ({ parsedInput }) => {
+        await raidSessionRepo.delete(parsedInput.id)
+    })
 
-export async function cloneRaidSession(id: string): Promise<Result<RaidSession>> {
-    return tryCatch(async () => {
-        const source = await raidSessionRepo.getWithRoster(id)
-        const cloned: NewRaidSession = {
+export const cloneRaidSession = authActionClient
+    .inputSchema(z.object({ id: z.uuid() }))
+    .action(async ({ parsedInput }) => {
+        const source = await raidSessionRepo.getWithRoster(parsedInput.id)
+        const cloned = {
             name: `${source.name}-${newUUID().slice(0, 6)}`,
             raidDate: getUnixTimestamp(),
             roster: source.roster.map((r) => r.id),
         }
         const newId = await raidSessionRepo.add(cloned)
         return await raidSessionRepo.getById(newId)
-    }, "RaidSessions")
-}
+    })
 
-export async function importRosterInRaidSession(
-    raidSessionId: string,
-    csv: string
-): Promise<VoidResult> {
-    return tryCatchVoid(async () => {
-        const source = await raidSessionRepo.getById(raidSessionId)
+export const importRosterInRaidSession = authActionClient
+    .inputSchema(z.object({ raidSessionId: z.uuid(), csv: z.string() }))
+    .action(async ({ parsedInput }) => {
+        const source = await raidSessionRepo.getById(parsedInput.raidSessionId)
         const allCharacters = await characterRepo.getList()
 
         // Parse CSV: each line is a character name-server or character name
-        const roster: Character[] = csv
+        const roster: Character[] = parsedInput.csv
             .split("\n")
             .map((line) => line.trim())
             .filter((line) => line.length > 0)
@@ -92,14 +83,13 @@ export async function importRosterInRaidSession(
             })
             .filter((r): r is Character => r !== undefined)
 
-        const editedRaidSession: EditRaidSession = {
+        const editedRaidSession = {
             ...source,
             roster: roster.map((r) => r.id),
         }
 
         await raidSessionRepo.edit(editedRaidSession)
-    }, "RaidSessions")
-}
+    })
 
 export async function getRaidSessionRoster(id: string): Promise<Character[]> {
     return await raidSessionRepo.getRoster(id)

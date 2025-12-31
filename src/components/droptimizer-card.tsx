@@ -3,7 +3,6 @@
 import { LoaderCircle, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { toast } from "sonner"
 import { useDeleteDroptimizer } from "@/lib/queries/droptimizers"
 import { getDpsHumanReadable } from "@/lib/utils"
 import { formatUnixTimestampToRelativeDays } from "@/shared/libs/date/date-utils"
@@ -42,7 +41,7 @@ export const DroptimizerCard = ({
     character,
 }: DroptimizerCardProps) => {
     const router = useRouter()
-    const deleteMutation = useDeleteDroptimizer()
+    const { execute: deleteDroptimizer, isExecuting: isDeleting } = useDeleteDroptimizer()
     const [isDetailOpen, setIsDetailOpen] = useState(false)
 
     const charName = character?.name ?? "Unknown"
@@ -52,14 +51,7 @@ export const DroptimizerCard = ({
         if (
             window.confirm(`Are you sure you want to delete ${charName}'s droptimizer?`)
         ) {
-            deleteMutation.mutate(dropt.url, {
-                onSuccess: () => {
-                    toast.success("Droptimizer deleted")
-                },
-                onError: (error) => {
-                    toast.error(`Failed to delete: ${error.message}`)
-                },
-            })
+            deleteDroptimizer({ id: dropt.id })
         }
     }
 
@@ -73,7 +65,7 @@ export const DroptimizerCard = ({
             {/* Delete Button */}
             <IconButton
                 icon={
-                    deleteMutation.isPending ? (
+                    isDeleting ? (
                         <LoaderCircle className="h-4 w-4 animate-spin" />
                     ) : (
                         <X className="h-4 w-4" />
@@ -83,7 +75,7 @@ export const DroptimizerCard = ({
                 size="sm"
                 className="absolute top-3 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                 onClick={handleDelete}
-                disabled={deleteMutation.isPending}
+                disabled={isDeleting}
             />
 
             {/* Character Info */}

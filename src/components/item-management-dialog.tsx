@@ -3,7 +3,6 @@
 import * as ToggleGroup from "@radix-ui/react-toggle-group"
 import { Loader2, Search, StickyNote, Users } from "lucide-react"
 import { useState, useMemo, type JSX } from "react"
-import { toast } from "sonner"
 import { useUpdateItemBisSpecs } from "@/lib/queries/bis-list"
 import { useItemNote, useSetItemNote } from "@/lib/queries/items"
 import { useCharactersWithLootsByItemId } from "@/lib/queries/loots"
@@ -68,36 +67,21 @@ export default function ItemManagementDialog({
             return
         }
 
-        setItemNoteMutation.mutate(
-            { id: itemAndSpecs.item.id, note: itemNote },
-            {
-                onSuccess: () => {
-                    toast.success("Item note updated successfully")
-                },
-                onError: (error: Error) => {
-                    toast.error(`Failed to update item note: ${error.message}`)
-                },
-            }
-        )
+        setItemNoteMutation.execute({ id: itemAndSpecs.item.id, note: itemNote })
     }
 
-    const handleBisSave = () => {
+    const handleBisSave = async () => {
         if (!itemAndSpecs) {
             return
         }
 
-        updateBisMutation.mutate(
-            { itemId: itemAndSpecs.item.id, specIds: selectedSpecs },
-            {
-                onSuccess: () => {
-                    toast.success("BiS specs updated successfully")
-                    setOpen(false)
-                },
-                onError: (error: Error) => {
-                    toast.error(`Failed to update BiS specs: ${error.message}`)
-                },
-            }
-        )
+        const result = await updateBisMutation.executeAsync({
+            itemId: itemAndSpecs.item.id,
+            specIds: selectedSpecs,
+        })
+        if (!result.serverError) {
+            setOpen(false)
+        }
     }
 
     if (!itemAndSpecs) {
@@ -195,10 +179,10 @@ export default function ItemManagementDialog({
                         </div>
                         <Button
                             className="w-full mt-4"
-                            onClick={handleBisSave}
-                            disabled={updateBisMutation.isPending}
+                            onClick={() => void handleBisSave()}
+                            disabled={updateBisMutation.isExecuting}
                         >
-                            {updateBisMutation.isPending ? (
+                            {updateBisMutation.isExecuting ? (
                                 <Loader2 className="animate-spin" />
                             ) : (
                                 "Save BiS Specs"
@@ -226,10 +210,10 @@ export default function ItemManagementDialog({
                             </div>
                             <Button
                                 onClick={handleSaveNote}
-                                disabled={setItemNoteMutation.isPending}
+                                disabled={setItemNoteMutation.isExecuting}
                                 className="w-full"
                             >
-                                {setItemNoteMutation.isPending ? (
+                                {setItemNoteMutation.isExecuting ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                         Saving...

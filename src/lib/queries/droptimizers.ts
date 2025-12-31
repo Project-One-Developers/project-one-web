@@ -1,6 +1,8 @@
 "use client"
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useAction } from "next-safe-action/hooks"
+import { toast } from "sonner"
 import {
     addSimC,
     addSimulationFromUrl,
@@ -11,6 +13,7 @@ import {
     getDroptimizerList,
     syncDroptimizersFromDiscord,
 } from "@/actions/droptimizer"
+import { s } from "@/lib/safe-stringify"
 import type { WowRaidDifficulty } from "@/shared/models/wow.model"
 import { queryKeys } from "./keys"
 
@@ -33,10 +36,13 @@ export function useLatestDroptimizers() {
 export function useDeleteDroptimizer() {
     const queryClient = useQueryClient()
 
-    return useMutation({
-        mutationFn: (id: string) => deleteDroptimizer(id),
+    return useAction(deleteDroptimizer, {
         onSuccess: () => {
+            toast.success("Droptimizer deleted.")
             void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to delete droptimizer")
         },
     })
 }
@@ -61,10 +67,13 @@ export function useDroptimizerByCharacterIdAndDiff(
 export function useAddSimC() {
     const queryClient = useQueryClient()
 
-    return useMutation({
-        mutationFn: (simcData: string) => addSimC(simcData),
+    return useAction(addSimC, {
         onSuccess: () => {
+            toast.success("SimC data added.")
             void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to add SimC data")
         },
     })
 }
@@ -72,23 +81,27 @@ export function useAddSimC() {
 export function useAddSimulationFromUrl() {
     const queryClient = useQueryClient()
 
-    return useMutation({
-        mutationFn: (url: string) => addSimulationFromUrl(url),
+    return useAction(addSimulationFromUrl, {
         onSuccess: () => {
+            toast.success("Simulation added.")
             void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to add simulation")
         },
     })
 }
 
-type DurationInput = { days?: number; hours?: number }
-
 export function useSyncDroptimizersFromDiscord() {
     const queryClient = useQueryClient()
 
-    return useMutation({
-        mutationFn: (lookback: DurationInput) => syncDroptimizersFromDiscord(lookback),
-        onSuccess: () => {
+    return useAction(syncDroptimizersFromDiscord, {
+        onSuccess: ({ data }) => {
+            toast.success(`Synced ${s(data.imported)} droptimizers from Discord.`)
             void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to sync droptimizers from Discord")
         },
     })
 }
@@ -96,10 +109,13 @@ export function useSyncDroptimizersFromDiscord() {
 export function useDeleteSimulationsOlderThan() {
     const queryClient = useQueryClient()
 
-    return useMutation({
-        mutationFn: (lookback: DurationInput) => deleteSimulationsOlderThan(lookback),
+    return useAction(deleteSimulationsOlderThan, {
         onSuccess: () => {
+            toast.success("Old simulations deleted.")
             void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to delete old simulations")
         },
     })
 }

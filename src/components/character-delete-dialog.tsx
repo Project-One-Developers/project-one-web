@@ -26,14 +26,13 @@ export default function CharacterDeleteDialog({
     character,
 }: CharacterDeleteDialogProps): JSX.Element {
     const router = useRouter()
-    const deleteMutation = useDeleteCharacter()
+    const { executeAsync: deleteCharacter, isExecuting } = useDeleteCharacter()
 
-    const handleDelete = () => {
-        deleteMutation.mutate(character.id, {
-            onSuccess: () => {
-                router.push("/roster")
-            },
-        })
+    const handleDelete = async () => {
+        const result = await deleteCharacter({ id: character.id })
+        if (result.data !== undefined) {
+            router.push("/roster")
+        }
     }
 
     return (
@@ -48,14 +47,10 @@ export default function CharacterDeleteDialog({
                 </DialogHeader>
                 <Button
                     variant="destructive"
-                    disabled={deleteMutation.isPending}
-                    onClick={handleDelete}
+                    disabled={isExecuting}
+                    onClick={() => void handleDelete()}
                 >
-                    {deleteMutation.isPending ? (
-                        <Loader2 className="animate-spin" />
-                    ) : (
-                        "Confirm"
-                    )}
+                    {isExecuting ? <Loader2 className="animate-spin" /> : "Confirm"}
                 </Button>
             </DialogContent>
         </Dialog>

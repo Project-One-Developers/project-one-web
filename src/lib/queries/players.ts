@@ -1,6 +1,8 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useAction } from "next-safe-action/hooks"
+import { toast } from "sonner"
 import {
     addCharacter,
     addCharacterWithSync,
@@ -17,19 +19,8 @@ import {
     getPlayersWithoutCharacters,
 } from "@/actions/characters"
 import { getPlayersWithSummaryCompact } from "@/actions/summary"
-import type {
-    EditCharacter,
-    EditPlayer,
-    NewCharacter,
-    NewCharacterWithoutClass,
-    NewPlayer,
-} from "@/shared/models/character.model"
 import type { PlayerWithSummaryCompact } from "@/shared/types/types"
 import { queryKeys } from "./keys"
-import {
-    useMutationWithResult,
-    useVoidMutationWithResult,
-} from "./use-mutation-with-result"
 
 // ============== QUERIES ==============
 
@@ -105,85 +96,153 @@ export function usePlayersSummaryCompact() {
 // ============== MUTATIONS ==============
 
 export function useAddPlayer() {
-    return useMutationWithResult({
-        mutationFn: (player: NewPlayer) => addPlayer(player),
-        invalidateKeys: [
-            [queryKeys.playersWithCharacters],
-            [queryKeys.playersWithoutCharacters],
-            [queryKeys.playersSummary],
-        ],
-        successMessage: (data) => `Player ${data.name} added successfully.`,
+    const queryClient = useQueryClient()
+
+    return useAction(addPlayer, {
+        onSuccess: ({ data }) => {
+            toast.success(`Player ${data.name} added successfully.`)
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithCharacters],
+            })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithoutCharacters],
+            })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersSummary],
+            })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to add player")
+        },
     })
 }
 
 export function useEditPlayer() {
-    return useMutationWithResult({
-        mutationFn: (player: EditPlayer) => editPlayer(player),
-        invalidateKeys: [[queryKeys.playersWithCharacters], [queryKeys.playersSummary]],
-        successMessage: (data) => `Player ${data.name} updated successfully.`,
+    const queryClient = useQueryClient()
+
+    return useAction(editPlayer, {
+        onSuccess: ({ data }) => {
+            toast.success(`Player ${data.name} updated successfully.`)
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithCharacters],
+            })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersSummary],
+            })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to update player")
+        },
     })
 }
 
 export function useDeletePlayer() {
-    return useVoidMutationWithResult({
-        mutationFn: (id: string) => deletePlayer(id),
-        invalidateKeys: [
-            [queryKeys.playersWithCharacters],
-            [queryKeys.playersWithoutCharacters],
-            [queryKeys.playersSummary],
-        ],
-        successMessage: "Player deleted successfully.",
+    const queryClient = useQueryClient()
+
+    return useAction(deletePlayer, {
+        onSuccess: () => {
+            toast.success("Player deleted successfully.")
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithCharacters],
+            })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithoutCharacters],
+            })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersSummary],
+            })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to delete player")
+        },
     })
 }
 
 export function useAddCharacter() {
-    return useMutationWithResult({
-        mutationFn: (character: NewCharacter) => addCharacter(character),
-        invalidateKeys: [
-            [queryKeys.characters],
-            [queryKeys.playersWithCharacters],
-            [queryKeys.playersWithoutCharacters],
-            [queryKeys.playersSummary],
-        ],
-        successMessage: (data) => `Character ${data.name} added successfully.`,
+    const queryClient = useQueryClient()
+
+    return useAction(addCharacter, {
+        onSuccess: ({ data }) => {
+            toast.success(`Character ${data.name} added successfully.`)
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithCharacters],
+            })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithoutCharacters],
+            })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersSummary],
+            })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to add character")
+        },
     })
 }
 
 export function useAddCharacterWithSync() {
-    return useMutationWithResult({
-        mutationFn: (character: NewCharacterWithoutClass) =>
-            addCharacterWithSync(character),
-        invalidateKeys: [
-            [queryKeys.characters],
-            [queryKeys.playersWithCharacters],
-            [queryKeys.playersWithoutCharacters],
-            [queryKeys.playersSummary],
-        ],
-        successMessage: (data) => `Character ${data.name} added successfully.`,
+    const queryClient = useQueryClient()
+
+    return useAction(addCharacterWithSync, {
+        onSuccess: ({ data }) => {
+            toast.success(`Character ${data.name} added successfully.`)
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithCharacters],
+            })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithoutCharacters],
+            })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersSummary],
+            })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to add character")
+        },
     })
 }
 
 export function useEditCharacter() {
-    return useMutationWithResult({
-        mutationFn: (character: EditCharacter) => editCharacter(character),
-        invalidateKeys: [
-            [queryKeys.characters],
-            [queryKeys.playersWithCharacters],
-            [queryKeys.playersSummary],
-        ],
-        successMessage: (data) => `Character ${data.name} updated successfully.`,
+    const queryClient = useQueryClient()
+
+    return useAction(editCharacter, {
+        onSuccess: ({ data }) => {
+            toast.success(`Character ${data.name} updated successfully.`)
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithCharacters],
+            })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersSummary],
+            })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to update character")
+        },
     })
 }
 
 export function useDeleteCharacter() {
-    return useVoidMutationWithResult({
-        mutationFn: (id: string) => deleteCharacter(id),
-        invalidateKeys: [
-            [queryKeys.characters],
-            [queryKeys.playersWithCharacters],
-            [queryKeys.playersWithoutCharacters],
-            [queryKeys.playersSummary],
-        ],
-        successMessage: "Character deleted successfully.",
+    const queryClient = useQueryClient()
+
+    return useAction(deleteCharacter, {
+        onSuccess: () => {
+            toast.success("Character deleted successfully.")
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithCharacters],
+            })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithoutCharacters],
+            })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersSummary],
+            })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to delete character")
+        },
     })
 }

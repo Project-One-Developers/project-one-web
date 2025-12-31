@@ -124,10 +124,9 @@ export function SessionLootsPanel({ raidSessionId }: SessionLootsPanelProps) {
                                                         <button
                                                             type="button"
                                                             onClick={() => {
-                                                                deleteLootMutation.mutate(
+                                                                deleteLootMutation.execute(
                                                                     {
                                                                         lootId: loot.id,
-                                                                        raidSessionId,
                                                                     }
                                                                 )
                                                             }}

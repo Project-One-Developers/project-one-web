@@ -1,6 +1,8 @@
 "use client"
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useAction } from "next-safe-action/hooks"
+import { toast } from "sonner"
 import {
     deleteItemNote,
     getAllItemNotes,
@@ -79,13 +81,16 @@ export function useItemNote(id: number | undefined) {
 export function useSetItemNote() {
     const queryClient = useQueryClient()
 
-    return useMutation({
-        mutationFn: ({ id, note }: { id: number; note: string }) => setItemNote(id, note),
-        onSuccess: (_, vars) => {
+    return useAction(setItemNote, {
+        onSuccess: ({ input }) => {
+            toast.success("Note saved")
             void queryClient.invalidateQueries({ queryKey: [queryKeys.items, "notes"] })
             void queryClient.invalidateQueries({
-                queryKey: [queryKeys.items, "notes", vars.id],
+                queryKey: [queryKeys.items, "notes", input.id],
             })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to save note")
         },
     })
 }
@@ -93,13 +98,16 @@ export function useSetItemNote() {
 export function useDeleteItemNote() {
     const queryClient = useQueryClient()
 
-    return useMutation({
-        mutationFn: (id: number) => deleteItemNote(id),
-        onSuccess: (_, id) => {
+    return useAction(deleteItemNote, {
+        onSuccess: ({ input }) => {
+            toast.success("Note deleted")
             void queryClient.invalidateQueries({ queryKey: [queryKeys.items, "notes"] })
             void queryClient.invalidateQueries({
-                queryKey: [queryKeys.items, "notes", id],
+                queryKey: [queryKeys.items, "notes", input.id],
             })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to delete note")
         },
     })
 }

@@ -9,6 +9,7 @@ import { bossRepo } from "@/db/repositories/bosses"
 import { itemNoteRepo, itemRepo } from "@/db/repositories/items"
 import { itemTable } from "@/db/schema"
 import { logger } from "@/lib/logger"
+import { authActionClient } from "@/lib/safe-action"
 import { s } from "@/lib/safe-stringify"
 import { CURRENT_SEASON } from "@/shared/consts/wow.consts"
 import type { Boss } from "@/shared/models/boss.model"
@@ -53,13 +54,17 @@ export async function getItemNote(id: number): Promise<ItemNote | null> {
     return await itemNoteRepo.getById(id)
 }
 
-export async function setItemNote(id: number, note: string): Promise<ItemNote> {
-    return await itemNoteRepo.set(id, note)
-}
+export const setItemNote = authActionClient
+    .inputSchema(z.object({ id: z.number(), note: z.string() }))
+    .action(async ({ parsedInput }) => {
+        return await itemNoteRepo.set(parsedInput.id, parsedInput.note)
+    })
 
-export async function deleteItemNote(id: number): Promise<void> {
-    await itemNoteRepo.delete(id)
-}
+export const deleteItemNote = authActionClient
+    .inputSchema(z.object({ id: z.number() }))
+    .action(async ({ parsedInput }) => {
+        await itemNoteRepo.delete(parsedInput.id)
+    })
 
 // ============== SYNC ITEMS FROM JSON ==============
 

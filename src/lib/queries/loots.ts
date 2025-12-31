@@ -1,6 +1,8 @@
 "use client"
 
 import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useAction } from "next-safe-action/hooks"
+import { toast } from "sonner"
 import {
     addLoots,
     addManualLoot,
@@ -20,18 +22,8 @@ import {
     unassignLoot,
     untradeLoot,
 } from "@/actions/loots"
-import { unwrap } from "@/lib/result"
 import { s } from "@/lib/safe-stringify"
-import type {
-    CharAssignmentHighlights,
-    NewLoot,
-    NewLootManual,
-} from "@/shared/models/loot.model"
 import { queryKeys } from "./keys"
-import {
-    useMutationWithResult,
-    useVoidMutationWithResult,
-} from "./use-mutation-with-result"
 
 // ============== QUERIES ==============
 
@@ -108,22 +100,18 @@ export function useLootWithItem(lootId: string | undefined) {
 export function useAddLoots() {
     const queryClient = useQueryClient()
 
-    return useVoidMutationWithResult({
-        mutationFn: ({
-            raidSessionId,
-            loots,
-        }: {
-            raidSessionId: string
-            loots: NewLoot[]
-        }) => addLoots(raidSessionId, loots),
-        successMessage: "Loots added successfully.",
-        onSuccess: (vars) => {
+    return useAction(addLoots, {
+        onSuccess: ({ input }) => {
+            toast.success("Loots added successfully.")
             void queryClient.invalidateQueries({
-                queryKey: [queryKeys.loots, "session", vars.raidSessionId],
+                queryKey: [queryKeys.loots, "session", input.raidSessionId],
             })
             void queryClient.invalidateQueries({
-                queryKey: [queryKeys.raidSession, vars.raidSessionId],
+                queryKey: [queryKeys.raidSession, input.raidSessionId],
             })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to add loots")
         },
     })
 }
@@ -131,28 +119,12 @@ export function useAddLoots() {
 export function useAssignLoot() {
     const queryClient = useQueryClient()
 
-    return useVoidMutationWithResult({
-        mutationFn: ({
-            charId,
-            lootId,
-            highlights,
-        }: {
-            charId: string
-            lootId: string
-            highlights: CharAssignmentHighlights | null
-            raidSessionId?: string
-        }) => assignLoot(charId, lootId, highlights),
-        onSuccess: (vars) => {
-            if (vars.raidSessionId) {
-                void queryClient.invalidateQueries({
-                    queryKey: [queryKeys.loots, "session", vars.raidSessionId],
-                })
-                void queryClient.invalidateQueries({
-                    queryKey: [queryKeys.loots, "sessions"],
-                })
-            } else {
-                void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
-            }
+    return useAction(assignLoot, {
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to assign loot")
         },
     })
 }
@@ -160,20 +132,12 @@ export function useAssignLoot() {
 export function useUnassignLoot() {
     const queryClient = useQueryClient()
 
-    return useVoidMutationWithResult({
-        mutationFn: ({ lootId }: { lootId: string; raidSessionId?: string }) =>
-            unassignLoot(lootId),
-        onSuccess: (vars) => {
-            if (vars.raidSessionId) {
-                void queryClient.invalidateQueries({
-                    queryKey: [queryKeys.loots, "session", vars.raidSessionId],
-                })
-                void queryClient.invalidateQueries({
-                    queryKey: [queryKeys.loots, "sessions"],
-                })
-            } else {
-                void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
-            }
+    return useAction(unassignLoot, {
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to unassign loot")
         },
     })
 }
@@ -181,20 +145,12 @@ export function useUnassignLoot() {
 export function useTradeLoot() {
     const queryClient = useQueryClient()
 
-    return useVoidMutationWithResult({
-        mutationFn: ({ lootId }: { lootId: string; raidSessionId?: string }) =>
-            tradeLoot(lootId),
-        onSuccess: (vars) => {
-            if (vars.raidSessionId) {
-                void queryClient.invalidateQueries({
-                    queryKey: [queryKeys.loots, "session", vars.raidSessionId],
-                })
-                void queryClient.invalidateQueries({
-                    queryKey: [queryKeys.loots, "sessions"],
-                })
-            } else {
-                void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
-            }
+    return useAction(tradeLoot, {
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to mark loot as traded")
         },
     })
 }
@@ -202,20 +158,12 @@ export function useTradeLoot() {
 export function useUntradeLoot() {
     const queryClient = useQueryClient()
 
-    return useVoidMutationWithResult({
-        mutationFn: ({ lootId }: { lootId: string; raidSessionId?: string }) =>
-            untradeLoot(lootId),
-        onSuccess: (vars) => {
-            if (vars.raidSessionId) {
-                void queryClient.invalidateQueries({
-                    queryKey: [queryKeys.loots, "session", vars.raidSessionId],
-                })
-                void queryClient.invalidateQueries({
-                    queryKey: [queryKeys.loots, "sessions"],
-                })
-            } else {
-                void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
-            }
+    return useAction(untradeLoot, {
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to unmark loot as traded")
         },
     })
 }
@@ -223,21 +171,13 @@ export function useUntradeLoot() {
 export function useDeleteLoot() {
     const queryClient = useQueryClient()
 
-    return useVoidMutationWithResult({
-        mutationFn: ({ lootId }: { lootId: string; raidSessionId?: string }) =>
-            deleteLoot(lootId),
-        successMessage: "Loot deleted successfully.",
-        onSuccess: (vars) => {
-            if (vars.raidSessionId) {
-                void queryClient.invalidateQueries({
-                    queryKey: [queryKeys.loots, "session", vars.raidSessionId],
-                })
-                void queryClient.invalidateQueries({
-                    queryKey: [queryKeys.loots, "sessions"],
-                })
-            } else {
-                void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
-            }
+    return useAction(deleteLoot, {
+        onSuccess: () => {
+            toast.success("Loot deleted successfully.")
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to delete loot")
         },
     })
 }
@@ -260,12 +200,11 @@ export function useLootAssignmentInfo(lootId: string | undefined) {
 export function useCharactersWithLootsByItemId(itemId: number | undefined) {
     return useQuery({
         queryKey: [queryKeys.loots, "charactersByItem", itemId],
-        queryFn: async () => {
+        queryFn: () => {
             if (!itemId) {
                 throw new Error("No item id provided")
             }
-            const result = await getCharactersWithLootsByItemId(itemId)
-            return unwrap(result)
+            return getCharactersWithLootsByItemId(itemId)
         },
         enabled: !!itemId,
     })
@@ -274,25 +213,18 @@ export function useCharactersWithLootsByItemId(itemId: number | undefined) {
 export function useImportRcLoot() {
     const queryClient = useQueryClient()
 
-    return useMutationWithResult({
-        mutationFn: ({
-            raidSessionId,
-            csv,
-            importAssignedCharacter,
-        }: {
-            raidSessionId: string
-            csv: string
-            importAssignedCharacter: boolean
-        }) => importRcLootCsv(raidSessionId, csv, importAssignedCharacter),
-        successMessage: (data: { imported: number }) =>
-            `Imported ${s(data.imported)} loot items.`,
-        onSuccess: (_, vars) => {
+    return useAction(importRcLootCsv, {
+        onSuccess: ({ data, input }) => {
+            toast.success(`Imported ${s(data.imported)} loot items.`)
             void queryClient.invalidateQueries({
-                queryKey: [queryKeys.loots, "session", vars.raidSessionId],
+                queryKey: [queryKeys.loots, "session", input.raidSessionId],
             })
             void queryClient.invalidateQueries({
-                queryKey: [queryKeys.raidSession, vars.raidSessionId],
+                queryKey: [queryKeys.raidSession, input.raidSessionId],
             })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to import RC loot")
         },
     })
 }
@@ -300,15 +232,15 @@ export function useImportRcLoot() {
 export function useImportRcAssignments() {
     const queryClient = useQueryClient()
 
-    return useMutationWithResult({
-        mutationFn: ({ raidSessionId, csv }: { raidSessionId: string; csv: string }) =>
-            importRcLootAssignments(raidSessionId, csv),
-        successMessage: (data: { assigned: number }) =>
-            `Assigned ${s(data.assigned)} loots.`,
-        onSuccess: (_, vars) => {
+    return useAction(importRcLootAssignments, {
+        onSuccess: ({ data, input }) => {
+            toast.success(`Assigned ${s(data.assigned)} loots.`)
             void queryClient.invalidateQueries({
-                queryKey: [queryKeys.loots, "session", vars.raidSessionId],
+                queryKey: [queryKeys.loots, "session", input.raidSessionId],
             })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to import RC assignments")
         },
     })
 }
@@ -316,18 +248,18 @@ export function useImportRcAssignments() {
 export function useImportMrtLoot() {
     const queryClient = useQueryClient()
 
-    return useMutationWithResult({
-        mutationFn: ({ raidSessionId, data }: { raidSessionId: string; data: string }) =>
-            importMrtLoot(raidSessionId, data),
-        successMessage: (result: { imported: number }) =>
-            `Imported ${s(result.imported)} loot items.`,
-        onSuccess: (_, vars) => {
+    return useAction(importMrtLoot, {
+        onSuccess: ({ data, input }) => {
+            toast.success(`Imported ${s(data.imported)} loot items.`)
             void queryClient.invalidateQueries({
-                queryKey: [queryKeys.loots, "session", vars.raidSessionId],
+                queryKey: [queryKeys.loots, "session", input.raidSessionId],
             })
             void queryClient.invalidateQueries({
-                queryKey: [queryKeys.raidSession, vars.raidSessionId],
+                queryKey: [queryKeys.raidSession, input.raidSessionId],
             })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to import MRT loot")
         },
     })
 }
@@ -335,23 +267,18 @@ export function useImportMrtLoot() {
 export function useAddManualLoot() {
     const queryClient = useQueryClient()
 
-    return useMutationWithResult({
-        mutationFn: ({
-            raidSessionId,
-            manualLoots,
-        }: {
-            raidSessionId: string
-            manualLoots: NewLootManual[]
-        }) => addManualLoot(raidSessionId, manualLoots),
-        successMessage: (data: { imported: number }) =>
-            `Added ${s(data.imported)} manual loot items.`,
-        onSuccess: (_, vars) => {
+    return useAction(addManualLoot, {
+        onSuccess: ({ data, input }) => {
+            toast.success(`Added ${s(data.imported)} manual loot items.`)
             void queryClient.invalidateQueries({
-                queryKey: [queryKeys.loots, "session", vars.raidSessionId],
+                queryKey: [queryKeys.loots, "session", input.raidSessionId],
             })
             void queryClient.invalidateQueries({
-                queryKey: [queryKeys.raidSession, vars.raidSessionId],
+                queryKey: [queryKeys.raidSession, input.raidSessionId],
             })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to add manual loot")
         },
     })
 }

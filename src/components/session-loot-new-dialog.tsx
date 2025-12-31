@@ -4,7 +4,6 @@ import * as Tabs from "@radix-ui/react-tabs"
 import * as ToggleGroup from "@radix-ui/react-toggle-group"
 import { LoaderCircle, X } from "lucide-react"
 import { useState, type JSX } from "react"
-import { toast } from "sonner"
 import { useSearchItems } from "@/lib/queries/items"
 import {
     useAddManualLoot,
@@ -51,28 +50,23 @@ export default function SessionLootNewDialog({
 
     const { data: items, isLoading } = useSearchItems(searchTerm)
 
-    const addManualLootsMutation = useAddManualLoot()
-    const addRcLootsMutation = useImportRcLoot()
-    const addRcAssignementsMutation = useImportRcAssignments()
-    const addMrtLootsMutation = useImportMrtLoot()
+    const { executeAsync: addManualLoots, isExecuting: isAddingManual } =
+        useAddManualLoot()
+    const { executeAsync: importRcLoot, isExecuting: isImportingRc } = useImportRcLoot()
+    const { executeAsync: importRcAssignments, isExecuting: isImportingRcAssign } =
+        useImportRcAssignments()
+    const { executeAsync: importMrtLoot, isExecuting: isImportingMrt } =
+        useImportMrtLoot()
 
-    const handleAddManualLoots = () => {
-        addManualLootsMutation.mutate(
-            {
-                raidSessionId,
-                manualLoots: selectedItems,
-            },
-            {
-                onSuccess: () => {
-                    setSelectedItems([])
-                    setOpen(false)
-                    toast.success("Loots successfully added.")
-                },
-                onError: (error) => {
-                    toast.error(`Failed to add loots. ${error.message}`)
-                },
-            }
-        )
+    const handleAddManualLoots = async () => {
+        const result = await addManualLoots({
+            raidSessionId,
+            manualLoots: selectedItems,
+        })
+        if (result.data) {
+            setSelectedItems([])
+            setOpen(false)
+        }
     }
 
     const handleItemSelect = (item: Item) => {
@@ -88,62 +82,38 @@ export default function SessionLootNewDialog({
         setSearchTerm("")
     }
 
-    const handleRcImportLoots = (importAssignedCharacter: boolean) => {
-        addRcLootsMutation.mutate(
-            {
-                raidSessionId,
-                csv: rcCsvData,
-                importAssignedCharacter,
-            },
-            {
-                onSuccess: () => {
-                    setRcInputData("")
-                    setOpen(false)
-                    toast.success("Loots successfully imported.")
-                },
-                onError: (error) => {
-                    toast.error(`Failed to import RC. ${error.message}`)
-                },
-            }
-        )
+    const handleRcImportLoots = async (importAssignedCharacter: boolean) => {
+        const result = await importRcLoot({
+            raidSessionId,
+            csv: rcCsvData,
+            importAssignedCharacter,
+        })
+        if (result.data) {
+            setRcInputData("")
+            setOpen(false)
+        }
     }
 
-    const handleRcImportAssignements = () => {
-        addRcAssignementsMutation.mutate(
-            {
-                raidSessionId,
-                csv: rcCsvData,
-            },
-            {
-                onSuccess: () => {
-                    setRcInputData("")
-                    setOpen(false)
-                    toast.success("Assignments successfully imported.")
-                },
-                onError: (error) => {
-                    toast.error(`Failed to import RC. ${error.message}`)
-                },
-            }
-        )
+    const handleRcImportAssignements = async () => {
+        const result = await importRcAssignments({
+            raidSessionId,
+            csv: rcCsvData,
+        })
+        if (result.data) {
+            setRcInputData("")
+            setOpen(false)
+        }
     }
 
-    const handleMrtImport = () => {
-        addMrtLootsMutation.mutate(
-            {
-                raidSessionId,
-                data: mrtData,
-            },
-            {
-                onSuccess: () => {
-                    setMrtData("")
-                    setOpen(false)
-                    toast.success("Loots successfully imported.")
-                },
-                onError: (error) => {
-                    toast.error(`Failed to import MRT. ${error.message}`)
-                },
-            }
-        )
+    const handleMrtImport = async () => {
+        const result = await importMrtLoot({
+            raidSessionId,
+            data: mrtData,
+        })
+        if (result.data) {
+            setMrtData("")
+            setOpen(false)
+        }
     }
 
     return (
@@ -344,13 +314,10 @@ export default function SessionLootNewDialog({
                         </div>
                         <Button
                             className="w-full mt-4"
-                            onClick={handleAddManualLoots}
-                            disabled={
-                                addManualLootsMutation.isPending ||
-                                selectedItems.length === 0
-                            }
+                            onClick={() => void handleAddManualLoots()}
+                            disabled={isAddingManual || selectedItems.length === 0}
                         >
-                            {addManualLootsMutation.isPending && (
+                            {isAddingManual && (
                                 <LoaderCircle className="animate-spin mr-2 h-4 w-4" />
                             )}
                             Add Loots
@@ -368,28 +335,20 @@ export default function SessionLootNewDialog({
                         <div className="flex gap-2 mt-4">
                             <Button
                                 className="flex-1"
-                                onClick={() => {
-                                    handleRcImportLoots(false)
-                                }}
-                                disabled={
-                                    addRcLootsMutation.isPending || !rcCsvData.trim()
-                                }
+                                onClick={() => void handleRcImportLoots(false)}
+                                disabled={isImportingRc || !rcCsvData.trim()}
                             >
-                                {addRcLootsMutation.isPending ? (
+                                {isImportingRc ? (
                                     <LoaderCircle className="animate-spin mr-2 h-4 w-4" />
                                 ) : null}
                                 Import Loots
                             </Button>
                             <Button
                                 className="flex-1"
-                                onClick={() => {
-                                    handleRcImportLoots(true)
-                                }}
-                                disabled={
-                                    addRcLootsMutation.isPending || !rcCsvData.trim()
-                                }
+                                onClick={() => void handleRcImportLoots(true)}
+                                disabled={isImportingRc || !rcCsvData.trim()}
                             >
-                                {addRcLootsMutation.isPending ? (
+                                {isImportingRc ? (
                                     <LoaderCircle className="animate-spin mr-2 h-4 w-4" />
                                 ) : null}
                                 Import Loots + Assigned
@@ -397,13 +356,10 @@ export default function SessionLootNewDialog({
                             <Button
                                 className="flex-1"
                                 variant="secondary"
-                                onClick={handleRcImportAssignements}
-                                disabled={
-                                    addRcAssignementsMutation.isPending ||
-                                    !rcCsvData.trim()
-                                }
+                                onClick={() => void handleRcImportAssignements()}
+                                disabled={isImportingRcAssign || !rcCsvData.trim()}
                             >
-                                {addRcAssignementsMutation.isPending ? (
+                                {isImportingRcAssign ? (
                                     <LoaderCircle className="animate-spin mr-2 h-4 w-4" />
                                 ) : null}
                                 Import Assigned
@@ -421,10 +377,10 @@ export default function SessionLootNewDialog({
                         />
                         <Button
                             className="w-full mt-4"
-                            onClick={handleMrtImport}
-                            disabled={addMrtLootsMutation.isPending || !mrtData.trim()}
+                            onClick={() => void handleMrtImport()}
+                            disabled={isImportingMrt || !mrtData.trim()}
                         >
-                            {addMrtLootsMutation.isPending && (
+                            {isImportingMrt && (
                                 <LoaderCircle className="animate-spin mr-2 h-4 w-4" />
                             )}
                             Import Loots

@@ -2,7 +2,6 @@
 
 import { LoaderCircle, MoreVertical, StickyNote } from "lucide-react"
 import { useMemo, useState, type JSX } from "react"
-import { toast } from "sonner"
 import { useItemNote } from "@/lib/queries/items"
 import {
     useAssignLoot,
@@ -69,10 +68,10 @@ export default function LootsEligibleChars({
             .sort(sortEligibleCharacters)
     }, [lootAssignmentInfoQuery.data, showAlts])
 
-    const assignLootMutation = useAssignLoot()
-    const unassignLootMutation = useUnassignLoot()
+    const { executeAsync: assignLoot } = useAssignLoot()
+    const { executeAsync: unassignLoot } = useUnassignLoot()
 
-    const handleAssign = (charInfo: CharAssignmentInfo) => {
+    const handleAssign = async (charInfo: CharAssignmentInfo) => {
         // Optimistically update
         const previousSelectedLoot = { ...selectedLoot }
         setSelectedLoot({
@@ -80,23 +79,17 @@ export default function LootsEligibleChars({
             assignedCharacterId: charInfo.character.id,
         })
 
-        assignLootMutation.mutate(
-            {
-                charId: charInfo.character.id,
-                lootId: selectedLoot.id,
-                highlights: charInfo.highlights,
-                raidSessionId: selectedLoot.raidSessionId,
-            },
-            {
-                onError: (error) => {
-                    setSelectedLoot(previousSelectedLoot)
-                    toast.error(`Unable to assign loot. Error: ${error.message}`)
-                },
-            }
-        )
+        const result = await assignLoot({
+            charId: charInfo.character.id,
+            lootId: selectedLoot.id,
+            highlights: charInfo.highlights,
+        })
+        if (result.serverError) {
+            setSelectedLoot(previousSelectedLoot)
+        }
     }
 
-    const handleUnassign = () => {
+    const handleUnassign = async () => {
         // Optimistically update
         const previousSelectedLoot = { ...selectedLoot }
         setSelectedLoot({
@@ -104,15 +97,10 @@ export default function LootsEligibleChars({
             assignedCharacterId: null,
         })
 
-        unassignLootMutation.mutate(
-            { lootId: selectedLoot.id, raidSessionId: selectedLoot.raidSessionId },
-            {
-                onError: (error) => {
-                    setSelectedLoot(previousSelectedLoot)
-                    toast.error(`Unable to unassign loot. Error: ${error.message}`)
-                },
-            }
-        )
+        const result = await unassignLoot({ lootId: selectedLoot.id })
+        if (result.serverError) {
+            setSelectedLoot(previousSelectedLoot)
+        }
     }
 
     if (lootAssignmentInfoQuery.isLoading) {
@@ -240,9 +228,9 @@ export default function LootsEligibleChars({
                                         selectedLoot.assignedCharacterId ===
                                         charInfo.character.id
                                     ) {
-                                        handleUnassign()
+                                        void handleUnassign()
                                     } else {
-                                        handleAssign(charInfo)
+                                        void handleAssign(charInfo)
                                     }
                                 }}
                             >

@@ -25,14 +25,13 @@ export default function PlayerDeleteDialog({
     setOpen,
     player,
 }: PlayerDeleteDialogProps): JSX.Element {
-    const deleteMutation = useDeletePlayer()
+    const { executeAsync: deletePlayer, isExecuting } = useDeletePlayer()
 
-    const handleDelete = () => {
-        deleteMutation.mutate(player.id, {
-            onSuccess: () => {
-                setOpen(false)
-            },
-        })
+    const handleDelete = async () => {
+        const result = await deletePlayer({ id: player.id })
+        if (result.data !== undefined) {
+            setOpen(false)
+        }
     }
 
     return (
@@ -52,12 +51,8 @@ export default function PlayerDeleteDialog({
                     height={400}
                     unoptimized
                 />
-                <Button disabled={deleteMutation.isPending} onClick={handleDelete}>
-                    {deleteMutation.isPending ? (
-                        <Loader2 className="animate-spin" />
-                    ) : (
-                        "Confirm"
-                    )}
+                <Button disabled={isExecuting} onClick={() => void handleDelete()}>
+                    {isExecuting ? <Loader2 className="animate-spin" /> : "Confirm"}
                 </Button>
             </DialogContent>
         </Dialog>

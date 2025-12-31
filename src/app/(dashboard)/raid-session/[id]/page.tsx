@@ -44,8 +44,9 @@ export default function RaidSessionPage() {
 
     const { data: raidSession, isLoading } = useRaidSession(raidSessionId)
     const { data: loots } = useLootsBySessionWithItem(raidSessionId)
-    const cloneMutation = useCloneRaidSession()
-    const deleteMutation = useDeleteRaidSession()
+    const { executeAsync: cloneSession, isExecuting: isCloning } = useCloneRaidSession()
+    const { executeAsync: deleteSession, isExecuting: isDeleting } =
+        useDeleteRaidSession()
 
     if (isLoading) {
         return <LoadingSpinner size="lg" iconSize="lg" text="Loading session..." />
@@ -83,23 +84,19 @@ export default function RaidSessionPage() {
         .filter((character) => character.role === "DPS")
         .sort((a, b) => a.class.localeCompare(b.class))
 
-    const handleClone = () => {
-        cloneMutation.mutate(raidSession.id, {
-            onSuccess: (result) => {
-                if (result.success) {
-                    router.push(`/raid-session/${result.data.id}`)
-                }
-            },
-        })
+    const handleClone = async () => {
+        const result = await cloneSession({ id: raidSession.id })
+        if (result.data) {
+            router.push(`/raid-session/${result.data.id}`)
+        }
     }
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (window.confirm(`Are you sure you want to delete "${raidSession.name}"?`)) {
-            deleteMutation.mutate(raidSession.id, {
-                onSuccess: () => {
-                    router.push("/raid-session")
-                },
-            })
+            const result = await deleteSession({ id: raidSession.id })
+            if (result.data !== undefined) {
+                router.push("/raid-session")
+            }
         }
     }
 
@@ -151,16 +148,16 @@ export default function RaidSessionPage() {
                     <Button
                         variant="secondary"
                         size="sm"
-                        onClick={handleClone}
-                        disabled={cloneMutation.isPending}
+                        onClick={() => void handleClone()}
+                        disabled={isCloning}
                     >
                         <Copy className="mr-2 h-4 w-4" /> Clone
                     </Button>
                     <Button
                         variant="destructive"
                         size="sm"
-                        onClick={handleDelete}
-                        disabled={deleteMutation.isPending}
+                        onClick={() => void handleDelete()}
+                        disabled={isDeleting}
                     >
                         <Trash2 className="mr-2 h-4 w-4" /> Delete
                     </Button>

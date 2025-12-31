@@ -1,6 +1,8 @@
 "use client"
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useAction } from "next-safe-action/hooks"
+import { toast } from "sonner"
 import { getBisList, updateItemBisSpec } from "@/actions/bis-list"
 import { queryKeys } from "./keys"
 
@@ -15,11 +17,13 @@ export function useBisList() {
 export function useUpdateItemBisSpecs() {
     const queryClient = useQueryClient()
 
-    return useMutation({
-        mutationFn: ({ itemId, specIds }: { itemId: number; specIds: number[] }) =>
-            updateItemBisSpec(itemId, specIds),
+    return useAction(updateItemBisSpec, {
         onSuccess: () => {
+            toast.success("BiS specs updated")
             void queryClient.invalidateQueries({ queryKey: [queryKeys.bisList] })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to update BiS specs")
         },
     })
 }

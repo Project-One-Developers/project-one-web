@@ -2,7 +2,6 @@
 
 import { LoaderCircle } from "lucide-react"
 import { useState, type JSX } from "react"
-import { toast } from "sonner"
 import { useImportRosterInRaidSession } from "@/lib/queries/raid-sessions"
 import { Button } from "./ui/button"
 import {
@@ -25,25 +24,17 @@ export default function SessionRosterImportDialog({
 }): JSX.Element {
     const [rosterData, setRosterData] = useState("")
 
-    const importRosterMutation = useImportRosterInRaidSession()
+    const { executeAsync: importRoster, isExecuting } = useImportRosterInRaidSession()
 
-    const handleImport = () => {
-        importRosterMutation.mutate(
-            {
-                raidSessionId,
-                csv: rosterData,
-            },
-            {
-                onSuccess: () => {
-                    setRosterData("")
-                    setOpen(false)
-                    toast.success("Roster successfully imported.")
-                },
-                onError: (error) => {
-                    toast.error(`Failed to import Roster. ${error.message}`)
-                },
-            }
-        )
+    const handleImport = async () => {
+        const result = await importRoster({
+            raidSessionId,
+            csv: rosterData,
+        })
+        if (result.data !== undefined) {
+            setRosterData("")
+            setOpen(false)
+        }
     }
 
     return (
@@ -67,10 +58,10 @@ export default function SessionRosterImportDialog({
                 />
                 <Button
                     className="w-full mt-4"
-                    onClick={handleImport}
-                    disabled={importRosterMutation.isPending || !rosterData.trim()}
+                    onClick={() => void handleImport()}
+                    disabled={isExecuting || !rosterData.trim()}
                 >
-                    {importRosterMutation.isPending && (
+                    {isExecuting && (
                         <LoaderCircle className="animate-spin mr-2 h-4 w-4" />
                     )}
                     Import Roster

@@ -2,6 +2,7 @@
 
 import { groupBy, keyBy } from "es-toolkit"
 import { Duration } from "luxon"
+import { z } from "zod"
 import { bisListRepo } from "@/db/repositories/bis-list"
 import { blizzardRepo } from "@/db/repositories/blizzard"
 import { characterRepo } from "@/db/repositories/characters"
@@ -24,28 +25,23 @@ import {
     parseTiersetInfo,
 } from "@/lib/loot/loot-utils"
 import { parseManualLoots, parseMrtLoots, parseRcLoots } from "@/lib/loots/loot-parsers"
-import { fail, ok, tryCatch, tryCatchVoid } from "@/lib/result"
+import { authActionClient } from "@/lib/safe-action"
 import { s } from "@/lib/safe-stringify"
 import { isInCurrentWowWeek } from "@/shared/libs/date/date-utils"
 import { compareGearItem, gearAreTheSame } from "@/shared/libs/items/item-bonus-utils"
 import { getWowClassFromIdOrName } from "@/shared/libs/spec-parser/spec-utils"
 import type { CharacterBlizzard } from "@/shared/models/blizzard.model"
 import type { CharacterWithGears } from "@/shared/models/character.model"
-import type {
-    CharAssignmentHighlights,
-    Loot,
-    LootWithAssigned,
-    LootWithItem,
-    NewLoot,
-    NewLootManual,
+import {
+    charAssignmentHighlightsSchema,
+    newLootManualSchema,
+    newLootSchema,
+    type Loot,
+    type LootWithAssigned,
+    type LootWithItem,
 } from "@/shared/models/loot.model"
 import type { SimC } from "@/shared/models/simulation.model"
-import type {
-    CharAssignmentInfo,
-    LootAssignmentInfo,
-    Result,
-    VoidResult,
-} from "@/shared/types/types"
+import type { CharAssignmentInfo, LootAssignmentInfo } from "@/shared/types/types"
 
 const RAID_SESSION_TIME_WINDOW = Duration.fromObject({ hours: 5 }).as("seconds")
 
@@ -75,93 +71,107 @@ export async function getLootWithItemById(lootId: string): Promise<LootWithItem>
     return await lootRepo.getWithItemById(lootId)
 }
 
-export async function assignLoot(
-    charId: string,
-    lootId: string,
-    highlights: CharAssignmentHighlights | null
-): Promise<VoidResult> {
-    return tryCatchVoid(
-        () => lootRepo.assign(charId, lootId, highlights),
-        "Loots",
-        "Failed to assign loot"
+export const assignLoot = authActionClient
+    .inputSchema(
+        z.object({
+            charId: z.uuid(),
+            lootId: z.uuid(),
+            highlights: charAssignmentHighlightsSchema.nullable(),
+        })
     )
-}
+    .action(async ({ parsedInput }) => {
+        await lootRepo.assign(
+            parsedInput.charId,
+            parsedInput.lootId,
+            parsedInput.highlights
+        )
+    })
 
-export async function unassignLoot(lootId: string): Promise<VoidResult> {
-    return tryCatchVoid(
-        () => lootRepo.unassign(lootId),
-        "Loots",
-        "Failed to unassign loot"
+export const unassignLoot = authActionClient
+    .inputSchema(z.object({ lootId: z.uuid() }))
+    .action(async ({ parsedInput }) => {
+        await lootRepo.unassign(parsedInput.lootId)
+    })
+
+export const tradeLoot = authActionClient
+    .inputSchema(z.object({ lootId: z.uuid() }))
+    .action(async ({ parsedInput }) => {
+        await lootRepo.trade(parsedInput.lootId)
+    })
+
+export const untradeLoot = authActionClient
+    .inputSchema(z.object({ lootId: z.uuid() }))
+    .action(async ({ parsedInput }) => {
+        await lootRepo.untrade(parsedInput.lootId)
+    })
+
+export const deleteLoot = authActionClient
+    .inputSchema(z.object({ lootId: z.uuid() }))
+    .action(async ({ parsedInput }) => {
+        await lootRepo.delete(parsedInput.lootId)
+    })
+
+export const addLoots = authActionClient
+    .inputSchema(
+        z.object({
+            raidSessionId: z.uuid(),
+            loots: z.array(newLootSchema),
+        })
     )
-}
-
-export async function tradeLoot(lootId: string): Promise<VoidResult> {
-    return tryCatchVoid(
-        () => lootRepo.trade(lootId),
-        "Loots",
-        "Failed to mark loot as traded"
-    )
-}
-
-export async function untradeLoot(lootId: string): Promise<VoidResult> {
-    return tryCatchVoid(
-        () => lootRepo.untrade(lootId),
-        "Loots",
-        "Failed to unmark loot as traded"
-    )
-}
-
-export async function deleteLoot(lootId: string): Promise<VoidResult> {
-    return tryCatchVoid(() => lootRepo.delete(lootId), "Loots", "Failed to delete loot")
-}
-
-export async function addLoots(
-    raidSessionId: string,
-    loots: NewLoot[]
-): Promise<VoidResult> {
-    return tryCatchVoid(async () => {
-        const eligibleCharacters = await raidSessionRepo.getRoster(raidSessionId)
-        await lootRepo.addMany(raidSessionId, loots, eligibleCharacters)
-    }, "Loots")
-}
+    .action(async ({ parsedInput }) => {
+        const eligibleCharacters = await raidSessionRepo.getRoster(
+            parsedInput.raidSessionId
+        )
+        await lootRepo.addMany(
+            parsedInput.raidSessionId,
+            parsedInput.loots,
+            eligibleCharacters
+        )
+    })
 
 // ============== LOOT IMPORT ACTIONS ==============
 
 /**
  * Import loot from RC Loot Council CSV export
  */
-export async function importRcLootCsv(
-    raidSessionId: string,
-    csv: string,
-    importAssignedCharacter: boolean
-): Promise<Result<{ imported: number; errors: string[] }>> {
-    return tryCatch(async () => {
-        const session = await raidSessionRepo.getById(raidSessionId)
+export const importRcLootCsv = authActionClient
+    .inputSchema(
+        z.object({
+            raidSessionId: z.uuid(),
+            csv: z.string().min(1),
+            importAssignedCharacter: z.boolean(),
+        })
+    )
+    .action(async ({ parsedInput }) => {
+        const session = await raidSessionRepo.getById(parsedInput.raidSessionId)
 
         // Date bounds: session date +5 hours
         const dateLowerBound = session.raidDate
         const dateUpperBound = session.raidDate + RAID_SESSION_TIME_WINDOW
 
         const allItems = await itemRepo.getAll()
-        const allCharacters = importAssignedCharacter ? await characterRepo.getList() : []
+        const allCharacters = parsedInput.importAssignedCharacter
+            ? await characterRepo.getList()
+            : []
 
         const loots = parseRcLoots(
-            csv,
+            parsedInput.csv,
             dateLowerBound,
             dateUpperBound,
-            importAssignedCharacter,
+            parsedInput.importAssignedCharacter,
             allItems,
             allCharacters
         )
 
         if (loots.length > 0) {
-            const eligibleCharacters = await raidSessionRepo.getRoster(raidSessionId)
-            await lootRepo.addMany(raidSessionId, loots, eligibleCharacters)
+            const eligibleCharacters = await raidSessionRepo.getRoster(
+                parsedInput.raidSessionId
+            )
+            await lootRepo.addMany(parsedInput.raidSessionId, loots, eligibleCharacters)
         }
 
-        return { imported: loots.length, errors: [] }
-    }, "Loots")
-}
+        return { imported: loots.length, errors: [] as string[] }
+    })
 
 // Helper function to compare bonus ID arrays
 const bonusIdsMatch = (
@@ -186,12 +196,15 @@ const bonusIdsMatch = (
  * Import loot assignments from RC Loot Council CSV export
  * This assigns existing session loots based on RC Loot Council data
  */
-export async function importRcLootAssignments(
-    raidSessionId: string,
-    csv: string
-): Promise<Result<{ assigned: number; warnings: string[] }>> {
-    return tryCatch(async () => {
-        const session = await raidSessionRepo.getById(raidSessionId)
+export const importRcLootAssignments = authActionClient
+    .inputSchema(
+        z.object({
+            raidSessionId: z.uuid(),
+            csv: z.string().min(1),
+        })
+    )
+    .action(async ({ parsedInput }) => {
+        const session = await raidSessionRepo.getById(parsedInput.raidSessionId)
 
         const allItems = await itemRepo.getAll()
         const allCharacters = await characterRepo.getList()
@@ -199,7 +212,7 @@ export async function importRcLootAssignments(
         const [rcLootData, sessionLoots] = await Promise.all([
             Promise.resolve(
                 parseRcLoots(
-                    csv,
+                    parsedInput.csv,
                     session.raidDate,
                     session.raidDate + RAID_SESSION_TIME_WINDOW,
                     true,
@@ -207,7 +220,7 @@ export async function importRcLootAssignments(
                     allCharacters
                 )
             ),
-            lootRepo.getByRaidSessionId(raidSessionId),
+            lootRepo.getByRaidSessionId(parsedInput.raidSessionId),
         ])
 
         const warnings: string[] = []
@@ -286,18 +299,20 @@ export async function importRcLootAssignments(
         }
 
         return { assigned: assignedCount, warnings }
-    }, "Loots")
-}
+    })
 
 /**
  * Import loot from MRT (Method Raid Tools) export
  */
-export async function importMrtLoot(
-    raidSessionId: string,
-    data: string
-): Promise<Result<{ imported: number; errors: string[] }>> {
-    return tryCatch(async () => {
-        const session = await raidSessionRepo.getById(raidSessionId)
+export const importMrtLoot = authActionClient
+    .inputSchema(
+        z.object({
+            raidSessionId: z.uuid(),
+            data: z.string().min(1),
+        })
+    )
+    .action(async ({ parsedInput }) => {
+        const session = await raidSessionRepo.getById(parsedInput.raidSessionId)
 
         // Date bounds: session date +5 hours
         const dateLowerBound = session.raidDate
@@ -305,37 +320,47 @@ export async function importMrtLoot(
 
         const allItems = await itemRepo.getAll()
 
-        const loots = parseMrtLoots(data, dateLowerBound, dateUpperBound, allItems)
+        const loots = parseMrtLoots(
+            parsedInput.data,
+            dateLowerBound,
+            dateUpperBound,
+            allItems
+        )
 
         if (loots.length > 0) {
-            const eligibleCharacters = await raidSessionRepo.getRoster(raidSessionId)
-            await lootRepo.addMany(raidSessionId, loots, eligibleCharacters)
+            const eligibleCharacters = await raidSessionRepo.getRoster(
+                parsedInput.raidSessionId
+            )
+            await lootRepo.addMany(parsedInput.raidSessionId, loots, eligibleCharacters)
         }
 
-        return { imported: loots.length, errors: [] }
-    }, "Loots")
-}
+        return { imported: loots.length, errors: [] as string[] }
+    })
 
 /**
  * Add manually entered loot
  */
-export async function addManualLoot(
-    raidSessionId: string,
-    manualLoots: NewLootManual[]
-): Promise<Result<{ imported: number; errors: string[] }>> {
-    return tryCatch(async () => {
+export const addManualLoot = authActionClient
+    .inputSchema(
+        z.object({
+            raidSessionId: z.uuid(),
+            manualLoots: z.array(newLootManualSchema),
+        })
+    )
+    .action(async ({ parsedInput }) => {
         const allItems = await itemRepo.getAll()
 
-        const loots = parseManualLoots(manualLoots, allItems)
+        const loots = parseManualLoots(parsedInput.manualLoots, allItems)
 
         if (loots.length > 0) {
-            const eligibleCharacters = await raidSessionRepo.getRoster(raidSessionId)
-            await lootRepo.addMany(raidSessionId, loots, eligibleCharacters)
+            const eligibleCharacters = await raidSessionRepo.getRoster(
+                parsedInput.raidSessionId
+            )
+            await lootRepo.addMany(parsedInput.raidSessionId, loots, eligibleCharacters)
         }
 
-        return { imported: loots.length, errors: [] }
-    }, "Loots")
-}
+        return { imported: loots.length, errors: [] as string[] }
+    })
 
 // ============== LOOT ASSIGNMENT INFO ==============
 
@@ -453,7 +478,7 @@ export async function getLootAssignmentInfo(lootId: string): Promise<LootAssignm
  */
 export async function getCharactersWithLootsByItemId(
     itemId: number
-): Promise<Result<CharacterWithGears[]>> {
+): Promise<CharacterWithGears[]> {
     // Stage 1: Get item and roster to determine eligible characters
     const [item, roster] = await Promise.all([
         itemRepo.getById(itemId),
@@ -461,7 +486,7 @@ export async function getCharactersWithLootsByItemId(
     ])
 
     if (item === null) {
-        return fail("Item not found", "Loots")
+        throw new Error("Item not found")
     }
 
     // Filter to class-eligible characters
@@ -540,5 +565,5 @@ export async function getCharactersWithLootsByItemId(
         }
     })
 
-    return ok(res)
+    return res
 }

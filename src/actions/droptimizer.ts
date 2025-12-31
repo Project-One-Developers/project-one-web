@@ -4,6 +4,7 @@ import { partition } from "es-toolkit"
 import { DateTime } from "luxon"
 import pLimit from "p-limit"
 import { match } from "ts-pattern"
+import { z } from "zod"
 import { characterRepo } from "@/db/repositories/characters"
 import { droptimizerRepo } from "@/db/repositories/droptimizer"
 import { simcRepo, type NewSimC } from "@/db/repositories/simc"
@@ -12,13 +13,11 @@ import { extractUrlsFromMessages, readAllMessagesInDiscord } from "@/lib/discord
 import { fetchDroptimizerFromQELiveURL } from "@/lib/droptimizer/qelive-parser"
 import { fetchDroptimizerFromURL } from "@/lib/droptimizer/raidbots-parser"
 import { logger } from "@/lib/logger"
+import { authActionClient } from "@/lib/safe-action"
 import { s } from "@/lib/safe-stringify"
 import { parseSimC } from "@/lib/simc/simc-parser"
-import type { Droptimizer, NewDroptimizer, SimC } from "@/shared/models/simulation.model"
+import type { Droptimizer, NewDroptimizer } from "@/shared/models/simulation.model"
 import type { WowRaidDifficulty } from "@/shared/models/wow.model"
-import type { VoidResult } from "@/shared/types/types"
-
-type DurationInput = { days?: number; hours?: number }
 
 /**
  * Resolve a character ID from name and realm.
@@ -40,9 +39,11 @@ export async function getDroptimizerLatestList(): Promise<Droptimizer[]> {
     return await droptimizerRepo.getLatestList()
 }
 
-export async function deleteDroptimizer(id: string): Promise<void> {
-    await droptimizerRepo.delete(id)
-}
+export const deleteDroptimizer = authActionClient
+    .inputSchema(z.object({ id: z.uuid() }))
+    .action(async ({ parsedInput }) => {
+        await droptimizerRepo.delete(parsedInput.id)
+    })
 
 export async function getDroptimizerByCharacterIdAndDiff(
     characterId: string,
@@ -58,29 +59,49 @@ export async function addDroptimizer(
     return await droptimizerRepo.add(droptimizer, characterId)
 }
 
+const durationInputSchema = z.object({
+    days: z.number().optional(),
+    hours: z.number().optional(),
+})
+
+type DurationInput = z.infer<typeof durationInputSchema>
+
 /**
- * Delete simulations older than the specified duration
- * @param lookback - Duration object (e.g., { hours: 12 } or { days: 7 })
+ * Internal: Delete simulations older than the specified duration
+ * Used by cron routes and the auth-protected action
  */
-export async function deleteSimulationsOlderThan(lookback: DurationInput): Promise<void> {
+export async function deleteSimulationsOlderThanInternal(
+    lookback: DurationInput
+): Promise<void> {
     const cutoffDate = DateTime.now().minus(lookback)
     await droptimizerRepo.deleteOlderThanDate(cutoffDate.toUnixInteger())
 }
 
 /**
- * Add SimC character data (for vault/tierset info without running a full droptimizer)
+ * Delete simulations older than the specified duration
+ * @param lookback - Duration object (e.g., { hours: 12 } or { days: 7 })
  */
-export async function addSimC(simcData: string): Promise<SimC> {
-    const simc: NewSimC = await parseSimC(simcData)
-    const characterId = await resolveCharacterId(simc.charName, simc.charRealm)
-    return await simcRepo.add(simc, characterId)
-}
+export const deleteSimulationsOlderThan = authActionClient
+    .inputSchema(z.object({ lookback: durationInputSchema }))
+    .action(async ({ parsedInput }) => {
+        await deleteSimulationsOlderThanInternal(parsedInput.lookback)
+    })
 
 /**
- * Add a simulation from a URL (Raidbots or QE Live)
- * Returns an array because QE Live can contain multiple difficulties
+ * Add SimC character data (for vault/tierset info without running a full droptimizer)
  */
-export async function addSimulationFromUrl(url: string): Promise<Droptimizer[]> {
+export const addSimC = authActionClient
+    .inputSchema(z.object({ simcData: z.string().min(1) }))
+    .action(async ({ parsedInput }) => {
+        const simc: NewSimC = await parseSimC(parsedInput.simcData)
+        const characterId = await resolveCharacterId(simc.charName, simc.charRealm)
+        return await simcRepo.add(simc, characterId)
+    })
+
+/**
+ * Internal function to add a simulation from a URL (used by both action and sync)
+ */
+async function addSimulationFromUrlInternal(url: string): Promise<Droptimizer[]> {
     logger.info("Droptimizer", `Adding simulation from url ${url}`)
 
     const droptimizers = await match(url)
@@ -113,11 +134,22 @@ export async function addSimulationFromUrl(url: string): Promise<Droptimizer[]> 
 }
 
 /**
- * Sync droptimizers from Discord channel
- * Fetches all messages from the droptimizers channel and imports any URLs found
- * @param lookback - Duration object (e.g., { hours: 12 } or { days: 7 })
+ * Add a simulation from a URL (Raidbots or QE Live)
+ * Returns an array because QE Live can contain multiple difficulties
  */
-export async function syncDroptimizersFromDiscord(
+export const addSimulationFromUrl = authActionClient
+    .inputSchema(z.object({ url: z.url() }))
+    .action(async ({ parsedInput }) => {
+        return addSimulationFromUrlInternal(parsedInput.url)
+    })
+
+type UrlImportResult = { success: true } | { success: false; error: string }
+
+/**
+ * Internal: Sync droptimizers from Discord channel
+ * Used by cron routes and the auth-protected action
+ */
+export async function syncDroptimizersFromDiscordInternal(
     lookback: DurationInput
 ): Promise<{ imported: number; errors: string[] }> {
     const botKey = env.DISCORD_BOT_TOKEN
@@ -138,9 +170,9 @@ export async function syncDroptimizersFromDiscord(
 
     const results = await Promise.all(
         Array.from(uniqueUrls).map((url) =>
-            limit(async (): Promise<VoidResult> => {
+            limit(async (): Promise<UrlImportResult> => {
                 try {
-                    await addSimulationFromUrl(url)
+                    await addSimulationFromUrlInternal(url)
                     return { success: true }
                 } catch (error) {
                     const errorMsg = `Failed to import ${url}: ${s(error)}`
@@ -152,7 +184,7 @@ export async function syncDroptimizersFromDiscord(
     )
 
     const [successes, failures] = partition(results, (r) => r.success)
-    const errors = failures.map((r) => r.error)
+    const errors = failures.map((r) => (r as { success: false; error: string }).error)
 
     logger.info(
         "Droptimizer",
@@ -161,3 +193,14 @@ export async function syncDroptimizersFromDiscord(
 
     return { imported: successes.length, errors }
 }
+
+/**
+ * Sync droptimizers from Discord channel
+ * Fetches all messages from the droptimizers channel and imports any URLs found
+ * @param lookback - Duration object (e.g., { hours: 12 } or { days: 7 })
+ */
+export const syncDroptimizersFromDiscord = authActionClient
+    .inputSchema(z.object({ lookback: durationInputSchema }))
+    .action(async ({ parsedInput }) => {
+        return syncDroptimizersFromDiscordInternal(parsedInput.lookback)
+    })

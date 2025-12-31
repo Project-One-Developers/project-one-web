@@ -97,8 +97,10 @@ export default function CharacterDialog({
     // Track the last open state to reset form when dialog opens
     const [lastOpen, setLastOpen] = useState(isOpen)
 
-    const addMutation = useAddCharacterWithSync()
-    const editMutation = useEditCharacter()
+    const { executeAsync: addCharacter, isExecuting: isAdding } =
+        useAddCharacterWithSync()
+    const { executeAsync: editCharacterAction, isExecuting: isEditing } =
+        useEditCharacter()
 
     // Reset form when dialog opens (transition from closed to open)
     if (isOpen && !lastOpen) {
@@ -144,7 +146,7 @@ export default function CharacterDialog({
         return Object.keys(newErrors).length === 0
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
         if (!validateForm()) {
@@ -161,11 +163,10 @@ export default function CharacterDialog({
                 main: formData.main,
                 playerId: existingCharacter.playerId,
             }
-            editMutation.mutate(editData, {
-                onSuccess: () => {
-                    setOpen(false)
-                },
-            })
+            const result = await editCharacterAction(editData)
+            if (result.data) {
+                setOpen(false)
+            }
         } else {
             if (!player) {
                 throw Error("Unable to add character without selecting a player")
@@ -177,12 +178,11 @@ export default function CharacterDialog({
                 main: formData.main,
                 playerId: player.id,
             }
-            addMutation.mutate(addData, {
-                onSuccess: () => {
-                    resetForm()
-                    setOpen(false)
-                },
-            })
+            const result = await addCharacter(addData)
+            if (result.data) {
+                resetForm()
+                setOpen(false)
+            }
         }
     }
 
@@ -201,7 +201,7 @@ export default function CharacterDialog({
     }
 
     const filteredClasses = ROLES_CLASSES_MAP[formData.role]
-    const isLoading = addMutation.isPending || editMutation.isPending
+    const isLoading = isAdding || isEditing
 
     return (
         <Dialog open={isOpen} onOpenChange={setOpen}>
@@ -217,7 +217,10 @@ export default function CharacterDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="flex flex-col gap-y-4">
+                <form
+                    onSubmit={(e) => void handleSubmit(e)}
+                    className="flex flex-col gap-y-4"
+                >
                     <div className="space-y-2">
                         <Label htmlFor="name">Name</Label>
                         <Input

@@ -99,12 +99,18 @@ export default function SettingsPage(): JSX.Element {
     const handleSyncDiscord = async () => {
         setIsSyncingDiscord(true)
         try {
-            const result = await syncDroptimizersFromDiscord({ days: 7 })
-            toast.success(
-                `Discord sync completed: ${s(result.imported)} droptimizers imported`
-            )
-            if (result.errors.length > 0) {
-                toast.warning(`${s(result.errors.length)} errors occurred during import`)
+            const result = await syncDroptimizersFromDiscord({ lookback: { days: 7 } })
+            if (result.data) {
+                toast.success(
+                    `Discord sync completed: ${s(result.data.imported)} droptimizers imported`
+                )
+                if (result.data.errors.length > 0) {
+                    toast.warning(
+                        `${s(result.data.errors.length)} errors occurred during import`
+                    )
+                }
+            } else {
+                toast.error(result.serverError ?? "Discord sync failed")
             }
         } catch (error) {
             toast.error(`Discord sync failed: ${s(error)}`)

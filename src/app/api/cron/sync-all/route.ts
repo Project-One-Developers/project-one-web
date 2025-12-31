@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import {
-    syncDroptimizersFromDiscord,
-    deleteSimulationsOlderThan,
+    syncDroptimizersFromDiscordInternal,
+    deleteSimulationsOlderThanInternal,
 } from "@/actions/droptimizer"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
 
         // Discord droptimizer sync
         try {
-            const discordResult = await syncDroptimizersFromDiscord({ days: 2 })
+            const discordResult = await syncDroptimizersFromDiscordInternal({ days: 2 })
             results.discord.success = true
             results.discord.imported = discordResult.imported
             results.discord.errors = discordResult.errors
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
 
         // Cleanup old simulations
         try {
-            await deleteSimulationsOlderThan({ days: 7 })
+            await deleteSimulationsOlderThanInternal({ days: 7 })
             results.cleanup.success = true
         } catch (error) {
             results.cleanup.error =

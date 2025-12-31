@@ -75,6 +75,104 @@ import { env } from "@/env"
 env.DATABASE_URL // typed and validated
 ```
 
+### Server Actions with next-safe-action
+
+All mutations use `next-safe-action` for type-safe server actions with automatic validation and error handling.
+
+**Defining Actions** (`src/actions/`):
+
+```typescript
+import { z } from "zod"
+import { authActionClient } from "@/lib/safe-action"
+
+// Use authActionClient for protected actions (requires auth)
+export const addCharacter = authActionClient
+    .inputSchema(z.object({
+        name: z.string().min(1),
+        realm: z.string().min(1),
+        playerId: z.uuid(),
+    }))
+    .action(async ({ parsedInput }) => {
+        const character = await characterRepo.create(parsedInput)
+        return character // Automatically wrapped in success response
+    })
+
+// For user-facing errors, throw ActionError
+import { ActionError } from "@/lib/safe-action"
+
+export const addCharacterWithSync = authActionClient
+    .inputSchema(newCharacterSchema)
+    .action(async ({ parsedInput }) => {
+        const profile = await fetchProfile(parsedInput.name)
+        if (!profile) {
+            throw new ActionError(`Character "${parsedInput.name}" not found`)
+        }
+        return await characterRepo.create(parsedInput)
+    })
+```
+
+**Query Hooks** (`src/lib/queries/`):
+
+```typescript
+import { useAction } from "next-safe-action/hooks"
+import { useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
+
+export function useAddCharacter() {
+    const queryClient = useQueryClient()
+
+    return useAction(addCharacter, {
+        onSuccess: ({ data }) => {
+            // data is non-null here - access directly without ?. or !
+            toast.success(`Character ${data.name} added`)
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to add character")
+        },
+    })
+}
+```
+
+**Component Usage**:
+
+```typescript
+// Get the hook
+const { execute, executeAsync, isExecuting } = useAddCharacter()
+
+// Option 1: Fire and forget (callbacks handle success/error)
+execute({ name: "Thrall", realm: "Draenor", playerId: "..." })
+
+// Option 2: Await result for conditional logic
+const result = await executeAsync(data)
+if (result.data) {
+    setOpen(false) // Close dialog on success
+}
+// Note: result is always defined, use result.data not result?.data
+
+// Loading state
+<Button disabled={isExecuting}>
+    {isExecuting ? "Saving..." : "Save"}
+</Button>
+```
+
+**Form Handlers** - wrap async handlers with `void` to satisfy ESLint:
+
+```tsx
+// ✓ Good
+<form onSubmit={(e) => void handleSubmit(e)}>
+
+// ✗ Bad - ESLint no-misused-promises error
+<form onSubmit={handleSubmit}>
+```
+
+**Key Rules**:
+- Use `z.uuid()` not `z.string().uuid()` (deprecated)
+- Use `z.url()` not `z.string().url()` (deprecated)
+- Use `.inputSchema()` not `.schema()` (deprecated)
+- In `onSuccess`, `data` is non-null - access `data.property` directly
+- `result` from `executeAsync` is always defined - use `result.data` not `result?.data`
+
 ### Naming Conventions
 
 - Components: PascalCase (`CharacterDialog.tsx`)

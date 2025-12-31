@@ -1,6 +1,8 @@
 "use client"
 
 import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useAction } from "next-safe-action/hooks"
+import { toast } from "sonner"
 import {
     addRaidSession,
     cloneRaidSession,
@@ -10,12 +12,7 @@ import {
     getRaidSessionWithSummaryList,
     importRosterInRaidSession,
 } from "@/actions/raid-sessions"
-import type { EditRaidSession, NewRaidSession } from "@/shared/models/raid-session.model"
 import { queryKeys } from "./keys"
-import {
-    useMutationWithResult,
-    useVoidMutationWithResult,
-} from "./use-mutation-with-result"
 
 export function useRaidSessions() {
     return useQuery({
@@ -42,56 +39,87 @@ export function useRaidSession(id: string | undefined) {
 }
 
 export function useAddRaidSession() {
-    return useMutationWithResult({
-        mutationFn: (session: NewRaidSession) => addRaidSession(session),
-        invalidateKeys: [[queryKeys.raidSessions]],
-        successMessage: (data) => `Raid session "${data.name}" created.`,
+    const queryClient = useQueryClient()
+
+    return useAction(addRaidSession, {
+        onSuccess: ({ data }) => {
+            toast.success(`Raid session "${data.name}" created.`)
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.raidSessions],
+            })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to create raid session")
+        },
     })
 }
 
 export function useEditRaidSession() {
     const queryClient = useQueryClient()
 
-    return useMutationWithResult({
-        mutationFn: (session: EditRaidSession) => editRaidSession(session),
-        invalidateKeys: [[queryKeys.raidSessions]],
-        successMessage: (data) => `Raid session "${data.name}" updated.`,
-        onSuccess: (data) => {
+    return useAction(editRaidSession, {
+        onSuccess: ({ data }) => {
+            toast.success(`Raid session "${data.name}" updated.`)
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.raidSessions],
+            })
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.raidSession, data.id],
             })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to update raid session")
         },
     })
 }
 
 export function useDeleteRaidSession() {
-    return useVoidMutationWithResult({
-        mutationFn: (id: string) => deleteRaidSession(id),
-        invalidateKeys: [[queryKeys.raidSessions]],
-        successMessage: "Raid session deleted.",
+    const queryClient = useQueryClient()
+
+    return useAction(deleteRaidSession, {
+        onSuccess: () => {
+            toast.success("Raid session deleted.")
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.raidSessions],
+            })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to delete raid session")
+        },
     })
 }
 
 export function useCloneRaidSession() {
-    return useMutationWithResult({
-        mutationFn: (id: string) => cloneRaidSession(id),
-        invalidateKeys: [[queryKeys.raidSessions]],
-        successMessage: (data) => `Raid session cloned as "${data.name}".`,
+    const queryClient = useQueryClient()
+
+    return useAction(cloneRaidSession, {
+        onSuccess: ({ data }) => {
+            toast.success(`Raid session cloned as "${data.name}".`)
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.raidSessions],
+            })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to clone raid session")
+        },
     })
 }
 
 export function useImportRosterInRaidSession() {
     const queryClient = useQueryClient()
 
-    return useVoidMutationWithResult({
-        mutationFn: ({ raidSessionId, csv }: { raidSessionId: string; csv: string }) =>
-            importRosterInRaidSession(raidSessionId, csv),
-        invalidateKeys: [[queryKeys.raidSessions]],
-        successMessage: "Roster imported successfully.",
-        onSuccess: (vars) => {
+    return useAction(importRosterInRaidSession, {
+        onSuccess: ({ input }) => {
+            toast.success("Roster imported successfully.")
             void queryClient.invalidateQueries({
-                queryKey: [queryKeys.raidSession, vars.raidSessionId],
+                queryKey: [queryKeys.raidSessions],
             })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.raidSession, input.raidSessionId],
+            })
+        },
+        onError: ({ error }) => {
+            toast.error(error.serverError ?? "Failed to import roster")
         },
     })
 }

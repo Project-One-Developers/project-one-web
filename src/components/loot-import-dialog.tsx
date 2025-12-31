@@ -40,10 +40,14 @@ export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
         }
 
         setIsLoading(true)
-        const result = await importRcLootCsv(raidSessionId, rcCsvData, importAssigned)
+        const result = await importRcLootCsv({
+            raidSessionId,
+            csv: rcCsvData,
+            importAssignedCharacter: importAssigned,
+        })
         setIsLoading(false)
 
-        if (result.success) {
+        if (result.data) {
             toast.success(`Imported ${s(result.data.imported)} loot items`)
             void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
             void queryClient.invalidateQueries({
@@ -52,7 +56,7 @@ export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
             setRcCsvData("")
             setOpen(false)
         } else {
-            toast.error(result.error)
+            toast.error(result.serverError ?? "Failed to import RC loot")
         }
     }
 
@@ -63,10 +67,13 @@ export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
         }
 
         setIsLoading(true)
-        const result = await importMrtLoot(raidSessionId, mrtData)
+        const result = await importMrtLoot({
+            raidSessionId,
+            data: mrtData,
+        })
         setIsLoading(false)
 
-        if (result.success) {
+        if (result.data) {
             toast.success(`Imported ${s(result.data.imported)} loot items`)
             void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
             void queryClient.invalidateQueries({
@@ -75,7 +82,7 @@ export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
             setMrtData("")
             setOpen(false)
         } else {
-            toast.error(result.error)
+            toast.error(result.serverError ?? "Failed to import MRT loot")
         }
     }
 

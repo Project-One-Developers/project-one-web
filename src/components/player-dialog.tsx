@@ -34,8 +34,8 @@ function PlayerDialogContent({
     const [playerName, setPlayerName] = useState(initialName)
     const [nameError, setNameError] = useState("")
 
-    const addMutation = useAddPlayer()
-    const editMutation = useEditPlayer()
+    const { executeAsync: addPlayer, isExecuting: isAdding } = useAddPlayer()
+    const { executeAsync: editPlayer, isExecuting: isEditingPlayer } = useEditPlayer()
 
     const resetForm = () => {
         setPlayerName("")
@@ -54,7 +54,7 @@ function PlayerDialogContent({
         return true
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
         if (!validateForm()) {
@@ -66,21 +66,16 @@ function PlayerDialogContent({
         }
 
         if (existingPlayer) {
-            editMutation.mutate(
-                { id: existingPlayer.id, ...playerData },
-                {
-                    onSuccess: () => {
-                        setOpen(false)
-                    },
-                }
-            )
+            const result = await editPlayer({ id: existingPlayer.id, ...playerData })
+            if (result.data) {
+                setOpen(false)
+            }
         } else {
-            addMutation.mutate(playerData, {
-                onSuccess: () => {
-                    resetForm()
-                    setOpen(false)
-                },
-            })
+            const result = await addPlayer(playerData)
+            if (result.data) {
+                resetForm()
+                setOpen(false)
+            }
         }
     }
 
@@ -91,7 +86,7 @@ function PlayerDialogContent({
         }
     }
 
-    const isLoading = addMutation.isPending || editMutation.isPending
+    const isLoading = isAdding || isEditingPlayer
 
     return (
         <>
@@ -103,7 +98,10 @@ function PlayerDialogContent({
                 </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-y-4">
+            <form
+                onSubmit={(e) => void handleSubmit(e)}
+                className="flex flex-col gap-y-4"
+            >
                 <div className="space-y-2">
                     <Label htmlFor="name">Name</Label>
                     <Input
