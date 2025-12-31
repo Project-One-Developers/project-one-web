@@ -2,6 +2,8 @@
 
 import Image from "next/image"
 import { Checkbox } from "@/components/ui/checkbox"
+import { GlassCard } from "@/components/ui/glass-card"
+import { SectionHeader } from "@/components/ui/section-header"
 import type { LootFilter } from "@/lib/filters"
 import { cn } from "@/lib/utils"
 import { armorTypesIcon, classIcon, itemSlotIcon, raidDiffIcon } from "@/lib/wow-icon"
@@ -65,23 +67,21 @@ export const FiltersPanel = ({
     }
 
     const renderContent = () => (
-        <div className="space-y-3">
+        <div className="space-y-4">
             {/* Raid Difficulty Selector */}
             {showRaidDifficulty && (
-                <fieldset className="border-t border-border/50 pt-2">
-                    <legend className="text-sm font-semibold text-foreground mb-2">
-                        Difficulty
-                    </legend>
+                <div className="space-y-2">
+                    <SectionHeader>Difficulty</SectionHeader>
                     <div className="flex flex-wrap gap-2">
                         {(["Normal", "Heroic", "Mythic"] as WowRaidDifficulty[]).map(
                             (difficulty) => (
                                 <div
                                     key={difficulty}
                                     className={cn(
-                                        "cursor-pointer transition-transform hover:scale-110 rounded-lg overflow-hidden",
+                                        "cursor-pointer transition-all duration-200 hover:scale-105 rounded-xl overflow-hidden",
                                         filter.selectedRaidDiff.includes(difficulty)
-                                            ? "ring-2 ring-blue-500 shadow-lg"
-                                            : "opacity-60 grayscale hover:opacity-100 hover:grayscale-0"
+                                            ? "ring-2 ring-primary shadow-lg shadow-primary/20"
+                                            : "opacity-50 grayscale hover:opacity-80 hover:grayscale-0"
                                     )}
                                     onClick={() => {
                                         selectDifficulty(difficulty)
@@ -92,7 +92,7 @@ export const FiltersPanel = ({
                                         alt={difficulty}
                                         width={64}
                                         height={64}
-                                        className="w-16 h-16 object-cover"
+                                        className="w-14 h-14 object-cover"
                                         title={difficulty}
                                         unoptimized
                                     />
@@ -100,22 +100,20 @@ export const FiltersPanel = ({
                             )
                         )}
                     </div>
-                </fieldset>
+                </div>
             )}
 
             {/* Character Type Filters */}
             {showMainsAlts && (
-                <fieldset className="border-t border-border/50 pt-2">
-                    <legend className="text-sm font-semibold text-foreground mb-2">
-                        Characters
-                    </legend>
-                    <div className="flex flex-wrap gap-2">
+                <div className="space-y-2">
+                    <SectionHeader>Characters</SectionHeader>
+                    <div className="flex flex-wrap gap-3">
                         <div
                             className={cn(
-                                "cursor-pointer transition-transform hover:scale-105 rounded-lg overflow-hidden",
+                                "cursor-pointer transition-all duration-200 hover:scale-105 rounded-xl overflow-hidden flex flex-col items-center",
                                 filter.showMains
-                                    ? "ring-2 ring-blue-500 shadow-lg"
-                                    : "opacity-60 grayscale hover:opacity-100 hover:grayscale-0"
+                                    ? "ring-2 ring-primary shadow-lg shadow-primary/20"
+                                    : "opacity-50 grayscale hover:opacity-80 hover:grayscale-0"
                             )}
                             onClick={() => {
                                 updateFilter("showMains", !filter.showMains)
@@ -130,16 +128,16 @@ export const FiltersPanel = ({
                                 title="Main Characters"
                                 unoptimized
                             />
-                            <div className="text-center text-[10px] mt-0.5 font-semibold">
+                            <span className="text-[10px] font-medium text-muted-foreground mt-1">
                                 Mains
-                            </div>
+                            </span>
                         </div>
                         <div
                             className={cn(
-                                "cursor-pointer transition-transform hover:scale-105 rounded-lg overflow-hidden",
+                                "cursor-pointer transition-all duration-200 hover:scale-105 rounded-xl overflow-hidden flex flex-col items-center",
                                 filter.showAlts
-                                    ? "ring-2 ring-blue-500 shadow-lg"
-                                    : "opacity-60 grayscale hover:opacity-100 hover:grayscale-0"
+                                    ? "ring-2 ring-primary shadow-lg shadow-primary/20"
+                                    : "opacity-50 grayscale hover:opacity-80 hover:grayscale-0"
                             )}
                             onClick={() => {
                                 updateFilter("showAlts", !filter.showAlts)
@@ -154,29 +152,27 @@ export const FiltersPanel = ({
                                 title="Alt Characters"
                                 unoptimized
                             />
-                            <div className="text-center text-[10px] mt-0.5 font-semibold">
+                            <span className="text-[10px] font-medium text-muted-foreground mt-1">
                                 Alts
-                            </div>
+                            </span>
                         </div>
                     </div>
-                </fieldset>
+                </div>
             )}
 
             {/* Class Filter */}
             {showClassFilter && (
-                <fieldset className="border-t border-border/50 pt-2">
-                    <legend className="text-sm font-semibold text-foreground mb-2">
-                        Class
-                    </legend>
-                    <div className="flex flex-wrap gap-1">
+                <div className="space-y-2">
+                    <SectionHeader>Class</SectionHeader>
+                    <div className="flex flex-wrap gap-1.5">
                         {wowClassNameSchema.options.map((wowClassName) => (
                             <div
                                 key={wowClassName}
                                 className={cn(
-                                    "cursor-pointer transition-transform hover:scale-110 rounded-full",
+                                    "cursor-pointer transition-all duration-200 hover:scale-110 rounded-full",
                                     filter.selectedWowClassName.includes(wowClassName)
-                                        ? "ring-2 ring-blue-500"
-                                        : "opacity-50 grayscale"
+                                        ? "ring-2 ring-primary shadow-md shadow-primary/20"
+                                        : "opacity-40 grayscale hover:opacity-70 hover:grayscale-0"
                                 )}
                                 onClick={() => {
                                     toggleWowClass(wowClassName)
@@ -185,33 +181,31 @@ export const FiltersPanel = ({
                                 <Image
                                     src={classIcon.get(wowClassName) ?? ""}
                                     alt={wowClassName}
-                                    width={24}
-                                    height={24}
-                                    className="w-6 h-6 object-cover rounded-full"
+                                    width={28}
+                                    height={28}
+                                    className="w-7 h-7 object-cover rounded-full"
                                     title={wowClassName}
                                     unoptimized
                                 />
                             </div>
                         ))}
                     </div>
-                </fieldset>
+                </div>
             )}
 
             {/* Item Slot Filter */}
             {showSlotFilter && (
-                <fieldset className="border-t border-border/50 pt-2">
-                    <legend className="text-sm font-semibold text-foreground mb-2">
-                        Item Slot
-                    </legend>
-                    <div className="flex flex-wrap gap-1">
+                <div className="space-y-2">
+                    <SectionHeader>Item Slot</SectionHeader>
+                    <div className="flex flex-wrap gap-1.5">
                         {wowItemSlotKeySchema.options.map((slotName) => (
                             <div
                                 key={slotName}
                                 className={cn(
-                                    "cursor-pointer transition-transform hover:scale-110 rounded-md",
+                                    "cursor-pointer transition-all duration-200 hover:scale-110 rounded-lg",
                                     filter.selectedSlots.includes(slotName)
-                                        ? "ring-2 ring-blue-500"
-                                        : "opacity-50 grayscale"
+                                        ? "ring-2 ring-primary shadow-md shadow-primary/20"
+                                        : "opacity-40 grayscale hover:opacity-70 hover:grayscale-0"
                                 )}
                                 onClick={() => {
                                     toggleSlot(slotName)
@@ -220,33 +214,31 @@ export const FiltersPanel = ({
                                 <Image
                                     src={itemSlotIcon.get(slotName) ?? ""}
                                     alt={formatWowSlotKey(slotName)}
-                                    width={24}
-                                    height={24}
-                                    className="w-6 h-6 object-cover"
+                                    width={28}
+                                    height={28}
+                                    className="w-7 h-7 object-cover"
                                     title={formatWowSlotKey(slotName)}
                                     unoptimized
                                 />
                             </div>
                         ))}
                     </div>
-                </fieldset>
+                </div>
             )}
 
             {/* Armor Type Filter */}
             {showArmorTypeFilter && (
-                <fieldset className="border-t border-border/50 pt-2">
-                    <legend className="text-sm font-semibold text-foreground mb-2">
-                        Armor Type
-                    </legend>
-                    <div className="flex flex-wrap gap-1">
+                <div className="space-y-2">
+                    <SectionHeader>Armor Type</SectionHeader>
+                    <div className="flex flex-wrap gap-1.5">
                         {wowArmorTypeSchema.options.map((armorType) => (
                             <div
                                 key={armorType}
                                 className={cn(
-                                    "cursor-pointer transition-transform hover:scale-110 rounded-md",
+                                    "cursor-pointer transition-all duration-200 hover:scale-110 rounded-lg",
                                     filter.selectedArmorTypes.includes(armorType)
-                                        ? "ring-2 ring-blue-500"
-                                        : "opacity-50 grayscale"
+                                        ? "ring-2 ring-primary shadow-md shadow-primary/20"
+                                        : "opacity-40 grayscale hover:opacity-70 hover:grayscale-0"
                                 )}
                                 onClick={() => {
                                     toggleArmorType(armorType)
@@ -255,25 +247,23 @@ export const FiltersPanel = ({
                                 <Image
                                     src={armorTypesIcon.get(armorType) ?? ""}
                                     alt={armorType}
-                                    width={24}
-                                    height={24}
-                                    className="w-6 h-6 object-cover"
+                                    width={28}
+                                    height={28}
+                                    className="w-7 h-7 object-cover"
                                     title={armorType}
                                     unoptimized
                                 />
                             </div>
                         ))}
                     </div>
-                </fieldset>
+                </div>
             )}
 
             {/* Droptimizer-specific filters */}
             {showDroptimizerFilters && (
-                <fieldset className="border-t border-border/50 pt-2">
-                    <legend className="text-lg font-semibold text-foreground mb-1">
-                        Droptimizer
-                    </legend>
-                    <div className="space-y-4">
+                <div className="space-y-3">
+                    <SectionHeader>Droptimizer</SectionHeader>
+                    <div className="space-y-3">
                         {/* Upgrades only and Minimum Upgrade Amount in the same row */}
                         <div className="flex flex-row items-center gap-3">
                             <Checkbox
@@ -285,7 +275,7 @@ export const FiltersPanel = ({
                             />
                             <label
                                 htmlFor="only-upgrades"
-                                className="text-sm font-semibold"
+                                className="text-sm text-foreground"
                             >
                                 Minimum upgrade
                             </label>
@@ -300,7 +290,7 @@ export const FiltersPanel = ({
                                         updateFilter("minUpgrade", Number(e.target.value))
                                     }}
                                     disabled={!filter.onlyUpgrades}
-                                    className="border rounded-md bg-transparent text-white w-20 px-2 py-1"
+                                    className="border border-border/50 rounded-lg bg-background/50 text-foreground w-20 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                                 />
                             )}
                         </div>
@@ -316,20 +306,27 @@ export const FiltersPanel = ({
                             />
                             <label
                                 htmlFor="hide-no-upgrades"
-                                className="text-sm font-semibold"
+                                className="text-sm text-foreground"
                             >
                                 Hide if no upgrade
                             </label>
                         </div>
                     </div>
-                </fieldset>
+                </div>
             )}
         </div>
     )
 
     return (
-        <div className={cn("bg-card border border-border/50 rounded-lg p-3", className)}>
+        <GlassCard
+            variant="solid"
+            padding="lg"
+            className={cn(
+                "backdrop-blur-none bg-card shadow-2xl shadow-black/20",
+                className
+            )}
+        >
             {renderContent()}
-        </div>
+        </GlassCard>
     )
 }
