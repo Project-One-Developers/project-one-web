@@ -6,7 +6,11 @@ import { blizzardRepo, type CharacterBlizzardDb } from "@/db/repositories/blizza
 import { bossRepo } from "@/db/repositories/bosses"
 import { characterRepo } from "@/db/repositories/characters"
 import { playerRepo } from "@/db/repositories/player.repo"
-import { fetchGuildRoster, realmSlugToName } from "@/lib/blizzard/blizzard-api"
+import {
+    fetchGuildRoster,
+    realmSlugToName,
+    type CharacterProfileResponse,
+} from "@/lib/blizzard/blizzard-api"
 import {
     fetchAndParseCharacter,
     resetItemsCache,
@@ -25,6 +29,9 @@ import type { Boss } from "@/shared/models/boss.model"
 import type { CharacterWithEncounters } from "@/shared/models/character.model"
 import type { WowClassName } from "@/shared/models/wow.model"
 import type { Result } from "@/shared/types/types"
+
+// Re-export for use by other actions
+export type { CharacterProfileResponse }
 
 // ============================================================================
 // Guild Import Config (hardcoded for now)
@@ -129,12 +136,14 @@ export async function syncAllCharactersBlizzard(): Promise<{
 }
 
 /**
- * Sync a single character's Blizzard API data
+ * Sync a single character's Blizzard API data.
+ * Optionally accepts a pre-fetched profile to avoid duplicate API calls.
  */
 export async function syncCharacterBlizzard(
     characterId: string,
     characterName: string,
-    characterRealm: string
+    characterRealm: string,
+    preloadedProfile?: CharacterProfileResponse
 ): Promise<void> {
     logger.info(
         "Blizzard",
@@ -155,7 +164,8 @@ export async function syncCharacterBlizzard(
         characterId,
         characterName,
         characterRealm,
-        bossLookup
+        bossLookup,
+        preloadedProfile
     )
 
     if (!result) {

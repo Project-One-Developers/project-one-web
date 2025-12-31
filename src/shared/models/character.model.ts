@@ -50,6 +50,11 @@ export const newCharacterSchema = characterSchema.omit({
 })
 export type NewCharacter = z.infer<typeof newCharacterSchema>
 
+export const newCharacterWithoutClassSchema = newCharacterSchema.omit({
+    class: true,
+})
+export type NewCharacterWithoutClass = z.infer<typeof newCharacterWithoutClassSchema>
+
 export const editCharacterSchema = characterSchema.extend({
     id: characterSchema.shape.id,
 })

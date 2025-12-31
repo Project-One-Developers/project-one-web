@@ -158,17 +158,19 @@ async function doFetchAndCreateBosses(
 }
 
 /**
- * Fetch and parse character data from Blizzard API
+ * Fetch and parse character data from Blizzard API.
+ * Optionally accepts a pre-fetched profile to avoid duplicate API calls.
  */
 export async function fetchAndParseCharacter(
     characterId: string, // FK to charTable.id
     name: string,
     realm: string,
-    bossLookup: Record<number, Boss> // blizzardEncounterId -> boss
+    bossLookup: Record<number, Boss>, // blizzardEncounterId -> boss
+    preloadedProfile?: CharacterProfileResponse
 ): Promise<ParsedBlizzardData | null> {
-    // Fetch all data in parallel
+    // Fetch data in parallel (skip profile fetch if already provided)
     const [profile, equipment, raids] = await Promise.all([
-        fetchCharacterProfile(name, realm),
+        preloadedProfile ?? fetchCharacterProfile(name, realm),
         fetchCharacterEquipment(name, realm),
         fetchCharacterEncountersRaids(name, realm),
     ])

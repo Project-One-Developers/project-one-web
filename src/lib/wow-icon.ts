@@ -2,7 +2,6 @@ import type {
     WowArmorType,
     WowClassName,
     WowItemSlotKey,
-    WowRaidDifficulty,
 } from "@/shared/models/wow.model"
 
 export const classIcon = new Map<WowClassName, string>([

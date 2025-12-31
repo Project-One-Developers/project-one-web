@@ -4,9 +4,14 @@ import { CheckedState } from "@radix-ui/react-checkbox"
 import { Loader2 } from "lucide-react"
 import React, { useState, useMemo, type JSX } from "react"
 import { toast } from "sonner"
-import { useAddCharacter, useEditCharacter } from "@/lib/queries/players"
+import { useAddCharacterWithSync, useEditCharacter } from "@/lib/queries/players"
 import { REALMS, ROLES } from "@/shared/consts/wow.consts"
-import type { Character, NewCharacter, Player } from "@/shared/models/character.model"
+import type {
+    Character,
+    EditCharacter,
+    NewCharacterWithoutClass,
+    Player,
+} from "@/shared/models/character.model"
 import {
     ROLES_CLASSES_MAP,
     type WowClassName,
@@ -42,7 +47,7 @@ type CharacterDialogProps = {
 type FormData = {
     name: string
     realm: string
-    class: WowClassName
+    class: WowClassName // Only used in edit mode
     role: WoWRole
     main: boolean
 }
@@ -50,7 +55,7 @@ type FormData = {
 type FormErrors = {
     name?: string
     realm?: string
-    class?: string
+    class?: string // Only used in edit mode
     role?: string
 }
 
@@ -93,7 +98,7 @@ export default function CharacterDialog({
     // Track the last open state to reset form when dialog opens
     const [lastOpen, setLastOpen] = useState(isOpen)
 
-    const addMutation = useAddCharacter()
+    const addMutation = useAddCharacterWithSync()
     const editMutation = useEditCharacter()
 
     // Reset form when dialog opens (transition from closed to open)
@@ -127,7 +132,8 @@ export default function CharacterDialog({
             newErrors.realm = "Realm is required"
         }
 
-        if (!formData.class.trim()) {
+        // Class is only required in edit mode (in add mode it's fetched from Blizzard)
+        if (mode === "edit" && !formData.class.trim()) {
             newErrors.class = "Class is required"
         }
 
@@ -146,49 +152,48 @@ export default function CharacterDialog({
             return
         }
 
-        const characterData: NewCharacter = {
-            ...formData,
-            playerId: player?.id || existingCharacter?.playerId || "",
-        }
-
         if (mode === "edit" && existingCharacter) {
-            editMutation.mutate(
-                { id: existingCharacter.id, ...characterData },
-                {
-                    onSuccess: () => {
-                        setOpen(false)
-                        toast.success(
-                            `Character ${characterData.name} edited successfully`
-                        )
-                    },
-                    onError: (error) => {
-                        toast.error(
-                            `Unable to edit the character. Error: ${error.message}`
-                        )
-                    },
-                }
-            )
+            const editData: EditCharacter = {
+                id: existingCharacter.id,
+                name: formData.name,
+                realm: formData.realm,
+                class: formData.class,
+                role: formData.role,
+                main: formData.main,
+                playerId: existingCharacter.playerId,
+            }
+            editMutation.mutate(editData, {
+                onSuccess: () => {
+                    setOpen(false)
+                    toast.success(`Character ${formData.name} edited successfully`)
+                },
+                onError: (error) => {
+                    toast.error(`Unable to edit the character. Error: ${error.message}`)
+                },
+            })
         } else {
             if (!player) {
                 throw Error("Unable to add character without selecting a player")
             }
-            addMutation.mutate(
-                { ...characterData, playerId: player.id },
-                {
-                    onSuccess: () => {
-                        resetForm()
-                        setOpen(false)
-                        toast.success(
-                            `The character ${characterData.name} has been successfully added.`
-                        )
-                    },
-                    onError: (error) => {
-                        toast.error(
-                            `Unable to add the character. Error: ${error.message}`
-                        )
-                    },
-                }
-            )
+            const addData: NewCharacterWithoutClass = {
+                name: formData.name,
+                realm: formData.realm,
+                role: formData.role,
+                main: formData.main,
+                playerId: player.id,
+            }
+            addMutation.mutate(addData, {
+                onSuccess: () => {
+                    resetForm()
+                    setOpen(false)
+                    toast.success(
+                        `The character ${formData.name} has been successfully added.`
+                    )
+                },
+                onError: (error) => {
+                    toast.error(`Unable to add the character. Error: ${error.message}`)
+                },
+            })
         }
     }
 
@@ -217,7 +222,9 @@ export default function CharacterDialog({
                         {mode === "add" ? "New" : "Edit"} character for {player?.name}
                     </DialogTitle>
                     <DialogDescription>
-                        Enter the correct character name as it appears in-game
+                        {mode === "add"
+                            ? "Enter the character name and realm. Class and gear will be fetched automatically from the Blizzard API."
+                            : "Edit the character details"}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -284,31 +291,33 @@ export default function CharacterDialog({
                         )}
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="class">Class</Label>
-                        <Select
-                            value={formData.class}
-                            onValueChange={(value) => {
-                                handleInputChange("class", value)
-                            }}
-                        >
-                            <SelectTrigger
-                                className={errors.class ? "border-red-500" : ""}
+                    {mode === "edit" && (
+                        <div className="space-y-2">
+                            <Label htmlFor="class">Class</Label>
+                            <Select
+                                value={formData.class}
+                                onValueChange={(value) => {
+                                    handleInputChange("class", value)
+                                }}
                             >
-                                <SelectValue placeholder="Select a class" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {filteredClasses.map((c) => (
-                                    <SelectItem key={c} value={c}>
-                                        {c}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        {errors.class && (
-                            <p className="text-sm text-red-500">{errors.class}</p>
-                        )}
-                    </div>
+                                <SelectTrigger
+                                    className={errors.class ? "border-red-500" : ""}
+                                >
+                                    <SelectValue placeholder="Select a class" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {filteredClasses.map((c) => (
+                                        <SelectItem key={c} value={c}>
+                                            {c}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {errors.class && (
+                                <p className="text-sm text-red-500">{errors.class}</p>
+                            )}
+                        </div>
+                    )}
 
                     <div className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                         <Checkbox
