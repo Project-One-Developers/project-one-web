@@ -11,7 +11,6 @@ import {
     Users,
 } from "lucide-react"
 import { useState, type JSX, useMemo } from "react"
-import { toast } from "sonner"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { usePlayersWithCharacters } from "@/lib/queries/players"
 import { useAddRaidSession, useEditRaidSession } from "@/lib/queries/raid-sessions"
@@ -300,12 +299,6 @@ function RaidSessionDialogContent({
             editMutation.mutate(sessionData, {
                 onSuccess: () => {
                     setOpen(false)
-                    toast.success(
-                        `Raid session "${sessionData.name}" updated successfully`
-                    )
-                },
-                onError: (error) => {
-                    toast.error(`Unable to update raid session. Error: ${error.message}`)
                 },
             })
         } else {
@@ -318,12 +311,6 @@ function RaidSessionDialogContent({
             addMutation.mutate(sessionData, {
                 onSuccess: () => {
                     setOpen(false)
-                    toast.success(
-                        `Raid session "${sessionData.name}" created successfully`
-                    )
-                },
-                onError: (error) => {
-                    toast.error(`Unable to create raid session. Error: ${error.message}`)
                 },
             })
         }

@@ -7,6 +7,7 @@ import { droptimizerRepo } from "@/db/repositories/droptimizer"
 import { playerRepo } from "@/db/repositories/player.repo"
 import { fetchCharacterMedia, fetchCharacterProfile } from "@/lib/blizzard/blizzard-api"
 import { logger } from "@/lib/logger"
+import { fail, ok, tryCatch, tryCatchVoid } from "@/lib/result"
 import { s } from "@/lib/safe-stringify"
 import type {
     Character,
@@ -21,15 +22,22 @@ import type {
     PlayerWithCharacters,
 } from "@/shared/models/character.model"
 import type { WowClassName } from "@/shared/models/wow.model"
+import type { Result, VoidResult } from "@/shared/types/types"
 import { syncCharacterBlizzard } from "./blizzard"
 
 // ============== CHARACTERS ==============
 
 export async function addCharacter(
     character: NewCharacter
-): Promise<CharacterWithPlayer | null> {
-    const id = await characterRepo.add(character)
-    return await characterRepo.getWithPlayerById(id)
+): Promise<Result<CharacterWithPlayer>> {
+    return tryCatch(async () => {
+        const id = await characterRepo.add(character)
+        const result = await characterRepo.getWithPlayerById(id)
+        if (!result) {
+            throw new Error("Character was created but could not be retrieved")
+        }
+        return result
+    }, "Characters")
 }
 
 const mapBlizzardClassId = (classId: number): WowClassName | null =>
@@ -55,7 +63,7 @@ const mapBlizzardClassId = (classId: number): WowClassName | null =>
  */
 export async function addCharacterWithSync(
     character: NewCharacterWithoutClass
-): Promise<CharacterWithPlayer | null> {
+): Promise<Result<CharacterWithPlayer>> {
     logger.info(
         "Characters",
         `Adding character with sync: ${character.name}-${character.realm}`
@@ -64,15 +72,17 @@ export async function addCharacterWithSync(
     // Fetch character profile from Blizzard to get the class
     const profile = await fetchCharacterProfile(character.name, character.realm)
     if (!profile) {
-        throw new Error(
-            `Character "${character.name}" not found on "${character.realm}". Please check the name and realm are correct.`
+        return fail(
+            `Character "${character.name}" not found on "${character.realm}". Please check the name and realm are correct.`,
+            "Characters"
         )
     }
 
     const wowClass = mapBlizzardClassId(profile.character_class.id)
     if (!wowClass) {
-        throw new Error(
-            `Unknown class ID ${s(profile.character_class.id)} for ${character.name}`
+        return fail(
+            `Unknown class ID ${s(profile.character_class.id)} for ${character.name}`,
+            "Characters"
         )
     }
 
@@ -81,25 +91,37 @@ export async function addCharacterWithSync(
         ...character,
         class: wowClass,
     }
-    const id = await characterRepo.add(newCharacter)
 
-    // Sync gear and other Blizzard data in the background (don't block)
-    // Pass the already-fetched profile to avoid duplicate API call
-    void syncCharacterBlizzard(id, character.name, character.realm, profile).catch(
-        (err: unknown) => {
-            logger.error(
-                "Characters",
-                `Failed to sync Blizzard data for ${character.name}: ${s(err)}`
-            )
+    try {
+        const id = await characterRepo.add(newCharacter)
+
+        // Sync gear and other Blizzard data in the background (don't block)
+        // Pass the already-fetched profile to avoid duplicate API call
+        void syncCharacterBlizzard(id, character.name, character.realm, profile).catch(
+            (err: unknown) => {
+                logger.error(
+                    "Characters",
+                    `Failed to sync Blizzard data for ${character.name}: ${s(err)}`
+                )
+            }
+        )
+
+        logger.info(
+            "Characters",
+            `Character ${character.name} (${wowClass}) added successfully`
+        )
+
+        const result = await characterRepo.getWithPlayerById(id)
+        if (!result) {
+            return fail("Character was created but could not be retrieved", "Characters")
         }
-    )
-
-    logger.info(
-        "Characters",
-        `Character ${character.name} (${wowClass}) added successfully`
-    )
-
-    return await characterRepo.getWithPlayerById(id)
+        return ok(result)
+    } catch (error) {
+        return fail(
+            `Failed to add character: ${error instanceof Error ? error.message : "Unknown error"}`,
+            "Characters"
+        )
+    }
 }
 
 export async function getCharacter(id: string): Promise<CharacterWithPlayer | null> {
@@ -114,31 +136,57 @@ export async function getCharactersWithPlayerList(): Promise<CharacterWithPlayer
     return await characterRepo.getWithPlayerList()
 }
 
-export async function deleteCharacter(id: string): Promise<void> {
-    await characterRepo.delete(id)
+export async function deleteCharacter(id: string): Promise<VoidResult> {
+    return tryCatchVoid(
+        () => characterRepo.delete(id),
+        "Characters",
+        "Failed to delete character"
+    )
 }
 
 export async function editCharacter(
     edited: EditCharacter
-): Promise<CharacterWithPlayer | null> {
-    await characterRepo.edit(edited)
-    return await characterRepo.getWithPlayerById(edited.id)
+): Promise<Result<CharacterWithPlayer>> {
+    return tryCatch(async () => {
+        await characterRepo.edit(edited)
+        const result = await characterRepo.getWithPlayerById(edited.id)
+        if (!result) {
+            throw new Error("Character was updated but could not be retrieved")
+        }
+        return result
+    }, "Characters")
 }
 
 // ============== PLAYERS ==============
 
-export async function addPlayer(player: NewPlayer): Promise<Player | null> {
-    const id = await playerRepo.add(player)
-    return await playerRepo.getById(id)
+export async function addPlayer(player: NewPlayer): Promise<Result<Player>> {
+    return tryCatch(async () => {
+        const id = await playerRepo.add(player)
+        const result = await playerRepo.getById(id)
+        if (!result) {
+            throw new Error("Player was created but could not be retrieved")
+        }
+        return result
+    }, "Players")
 }
 
-export async function deletePlayer(playerId: string): Promise<void> {
-    await playerRepo.delete(playerId)
+export async function deletePlayer(playerId: string): Promise<VoidResult> {
+    return tryCatchVoid(
+        () => playerRepo.delete(playerId),
+        "Players",
+        "Failed to delete player"
+    )
 }
 
-export async function editPlayer(edited: EditPlayer): Promise<Player | null> {
-    await playerRepo.edit(edited)
-    return await playerRepo.getById(edited.id)
+export async function editPlayer(edited: EditPlayer): Promise<Result<Player>> {
+    return tryCatch(async () => {
+        await playerRepo.edit(edited)
+        const result = await playerRepo.getById(edited.id)
+        if (!result) {
+            throw new Error("Player was updated but could not be retrieved")
+        }
+        return result
+    }, "Players")
 }
 
 export async function getPlayerWithCharactersList(): Promise<PlayerWithCharacters[]> {

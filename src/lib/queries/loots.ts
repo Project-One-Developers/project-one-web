@@ -1,6 +1,6 @@
 "use client"
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
     addLoots,
     addManualLoot,
@@ -20,12 +20,18 @@ import {
     unassignLoot,
     untradeLoot,
 } from "@/actions/loots"
+import { unwrap } from "@/lib/result"
+import { s } from "@/lib/safe-stringify"
 import type {
     CharAssignmentHighlights,
     NewLoot,
     NewLootManual,
 } from "@/shared/models/loot.model"
 import { queryKeys } from "./keys"
+import {
+    useMutationWithResult,
+    useVoidMutationWithResult,
+} from "./use-mutation-with-result"
 
 // ============== QUERIES ==============
 
@@ -102,7 +108,7 @@ export function useLootWithItem(lootId: string | undefined) {
 export function useAddLoots() {
     const queryClient = useQueryClient()
 
-    return useMutation({
+    return useVoidMutationWithResult({
         mutationFn: ({
             raidSessionId,
             loots,
@@ -110,7 +116,8 @@ export function useAddLoots() {
             raidSessionId: string
             loots: NewLoot[]
         }) => addLoots(raidSessionId, loots),
-        onSuccess: (_, vars) => {
+        successMessage: "Loots added successfully.",
+        onSuccess: (vars) => {
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.loots, "session", vars.raidSessionId],
             })
@@ -124,7 +131,7 @@ export function useAddLoots() {
 export function useAssignLoot() {
     const queryClient = useQueryClient()
 
-    return useMutation({
+    return useVoidMutationWithResult({
         mutationFn: ({
             charId,
             lootId,
@@ -135,7 +142,7 @@ export function useAssignLoot() {
             highlights: CharAssignmentHighlights | null
             raidSessionId?: string
         }) => assignLoot(charId, lootId, highlights),
-        onSuccess: (_, vars) => {
+        onSuccess: (vars) => {
             if (vars.raidSessionId) {
                 void queryClient.invalidateQueries({
                     queryKey: [queryKeys.loots, "session", vars.raidSessionId],
@@ -153,10 +160,10 @@ export function useAssignLoot() {
 export function useUnassignLoot() {
     const queryClient = useQueryClient()
 
-    return useMutation({
+    return useVoidMutationWithResult({
         mutationFn: ({ lootId }: { lootId: string; raidSessionId?: string }) =>
             unassignLoot(lootId),
-        onSuccess: (_, vars) => {
+        onSuccess: (vars) => {
             if (vars.raidSessionId) {
                 void queryClient.invalidateQueries({
                     queryKey: [queryKeys.loots, "session", vars.raidSessionId],
@@ -174,10 +181,10 @@ export function useUnassignLoot() {
 export function useTradeLoot() {
     const queryClient = useQueryClient()
 
-    return useMutation({
+    return useVoidMutationWithResult({
         mutationFn: ({ lootId }: { lootId: string; raidSessionId?: string }) =>
             tradeLoot(lootId),
-        onSuccess: (_, vars) => {
+        onSuccess: (vars) => {
             if (vars.raidSessionId) {
                 void queryClient.invalidateQueries({
                     queryKey: [queryKeys.loots, "session", vars.raidSessionId],
@@ -195,10 +202,10 @@ export function useTradeLoot() {
 export function useUntradeLoot() {
     const queryClient = useQueryClient()
 
-    return useMutation({
+    return useVoidMutationWithResult({
         mutationFn: ({ lootId }: { lootId: string; raidSessionId?: string }) =>
             untradeLoot(lootId),
-        onSuccess: (_, vars) => {
+        onSuccess: (vars) => {
             if (vars.raidSessionId) {
                 void queryClient.invalidateQueries({
                     queryKey: [queryKeys.loots, "session", vars.raidSessionId],
@@ -216,10 +223,11 @@ export function useUntradeLoot() {
 export function useDeleteLoot() {
     const queryClient = useQueryClient()
 
-    return useMutation({
+    return useVoidMutationWithResult({
         mutationFn: ({ lootId }: { lootId: string; raidSessionId?: string }) =>
             deleteLoot(lootId),
-        onSuccess: (_, vars) => {
+        successMessage: "Loot deleted successfully.",
+        onSuccess: (vars) => {
             if (vars.raidSessionId) {
                 void queryClient.invalidateQueries({
                     queryKey: [queryKeys.loots, "session", vars.raidSessionId],
@@ -252,11 +260,12 @@ export function useLootAssignmentInfo(lootId: string | undefined) {
 export function useCharactersWithLootsByItemId(itemId: number | undefined) {
     return useQuery({
         queryKey: [queryKeys.loots, "charactersByItem", itemId],
-        queryFn: () => {
+        queryFn: async () => {
             if (!itemId) {
                 throw new Error("No item id provided")
             }
-            return getCharactersWithLootsByItemId(itemId)
+            const result = await getCharactersWithLootsByItemId(itemId)
+            return unwrap(result)
         },
         enabled: !!itemId,
     })
@@ -265,7 +274,7 @@ export function useCharactersWithLootsByItemId(itemId: number | undefined) {
 export function useImportRcLoot() {
     const queryClient = useQueryClient()
 
-    return useMutation({
+    return useMutationWithResult({
         mutationFn: ({
             raidSessionId,
             csv,
@@ -275,6 +284,8 @@ export function useImportRcLoot() {
             csv: string
             importAssignedCharacter: boolean
         }) => importRcLootCsv(raidSessionId, csv, importAssignedCharacter),
+        successMessage: (data: { imported: number }) =>
+            `Imported ${s(data.imported)} loot items.`,
         onSuccess: (_, vars) => {
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.loots, "session", vars.raidSessionId],
@@ -289,9 +300,11 @@ export function useImportRcLoot() {
 export function useImportRcAssignments() {
     const queryClient = useQueryClient()
 
-    return useMutation({
+    return useMutationWithResult({
         mutationFn: ({ raidSessionId, csv }: { raidSessionId: string; csv: string }) =>
             importRcLootAssignments(raidSessionId, csv),
+        successMessage: (data: { assigned: number }) =>
+            `Assigned ${s(data.assigned)} loots.`,
         onSuccess: (_, vars) => {
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.loots, "session", vars.raidSessionId],
@@ -303,9 +316,11 @@ export function useImportRcAssignments() {
 export function useImportMrtLoot() {
     const queryClient = useQueryClient()
 
-    return useMutation({
+    return useMutationWithResult({
         mutationFn: ({ raidSessionId, data }: { raidSessionId: string; data: string }) =>
             importMrtLoot(raidSessionId, data),
+        successMessage: (result: { imported: number }) =>
+            `Imported ${s(result.imported)} loot items.`,
         onSuccess: (_, vars) => {
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.loots, "session", vars.raidSessionId],
@@ -320,7 +335,7 @@ export function useImportMrtLoot() {
 export function useAddManualLoot() {
     const queryClient = useQueryClient()
 
-    return useMutation({
+    return useMutationWithResult({
         mutationFn: ({
             raidSessionId,
             manualLoots,
@@ -328,6 +343,8 @@ export function useAddManualLoot() {
             raidSessionId: string
             manualLoots: NewLootManual[]
         }) => addManualLoot(raidSessionId, manualLoots),
+        successMessage: (data: { imported: number }) =>
+            `Added ${s(data.imported)} manual loot items.`,
         onSuccess: (_, vars) => {
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.loots, "session", vars.raidSessionId],

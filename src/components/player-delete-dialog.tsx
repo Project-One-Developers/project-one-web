@@ -3,7 +3,6 @@
 import { Loader2 } from "lucide-react"
 import Image from "next/image"
 import { type JSX } from "react"
-import { toast } from "sonner"
 import { useDeletePlayer } from "@/lib/queries/players"
 import type { Player } from "@/shared/models/character.model"
 import { Button } from "./ui/button"
@@ -32,10 +31,6 @@ export default function PlayerDeleteDialog({
         deleteMutation.mutate(player.id, {
             onSuccess: () => {
                 setOpen(false)
-                toast.success(`The player ${player.name} has been successfully deleted.`)
-            },
-            onError: (error) => {
-                toast.error(`Unable to delete the player. Error: ${error.message}`)
             },
         })
     }

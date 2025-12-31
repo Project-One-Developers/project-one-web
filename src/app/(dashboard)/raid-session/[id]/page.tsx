@@ -12,7 +12,6 @@ import {
 } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
 import { useState } from "react"
-import { toast } from "sonner"
 import RaidSessionDialog from "@/components/raid-session-dialog"
 import SessionLootNewDialog from "@/components/session-loot-new-dialog"
 import { SessionLootsPanel } from "@/components/session-loots-panel"
@@ -86,12 +85,10 @@ export default function RaidSessionPage() {
 
     const handleClone = () => {
         cloneMutation.mutate(raidSession.id, {
-            onSuccess: (clonedSession) => {
-                toast.success("Session cloned")
-                router.push(`/raid-session/${clonedSession.id}`)
-            },
-            onError: (error) => {
-                toast.error(`Failed to clone: ${error.message}`)
+            onSuccess: (result) => {
+                if (result.success) {
+                    router.push(`/raid-session/${result.data.id}`)
+                }
             },
         })
     }
@@ -100,11 +97,7 @@ export default function RaidSessionPage() {
         if (window.confirm(`Are you sure you want to delete "${raidSession.name}"?`)) {
             deleteMutation.mutate(raidSession.id, {
                 onSuccess: () => {
-                    toast.success("Session deleted")
                     router.push("/raid-session")
-                },
-                onError: (error) => {
-                    toast.error(`Failed to delete: ${error.message}`)
                 },
             })
         }

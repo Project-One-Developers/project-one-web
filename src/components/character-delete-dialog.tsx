@@ -3,7 +3,6 @@
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { type JSX } from "react"
-import { toast } from "sonner"
 import { useDeleteCharacter } from "@/lib/queries/players"
 import type { Character } from "@/shared/models/character.model"
 import { Button } from "./ui/button"
@@ -32,11 +31,7 @@ export default function CharacterDeleteDialog({
     const handleDelete = () => {
         deleteMutation.mutate(character.id, {
             onSuccess: () => {
-                toast.success(`Character ${character.name} has been deleted.`)
                 router.push("/roster")
-            },
-            onError: (error) => {
-                toast.error(`Unable to delete the character. Error: ${error.message}`)
             },
         })
     }

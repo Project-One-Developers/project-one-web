@@ -2,7 +2,6 @@
 
 import { Loader2 } from "lucide-react"
 import { useState, useMemo, type JSX } from "react"
-import { toast } from "sonner"
 import { useAddPlayer, useEditPlayer } from "@/lib/queries/players"
 import type { NewPlayer, Player } from "@/shared/models/character.model"
 import { Button } from "./ui/button"
@@ -72,10 +71,6 @@ function PlayerDialogContent({
                 {
                     onSuccess: () => {
                         setOpen(false)
-                        toast.success(`Player ${playerData.name} edited successfully`)
-                    },
-                    onError: (error) => {
-                        toast.error(`Unable to edit the player. Error: ${error.message}`)
                     },
                 }
             )
@@ -84,12 +79,6 @@ function PlayerDialogContent({
                 onSuccess: () => {
                     resetForm()
                     setOpen(false)
-                    toast.success(
-                        `The player ${playerData.name} has been successfully added.`
-                    )
-                },
-                onError: (error) => {
-                    toast.error(`Unable to add the player. Error: ${error.message}`)
                 },
             })
         }

@@ -24,6 +24,7 @@ import {
     parseTiersetInfo,
 } from "@/lib/loot/loot-utils"
 import { parseManualLoots, parseMrtLoots, parseRcLoots } from "@/lib/loots/loot-parsers"
+import { fail, ok, tryCatch, tryCatchVoid } from "@/lib/result"
 import { s } from "@/lib/safe-stringify"
 import { isInCurrentWowWeek } from "@/shared/libs/date/date-utils"
 import { compareGearItem, gearAreTheSame } from "@/shared/libs/items/item-bonus-utils"
@@ -39,7 +40,12 @@ import type {
     NewLootManual,
 } from "@/shared/models/loot.model"
 import type { SimC } from "@/shared/models/simulation.model"
-import type { CharAssignmentInfo, LootAssignmentInfo } from "@/shared/types/types"
+import type {
+    CharAssignmentInfo,
+    LootAssignmentInfo,
+    Result,
+    VoidResult,
+} from "@/shared/types/types"
 
 const RAID_SESSION_TIME_WINDOW = Duration.fromObject({ hours: 5 }).as("seconds")
 
@@ -73,29 +79,50 @@ export async function assignLoot(
     charId: string,
     lootId: string,
     highlights: CharAssignmentHighlights | null
-): Promise<void> {
-    await lootRepo.assign(charId, lootId, highlights)
+): Promise<VoidResult> {
+    return tryCatchVoid(
+        () => lootRepo.assign(charId, lootId, highlights),
+        "Loots",
+        "Failed to assign loot"
+    )
 }
 
-export async function unassignLoot(lootId: string): Promise<void> {
-    await lootRepo.unassign(lootId)
+export async function unassignLoot(lootId: string): Promise<VoidResult> {
+    return tryCatchVoid(
+        () => lootRepo.unassign(lootId),
+        "Loots",
+        "Failed to unassign loot"
+    )
 }
 
-export async function tradeLoot(lootId: string): Promise<void> {
-    await lootRepo.trade(lootId)
+export async function tradeLoot(lootId: string): Promise<VoidResult> {
+    return tryCatchVoid(
+        () => lootRepo.trade(lootId),
+        "Loots",
+        "Failed to mark loot as traded"
+    )
 }
 
-export async function untradeLoot(lootId: string): Promise<void> {
-    await lootRepo.untrade(lootId)
+export async function untradeLoot(lootId: string): Promise<VoidResult> {
+    return tryCatchVoid(
+        () => lootRepo.untrade(lootId),
+        "Loots",
+        "Failed to unmark loot as traded"
+    )
 }
 
-export async function deleteLoot(lootId: string): Promise<void> {
-    await lootRepo.delete(lootId)
+export async function deleteLoot(lootId: string): Promise<VoidResult> {
+    return tryCatchVoid(() => lootRepo.delete(lootId), "Loots", "Failed to delete loot")
 }
 
-export async function addLoots(raidSessionId: string, loots: NewLoot[]): Promise<void> {
-    const eligibleCharacters = await raidSessionRepo.getRoster(raidSessionId)
-    await lootRepo.addMany(raidSessionId, loots, eligibleCharacters)
+export async function addLoots(
+    raidSessionId: string,
+    loots: NewLoot[]
+): Promise<VoidResult> {
+    return tryCatchVoid(async () => {
+        const eligibleCharacters = await raidSessionRepo.getRoster(raidSessionId)
+        await lootRepo.addMany(raidSessionId, loots, eligibleCharacters)
+    }, "Loots")
 }
 
 // ============== LOOT IMPORT ACTIONS ==============
@@ -107,31 +134,33 @@ export async function importRcLootCsv(
     raidSessionId: string,
     csv: string,
     importAssignedCharacter: boolean
-): Promise<{ imported: number; errors: string[] }> {
-    const session = await raidSessionRepo.getById(raidSessionId)
+): Promise<Result<{ imported: number; errors: string[] }>> {
+    return tryCatch(async () => {
+        const session = await raidSessionRepo.getById(raidSessionId)
 
-    // Date bounds: session date +5 hours
-    const dateLowerBound = session.raidDate
-    const dateUpperBound = session.raidDate + RAID_SESSION_TIME_WINDOW
+        // Date bounds: session date +5 hours
+        const dateLowerBound = session.raidDate
+        const dateUpperBound = session.raidDate + RAID_SESSION_TIME_WINDOW
 
-    const allItems = await itemRepo.getAll()
-    const allCharacters = importAssignedCharacter ? await characterRepo.getList() : []
+        const allItems = await itemRepo.getAll()
+        const allCharacters = importAssignedCharacter ? await characterRepo.getList() : []
 
-    const loots = parseRcLoots(
-        csv,
-        dateLowerBound,
-        dateUpperBound,
-        importAssignedCharacter,
-        allItems,
-        allCharacters
-    )
+        const loots = parseRcLoots(
+            csv,
+            dateLowerBound,
+            dateUpperBound,
+            importAssignedCharacter,
+            allItems,
+            allCharacters
+        )
 
-    if (loots.length > 0) {
-        const eligibleCharacters = await raidSessionRepo.getRoster(raidSessionId)
-        await lootRepo.addMany(raidSessionId, loots, eligibleCharacters)
-    }
+        if (loots.length > 0) {
+            const eligibleCharacters = await raidSessionRepo.getRoster(raidSessionId)
+            await lootRepo.addMany(raidSessionId, loots, eligibleCharacters)
+        }
 
-    return { imported: loots.length, errors: [] }
+        return { imported: loots.length, errors: [] }
+    }, "Loots")
 }
 
 // Helper function to compare bonus ID arrays
@@ -160,97 +189,104 @@ const bonusIdsMatch = (
 export async function importRcLootAssignments(
     raidSessionId: string,
     csv: string
-): Promise<{ assigned: number; warnings: string[] }> {
-    const session = await raidSessionRepo.getById(raidSessionId)
+): Promise<Result<{ assigned: number; warnings: string[] }>> {
+    return tryCatch(async () => {
+        const session = await raidSessionRepo.getById(raidSessionId)
 
-    const allItems = await itemRepo.getAll()
-    const allCharacters = await characterRepo.getList()
+        const allItems = await itemRepo.getAll()
+        const allCharacters = await characterRepo.getList()
 
-    const [rcLootData, sessionLoots] = await Promise.all([
-        Promise.resolve(
-            parseRcLoots(
-                csv,
-                session.raidDate,
-                session.raidDate + RAID_SESSION_TIME_WINDOW,
-                true,
-                allItems,
-                allCharacters
-            )
-        ),
-        lootRepo.getByRaidSessionId(raidSessionId),
-    ])
+        const [rcLootData, sessionLoots] = await Promise.all([
+            Promise.resolve(
+                parseRcLoots(
+                    csv,
+                    session.raidDate,
+                    session.raidDate + RAID_SESSION_TIME_WINDOW,
+                    true,
+                    allItems,
+                    allCharacters
+                )
+            ),
+            lootRepo.getByRaidSessionId(raidSessionId),
+        ])
 
-    const warnings: string[] = []
-    let assignedCount = 0
+        const warnings: string[] = []
+        let assignedCount = 0
 
-    // Build assignment map: charId:itemString -> count
-    const assignmentMap = new Map<string, number>()
-    for (const rcLoot of rcLootData) {
-        if (rcLoot.assignedTo) {
-            const assignmentKey = `${rcLoot.assignedTo}#${s(rcLoot.gearItem.item.id)}#${rcLoot.gearItem.bonusIds?.join(",") ?? ""}`
-            assignmentMap.set(assignmentKey, (assignmentMap.get(assignmentKey) || 0) + 1)
-        }
-    }
-
-    // Process each assignment
-    for (const [assignmentKey, requiredAmount] of assignmentMap.entries()) {
-        const parts = assignmentKey.split("#")
-        const charId = parts[0]
-        const itemIdString = parts[1]
-        const bonusIdsString = parts[2]
-
-        if (!charId || !itemIdString) {
-            continue
-        }
-
-        // Parse itemId as number and bonusIds as array
-        const itemId = parseInt(itemIdString, 10)
-        const bonusIds = bonusIdsString
-            ? bonusIdsString.split(",").map((id) => parseInt(id, 10))
-            : []
-
-        // Find eligible loots for this character and item with matching bonus IDs
-        const eligibleLoots = sessionLoots.filter(
-            (loot) =>
-                loot.itemId === itemId &&
-                bonusIdsMatch(loot.gearItem.bonusIds, bonusIds) &&
-                loot.charsEligibility.includes(charId)
-        )
-
-        const alreadyAssignedCount = eligibleLoots.filter(
-            (loot) => loot.assignedCharacterId === charId
-        ).length
-
-        const unassignedLoots = eligibleLoots.filter((loot) => !loot.assignedCharacterId)
-        const availableCount = unassignedLoots.length
-        const remainingNeeded = Math.max(0, requiredAmount - alreadyAssignedCount)
-        const actualAssignCount = Math.min(remainingNeeded, availableCount)
-
-        // Warn if we can't fulfill the full request
-        if (remainingNeeded > availableCount) {
-            warnings.push(
-                `Insufficient unassigned loots for charId ${s(charId)} and itemId ${s(itemId)}. ` +
-                    `Required: ${s(remainingNeeded)}, Available: ${s(availableCount)}. Assigning ${s(actualAssignCount)} loots.`
-            )
-        }
-
-        // Assign available loots
-        const lootsToAssign = unassignedLoots.slice(0, actualAssignCount)
-        for (const loot of lootsToAssign) {
-            await lootRepo.assign(charId, loot.id, null)
-            // Update the loot in sessionLoots to reflect the assignment (so next filters are up to date)
-            const lootIndex = sessionLoots.findIndex((l) => l.id === loot.id)
-            if (lootIndex !== -1) {
-                const sessionLoot = sessionLoots[lootIndex]
-                if (sessionLoot) {
-                    sessionLoot.assignedCharacterId = charId
-                }
+        // Build assignment map: charId:itemString -> count
+        const assignmentMap = new Map<string, number>()
+        for (const rcLoot of rcLootData) {
+            if (rcLoot.assignedTo) {
+                const assignmentKey = `${rcLoot.assignedTo}#${s(rcLoot.gearItem.item.id)}#${rcLoot.gearItem.bonusIds?.join(",") ?? ""}`
+                assignmentMap.set(
+                    assignmentKey,
+                    (assignmentMap.get(assignmentKey) || 0) + 1
+                )
             }
-            assignedCount++
         }
-    }
 
-    return { assigned: assignedCount, warnings }
+        // Process each assignment
+        for (const [assignmentKey, requiredAmount] of assignmentMap.entries()) {
+            const parts = assignmentKey.split("#")
+            const charId = parts[0]
+            const itemIdString = parts[1]
+            const bonusIdsString = parts[2]
+
+            if (!charId || !itemIdString) {
+                continue
+            }
+
+            // Parse itemId as number and bonusIds as array
+            const itemId = parseInt(itemIdString, 10)
+            const bonusIds = bonusIdsString
+                ? bonusIdsString.split(",").map((id) => parseInt(id, 10))
+                : []
+
+            // Find eligible loots for this character and item with matching bonus IDs
+            const eligibleLoots = sessionLoots.filter(
+                (loot) =>
+                    loot.itemId === itemId &&
+                    bonusIdsMatch(loot.gearItem.bonusIds, bonusIds) &&
+                    loot.charsEligibility.includes(charId)
+            )
+
+            const alreadyAssignedCount = eligibleLoots.filter(
+                (loot) => loot.assignedCharacterId === charId
+            ).length
+
+            const unassignedLoots = eligibleLoots.filter(
+                (loot) => !loot.assignedCharacterId
+            )
+            const availableCount = unassignedLoots.length
+            const remainingNeeded = Math.max(0, requiredAmount - alreadyAssignedCount)
+            const actualAssignCount = Math.min(remainingNeeded, availableCount)
+
+            // Warn if we can't fulfill the full request
+            if (remainingNeeded > availableCount) {
+                warnings.push(
+                    `Insufficient unassigned loots for charId ${s(charId)} and itemId ${s(itemId)}. ` +
+                        `Required: ${s(remainingNeeded)}, Available: ${s(availableCount)}. Assigning ${s(actualAssignCount)} loots.`
+                )
+            }
+
+            // Assign available loots
+            const lootsToAssign = unassignedLoots.slice(0, actualAssignCount)
+            for (const loot of lootsToAssign) {
+                await lootRepo.assign(charId, loot.id, null)
+                // Update the loot in sessionLoots to reflect the assignment (so next filters are up to date)
+                const lootIndex = sessionLoots.findIndex((l) => l.id === loot.id)
+                if (lootIndex !== -1) {
+                    const sessionLoot = sessionLoots[lootIndex]
+                    if (sessionLoot) {
+                        sessionLoot.assignedCharacterId = charId
+                    }
+                }
+                assignedCount++
+            }
+        }
+
+        return { assigned: assignedCount, warnings }
+    }, "Loots")
 }
 
 /**
@@ -259,23 +295,25 @@ export async function importRcLootAssignments(
 export async function importMrtLoot(
     raidSessionId: string,
     data: string
-): Promise<{ imported: number; errors: string[] }> {
-    const session = await raidSessionRepo.getById(raidSessionId)
+): Promise<Result<{ imported: number; errors: string[] }>> {
+    return tryCatch(async () => {
+        const session = await raidSessionRepo.getById(raidSessionId)
 
-    // Date bounds: session date +5 hours
-    const dateLowerBound = session.raidDate
-    const dateUpperBound = session.raidDate + RAID_SESSION_TIME_WINDOW
+        // Date bounds: session date +5 hours
+        const dateLowerBound = session.raidDate
+        const dateUpperBound = session.raidDate + RAID_SESSION_TIME_WINDOW
 
-    const allItems = await itemRepo.getAll()
+        const allItems = await itemRepo.getAll()
 
-    const loots = parseMrtLoots(data, dateLowerBound, dateUpperBound, allItems)
+        const loots = parseMrtLoots(data, dateLowerBound, dateUpperBound, allItems)
 
-    if (loots.length > 0) {
-        const eligibleCharacters = await raidSessionRepo.getRoster(raidSessionId)
-        await lootRepo.addMany(raidSessionId, loots, eligibleCharacters)
-    }
+        if (loots.length > 0) {
+            const eligibleCharacters = await raidSessionRepo.getRoster(raidSessionId)
+            await lootRepo.addMany(raidSessionId, loots, eligibleCharacters)
+        }
 
-    return { imported: loots.length, errors: [] }
+        return { imported: loots.length, errors: [] }
+    }, "Loots")
 }
 
 /**
@@ -284,17 +322,19 @@ export async function importMrtLoot(
 export async function addManualLoot(
     raidSessionId: string,
     manualLoots: NewLootManual[]
-): Promise<{ imported: number; errors: string[] }> {
-    const allItems = await itemRepo.getAll()
+): Promise<Result<{ imported: number; errors: string[] }>> {
+    return tryCatch(async () => {
+        const allItems = await itemRepo.getAll()
 
-    const loots = parseManualLoots(manualLoots, allItems)
+        const loots = parseManualLoots(manualLoots, allItems)
 
-    if (loots.length > 0) {
-        const eligibleCharacters = await raidSessionRepo.getRoster(raidSessionId)
-        await lootRepo.addMany(raidSessionId, loots, eligibleCharacters)
-    }
+        if (loots.length > 0) {
+            const eligibleCharacters = await raidSessionRepo.getRoster(raidSessionId)
+            await lootRepo.addMany(raidSessionId, loots, eligibleCharacters)
+        }
 
-    return { imported: loots.length, errors: [] }
+        return { imported: loots.length, errors: [] }
+    }, "Loots")
 }
 
 // ============== LOOT ASSIGNMENT INFO ==============
@@ -413,7 +453,7 @@ export async function getLootAssignmentInfo(lootId: string): Promise<LootAssignm
  */
 export async function getCharactersWithLootsByItemId(
     itemId: number
-): Promise<CharacterWithGears[]> {
+): Promise<Result<CharacterWithGears[]>> {
     // Stage 1: Get item and roster to determine eligible characters
     const [item, roster] = await Promise.all([
         itemRepo.getById(itemId),
@@ -421,7 +461,7 @@ export async function getCharactersWithLootsByItemId(
     ])
 
     if (item === null) {
-        throw new Error("Item not found")
+        return fail("Item not found", "Loots")
     }
 
     // Filter to class-eligible characters
@@ -500,5 +540,5 @@ export async function getCharactersWithLootsByItemId(
         }
     })
 
-    return res
+    return ok(res)
 }

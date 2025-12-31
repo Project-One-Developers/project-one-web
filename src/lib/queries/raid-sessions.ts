@@ -1,6 +1,6 @@
 "use client"
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
     addRaidSession,
     cloneRaidSession,
@@ -12,6 +12,10 @@ import {
 } from "@/actions/raid-sessions"
 import type { EditRaidSession, NewRaidSession } from "@/shared/models/raid-session.model"
 import { queryKeys } from "./keys"
+import {
+    useMutationWithResult,
+    useVoidMutationWithResult,
+} from "./use-mutation-with-result"
 
 export function useRaidSessions() {
     return useQuery({
@@ -38,60 +42,53 @@ export function useRaidSession(id: string | undefined) {
 }
 
 export function useAddRaidSession() {
-    const queryClient = useQueryClient()
-
-    return useMutation({
+    return useMutationWithResult({
         mutationFn: (session: NewRaidSession) => addRaidSession(session),
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
-        },
+        invalidateKeys: [[queryKeys.raidSessions]],
+        successMessage: (data) => `Raid session "${data.name}" created.`,
     })
 }
 
 export function useEditRaidSession() {
     const queryClient = useQueryClient()
 
-    return useMutation({
+    return useMutationWithResult({
         mutationFn: (session: EditRaidSession) => editRaidSession(session),
-        onSuccess: (_, vars) => {
-            void queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
+        invalidateKeys: [[queryKeys.raidSessions]],
+        successMessage: (data) => `Raid session "${data.name}" updated.`,
+        onSuccess: (data) => {
             void queryClient.invalidateQueries({
-                queryKey: [queryKeys.raidSession, vars.id],
+                queryKey: [queryKeys.raidSession, data.id],
             })
         },
     })
 }
 
 export function useDeleteRaidSession() {
-    const queryClient = useQueryClient()
-
-    return useMutation({
+    return useVoidMutationWithResult({
         mutationFn: (id: string) => deleteRaidSession(id),
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
-        },
+        invalidateKeys: [[queryKeys.raidSessions]],
+        successMessage: "Raid session deleted.",
     })
 }
 
 export function useCloneRaidSession() {
-    const queryClient = useQueryClient()
-
-    return useMutation({
+    return useMutationWithResult({
         mutationFn: (id: string) => cloneRaidSession(id),
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
-        },
+        invalidateKeys: [[queryKeys.raidSessions]],
+        successMessage: (data) => `Raid session cloned as "${data.name}".`,
     })
 }
 
 export function useImportRosterInRaidSession() {
     const queryClient = useQueryClient()
 
-    return useMutation({
+    return useVoidMutationWithResult({
         mutationFn: ({ raidSessionId, csv }: { raidSessionId: string; csv: string }) =>
             importRosterInRaidSession(raidSessionId, csv),
-        onSuccess: (_, vars) => {
-            void queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
+        invalidateKeys: [[queryKeys.raidSessions]],
+        successMessage: "Roster imported successfully.",
+        onSuccess: (vars) => {
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.raidSession, vars.raidSessionId],
             })

@@ -3,7 +3,6 @@
 import { CheckedState } from "@radix-ui/react-checkbox"
 import { Loader2 } from "lucide-react"
 import React, { useState, useMemo, type JSX } from "react"
-import { toast } from "sonner"
 import { useAddCharacterWithSync, useEditCharacter } from "@/lib/queries/players"
 import { REALMS, ROLES } from "@/shared/consts/wow.consts"
 import type {
@@ -165,10 +164,6 @@ export default function CharacterDialog({
             editMutation.mutate(editData, {
                 onSuccess: () => {
                     setOpen(false)
-                    toast.success(`Character ${formData.name} edited successfully`)
-                },
-                onError: (error) => {
-                    toast.error(`Unable to edit the character. Error: ${error.message}`)
                 },
             })
         } else {
@@ -186,12 +181,6 @@ export default function CharacterDialog({
                 onSuccess: () => {
                     resetForm()
                     setOpen(false)
-                    toast.success(
-                        `The character ${formData.name} has been successfully added.`
-                    )
-                },
-                onError: (error) => {
-                    toast.error(`Unable to add the character. Error: ${error.message}`)
                 },
             })
         }

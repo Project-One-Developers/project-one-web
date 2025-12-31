@@ -65,7 +65,11 @@ const StatBadge = React.forwardRef<HTMLDivElement, StatBadgeProps>(
                 className={cn(statBadgeVariants({ variant }), className)}
                 {...props}
             >
-                {icon && <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center">{icon}</span>}
+                {icon && (
+                    <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
+                        {icon}
+                    </span>
+                )}
                 <span className={statBadgeLabelVariants({ variant })}>{label}</span>
                 <span className={statBadgeValueVariants({ variant })}>{value}</span>
             </div>

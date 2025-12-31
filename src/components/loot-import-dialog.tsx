@@ -40,19 +40,19 @@ export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
         }
 
         setIsLoading(true)
-        try {
-            const result = await importRcLootCsv(raidSessionId, rcCsvData, importAssigned)
-            toast.success(`Imported ${s(result.imported)} loot items`)
+        const result = await importRcLootCsv(raidSessionId, rcCsvData, importAssigned)
+        setIsLoading(false)
+
+        if (result.success) {
+            toast.success(`Imported ${s(result.data.imported)} loot items`)
             void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.raidSession, raidSessionId],
             })
             setRcCsvData("")
             setOpen(false)
-        } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Failed to import loot")
-        } finally {
-            setIsLoading(false)
+        } else {
+            toast.error(result.error)
         }
     }
 
@@ -63,19 +63,19 @@ export function LootImportDialog({ raidSessionId }: LootImportDialogProps) {
         }
 
         setIsLoading(true)
-        try {
-            const result = await importMrtLoot(raidSessionId, mrtData)
-            toast.success(`Imported ${s(result.imported)} loot items`)
+        const result = await importMrtLoot(raidSessionId, mrtData)
+        setIsLoading(false)
+
+        if (result.success) {
+            toast.success(`Imported ${s(result.data.imported)} loot items`)
             void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.raidSession, raidSessionId],
             })
             setMrtData("")
             setOpen(false)
-        } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Failed to import loot")
-        } finally {
-            setIsLoading(false)
+        } else {
+            toast.error(result.error)
         }
     }
 
