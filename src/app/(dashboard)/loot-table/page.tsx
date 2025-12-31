@@ -2,7 +2,7 @@
 
 import { Edit, Package, Search } from "lucide-react"
 import { useState, useMemo, useEffect, type JSX } from "react"
-import { GlobalFilterUI } from "@/components/global-filter-ui"
+import { FilterBar } from "@/components/filter-bar"
 import ItemManagementDialog from "@/components/item-management-dialog"
 import { EmptyState } from "@/components/ui/empty-state"
 import { GlassCard } from "@/components/ui/glass-card"
@@ -246,22 +246,37 @@ function LootTableContent(): JSX.Element {
     }
 
     return (
-        <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-8 items-center p-8 relative">
-            {/* Search Bar */}
-            <GlassCard padding="default" className="w-full max-w-md">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        type="text"
-                        placeholder="Search items..."
-                        value={searchQuery}
-                        onChange={(e) => {
-                            setSearchQuery(e.target.value)
-                        }}
-                        className="w-full pl-10 bg-transparent border-0 focus-visible:ring-0"
-                    />
-                </div>
-            </GlassCard>
+        <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-6 p-8">
+            {/* Filter Bar with Search */}
+            <div className="flex flex-col sm:flex-row gap-4">
+                <FilterBar
+                    showRaidDifficulty={false}
+                    showDroptimizerFilters={false}
+                    showMainsAlts={false}
+                    showClassFilter={true}
+                    showSlotFilter={true}
+                    showArmorTypeFilter={true}
+                    className="flex-1"
+                />
+                <GlassCard
+                    variant="solid"
+                    padding="sm"
+                    className="backdrop-blur-none bg-card/80 w-full sm:w-64"
+                >
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="text"
+                            placeholder="Search items..."
+                            value={searchQuery}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value)
+                            }}
+                            className="w-full pl-10 bg-transparent border-0 focus-visible:ring-0"
+                        />
+                    </div>
+                </GlassCard>
+            </div>
 
             {/* Boss List */}
             {filteredBosses.length > 0 ? (
@@ -286,16 +301,6 @@ function LootTableContent(): JSX.Element {
                     description="No items match your current filters"
                 />
             )}
-
-            {/* Bottom Right Filter button */}
-            <GlobalFilterUI
-                showRaidDifficulty={false}
-                showDroptimizerFilters={false}
-                showMainsAlts={false}
-                showClassFilter={true}
-                showSlotFilter={true}
-                showArmorTypeFilter={true}
-            />
 
             {selectedItem && (
                 <ItemManagementDialog

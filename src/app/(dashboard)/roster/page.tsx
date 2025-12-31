@@ -17,7 +17,6 @@ import PlayerDialog from "@/components/player-dialog"
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
 import { GlassCard } from "@/components/ui/glass-card"
-import { IconButton } from "@/components/ui/icon-button"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { StatBadge } from "@/components/ui/stat-badge"
 import { CharacterOverviewIcon } from "@/components/wow/character-overview-icon"
@@ -146,14 +145,17 @@ export default function RosterPage(): JSX.Element {
     }
 
     return (
-        <div className="w-full min-h-screen flex flex-col p-6 md:p-8">
-            {/* Header Section */}
-            <div className="mb-8 space-y-6">
-                {/* Search and External Links Row */}
+        <div className="w-full min-h-screen flex flex-col gap-6 p-6 md:p-8">
+            {/* Top Bar */}
+            <GlassCard
+                variant="solid"
+                padding="sm"
+                className="backdrop-blur-none bg-card/80"
+            >
                 <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
                     {/* Search Bar */}
-                    <div className="relative flex-1 max-w-xl">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <div className="relative flex-1">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                         <input
                             type="text"
                             placeholder="Search players or characters..."
@@ -161,17 +163,41 @@ export default function RosterPage(): JSX.Element {
                             onChange={(e) => {
                                 setSearchQuery(e.target.value)
                             }}
-                            className="w-full pl-10 pr-4 py-2.5 bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
+                            className="w-full pl-12 pr-4 py-3 bg-background/50 border border-border/50 rounded-xl text-base placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
                         />
                     </div>
 
-                    {/* External Site Icons */}
+                    {/* Action Buttons */}
                     <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="default"
+                            onClick={handleExportCsv}
+                            className="gap-2"
+                        >
+                            <Download className="w-4 h-4" />
+                            <span className="hidden sm:inline">Export</span>
+                        </Button>
+                        <Button
+                            variant="default"
+                            size="default"
+                            onClick={() => {
+                                setIsAddDialogOpen(true)
+                            }}
+                            className="gap-2"
+                        >
+                            <UserRoundPlus className="w-4 h-4" />
+                            <span className="hidden sm:inline">Add Player</span>
+                        </Button>
+                    </div>
+
+                    {/* External Site Icons */}
+                    <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-border/50">
                         <a
                             href="https://raider.io/guilds/eu/pozzo-delleternit%C3%A0/Project%20One"
                             rel="noreferrer"
                             target="_blank"
-                            className="group relative rounded-xl bg-card/50 backdrop-blur-sm border border-border/50 w-10 h-10 flex items-center justify-center hover:border-primary/50 hover:bg-primary/10 transition-all duration-200"
+                            className="group relative rounded-xl bg-card/50 border border-border/50 w-10 h-10 flex items-center justify-center hover:border-primary/50 hover:bg-primary/10 transition-all duration-200"
                             title="Raider.io"
                         >
                             <Image
@@ -186,7 +212,7 @@ export default function RosterPage(): JSX.Element {
                             href="https://www.warcraftlogs.com/guild/reports-list/633223"
                             rel="noreferrer"
                             target="_blank"
-                            className="group relative rounded-xl bg-card/50 backdrop-blur-sm border border-border/50 w-10 h-10 flex items-center justify-center hover:border-primary/50 hover:bg-primary/10 transition-all duration-200"
+                            className="group relative rounded-xl bg-card/50 border border-border/50 w-10 h-10 flex items-center justify-center hover:border-primary/50 hover:bg-primary/10 transition-all duration-200"
                             title="WarcraftLogs"
                         >
                             <Image
@@ -199,36 +225,36 @@ export default function RosterPage(): JSX.Element {
                         </a>
                     </div>
                 </div>
+            </GlassCard>
 
-                {/* Stats Row */}
-                <div className="flex flex-wrap gap-3">
+            {/* Stats Row */}
+            <div className="flex flex-wrap gap-3">
+                <StatBadge
+                    icon={<Users className="w-4 h-4 text-primary" />}
+                    label="Players"
+                    value={s(players.length)}
+                />
+                <StatBadge
+                    icon={<span className="text-primary font-bold">⚔</span>}
+                    label="Characters"
+                    value={s(totalCharacters)}
+                />
+                {itemLevelStats.mean > 0 && (
                     <StatBadge
-                        icon={<Users className="w-4 h-4 text-primary" />}
-                        label="Players"
-                        value={s(players.length)}
+                        variant="info"
+                        icon={<span className="text-blue-400 font-bold">◆</span>}
+                        label="Avg iLvl"
+                        value={Math.round(itemLevelStats.mean)}
                     />
+                )}
+                {itemLevelStats.lowCount > 0 && (
                     <StatBadge
-                        icon={<span className="text-primary font-bold">⚔</span>}
-                        label="Characters"
-                        value={s(totalCharacters)}
+                        variant="warning"
+                        icon={<AlertTriangle className="w-4 h-4 text-orange-400" />}
+                        label="Low Gear"
+                        value={s(itemLevelStats.lowCount)}
                     />
-                    {itemLevelStats.mean > 0 && (
-                        <StatBadge
-                            variant="info"
-                            icon={<span className="text-blue-400 font-bold">◆</span>}
-                            label="Avg iLvl"
-                            value={Math.round(itemLevelStats.mean)}
-                        />
-                    )}
-                    {itemLevelStats.lowCount > 0 && (
-                        <StatBadge
-                            variant="warning"
-                            icon={<AlertTriangle className="w-4 h-4 text-orange-400" />}
-                            label="Low Gear"
-                            value={s(itemLevelStats.lowCount)}
-                        />
-                    )}
-                </div>
+                )}
             </div>
 
             {/* Cards Grid */}
@@ -305,26 +331,6 @@ export default function RosterPage(): JSX.Element {
                     }
                 />
             )}
-
-            {/* Floating Action Buttons */}
-            <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
-                <IconButton
-                    icon={<Download className="w-5 h-5" />}
-                    variant="secondary"
-                    size="lg"
-                    onClick={handleExportCsv}
-                    title="Export Roster as CSV"
-                />
-                <IconButton
-                    icon={<UserRoundPlus className="w-5 h-5" />}
-                    variant="primary"
-                    size="lg"
-                    onClick={() => {
-                        setIsAddDialogOpen(true)
-                    }}
-                    title="Add Player"
-                />
-            </div>
 
             {/* Page Dialogs */}
             {selectedPlayer && (

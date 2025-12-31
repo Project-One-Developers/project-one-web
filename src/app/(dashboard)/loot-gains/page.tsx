@@ -3,7 +3,7 @@
 import { Package } from "lucide-react"
 import { useMemo, type JSX } from "react"
 import { DroptimizersForItem } from "@/components/droptimizers-for-item"
-import { GlobalFilterUI } from "@/components/global-filter-ui"
+import { FilterBar } from "@/components/filter-bar"
 import { EmptyState } from "@/components/ui/empty-state"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { BossCard } from "@/components/wow/boss-card"
@@ -108,33 +108,9 @@ function LootGainsContent(): JSX.Element {
     const encounterList = raidLootTableRes.data ?? []
 
     return (
-        <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-8 items-center p-8 relative">
-            {/* Boss List */}
-            <div className="flex flex-wrap gap-x-4 gap-y-4 justify-center">
-                {encounterList
-                    .sort((a, b) => a.order - b.order)
-                    .map((boss) => (
-                        <BossPanel
-                            key={boss.id}
-                            boss={boss}
-                            droptimizers={filteredDroptimizers}
-                            characters={charRes.data ?? []}
-                            diff={filter.selectedRaidDiff}
-                            hideItemsWithoutDropt={filter.hideIfNoUpgrade}
-                        />
-                    ))}
-            </div>
-
-            {encounterList.length === 0 && (
-                <EmptyState
-                    icon={<Package className="w-8 h-8" />}
-                    title="No loot data"
-                    description="No raid loot table data available"
-                />
-            )}
-
-            {/* Bottom Right Filter button */}
-            <GlobalFilterUI
+        <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-6 p-8">
+            {/* Filter Bar */}
+            <FilterBar
                 showRaidDifficulty={true}
                 showDroptimizerFilters={true}
                 showMainsAlts={true}
@@ -142,6 +118,30 @@ function LootGainsContent(): JSX.Element {
                 showSlotFilter={true}
                 showArmorTypeFilter={true}
             />
+
+            {/* Boss List */}
+            {encounterList.length > 0 ? (
+                <div className="flex flex-wrap gap-4 justify-center">
+                    {encounterList
+                        .sort((a, b) => a.order - b.order)
+                        .map((boss) => (
+                            <BossPanel
+                                key={boss.id}
+                                boss={boss}
+                                droptimizers={filteredDroptimizers}
+                                characters={charRes.data ?? []}
+                                diff={filter.selectedRaidDiff}
+                                hideItemsWithoutDropt={filter.hideIfNoUpgrade}
+                            />
+                        ))}
+                </div>
+            ) : (
+                <EmptyState
+                    icon={<Package className="w-8 h-8" />}
+                    title="No loot data"
+                    description="No raid loot table data available"
+                />
+            )}
         </div>
     )
 }

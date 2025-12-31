@@ -3,7 +3,7 @@
 import { groupBy, partition, sortBy } from "es-toolkit"
 import { Search } from "lucide-react"
 import { useEffect, useMemo, useState, type JSX } from "react"
-import { GlobalFilterUI } from "@/components/global-filter-ui"
+import { FilterBar } from "@/components/filter-bar"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Input } from "@/components/ui/input"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
@@ -356,40 +356,52 @@ function RaidProgressionPageContent(): JSX.Element {
     }
 
     return (
-        <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-6 p-8 relative">
-            {/* Header */}
-            <GlassCard padding="lg" className="text-center space-y-4">
-                <div>
-                    <h1 className="text-2xl font-bold">Raid Progression</h1>
-                    <p className="text-muted-foreground text-sm mt-1">
-                        Showing {filter.selectedRaidDiff} difficulty for{" "}
-                        {s((rosterProgressionQuery.data ?? []).length)} characters
-                        {debouncedSearchQuery && (
-                            <span className="text-primary">
-                                {" "}
-                                (filtered by &quot;{debouncedSearchQuery}&quot;)
-                            </span>
-                        )}
-                    </p>
-                </div>
+        <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-6 p-8">
+            {/* Filter Bar with Search */}
+            <div className="flex flex-col sm:flex-row gap-4">
+                <FilterBar
+                    showRaidDifficulty={true}
+                    showMainsAlts={true}
+                    showDroptimizerFilters={false}
+                    showClassFilter={false}
+                    showSlotFilter={false}
+                    showArmorTypeFilter={false}
+                    className="flex-1"
+                />
+                <GlassCard
+                    variant="solid"
+                    padding="sm"
+                    className="backdrop-blur-none bg-card/80 w-full sm:w-64"
+                >
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="text"
+                            placeholder="Search players..."
+                            value={searchQuery}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value)
+                            }}
+                            className="w-full pl-10 bg-transparent border-0 focus-visible:ring-0"
+                        />
+                    </div>
+                </GlassCard>
+            </div>
 
-                {/* Search Bar */}
-                <div className="relative max-w-md mx-auto">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        type="text"
-                        placeholder="Search player names..."
-                        value={searchQuery}
-                        onChange={(e) => {
-                            setSearchQuery(e.target.value)
-                        }}
-                        className="w-full pl-10"
-                    />
-                </div>
-            </GlassCard>
+            {/* Info */}
+            <p className="text-muted-foreground text-sm text-center">
+                Showing {filter.selectedRaidDiff} progression for{" "}
+                {s((rosterProgressionQuery.data ?? []).length)} characters
+                {debouncedSearchQuery && (
+                    <span className="text-primary">
+                        {" "}
+                        (filtered by &quot;{debouncedSearchQuery}&quot;)
+                    </span>
+                )}
+            </p>
 
             {/* Boss List */}
-            <div className="flex flex-wrap gap-x-4 gap-y-4 justify-center">
+            <div className="flex flex-wrap gap-4 justify-center">
                 {orderedBosses.map((boss) => {
                     const progressData = progressByBoss.get(boss.id)
                     if (!progressData) {
@@ -407,16 +419,6 @@ function RaidProgressionPageContent(): JSX.Element {
                     )
                 })}
             </div>
-
-            {/* Bottom Right Filter button */}
-            <GlobalFilterUI
-                showRaidDifficulty={true}
-                showMainsAlts={true}
-                showDroptimizerFilters={false}
-                showClassFilter={false}
-                showSlotFilter={false}
-                showArmorTypeFilter={false}
-            />
         </div>
     )
 }

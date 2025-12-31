@@ -154,12 +154,6 @@ export const armorTypesIcon = new Map<WowArmorType, string>([
     ["Plate", "https://wow.zamimg.com/images/wow/icons/large/inv_chest_plate04.jpg"],
 ])
 
-export const raidDiffIcon = new Map<WowRaidDifficulty, string>([
-    ["Normal", "/icons/diff-normal.png"],
-    ["Heroic", "/icons/diff-heroic.png"],
-    ["Mythic", "/icons/diff-mythic.png"],
-])
-
 export const encounterIcon = new Map<number, string>([
     // Nerubar Palace
     [2607, "https://wow.zamimg.com/modelviewer/live/webthumbs/npc/12/117772.webp"], // Ulgrax the Devourer

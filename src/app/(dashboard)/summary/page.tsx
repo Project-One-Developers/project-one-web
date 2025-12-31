@@ -5,7 +5,7 @@ import { AlertTriangle, CheckCircle, Search, XCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useMemo, useState, type JSX } from "react"
 import { match } from "ts-pattern"
-import { GlobalFilterUI } from "@/components/global-filter-ui"
+import { FilterBar } from "@/components/filter-bar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Input } from "@/components/ui/input"
@@ -387,11 +387,36 @@ function SummaryPageContent(): JSX.Element {
     }
 
     return (
-        <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-6 p-8 relative">
-            {/* Header with Search and Filters */}
-            <GlassCard padding="lg" className="space-y-4">
-                <h1 className="text-2xl font-bold">Summary</h1>
-                <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+        <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-6 p-8">
+            {/* Filter Bar with Search */}
+            <div className="flex flex-col sm:flex-row gap-4">
+                <FilterBar
+                    showMainsAlts={true}
+                    showRaidDifficulty={false}
+                    showDroptimizerFilters={false}
+                    showClassFilter={false}
+                    showSlotFilter={false}
+                    showArmorTypeFilter={false}
+                    className="flex-1"
+                />
+                <GlassCard
+                    variant="solid"
+                    padding="sm"
+                    className="backdrop-blur-none bg-card/80 w-full sm:w-64"
+                >
+                    <SearchBar
+                        searchQuery={searchQuery}
+                        onSearchChange={setSearchQuery}
+                    />
+                </GlassCard>
+            </div>
+
+            {/* Tier Filters */}
+            <GlassCard
+                variant="solid"
+                padding="sm"
+                className="backdrop-blur-none bg-card/80"
+            >
                 <FilterControls
                     tierCompletionFilter={tierCompletionFilter}
                     onTierToggle={toggleTierCompletion}
@@ -435,16 +460,6 @@ function SummaryPageContent(): JSX.Element {
                     </TableBody>
                 </Table>
             </GlassCard>
-
-            {/* Bottom Right Filter button */}
-            <GlobalFilterUI
-                showMainsAlts={true}
-                showRaidDifficulty={false}
-                showDroptimizerFilters={false}
-                showClassFilter={false}
-                showSlotFilter={false}
-                showArmorTypeFilter={false}
-            />
         </div>
     )
 }

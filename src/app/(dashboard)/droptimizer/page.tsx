@@ -4,7 +4,7 @@ import { FileSpreadsheet } from "lucide-react"
 import { useMemo, type JSX } from "react"
 import { DroptimizerCard } from "@/components/droptimizer-card"
 import DroptimizerNewDialog from "@/components/droptimizer-new-dialog"
-import { GlobalFilterUI } from "@/components/global-filter-ui"
+import { FilterBar } from "@/components/filter-bar"
 import { EmptyState } from "@/components/ui/empty-state"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { FilterProvider, useFilterContext } from "@/lib/filter-context"
@@ -33,7 +33,22 @@ function DroptimizerPageContent(): JSX.Element {
     }
 
     return (
-        <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-8 items-center p-8 relative">
+        <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-6 p-8">
+            {/* Filter Bar with New Button */}
+            <div className="flex flex-col sm:flex-row gap-4">
+                <FilterBar
+                    showRaidDifficulty={true}
+                    showDroptimizerFilters={true}
+                    showMainsAlts={true}
+                    showClassFilter={true}
+                    showSlotFilter={true}
+                    showArmorTypeFilter={true}
+                    className="flex-1"
+                />
+                <DroptimizerNewDialog />
+            </div>
+
+            {/* Droptimizer Cards */}
             {filteredDroptimizers.length > 0 ? (
                 <div className="flex flex-wrap gap-4 justify-center">
                     {filteredDroptimizers.map((dropt) => (
@@ -51,20 +66,6 @@ function DroptimizerPageContent(): JSX.Element {
                     description="Import a droptimizer simulation to see upgrade recommendations"
                 />
             )}
-
-            {/* Bottom Right Filter button */}
-            <GlobalFilterUI
-                showRaidDifficulty={true}
-                showDroptimizerFilters={true}
-                showClassFilter={true}
-                showSlotFilter={true}
-                showArmorTypeFilter={true}
-            />
-
-            {/* New Droptimizer Dialog Trigger, above the filter icon */}
-            <div className="fixed bottom-24 right-6 z-50">
-                <DroptimizerNewDialog />
-            </div>
         </div>
     )
 }
