@@ -30,9 +30,6 @@ import type { CharacterWithEncounters } from "@/shared/models/character.model"
 import type { WowClassName } from "@/shared/models/wow.model"
 import type { Result } from "@/shared/types/types"
 
-// Re-export for use by other actions
-export type { CharacterProfileResponse }
-
 // ============================================================================
 // Guild Import Config (hardcoded for now)
 // ============================================================================
