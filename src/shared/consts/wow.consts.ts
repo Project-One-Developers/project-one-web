@@ -456,3 +456,25 @@ export const REALMS = {
         { name: "Ясеневый лес", slug: "ashenvale" },
     ],
 }
+
+// Build slug <-> name lookups from REALMS constant
+const realmSlugToNameMap = new Map(REALMS.EU.map((r) => [r.slug, r.name]))
+const realmNameToSlugMap = new Map(REALMS.EU.map((r) => [r.name.toLowerCase(), r.slug]))
+
+/**
+ * Convert realm slug to display name using REALMS constant
+ */
+export function realmSlugToName(slug: string): string {
+    return realmSlugToNameMap.get(slug) ?? slug
+}
+
+/**
+ * Convert realm display name to API slug using REALMS constant
+ * Falls back to basic slugification if not found
+ */
+export function realmNameToSlug(name: string): string {
+    return (
+        realmNameToSlugMap.get(name.toLowerCase()) ??
+        name.toLowerCase().replace(/\s+/g, "-")
+    )
+}

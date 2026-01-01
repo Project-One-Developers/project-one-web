@@ -3,7 +3,7 @@ import { z } from "zod"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
-import { REALMS } from "@/shared/consts/wow.consts"
+import { realmNameToSlug } from "@/shared/consts/wow.consts"
 import type { WowItemEquippedSlotKey, WowRaidDifficulty } from "@/shared/models/wow.model"
 
 // Rate limiting: Blizzard API allows ~36,000 requests/hour = 10/second
@@ -171,28 +171,6 @@ export const guildRosterResponseSchema = z.object({
     members: z.array(guildMemberSchema),
 })
 export type GuildRosterResponse = z.infer<typeof guildRosterResponseSchema>
-
-// Build slug <-> name lookups from REALMS constant
-const realmSlugToNameMap = new Map(REALMS.EU.map((r) => [r.slug, r.name]))
-const realmNameToSlugMap = new Map(REALMS.EU.map((r) => [r.name.toLowerCase(), r.slug]))
-
-/**
- * Convert realm slug to display name using REALMS constant
- */
-export function realmSlugToName(slug: string): string {
-    return realmSlugToNameMap.get(slug) ?? slug
-}
-
-/**
- * Convert realm display name to API slug using REALMS constant
- * Falls back to basic slugification if not found
- */
-export function realmNameToSlug(name: string): string {
-    return (
-        realmNameToSlugMap.get(name.toLowerCase()) ??
-        name.toLowerCase().replace(/\s+/g, "-")
-    )
-}
 
 // Cache token in memory (valid for ~24h, we refresh at 23h)
 let cachedToken: { token: string; expiresAt: number } | null = null

@@ -8,7 +8,6 @@ import { characterRepo } from "@/db/repositories/characters"
 import { playerRepo } from "@/db/repositories/player.repo"
 import {
     fetchGuildRoster,
-    realmSlugToName,
     type CharacterProfileResponse,
 } from "@/lib/blizzard/blizzard-api"
 import {
@@ -19,6 +18,7 @@ import {
 } from "@/lib/blizzard/blizzard-sync"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
+import { realmSlugToName } from "@/shared/consts/wow.consts"
 import {
     formaUnixTimestampToItalianDate,
     getUnixTimestamp,
