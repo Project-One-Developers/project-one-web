@@ -106,6 +106,7 @@ export default function SyncPage(): JSX.Element {
             if (result.errors.length > 0) {
                 toast.warning(`${s(result.errors.length)} errors occurred during import`)
             }
+            await queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
         } catch (error) {
             toast.error(`Discord sync failed: ${s(error)}`)
         } finally {
