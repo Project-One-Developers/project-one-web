@@ -92,9 +92,15 @@ export const blizzardRepo = {
                 .delete(characterEncounterTable)
                 .where(eq(characterEncounterTable.characterId, characterId))
 
+            // Deduplicate encounters (by character-boss-difficulty)
+            const uniqueEncounters = uniqBy(
+                encounters,
+                (e) => `${e.characterId}-${s(e.bossId)}-${e.difficulty}`
+            )
+
             // Insert new encounters
-            if (encounters.length > 0) {
-                await tx.insert(characterEncounterTable).values(encounters)
+            if (uniqueEncounters.length > 0) {
+                await tx.insert(characterEncounterTable).values(uniqueEncounters)
             }
         })
     },
