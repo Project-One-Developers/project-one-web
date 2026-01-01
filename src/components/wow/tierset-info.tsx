@@ -15,13 +15,15 @@ export function TiersetInfo({ tierset, className }: TiersetInfoProps) {
     const omniItems = tierset.filter((t) => t.item.slotKey === "omni")
 
     return (
-        <div className={cn("flex flex-row gap-1", className)}>
+        <div className={cn("flex flex-row gap-1 pt-4", className)}>
             {/* Standard Tier Slots */}
             {tierSlots.map((slot) => {
                 const tiersetItem = tierset.find((t) => t.item.slotKey === slot)
                 return (
-                    <div key={slot} className="flex flex-col items-center space-x-1">
-                        <span className="text-[9px] text-gray-400">{slot}</span>
+                    <div key={slot} className="relative flex flex-col items-center">
+                        <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[9px] text-gray-400 whitespace-nowrap">
+                            {slot}
+                        </span>
                         {tiersetItem ? (
                             tiersetItem.source === "bag" ? (
                                 <Tooltip>
@@ -67,8 +69,10 @@ export function TiersetInfo({ tierset, className }: TiersetInfoProps) {
             {omniItems.length > 0 && (
                 <div className="flex flex-row gap-1">
                     {omniItems.map((omniItem, index) => (
-                        <div key={index} className="flex flex-col items-center space-x-1">
-                            <span className="text-[9px] text-gray-400">omni</span>
+                        <div key={index} className="relative flex flex-col items-center">
+                            <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[9px] text-gray-400 whitespace-nowrap">
+                                omni
+                            </span>
                             {omniItem.source === "bag" ? (
                                 <Tooltip>
                                     <TooltipTrigger asChild>

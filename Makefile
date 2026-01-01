@@ -1,7 +1,7 @@
 .PHONY: all up down logs db-shell
 
 all:
-	pnpm typecheck && pnpm lint && pnpm format
+	pnpm typecheck && pnpm lint:fix && pnpm format
 
 up:
 	docker compose up --remove-orphans -d

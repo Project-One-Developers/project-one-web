@@ -1,6 +1,5 @@
 "use client"
 
-import { LoaderCircle, StickyNote, Users } from "lucide-react"
 import { useMemo, useState, type JSX } from "react"
 import { toast } from "sonner"
 import { useItemNote } from "@/lib/queries/items"
@@ -9,18 +8,13 @@ import {
     useLootAssignmentInfo,
     useUnassignLoot,
 } from "@/lib/queries/loots"
-import { getDpsHumanReadable, cn } from "@/lib/utils"
 import type { LootWithAssigned } from "@/shared/models/loot.models"
-import { tierSetBonusSchema } from "@/shared/models/wow.models"
-import { DROPTIMIZER_WARN, type CharAssignmentInfo } from "@/shared/types"
+import type { CharAssignmentInfo } from "@/shared/types"
 import { ITEM_SLOTS_KEY_TIERSET } from "@/shared/wow.consts"
-import { DroptimizerUpgradeForItemEquipped } from "./droptimizer-upgrade-for-item"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
-import { TiersetInfo } from "./wow/tierset-info"
-import { WowClassIcon } from "./wow/wow-class-icon"
-import { WowGearIcon } from "./wow/wow-gear-icon"
-import { WowSpecIcon } from "./wow/wow-spec-icon"
+import { EligibleCharacterRow } from "./eligible-character-row"
+import { SelectedLootHeader } from "./selected-loot-header"
+import { LoadingSpinner } from "./ui/loading-spinner"
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "./ui/table"
 
 type LootsEligibleCharsProps = {
     selectedLoot: LootWithAssigned
@@ -49,25 +43,25 @@ export default function LootsEligibleChars({
     const [showAlts, setShowAlts] = useState(false)
 
     const lootAssignmentInfoQuery = useLootAssignmentInfo(selectedLoot.id)
-
-    // Query for item note
     const itemNoteQuery = useItemNote(selectedLoot.gearItem.item.id)
+    const assignLootMutation = useAssignLoot()
+    const unassignLootMutation = useUnassignLoot()
 
     const eligibleCharacters = useMemo(() => {
         if (!lootAssignmentInfoQuery.data) {
             return []
         }
-
         return lootAssignmentInfoQuery.data.eligible
             .filter(({ character }) => showAlts || character.main)
             .sort(sortEligibleCharacters)
     }, [lootAssignmentInfoQuery.data, showAlts])
 
-    const assignLootMutation = useAssignLoot()
-    const unassignLootMutation = useUnassignLoot()
+    const slotKey = selectedLoot.gearItem.item.slotKey
+    const showTiersetInfo =
+        slotKey === "omni" || ITEM_SLOTS_KEY_TIERSET.some((s) => s === slotKey)
+    const showHighestInSlot = slotKey !== "omni"
 
     const handleAssign = (charInfo: CharAssignmentInfo) => {
-        // Optimistically update
         const previousSelectedLoot = { ...selectedLoot }
         setSelectedLoot({
             ...selectedLoot,
@@ -91,7 +85,6 @@ export default function LootsEligibleChars({
     }
 
     const handleUnassign = () => {
-        // Optimistically update
         const previousSelectedLoot = { ...selectedLoot }
         setSelectedLoot({
             ...selectedLoot,
@@ -110,323 +103,68 @@ export default function LootsEligibleChars({
     }
 
     if (lootAssignmentInfoQuery.isLoading) {
-        return (
-            <div className="flex flex-col items-center w-full justify-center mt-10 mb-10">
-                <LoaderCircle className="animate-spin text-5xl" />
-            </div>
-        )
+        return <LoadingSpinner size="default" text="Loading eligible characters..." />
     }
-
-    const showTiersetInfo =
-        selectedLoot.gearItem.item.slotKey === "omni" ||
-        ITEM_SLOTS_KEY_TIERSET.some((i) => i === selectedLoot.gearItem.item.slotKey)
-    const showHightestInSlot = selectedLoot.gearItem.item.slotKey !== "omni"
 
     return (
         <div className="flex flex-col gap-4">
-            <div className="flex flex-row justify-center items-center p-2 rounded-lg gap-4">
-                <WowGearIcon
-                    gearItem={selectedLoot.gearItem}
-                    showSlot={true}
-                    showTiersetLine={true}
-                    showExtendedInfo={true}
-                    showArmorType={true}
-                    showRoleIcons={true}
-                    iconClassName="h-12 w-12"
-                />
-                {/* Item Note Badge */}
-                {itemNoteQuery.data?.note && itemNoteQuery.data.note.trim() !== "" && (
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <div className="flex items-center gap-1 max-w-xs cursor-help bg-blue-900/50 text-blue-100 border border-blue-700 px-2 py-1 rounded-full text-xs">
-                                <StickyNote className="h-3 w-3" />
-                                <span className="truncate">
-                                    {itemNoteQuery.data.note.length > 20
-                                        ? `${itemNoteQuery.data.note.substring(0, 20)}...`
-                                        : itemNoteQuery.data.note}
-                                </span>
-                            </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-sm">
-                            <div className="whitespace-pre-wrap break-words">
-                                <strong className="text-blue-400">Item Note:</strong>
-                                <br />
-                                {itemNoteQuery.data.note}
-                            </div>
-                        </TooltipContent>
-                    </Tooltip>
-                )}
-                {/* Show Alts Toggle */}
-                <button
-                    onClick={() => {
-                        setShowAlts(!showAlts)
-                    }}
-                    className={cn(
-                        "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors",
-                        showAlts
-                            ? "bg-primary/20 text-primary border border-primary/50"
-                            : "bg-muted text-muted-foreground border border-border hover:bg-muted/80"
-                    )}
-                >
-                    <Users className="h-3 w-3" />
-                    {showAlts ? "All Characters" : "Mains Only"}
-                </button>
-            </div>
-            <Table className="w-full cursor-pointer">
-                <TableHeader className="bg-gray-800">
-                    <TableRow className="hover:bg-gray-800">
-                        <TableHead className="text-gray-300 font-semibold">
-                            Name
-                        </TableHead>
-                        <TableHead className="text-gray-300 font-semibold">
-                            Highlights
-                        </TableHead>
-                        <TableHead className="text-gray-300 font-semibold">
-                            Droptimizer
-                        </TableHead>
-                        {showHightestInSlot && (
-                            <TableHead className="text-gray-300 font-semibold">
-                                Highest
-                            </TableHead>
+            <SelectedLootHeader
+                loot={selectedLoot}
+                itemNote={itemNoteQuery.data?.note}
+                showAlts={showAlts}
+                onToggleShowAlts={() => {
+                    setShowAlts(!showAlts)
+                }}
+            />
+
+            <Table className="w-full">
+                <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                        <TableHead className="text-center">Name</TableHead>
+                        <TableHead className="text-center">Highlights</TableHead>
+                        <TableHead className="text-center">Droptimizer</TableHead>
+                        {showHighestInSlot && (
+                            <TableHead className="text-center">Highest</TableHead>
                         )}
-                        <TableHead className="text-gray-300 font-semibold">
-                            Other Assignment
-                        </TableHead>
+                        <TableHead className="text-center">Other Assignment</TableHead>
                         {showTiersetInfo && (
                             <>
-                                <TableHead className="text-gray-300 font-semibold">
-                                    Tierset
-                                </TableHead>
-                                <TableHead className="text-gray-300 font-semibold">
-                                    Catalyst
-                                </TableHead>
+                                <TableHead className="text-center">Tierset</TableHead>
+                                <TableHead className="text-center">Catalyst</TableHead>
                             </>
                         )}
-                        <TableHead className="text-gray-300 font-semibold">
-                            Vault
-                        </TableHead>
+                        <TableHead className="text-center">Vault</TableHead>
                     </TableRow>
                 </TableHeader>
-                <TableBody className="">
+                <TableBody>
                     {eligibleCharacters.map((charInfo) => {
-                        const assignedLoots = allLoots.filter(
+                        const otherAssignedLoots = allLoots.filter(
                             (loot) =>
                                 loot.id !== selectedLoot.id &&
                                 loot.assignedCharacterId === charInfo.character.id &&
-                                loot.gearItem.item.slotKey ===
-                                    selectedLoot.gearItem.item.slotKey
+                                loot.gearItem.item.slotKey === slotKey
                         )
+                        const vaultItems = charInfo.weeklyChest.filter(
+                            (vault) => vault.item.slotKey === slotKey
+                        )
+
                         return (
-                            <TableRow
+                            <EligibleCharacterRow
                                 key={charInfo.character.id}
-                                className={` py-2 cursor-pointer  hover:bg-gray-700  ${
+                                charInfo={charInfo}
+                                isAssigned={
                                     selectedLoot.assignedCharacterId ===
                                     charInfo.character.id
-                                        ? "bg-green-900/50"
-                                        : ""
-                                }`}
-                                onClick={() => {
-                                    if (
-                                        selectedLoot.assignedCharacterId ===
-                                        charInfo.character.id
-                                    ) {
-                                        handleUnassign()
-                                    } else {
-                                        handleAssign(charInfo)
-                                    }
+                                }
+                                showTiersetInfo={showTiersetInfo}
+                                showHighestInSlot={showHighestInSlot}
+                                otherAssignedLoots={otherAssignedLoots}
+                                vaultItems={vaultItems}
+                                onAssign={() => {
+                                    handleAssign(charInfo)
                                 }}
-                            >
-                                <TableCell className="rounded-l-md group-hover:border-l group-hover:border-t group-hover:border-b group-hover:border-white relative">
-                                    <div className="flex items-center space-x-3">
-                                        <div className="relative">
-                                            <div className="h-8 w-8 flex items-center justify-center overflow-hidden">
-                                                <WowClassIcon
-                                                    wowClassName={
-                                                        charInfo.character.class
-                                                    }
-                                                    className="object-contain h-full w-full border-2 border-background rounded-lg"
-                                                />
-                                            </div>
-                                            {/* CheckMark for awarded */}
-                                            {selectedLoot.assignedCharacterId ===
-                                                charInfo.character.id && (
-                                                <div className="absolute -top-1 -right-1 bg-green-500 rounded-full w-4 h-4 flex items-center justify-center">
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        className="h-3 w-3 text-white"
-                                                        viewBox="0 0 20 20"
-                                                        fill="currentColor"
-                                                    >
-                                                        <path
-                                                            fillRule="evenodd"
-                                                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                            clipRule="evenodd"
-                                                        />
-                                                    </svg>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <h1 className="font-bold text-gray-100">
-                                                {charInfo.character.name}
-                                            </h1>
-                                            <p className="text-xs text-gray-400">
-                                                Score: {charInfo.highlights.score}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <div className="flex flex-wrap gap-2">
-                                        {charInfo.highlights.dpsGain > 0 && (
-                                            <span className="px-2 py-1 text-xs font-bold bg-blue-900/50 text-blue-400 rounded-full">
-                                                +
-                                                {getDpsHumanReadable(
-                                                    charInfo.highlights.dpsGain
-                                                )}
-                                            </span>
-                                        )}
-
-                                        {charInfo.highlights.gearIsBis ? (
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <span className="px-2 py-1 text-xs font-bold bg-green-900/50 text-green-400 rounded-full">
-                                                        BIS
-                                                    </span>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <div className="flex flex-col gap-y-1">
-                                                        {charInfo.bisForSpec.map((s) => (
-                                                            <div
-                                                                key={s.id}
-                                                                className="flex flex-row gap-2 items-center"
-                                                            >
-                                                                <WowSpecIcon
-                                                                    specId={s.id}
-                                                                    className="object-cover object-top rounded-md full h-5 w-5 border border-background"
-                                                                />
-                                                                <p>{s.name}</p>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        ) : null}
-
-                                        {charInfo.highlights.lootEnableTiersetBonus ===
-                                            tierSetBonusSchema.enum["2p"] && (
-                                            <span className="px-2 py-1 text-xs font-bold bg-purple-900/50 text-purple-400 rounded-full">
-                                                2P
-                                            </span>
-                                        )}
-                                        {charInfo.highlights.lootEnableTiersetBonus ===
-                                            tierSetBonusSchema.enum["4p"] && (
-                                            <span className="px-2 py-1 text-xs font-bold bg-purple-900/50 text-purple-400 rounded-full">
-                                                4P
-                                            </span>
-                                        )}
-                                        {(charInfo.highlights.ilvlDiff > 0 ||
-                                            charInfo.highlights.isTrackUpgrade) && (
-                                            <span className="px-2 py-1 text-xs font-bold bg-yellow-900/50 text-yellow-400 rounded-full">
-                                                SLOT
-                                            </span>
-                                        )}
-                                        {charInfo.highlights.alreadyGotIt && (
-                                            <span className="px-2 py-1 text-xs font-bold bg-gray-700/50 text-gray-300 rounded-full">
-                                                OWNED
-                                            </span>
-                                        )}
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <div className="flex flex-col space-y-2">
-                                        {charInfo.droptimizers.map((droptWithUpgrade) => (
-                                            <DroptimizerUpgradeForItemEquipped
-                                                key={droptWithUpgrade.droptimizer.url}
-                                                upgrade={droptWithUpgrade.upgrade}
-                                                droptimizer={droptWithUpgrade.droptimizer}
-                                                itemEquipped={
-                                                    droptWithUpgrade.itemEquipped
-                                                }
-                                            />
-                                        ))}
-                                        {charInfo.warnDroptimizer ===
-                                            DROPTIMIZER_WARN.NotImported && (
-                                            <div className="flex flex-wrap gap-2">
-                                                <span className="px-2 py-1 text-xs font-bold bg-yellow-500/20 text-yellow-400 rounded-full flex items-center space-x-1 border border-yellow-400/50">
-                                                    {/* Warning Icon */}
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        className="h-3 w-3"
-                                                        viewBox="0 0 20 20"
-                                                        fill="currentColor"
-                                                    >
-                                                        <path
-                                                            fillRule="evenodd"
-                                                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                                                            clipRule="evenodd"
-                                                        />
-                                                    </svg>
-                                                    <span>
-                                                        {charInfo.warnDroptimizer.toUpperCase()}
-                                                    </span>
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </TableCell>
-                                {showHightestInSlot && (
-                                    <TableCell>
-                                        <div className="flex space-x-1">
-                                            {charInfo.bestItemsInSlot.map(
-                                                (bestInSlot) => (
-                                                    <WowGearIcon
-                                                        key={bestInSlot.item.id}
-                                                        gearItem={bestInSlot}
-                                                        showTiersetLine={true}
-                                                    />
-                                                )
-                                            )}
-                                        </div>
-                                    </TableCell>
-                                )}
-
-                                <TableCell>
-                                    <div className="flex space-x-1">
-                                        {assignedLoots.map((otherLoot) => (
-                                            <WowGearIcon
-                                                key={otherLoot.id}
-                                                gearItem={otherLoot.gearItem}
-                                            />
-                                        ))}
-                                    </div>
-                                </TableCell>
-
-                                {showTiersetInfo && (
-                                    <>
-                                        <TableCell>
-                                            <TiersetInfo tierset={charInfo.tierset} />
-                                        </TableCell>
-                                        <TableCell>{charInfo.catalystCharge}</TableCell>
-                                    </>
-                                )}
-                                <TableCell className="rounded-r-md">
-                                    <div className="flex space-x-1">
-                                        {charInfo.weeklyChest
-                                            .filter(
-                                                (vault) =>
-                                                    vault.item.slotKey ===
-                                                    selectedLoot.gearItem.item.slotKey
-                                            )
-                                            .map((gear) => (
-                                                <WowGearIcon
-                                                    key={gear.item.id}
-                                                    gearItem={gear}
-                                                />
-                                            ))}
-                                    </div>
-                                </TableCell>
-                            </TableRow>
+                                onUnassign={handleUnassign}
+                            />
                         )
                     })}
                 </TableBody>

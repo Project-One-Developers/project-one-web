@@ -1,14 +1,19 @@
 "use client"
 
 import Image from "next/image"
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import { cn } from "@/lib/utils"
 import { itemSlotIcon } from "@/lib/wow-icon"
 import { formatWowSlotKey } from "@/shared/libs/items/item-slot-utils"
 import type { LootWithAssigned } from "@/shared/models/loot.models"
 import { wowItemSlotKeySchema, type WowItemSlotKey } from "@/shared/models/wow.models"
-import { ITEM_SLOTS_KEY } from "@/shared/wow.consts"
+import { GlassCard } from "./ui/glass-card"
+import { Input } from "./ui/input"
 import { WowClassIcon } from "./wow/wow-class-icon"
 import { WowGearIcon } from "./wow/wow-gear-icon"
+
+const TOKENS_ICON_URL =
+    "https://wow.zamimg.com/images/wow/icons/large/inv_axe_2h_nerubianraid_d_01_nv.jpg"
 
 type LootsTabsProps = {
     loots: LootWithAssigned[]
@@ -16,158 +21,237 @@ type LootsTabsProps = {
     setSelectedLoot: (loot: LootWithAssigned) => void
 }
 
-const LootsTabs = ({ loots, selectedLoot, setSelectedLoot }: LootsTabsProps) => {
-    const [selectedSlot, setSelectedSlot] = useState<WowItemSlotKey | "tokens">(
-        ITEM_SLOTS_KEY[0]
-    )
-    const [searchQuery, setSearchQuery] = useState("")
+type SlotCount = { total: number; assigned: number }
 
-    // Filter loots by search query
-    const searchFilteredLoots = searchQuery.trim()
-        ? loots.filter((loot) =>
-              loot.gearItem.item.name.toLowerCase().includes(searchQuery.toLowerCase())
-          )
-        : loots
+function SlotButton({
+    slot,
+    count,
+    isSelected,
+    onClick,
+}: {
+    slot: WowItemSlotKey | "tokens"
+    count: SlotCount
+    isSelected: boolean
+    onClick: () => void
+}) {
+    const isComplete = count.assigned === count.total
+    const iconSrc = slot === "tokens" ? TOKENS_ICON_URL : (itemSlotIcon.get(slot) ?? "")
+    const title = slot === "tokens" ? "Tokens" : formatWowSlotKey(slot)
 
-    const lootCounts = searchFilteredLoots.reduce<
-        Partial<Record<WowItemSlotKey, { total: number; assigned: number }>>
-    >((acc, loot) => {
-        const slot = loot.gearItem.item.slotKey
-        acc[slot] ??= { total: 0, assigned: 0 }
-        acc[slot].total++
-        if (loot.assignedCharacter) {
-            acc[slot].assigned++
-        }
-        return acc
-    }, {})
-
-    const tokensLoots = searchFilteredLoots.filter(
-        (loot) => loot.gearItem.item.tierset || loot.gearItem.item.token
-    )
-    const tokensCount = tokensLoots.reduce(
-        (acc, loot) => {
-            acc.total++
-            if (loot.assignedCharacter) {
-                acc.assigned++
-            }
-            return acc
-        },
-        { total: 0, assigned: 0 }
-    )
-
-    const filteredLoots =
-        selectedSlot === "tokens"
-            ? tokensLoots.sort(
-                  (a, b) =>
-                      a.gearItem.item.name.localeCompare(b.gearItem.item.name) ||
-                      b.gearItem.itemLevel - a.gearItem.itemLevel
-              )
-            : searchFilteredLoots
-                  .filter((loot) => loot.gearItem.item.slotKey === selectedSlot)
-                  .sort(
-                      (a, b) =>
-                          a.gearItem.item.name.localeCompare(b.gearItem.item.name) ||
-                          b.gearItem.itemLevel - a.gearItem.itemLevel
-                  )
-
-    const renderSlotButton = (
-        slot: WowItemSlotKey | "tokens",
-        count: { total: number; assigned: number }
-    ) => (
-        <div key={slot} className="flex flex-col items-center">
+    return (
+        <div className="flex flex-col items-center">
             <span
-                className={`text-xs font-bold ${count.assigned === count.total ? "text-green-500" : "text-white"}`}
+                className={cn(
+                    "text-xs font-bold",
+                    isComplete ? "text-green-400" : "text-foreground"
+                )}
             >
                 {count.assigned}/{count.total}
             </span>
             <button
-                onClick={() => {
-                    setSelectedSlot(slot)
-                }}
-                className={`flex flex-col items-center gap-1 p-1 border-b-2 transition-transform ${selectedSlot === slot ? "border-primary" : "border-transparent"}`}
+                type="button"
+                onClick={onClick}
+                className={cn(
+                    "flex flex-col items-center gap-1 p-1 border-b-2 transition-all",
+                    isSelected ? "border-primary" : "border-transparent"
+                )}
             >
                 <Image
-                    src={
-                        slot === "tokens"
-                            ? "https://wow.zamimg.com/images/wow/icons/large/inv_axe_2h_nerubianraid_d_01_nv.jpg"
-                            : (itemSlotIcon.get(slot) ?? "")
-                    }
+                    src={iconSrc}
                     alt={slot}
                     width={32}
                     height={32}
-                    className="w-8 h-8 hover:scale-125 transition-transform cursor-pointer rounded-sm"
-                    title={slot === "tokens" ? "Tokens" : formatWowSlotKey(slot)}
+                    className="w-8 h-8 hover:scale-110 transition-transform cursor-pointer rounded-sm"
+                    title={title}
                     unoptimized
                 />
             </button>
         </div>
     )
+}
+
+function LootListItem({
+    loot,
+    isSelected,
+    showSlotInfo,
+    onClick,
+}: {
+    loot: LootWithAssigned
+    isSelected: boolean
+    showSlotInfo: boolean
+    onClick: () => void
+}) {
+    return (
+        <div
+            className={cn(
+                "flex flex-row justify-between items-center p-2 rounded-md cursor-pointer transition-colors",
+                "border border-transparent hover:border-border hover:bg-muted/50",
+                isSelected && "bg-muted border-border"
+            )}
+            onClick={onClick}
+        >
+            <WowGearIcon
+                gearItem={loot.gearItem}
+                showSlot={showSlotInfo}
+                showTiersetLine
+                showExtendedInfo
+                convertItemTrackToRaidDiff={true}
+                showRoleIcons={true}
+                showArmorType={!showSlotInfo}
+            />
+            {loot.assignedCharacter && (
+                <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-sm font-medium text-foreground">
+                        {loot.assignedCharacter.name}
+                    </span>
+                    <WowClassIcon
+                        wowClassName={loot.assignedCharacter.class}
+                        className="h-8 w-8 border-2 border-background rounded-lg shrink-0"
+                    />
+                </div>
+            )}
+        </div>
+    )
+}
+
+export default function LootsTabs({
+    loots,
+    selectedLoot,
+    setSelectedLoot,
+}: LootsTabsProps) {
+    const [selectedSlot, setSelectedSlot] = useState<WowItemSlotKey | "tokens">("head")
+    const [searchQuery, setSearchQuery] = useState("")
+
+    // Filter loots by search query
+    const searchFilteredLoots = useMemo(() => {
+        if (!searchQuery.trim()) {
+            return loots
+        }
+        const query = searchQuery.toLowerCase()
+        return loots.filter((loot) =>
+            loot.gearItem.item.name.toLowerCase().includes(query)
+        )
+    }, [loots, searchQuery])
+
+    // Calculate counts per slot
+    const lootCounts = useMemo(() => {
+        return searchFilteredLoots.reduce<Partial<Record<WowItemSlotKey, SlotCount>>>(
+            (acc, loot) => {
+                const slot = loot.gearItem.item.slotKey
+                acc[slot] ??= { total: 0, assigned: 0 }
+                acc[slot].total++
+                if (loot.assignedCharacter) {
+                    acc[slot].assigned++
+                }
+                return acc
+            },
+            {}
+        )
+    }, [searchFilteredLoots])
+
+    // Calculate token counts
+    const tokensLoots = useMemo(() => {
+        return searchFilteredLoots.filter(
+            (loot) => loot.gearItem.item.tierset || loot.gearItem.item.token
+        )
+    }, [searchFilteredLoots])
+
+    const tokensCount = useMemo<SlotCount>(() => {
+        return tokensLoots.reduce(
+            (acc, loot) => {
+                acc.total++
+                if (loot.assignedCharacter) {
+                    acc.assigned++
+                }
+                return acc
+            },
+            { total: 0, assigned: 0 }
+        )
+    }, [tokensLoots])
+
+    // Filter and sort loots for display
+    const filteredLoots = useMemo(() => {
+        const lootsToFilter =
+            selectedSlot === "tokens" ? tokensLoots : searchFilteredLoots
+        const filtered =
+            selectedSlot === "tokens"
+                ? lootsToFilter
+                : lootsToFilter.filter(
+                      (loot) => loot.gearItem.item.slotKey === selectedSlot
+                  )
+
+        return filtered.sort(
+            (a, b) =>
+                a.gearItem.item.name.localeCompare(b.gearItem.item.name) ||
+                b.gearItem.itemLevel - a.gearItem.itemLevel
+        )
+    }, [selectedSlot, searchFilteredLoots, tokensLoots])
 
     return (
-        <div>
+        <div className="flex flex-col gap-4">
             {/* Search Bar */}
-            <div className="mb-4">
-                <input
-                    type="text"
-                    placeholder="Search loots by name..."
-                    value={searchQuery}
-                    onChange={(e) => {
-                        setSearchQuery(e.target.value)
-                    }}
-                    className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
-            </div>
+            <Input
+                type="text"
+                placeholder="Search loots by name..."
+                value={searchQuery}
+                onChange={(e) => {
+                    setSearchQuery(e.target.value)
+                }}
+            />
 
-            <div className="flex flex-wrap gap-2 pb-2">
+            {/* Slot Tabs */}
+            <div className="flex flex-wrap gap-2">
                 {wowItemSlotKeySchema.options.map((slot) => {
                     const count = lootCounts[slot]
-                    return count && count.total > 0 ? renderSlotButton(slot, count) : null
+                    if (!count || count.total === 0) {
+                        return null
+                    }
+                    return (
+                        <SlotButton
+                            key={slot}
+                            slot={slot}
+                            count={count}
+                            isSelected={selectedSlot === slot}
+                            onClick={() => {
+                                setSelectedSlot(slot)
+                            }}
+                        />
+                    )
                 })}
-                {tokensCount.total > 0 && renderSlotButton("tokens", tokensCount)}
+                {tokensCount.total > 0 && (
+                    <SlotButton
+                        slot="tokens"
+                        count={tokensCount}
+                        isSelected={selectedSlot === "tokens"}
+                        onClick={() => {
+                            setSelectedSlot("tokens")
+                        }}
+                    />
+                )}
             </div>
-            <div className="bg-muted p-4 rounded-lg shadow-md mt-2">
+
+            {/* Loot List */}
+            <GlassCard padding="sm" className="flex flex-col gap-1">
                 {filteredLoots.length === 0 ? (
-                    <p className="text-gray-400">
+                    <p className="text-muted-foreground text-center py-4">
                         {searchQuery.trim()
                             ? "No loots match your search"
                             : "No loot in this category"}
                     </p>
                 ) : (
                     filteredLoots.map((loot) => (
-                        <div
+                        <LootListItem
                             key={loot.id}
-                            className={`flex flex-row justify-between border border-transparent hover:border-white py-2 cursor-pointer hover:bg-gray-700 p-2 rounded-md ${selectedLoot?.id === loot.id ? "bg-gray-700" : ""}`}
-                            onClick={(e) => {
-                                e.preventDefault()
+                            loot={loot}
+                            isSelected={selectedLoot?.id === loot.id}
+                            showSlotInfo={selectedSlot === "tokens"}
+                            onClick={() => {
                                 setSelectedLoot(loot)
                             }}
-                        >
-                            <WowGearIcon
-                                gearItem={loot.gearItem}
-                                showSlot={selectedSlot === "tokens"}
-                                showTiersetLine
-                                showExtendedInfo
-                                convertItemTrackToRaidDiff={true}
-                                showRoleIcons={true}
-                                showArmorType={selectedSlot !== "tokens"}
-                            />
-                            {loot.assignedCharacter && (
-                                <div className="flex flex-row gap-2 items-center shrink-0">
-                                    <span className="text-sm font-medium">
-                                        {loot.assignedCharacter.name}
-                                    </span>
-                                    <WowClassIcon
-                                        wowClassName={loot.assignedCharacter.class}
-                                        className="h-8 w-8 border-2 border-background rounded-lg shrink-0"
-                                    />
-                                </div>
-                            )}
-                        </div>
+                        />
                     ))
                 )}
-            </div>
+            </GlassCard>
         </div>
     )
 }
-
-export default LootsTabs

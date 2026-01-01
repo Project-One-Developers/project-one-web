@@ -1,17 +1,16 @@
 "use client"
 
-import { BarChart, DownloadIcon, Eye, Package, ZapIcon } from "lucide-react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { BarChart, DownloadIcon, ZapIcon } from "lucide-react"
+import { useSearchParams } from "next/navigation"
 import { Suspense, useEffect, useMemo, useState, type JSX } from "react"
+import { CollapsibleSessionSelector } from "@/components/collapsible-session-selector"
 import LootsEligibleChars from "@/components/loots-eligible-chars"
 import LootsTabs from "@/components/loots-tabs"
 import LootsTradeHelperDialog from "@/components/loots-trade-helper"
-import SessionCard from "@/components/session-card"
 import SessionLootNewDialog from "@/components/session-loot-new-dialog"
 import SessionRosterImportDialog from "@/components/session-roster-dialog"
 import { Button } from "@/components/ui/button"
 import { GlassCard } from "@/components/ui/glass-card"
-import { IconButton } from "@/components/ui/icon-button"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import {
     convertToCSV,
@@ -23,7 +22,6 @@ import {
 import { useRaidLootTable } from "@/lib/queries/bosses"
 import { useLootsBySessionsWithAssigned } from "@/lib/queries/loots"
 import { useRaidSessions } from "@/lib/queries/raid-sessions"
-import { s } from "@/shared/libs/string-utils"
 import type { LootWithAssigned } from "@/shared/models/loot.models"
 
 function AssignContent(): JSX.Element {
@@ -38,7 +36,6 @@ function AssignContent(): JSX.Element {
     const [selectedSessionId, setSelectedSessionId] = useState<string>("")
 
     const searchParams = useSearchParams()
-    const router = useRouter()
     const defaultSessionId = searchParams.get("sessionId")
 
     const raidLootTable = useRaidLootTable()
@@ -99,7 +96,6 @@ function AssignContent(): JSX.Element {
     )
 
     const loots = useMemo(() => lootsQuery.data ?? [], [lootsQuery.data])
-    const visibleSessions = showAllSessions ? sortedSessions : sortedSessions.slice(0, 5)
 
     const handleExportLoots = () => {
         const filename = generateLootFilename(sortedSessions, selectedSessions, "loots")
@@ -122,99 +118,57 @@ function AssignContent(): JSX.Element {
     const isLootsLoading = lootsQuery.isLoading
 
     return (
-        <div className="w-full h-full flex flex-col gap-y-6 p-8 relative">
-            {/* Page Header with integrated back button */}
-            <GlassCard padding="lg" className="flex items-center relative">
-                {/* Back button */}
-                <IconButton
-                    icon={<Package className="w-4 h-4" />}
+        <div className="w-full h-full flex flex-col gap-y-4 p-8 relative">
+            {/* Actions Bar */}
+            <div className="flex justify-end items-center gap-2">
+                <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => {
-                        router.back()
+                        setLootHelperDialogOpen(true)
                     }}
-                    variant="default"
-                    className="mr-4"
-                />
+                    disabled={selectedSessions.size === 0}
+                    className="h-8 text-xs"
+                >
+                    <ZapIcon className="h-4 w-4 mr-1" />
+                    Trade Helper
+                </Button>
 
-                <div className="flex flex-col flex-1 gap-4">
-                    {/* Compact Actions Bar */}
-                    <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            {selectedSessions.size > 0 && (
-                                <span>
-                                    {s(selectedSessions.size)} session
-                                    {selectedSessions.size !== 1 ? "s" : ""} selected
-                                </span>
-                            )}
-                        </div>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 text-xs"
+                    disabled={selectedSessions.size === 0}
+                    onClick={handleExportLoots}
+                >
+                    <DownloadIcon className="h-4 w-4 mr-1" />
+                    Export Loots
+                </Button>
 
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                    setShowAllSessions(!showAllSessions)
-                                }}
-                                className="h-8 text-xs"
-                            >
-                                <Eye className="h-4 w-4 mr-1" />
-                                {showAllSessions ? "Show less" : "Show all"}
-                            </Button>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 text-xs"
+                    disabled={selectedSessions.size === 0}
+                    onClick={handleExportStats}
+                >
+                    <BarChart className="h-4 w-4 mr-1" />
+                    Export Stats
+                </Button>
+            </div>
 
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                    setLootHelperDialogOpen(true)
-                                }}
-                                disabled={selectedSessions.size === 0}
-                                className="h-8 text-xs"
-                            >
-                                <ZapIcon className="h-4 w-4 mr-1" />
-                                Trade Helper
-                            </Button>
-
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 text-xs"
-                                disabled={selectedSessions.size === 0}
-                                onClick={handleExportLoots}
-                            >
-                                <DownloadIcon className="h-4 w-4 mr-1" />
-                                Export Loots
-                            </Button>
-
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 text-xs"
-                                disabled={selectedSessions.size === 0}
-                                onClick={handleExportStats}
-                            >
-                                <BarChart className="h-4 w-4 mr-1" />
-                                Export Stats
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* Session cards */}
-                    <div className="flex flex-wrap gap-4">
-                        {visibleSessions.map((session) => (
-                            <SessionCard
-                                key={session.id}
-                                session={session}
-                                isSelected={selectedSessions.has(session.id)}
-                                showActions={true}
-                                onClick={() => {
-                                    toggleSession(session.id)
-                                }}
-                                onEditRoster={handleEditRoster}
-                                onLootImport={handleLootImport}
-                            />
-                        ))}
-                    </div>
-                </div>
-            </GlassCard>
+            {/* Collapsible Session Selector */}
+            <CollapsibleSessionSelector
+                sessions={sortedSessions}
+                selectedSessions={selectedSessions}
+                onToggleSession={toggleSession}
+                onEditRoster={handleEditRoster}
+                onLootImport={handleLootImport}
+                showAllSessions={showAllSessions}
+                onToggleShowAll={() => {
+                    setShowAllSessions(!showAllSessions)
+                }}
+            />
 
             {selectedSessions.size > 0 ? (
                 isLootsLoading ? (
