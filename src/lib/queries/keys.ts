@@ -16,4 +16,6 @@ export const queryKeys = {
     bosses: "bosses",
     settings: "settings",
     bisList: "bisList",
+    lootRecapSessions: "lootRecapSessions",
+    lootRecap: "lootRecap",
 } as const

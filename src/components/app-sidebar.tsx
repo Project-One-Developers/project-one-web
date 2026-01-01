@@ -3,6 +3,7 @@
 import {
     CloudDownload,
     FileSpreadsheet,
+    History,
     LucideAccessibility,
     LucideBot,
     LucideCpu,
@@ -16,6 +17,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import type { JSX } from "react"
 import { clientEnv } from "@/env.client"
+import type { UserRole } from "@/shared/models/auth.models"
 import {
     Sidebar,
     SidebarContent,
@@ -98,7 +100,20 @@ const spreadsheetItems = [
     },
 ]
 
-export default function AppSidebar(): JSX.Element {
+// Items accessible to all users (both officers and members)
+const memberItems = [
+    {
+        title: "Loot Recap",
+        url: "/loot-recap",
+        icon: History,
+    },
+]
+
+type AppSidebarProps = {
+    userRole: UserRole
+}
+
+export default function AppSidebar({ userRole }: AppSidebarProps): JSX.Element {
     const pathname = usePathname()
     const { open } = useSidebar()
 
@@ -106,19 +121,22 @@ export default function AppSidebar(): JSX.Element {
         return <SidebarTrigger className="absolute left-2 top-2 z-10" />
     }
 
+    const isOfficer = userRole === "officer"
+
     return (
         <>
             <Sidebar>
                 <SidebarTrigger className="ml-2 mt-2" />
                 <SidebarContent>
+                    {/* Member-accessible items (shown to everyone) */}
                     <SidebarGroup>
-                        <SidebarGroupLabel>Preparation</SidebarGroupLabel>
+                        <SidebarGroupLabel>Guild</SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
-                                {preparationItems.map((item) => (
+                                {memberItems.map((item) => (
                                     <SidebarMenuItem
                                         key={item.title}
-                                        className={`hover:bg-muted ${pathname === item.url ? "bg-muted" : ""}`}
+                                        className={`hover:bg-muted ${pathname === item.url || pathname.startsWith(`${item.url}/`) ? "bg-muted" : ""}`}
                                     >
                                         <SidebarMenuButton asChild>
                                             <Link href={item.url}>
@@ -131,57 +149,86 @@ export default function AppSidebar(): JSX.Element {
                             </SidebarMenu>
                         </SidebarGroupContent>
                     </SidebarGroup>
-                    <SidebarGroup>
-                        <SidebarGroupLabel>Raid</SidebarGroupLabel>
-                        <SidebarGroupContent>
-                            <SidebarMenu>
-                                {raidItems.map((item) => (
-                                    <SidebarMenuItem
-                                        key={item.title}
-                                        className={`hover:bg-muted ${pathname === item.url ? "bg-muted" : ""}`}
-                                    >
-                                        <SidebarMenuButton asChild>
-                                            <Link href={item.url}>
-                                                <item.icon />
-                                                <span>{item.title}</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-                                ))}
-                            </SidebarMenu>
-                        </SidebarGroupContent>
-                    </SidebarGroup>
-                    <SidebarGroup>
-                        <SidebarGroupLabel>Spreadsheet</SidebarGroupLabel>
-                        <SidebarGroupContent>
-                            <SidebarMenu>
-                                {spreadsheetItems.map((item) => (
-                                    <SidebarMenuItem
-                                        key={item.title}
-                                        className="hover:bg-muted"
-                                    >
-                                        <SidebarMenuButton asChild>
-                                            <a
-                                                href={item.url}
-                                                rel="noreferrer"
-                                                target="_blank"
+
+                    {/* Officer-only items */}
+                    {isOfficer && (
+                        <>
+                            <SidebarGroup>
+                                <SidebarGroupLabel>Preparation</SidebarGroupLabel>
+                                <SidebarGroupContent>
+                                    <SidebarMenu>
+                                        {preparationItems.map((item) => (
+                                            <SidebarMenuItem
+                                                key={item.title}
+                                                className={`hover:bg-muted ${pathname === item.url ? "bg-muted" : ""}`}
                                             >
-                                                <item.icon />
-                                                <span>{item.title}</span>
-                                            </a>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-                                ))}
-                            </SidebarMenu>
-                        </SidebarGroupContent>
-                    </SidebarGroup>
+                                                <SidebarMenuButton asChild>
+                                                    <Link href={item.url}>
+                                                        <item.icon />
+                                                        <span>{item.title}</span>
+                                                    </Link>
+                                                </SidebarMenuButton>
+                                            </SidebarMenuItem>
+                                        ))}
+                                    </SidebarMenu>
+                                </SidebarGroupContent>
+                            </SidebarGroup>
+                            <SidebarGroup>
+                                <SidebarGroupLabel>Raid</SidebarGroupLabel>
+                                <SidebarGroupContent>
+                                    <SidebarMenu>
+                                        {raidItems.map((item) => (
+                                            <SidebarMenuItem
+                                                key={item.title}
+                                                className={`hover:bg-muted ${pathname === item.url ? "bg-muted" : ""}`}
+                                            >
+                                                <SidebarMenuButton asChild>
+                                                    <Link href={item.url}>
+                                                        <item.icon />
+                                                        <span>{item.title}</span>
+                                                    </Link>
+                                                </SidebarMenuButton>
+                                            </SidebarMenuItem>
+                                        ))}
+                                    </SidebarMenu>
+                                </SidebarGroupContent>
+                            </SidebarGroup>
+                            <SidebarGroup>
+                                <SidebarGroupLabel>Spreadsheet</SidebarGroupLabel>
+                                <SidebarGroupContent>
+                                    <SidebarMenu>
+                                        {spreadsheetItems.map((item) => (
+                                            <SidebarMenuItem
+                                                key={item.title}
+                                                className="hover:bg-muted"
+                                            >
+                                                <SidebarMenuButton asChild>
+                                                    <a
+                                                        href={item.url}
+                                                        rel="noreferrer"
+                                                        target="_blank"
+                                                    >
+                                                        <item.icon />
+                                                        <span>{item.title}</span>
+                                                    </a>
+                                                </SidebarMenuButton>
+                                            </SidebarMenuItem>
+                                        ))}
+                                    </SidebarMenu>
+                                </SidebarGroupContent>
+                            </SidebarGroup>
+                        </>
+                    )}
+
                     <SidebarGroup className="mt-auto">
-                        <Link
-                            href="/sync"
-                            className="p-2 rounded-full hover:bg-muted w-fit focus:outline-none"
-                        >
-                            <CloudDownload />
-                        </Link>
+                        {isOfficer && (
+                            <Link
+                                href="/sync"
+                                className="p-2 rounded-full hover:bg-muted w-fit focus:outline-none"
+                            >
+                                <CloudDownload />
+                            </Link>
+                        )}
                         <span className="text-xs text-muted-foreground px-2 mt-2">
                             {clientEnv.NEXT_PUBLIC_BUILD_ID ?? "dev"}
                         </span>

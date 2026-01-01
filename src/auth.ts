@@ -4,6 +4,28 @@ import "server-only"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
 import { s } from "@/shared/libs/string-utils"
+import { userRoleSchema, type UserRole } from "@/shared/models/auth.models"
+
+// Helper to determine user role from Discord roles
+function determineUserRole(userRoles: string[]): UserRole | null {
+    const officerRoles = env.DISCORD_OFFICER_ROLES_IDS
+    const memberRoles = env.DISCORD_MEMBER_ROLES_IDS
+
+    // Check officer roles first (higher priority)
+    const isOfficer = userRoles.some((role) => officerRoles.includes(role))
+    if (isOfficer) {
+        return "officer"
+    }
+
+    // Check member roles
+    const isMember =
+        memberRoles.length > 0 && userRoles.some((role) => memberRoles.includes(role))
+    if (isMember) {
+        return "member"
+    }
+
+    return null
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
     providers: [
@@ -22,7 +44,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             }
 
             const guildId = env.DISCORD_GUILD_ID
-            const allowedRoles = env.DISCORD_ALLOWED_ROLES
 
             try {
                 // Fetch user's membership in the guild
@@ -47,12 +68,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 const member = (await res.json()) as { roles?: string[] }
                 const userRoles: string[] = member.roles ?? []
 
-                // Check if user has any of the allowed roles
-                const hasAllowedRole = userRoles.some((role) =>
-                    allowedRoles.includes(role)
-                )
+                // Determine user role
+                const role = determineUserRole(userRoles)
 
-                if (!hasAllowedRole) {
+                if (!role) {
                     logger.info(
                         "Auth",
                         `Access denied for ${s(profile.username)} - missing required role`
@@ -60,15 +79,51 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     return false
                 }
 
-                logger.info("Auth", `Access granted for ${s(profile.username)}`)
+                logger.info(
+                    "Auth",
+                    `Access granted for ${s(profile.username)} as ${s(role)}`
+                )
                 return true
             } catch (error) {
                 logger.error("Auth", `Error checking Discord roles: ${s(error)}`)
                 return false
             }
         },
+        async jwt({ token, account, profile }) {
+            // On initial sign-in, determine and store the role
+            if (account && profile?.id) {
+                const guildId = env.DISCORD_GUILD_ID
+
+                try {
+                    const res = await fetch(
+                        `https://discord.com/api/users/@me/guilds/${guildId}/member`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${account.access_token ?? ""}`,
+                            },
+                        }
+                    )
+
+                    if (res.ok) {
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Discord API response
+                        const member = (await res.json()) as { roles?: string[] }
+                        const userRoles: string[] = member.roles ?? []
+                        // signIn callback already validated - role should exist
+                        token.role = determineUserRole(userRoles) ?? undefined
+                    }
+                } catch {
+                    // Role fetch failed - token.role stays undefined
+                    // Layouts will force re-authentication
+                }
+            }
+
+            return token
+        },
         session({ session, token }) {
             session.user.id = token.sub ?? ""
+            // Role may be undefined for stale sessions - layouts will handle redirect
+            const parsed = userRoleSchema.safeParse(token.role)
+            session.user.role = parsed.success ? parsed.data : undefined
             return session
         },
     },

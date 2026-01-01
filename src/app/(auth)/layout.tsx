@@ -10,9 +10,14 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
         session = null
     }
 
-    // Redirect to home if already logged in
-    if (session?.user) {
-        redirect("/")
+    // Only redirect if logged in with a valid role
+    // Stale sessions (no role) stay on login - re-authenticating will fix them
+    if (session?.user.role) {
+        if (session.user.role === "officer") {
+            redirect("/")
+        } else {
+            redirect("/loot-recap")
+        }
     }
 
     return <div className="min-h-screen flex items-center justify-center">{children}</div>

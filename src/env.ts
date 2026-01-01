@@ -5,7 +5,12 @@ const envSchema = z.object({
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
     DATABASE_URL: z.string(),
     DISCORD_GUILD_ID: z.string(),
-    DISCORD_ALLOWED_ROLES: z.string().transform((v) => v.split(",")),
+    DISCORD_OFFICER_ROLES_IDS: z.string().transform((v) => v.split(",")),
+    DISCORD_MEMBER_ROLES_IDS: z
+        .string()
+        .optional()
+        .default("")
+        .transform((v) => (v ? v.split(",") : [])),
     DISCORD_DROPTIMIZER_CHANNEL_ID: z.string(),
     DISCORD_BOT_TOKEN: z.string(),
     CRON_SECRET: z.string().optional(),
