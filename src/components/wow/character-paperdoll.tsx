@@ -63,9 +63,13 @@ export default function CharacterPaperdoll({ renderGearSlot }: CharacterPaperdol
             {/* Bottom Row - Weapons centered in the middle area (between columns) */}
             <div className="flex py-3 shrink-0">
                 <div className="w-70 shrink-0" />
-                <div className="flex-1 flex justify-center items-center gap-8">
-                    <div>{renderGearSlot("main_hand", { rightSide: true })}</div>
-                    <div>{renderGearSlot("off_hand", { rightSide: false })}</div>
+                <div className="flex-1 flex items-center gap-8">
+                    <div className="flex-1 flex justify-end">
+                        {renderGearSlot("main_hand", { rightSide: true })}
+                    </div>
+                    <div className="flex-1 flex justify-start">
+                        {renderGearSlot("off_hand", { rightSide: false })}
+                    </div>
                 </div>
                 <div className="w-70 shrink-0" />
             </div>
