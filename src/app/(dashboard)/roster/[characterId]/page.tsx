@@ -12,6 +12,7 @@ import { CharGameInfoPanel } from "@/components/character-game-info-panel"
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
 import { GlassCard } from "@/components/ui/glass-card"
+import { HighlightBadge } from "@/components/ui/highlight-badge"
 import { IconButton } from "@/components/ui/icon-button"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { WowCharacterLink } from "@/components/wow/wow-character-links"
@@ -96,9 +97,7 @@ export default function CharacterPage() {
                                 {character.name}
                             </h1>
                             {character.main && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-medium">
-                                    MAIN
-                                </span>
+                                <HighlightBadge variant="main">MAIN</HighlightBadge>
                             )}
                         </div>
                         <span className="text-sm text-muted-foreground">

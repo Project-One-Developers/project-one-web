@@ -4,6 +4,7 @@ import { Crown } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { type JSX } from "react"
+import { HighlightBadge } from "@/components/ui/highlight-badge"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { classIcon } from "@/lib/wow-icon"
@@ -25,9 +26,7 @@ const CharacterTooltip = ({
                 {summary.character.name}
             </span>
             {summary.character.main && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-medium">
-                    MAIN
-                </span>
+                <HighlightBadge variant="main">MAIN</HighlightBadge>
             )}
         </div>
         <div className="text-xs text-muted-foreground">
@@ -43,11 +42,7 @@ const CharacterTooltip = ({
             >
                 {summary.itemLevel}
             </span>
-            {isLowItemLevel && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400">
-                    Low
-                </span>
-            )}
+            {isLowItemLevel && <HighlightBadge variant="warning">Low</HighlightBadge>}
         </div>
         <div className="flex flex-row gap-2 pt-2">
             <WowCharacterLink character={summary.character} site="raiderio" />

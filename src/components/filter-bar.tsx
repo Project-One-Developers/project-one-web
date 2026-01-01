@@ -6,6 +6,7 @@ import type { ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { GlassCard } from "@/components/ui/glass-card"
+import { HighlightBadge } from "@/components/ui/highlight-badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { SectionHeader } from "@/components/ui/section-header"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
@@ -292,9 +293,9 @@ export const FilterBar = ({
                                 <Plus className="w-4 h-4" />
                                 <span>Filters</span>
                                 {hasAnyFilters && (
-                                    <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-primary/20 text-primary">
+                                    <HighlightBadge variant="primary" className="ml-1">
                                         {activeFilterCount}
-                                    </span>
+                                    </HighlightBadge>
                                 )}
                             </Button>
                         </PopoverTrigger>

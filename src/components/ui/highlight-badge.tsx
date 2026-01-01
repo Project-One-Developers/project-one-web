@@ -14,6 +14,9 @@ const highlightBadgeVariants = cva(
                 upgrade: "bg-yellow-500/20 text-yellow-400",
                 owned: "bg-muted text-muted-foreground",
                 warning: "bg-orange-500/20 text-orange-400 border border-orange-500/30",
+                main: "bg-amber-500/20 text-amber-400",
+                note: "bg-blue-500/20 text-blue-400 border border-blue-500/30",
+                primary: "bg-primary/20 text-primary",
             },
         },
         defaultVariants: {

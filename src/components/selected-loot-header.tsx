@@ -3,6 +3,7 @@
 import { StickyNote, Users } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { LootWithAssigned } from "@/shared/models/loot.models"
+import { HighlightBadge } from "./ui/highlight-badge"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 import { WowGearIcon } from "./wow/wow-gear-icon"
 
@@ -37,14 +38,19 @@ export function SelectedLootHeader({
             {hasNote && (
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <div className="flex items-center gap-1 max-w-xs cursor-help bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-1 rounded-full text-xs">
-                            <StickyNote className="h-3 w-3" />
-                            <span className="truncate">
-                                {itemNote.length > 20
-                                    ? `${itemNote.substring(0, 20)}...`
-                                    : itemNote}
-                            </span>
-                        </div>
+                        <span>
+                            <HighlightBadge
+                                variant="note"
+                                icon={<StickyNote className="h-3 w-3" />}
+                                className="max-w-xs cursor-help"
+                            >
+                                <span className="truncate">
+                                    {itemNote.length > 20
+                                        ? `${itemNote.substring(0, 20)}...`
+                                        : itemNote}
+                                </span>
+                            </HighlightBadge>
+                        </span>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-sm">
                         <div className="whitespace-pre-wrap wrap-break-word">
