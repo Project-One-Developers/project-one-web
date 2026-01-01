@@ -6,6 +6,7 @@ import {
     pgEnum,
     pgTable,
     primaryKey,
+    real,
     serial,
     text,
     timestamp,
@@ -77,8 +78,8 @@ export const charBlizzardTable = pgTable("characters_blizzard", {
     blizzardCharacterId: integer("blizzard_character_id").notNull(),
     syncedAt: integer("synced_at").notNull(), // unix timestamp when we synced
     lastLoginAt: integer("last_login_at").notNull(), // from Blizzard API
-    averageItemLevel: integer("average_item_level"),
-    equippedItemLevel: integer("equipped_item_level"),
+    averageItemLevel: real("average_item_level"),
+    equippedItemLevel: real("equipped_item_level"),
     itemsEquipped: jsonb("items_equipped").$type<GearItem[]>().notNull(),
 })
 
@@ -170,8 +171,8 @@ export const droptimizerTable = pgTable(
         weeklyChest: jsonb("weekly_chest").$type<GearItem[]>(),
         currencies:
             jsonb("currencies").$type<{ id: number; type: string; amount: number }[]>(),
-        itemsAverageItemLevel: integer("items_average_ilvl"),
-        itemsAverageItemLevelEquipped: integer("items_average_ilvl_equipped"),
+        itemsAverageItemLevel: real("items_average_ilvl"),
+        itemsAverageItemLevelEquipped: real("items_average_ilvl_equipped"),
         itemsEquipped: jsonb("items_equipped").$type<GearItem[]>().notNull(),
         itemsInBag: jsonb("items_in_bags").$type<GearItem[]>(),
         tiersetInfo: jsonb("tierset_info").$type<GearItem[]>(),

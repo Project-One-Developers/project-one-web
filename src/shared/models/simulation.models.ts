@@ -6,6 +6,9 @@ import {
     wowRaidDiffSchema,
 } from "./wow.models"
 
+// Helper to round to 2 decimal places
+const twoDecimals = z.number().transform((n) => Math.round(n * 100) / 100)
+
 export const droptimizerUpgradeSchema = z.object({
     id: z.string(),
     dps: z.number(),
@@ -71,8 +74,8 @@ export const droptimizerSchema = z.object({
     upgrades: z.array(droptimizerUpgradeSchema),
     weeklyChest: z.array(gearItemSchema),
     currencies: z.array(droptimizerCurrencySchema),
-    itemsAverageItemLevel: z.number().nullable(),
-    itemsAverageItemLevelEquipped: z.number().nullable(),
+    itemsAverageItemLevel: twoDecimals.nullable(),
+    itemsAverageItemLevelEquipped: twoDecimals.nullable(),
     itemsInBag: z.array(gearItemSchema),
     itemsEquipped: z.array(gearItemSchema),
     tiersetInfo: z.array(gearItemSchema),

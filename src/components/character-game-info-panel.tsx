@@ -2,7 +2,7 @@
 
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react"
 import Image from "next/image"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { match, P } from "ts-pattern"
 import { z } from "zod"
 import { getCharacterRenderUrl } from "@/actions/characters"
@@ -37,17 +37,7 @@ export const CharGameInfoPanel = ({ character, gameInfo }: CharGameInfoPanelProp
     const currencies = gameInfo?.droptimizer?.currencies ?? null
     const blizzardData = gameInfo?.blizzard ?? null
 
-    // Memoize sidebar data check to prevent unnecessary re-renders
-    const hasSidebarData = useMemo(() => {
-        const hasCurrencies = Boolean(currencies && currencies.length > 0)
-        const hasCurrentVault = Boolean(
-            droptimizer?.weeklyChest && droptimizer.weeklyChest.length > 0
-        )
-
-        return hasCurrencies || hasCurrentVault
-    }, [currencies, droptimizer?.weeklyChest])
-
-    const [sidebarOpen, setSidebarOpen] = useState<boolean>(hasSidebarData)
+    const [sidebarOpen, setSidebarOpen] = useState(false)
 
     return (
         <div className="flex gap-4 h-full">
@@ -210,22 +200,28 @@ const GearInfo = ({
     // Get class-themed background style
     const classBackgroundStyle = getClassBackgroundStyle(characterClass)
 
-    // Determine default tab or show empty state
-    const defaultTab = match({ blizzard, droptimizer })
+    // Determine default tab - always prefer armory when available
+    const initialTab = match({ blizzard, droptimizer })
         .with({ blizzard: null, droptimizer: null }, () => null)
-        .with(
-            {
-                blizzard: { syncedAt: P.number },
-                droptimizer: { simInfo: { date: P.number } },
-            },
-            ({ blizzard: b, droptimizer: d }) =>
-                b.syncedAt > d.simInfo.date ? "blizzard" : "droptimizer"
-        )
         .with({ blizzard: P.not(null) }, () => "blizzard")
         .with({ droptimizer: P.not(null) }, () => "droptimizer")
         .exhaustive()
 
-    if (defaultTab === null) {
+    // Track user's tab selection (null = user hasn't changed, use initialTab)
+    const [userSelectedTab, setUserSelectedTab] = useState<string | null>(null)
+    const activeTab = userSelectedTab ?? initialTab
+
+    // Get current item levels based on active tab
+    const equippedItemLevel =
+        activeTab === "blizzard"
+            ? blizzard?.equippedItemLevel
+            : droptimizer?.itemsAverageItemLevelEquipped
+    const averageItemLevel =
+        activeTab === "blizzard"
+            ? blizzard?.averageItemLevel
+            : droptimizer?.itemsAverageItemLevel
+
+    if (initialTab === null) {
         return (
             <EmptyState
                 size="default"
@@ -262,8 +258,30 @@ const GearInfo = ({
                     />
                 </div>
             )}
+            {/* Floating Item Level Card */}
+            {equippedItemLevel && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
+                    <div className="px-4 py-2 rounded-xl bg-black/60 backdrop-blur-sm border border-border/50 shadow-lg">
+                        <div className="flex flex-col items-center">
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                                Item Level
+                            </span>
+                            <span className="text-2xl font-bold text-blue-400">
+                                {equippedItemLevel}
+                            </span>
+                            {averageItemLevel &&
+                                averageItemLevel !== equippedItemLevel && (
+                                    <span className="text-xs text-muted-foreground">
+                                        {averageItemLevel} avg
+                                    </span>
+                                )}
+                        </div>
+                    </div>
+                </div>
+            )}
             <Tabs
-                defaultValue={defaultTab}
+                value={activeTab ?? undefined}
+                onValueChange={setUserSelectedTab}
                 className="w-full h-full relative z-10 flex flex-col"
             >
                 <TabsList className="flex justify-start gap-2 mb-3 bg-transparent h-auto p-0 shrink-0">
@@ -319,7 +337,10 @@ const GearInfo = ({
 
                 {blizzard && (
                     <TabsContent value="blizzard" className="flex-1 min-h-0 mt-0">
-                        <BlizzardData data={blizzard} />
+                        <BlizzardData
+                            data={blizzard}
+                            tiersetInfo={droptimizer?.tiersetInfo}
+                        />
                     </TabsContent>
                 )}
 

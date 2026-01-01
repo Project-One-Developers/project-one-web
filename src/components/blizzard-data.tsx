@@ -1,11 +1,17 @@
 "use client"
 
 import type { CharacterBlizzard } from "@/shared/models/blizzard.models"
+import type { GearItem } from "@/shared/models/item.models"
 import type { WowItemEquippedSlotKey } from "@/shared/models/wow.models"
 import CharacterGearLayout from "./character-gear-layout"
 import BaseGearSlot, { createGearSlotMapping } from "./wow/character-paperdoll-gearslot"
 
-export default function BlizzardData({ data }: { data: CharacterBlizzard }) {
+type BlizzardDataProps = {
+    data: CharacterBlizzard
+    tiersetInfo?: GearItem[]
+}
+
+export default function BlizzardData({ data, tiersetInfo }: BlizzardDataProps) {
     const gearBySlot = createGearSlotMapping(data.itemsEquipped)
 
     const renderGearSlot = (
@@ -25,5 +31,7 @@ export default function BlizzardData({ data }: { data: CharacterBlizzard }) {
         )
     }
 
-    return <CharacterGearLayout renderGearSlot={renderGearSlot} />
+    return (
+        <CharacterGearLayout renderGearSlot={renderGearSlot} tiersetInfo={tiersetInfo} />
+    )
 }

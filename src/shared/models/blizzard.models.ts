@@ -10,6 +10,9 @@ export const encounterSchema = z.object({
     lastDefeated: z.string().nullable(),
 })
 
+// Helper to round to 2 decimal places
+const twoDecimals = z.number().transform((n) => Math.round(n * 100) / 100)
+
 // Character Blizzard schema (character data from Blizzard API)
 export const charBlizzardSchema = z.object({
     name: z.string().max(MAX_CHARACTER_NAME_LENGTH),
@@ -18,8 +21,8 @@ export const charBlizzardSchema = z.object({
     blizzardCharacterId: z.number(),
     syncedAt: z.number(),
     lastLoginAt: z.number(),
-    averageItemLevel: z.number().nullable(),
-    equippedItemLevel: z.number().nullable(),
+    averageItemLevel: twoDecimals.nullable(),
+    equippedItemLevel: twoDecimals.nullable(),
     itemsEquipped: z.array(gearItemSchema),
 })
 

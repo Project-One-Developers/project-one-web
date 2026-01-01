@@ -302,6 +302,8 @@ export const droptimizerRepo = {
                 characterTalents: droptimizer.charInfo.talents,
                 weeklyChest: droptimizer.weeklyChest,
                 currencies: droptimizer.currencies,
+                itemsAverageItemLevel: droptimizer.itemsAverageItemLevel,
+                itemsAverageItemLevelEquipped: droptimizer.itemsAverageItemLevelEquipped,
                 itemsEquipped: droptimizer.itemsEquipped,
                 itemsInBag: droptimizer.itemsInBag,
                 tiersetInfo: droptimizer.tiersetInfo,
