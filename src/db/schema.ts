@@ -11,6 +11,7 @@ import {
     text,
     timestamp,
     unique,
+    uniqueIndex,
     varchar,
 } from "drizzle-orm/pg-core"
 import type { GearItem } from "@/shared/models/item.models"
@@ -179,7 +180,7 @@ export const droptimizerTable = pgTable(
     },
     (t) => [
         index("idx_droptimizer_char_id_date").on(t.characterId, t.simDate),
-        unique("droptimizer_char_raid_diff_spec").on(
+        uniqueIndex("droptimizer_char_raid_diff_spec").on(
             t.characterId,
             t.raidId,
             t.raidDifficulty,
