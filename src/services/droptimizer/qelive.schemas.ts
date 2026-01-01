@@ -1,3 +1,4 @@
+import "server-only"
 import { z } from "zod"
 
 export type QELiveJson = z.infer<typeof qeliveJsonSchema>

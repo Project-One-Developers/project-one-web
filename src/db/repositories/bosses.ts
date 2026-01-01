@@ -1,4 +1,5 @@
 import { eq, inArray } from "drizzle-orm"
+import "server-only"
 import { db } from "@/db"
 import { bossTable, itemTable } from "@/db/schema"
 import { buildConflictUpdateColumns, identity, mapAndParse } from "@/db/utils"

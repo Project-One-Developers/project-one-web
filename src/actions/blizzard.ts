@@ -6,23 +6,23 @@ import { blizzardRepo, type CharacterBlizzardDb } from "@/db/repositories/blizza
 import { bossRepo } from "@/db/repositories/bosses"
 import { characterRepo } from "@/db/repositories/characters"
 import { playerRepo } from "@/db/repositories/player.repo"
+import { logger } from "@/lib/logger"
 import {
     fetchGuildRoster,
     type CharacterProfileResponse,
-} from "@/lib/blizzard/blizzard-api"
+} from "@/services/blizzard/blizzard-api"
 import {
     fetchAndParseCharacter,
     resetItemsCache,
     resetFetchedInstancesCache,
     type ParsedBlizzardData,
-} from "@/lib/blizzard/blizzard-sync"
-import { logger } from "@/lib/logger"
-import { s } from "@/lib/safe-stringify"
+} from "@/services/blizzard/blizzard-sync"
 import { realmSlugToName } from "@/shared/consts/wow.consts"
 import {
     formaUnixTimestampToItalianDate,
     getUnixTimestamp,
 } from "@/shared/libs/date/date-utils"
+import { s } from "@/shared/libs/safe-stringify"
 import type { BlizzardEncounter } from "@/shared/models/blizzard.model"
 import type { Boss } from "@/shared/models/boss.model"
 import type {

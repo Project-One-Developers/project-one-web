@@ -1,5 +1,6 @@
 import nextVitals from "eslint-config-next/core-web-vitals"
 import nextTs from "eslint-config-next/typescript"
+import boundaries from "eslint-plugin-boundaries"
 import react from "eslint-plugin-react"
 import reactHooks from "eslint-plugin-react-hooks"
 import { defineConfig, globalIgnores } from "eslint/config"
@@ -84,6 +85,78 @@ const eslintConfig = defineConfig([
         },
         rules: {
             "custom/no-unsafe-zod-parse": "error",
+        },
+    },
+    // Architecture boundary rules - enforce server/client separation
+    // Key rule: components and client code cannot import server-only modules (services, db, env)
+    {
+        plugins: { boundaries },
+        settings: {
+            "boundaries/elements": [
+                // Server-only (the critical boundaries)
+                { type: "db", pattern: ["src/db/**"] },
+                { type: "services", pattern: ["src/services/**"] },
+                { type: "env", pattern: ["src/env.ts", "src/auth.ts"] },
+
+                // Entry points (can access everything)
+                { type: "actions", pattern: ["src/actions/**"] },
+                { type: "api", pattern: ["src/app/api/**"] },
+                { type: "pages", pattern: ["src/app/**"], mode: "file" },
+
+                // Universal utilities
+                { type: "lib", pattern: ["src/lib/**"] },
+                { type: "shared", pattern: ["src/shared/**"] },
+
+                // Client-side
+                { type: "components", pattern: ["src/components/**"] },
+                { type: "hooks", pattern: ["src/hooks/**"] },
+            ],
+        },
+        rules: {
+            "boundaries/element-types": [
+                "error",
+                {
+                    default: "allow",
+                    rules: [
+                        // CRITICAL: Components cannot import server-only modules
+                        {
+                            from: "components",
+                            disallow: ["db", "services", "env"],
+                            message:
+                                "Components cannot import server-only code. Use a Server Action instead.",
+                        },
+                        // CRITICAL: Hooks cannot import server-only modules
+                        {
+                            from: "hooks",
+                            disallow: ["db", "services", "env"],
+                            message:
+                                "Hooks cannot import server-only code. Use a Server Action instead.",
+                        },
+                        // Lib (includes queries) cannot import server-only modules
+                        {
+                            from: "lib",
+                            disallow: ["db", "services", "env"],
+                            message: "Lib utilities cannot import server-only code.",
+                        },
+                        // Shared cannot import anything except shared
+                        {
+                            from: "shared",
+                            disallow: [
+                                "db",
+                                "services",
+                                "env",
+                                "actions",
+                                "api",
+                                "pages",
+                                "lib",
+                                "components",
+                                "hooks",
+                            ],
+                            message: "Shared code should only import from shared/.",
+                        },
+                    ],
+                },
+            ],
         },
     },
     // Override default ignores of eslint-config-next.

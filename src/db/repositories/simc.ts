@@ -1,4 +1,5 @@
 import { eq, inArray } from "drizzle-orm"
+import "server-only"
 import { db } from "@/db"
 import { simcTable } from "@/db/schema"
 import { conflictUpdateAllExcept, mapAndParse, newUUID } from "@/db/utils"

@@ -1,5 +1,6 @@
 import { and, desc, eq, inArray } from "drizzle-orm"
 import { chunk, uniqBy } from "es-toolkit"
+import "server-only"
 import { z } from "zod"
 import { db } from "@/db"
 import {
@@ -10,7 +11,7 @@ import {
 } from "@/db/schema"
 import { conflictUpdateAllExcept, identity, mapAndParse } from "@/db/utils"
 import { logger } from "@/lib/logger"
-import { s } from "@/lib/safe-stringify"
+import { s } from "@/shared/libs/safe-stringify"
 import type { WowRaidDifficulty } from "@/shared/models/wow.model"
 
 // Type for inserting encounters

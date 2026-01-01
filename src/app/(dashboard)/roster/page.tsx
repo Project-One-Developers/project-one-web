@@ -23,7 +23,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { StatBadge } from "@/components/ui/stat-badge"
 import { CharacterOverviewIcon } from "@/components/wow/character-overview-icon"
 import { usePlayersSummaryCompact } from "@/lib/queries/players"
-import { s } from "@/lib/safe-stringify"
+import { s } from "@/shared/libs/safe-stringify"
 import type { Player } from "@/shared/models/character.model"
 import type { PlayerWithSummaryCompact } from "@/shared/types/types"
 

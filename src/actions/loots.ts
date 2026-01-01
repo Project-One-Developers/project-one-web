@@ -23,10 +23,14 @@ import {
     parseLootBisSpecForChar,
     parseTiersetInfo,
 } from "@/lib/loot/loot-utils"
-import { parseManualLoots, parseMrtLoots, parseRcLoots } from "@/lib/loots/loot-parsers"
-import { s } from "@/lib/safe-stringify"
+import {
+    parseManualLoots,
+    parseMrtLoots,
+    parseRcLoots,
+} from "@/services/loot/loot-parsers"
 import { isInCurrentWowWeek } from "@/shared/libs/date/date-utils"
 import { compareGearItem, gearAreTheSame } from "@/shared/libs/items/item-bonus-utils"
+import { s } from "@/shared/libs/safe-stringify"
 import { getWowClassFromIdOrName } from "@/shared/libs/spec-parser/spec-utils"
 import type { CharacterBlizzard } from "@/shared/models/blizzard.model"
 import type { CharacterWithGears } from "@/shared/models/character.model"

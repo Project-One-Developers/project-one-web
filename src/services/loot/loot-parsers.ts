@@ -1,9 +1,9 @@
 import { keyBy } from "es-toolkit"
 import { parse } from "papaparse"
+import "server-only"
 import { match } from "ts-pattern"
 import { z } from "zod"
 import { logger } from "@/lib/logger"
-import { s } from "@/lib/safe-stringify"
 import { PROFESSION_TYPES } from "@/shared/consts/wow.consts"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import {
@@ -21,6 +21,7 @@ import {
     getItemBonusString,
     parseItemString,
 } from "@/shared/libs/items/item-string-parser"
+import { s } from "@/shared/libs/safe-stringify"
 import type { Character } from "@/shared/models/character.model"
 import type { GearItem, Item, ItemTrack } from "@/shared/models/item.model"
 import {

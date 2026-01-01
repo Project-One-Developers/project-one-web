@@ -1,4 +1,5 @@
 import { desc, eq, inArray } from "drizzle-orm"
+import "server-only"
 import { db } from "@/db"
 import { charBlizzardTable, charTable, droptimizerTable } from "@/db/schema"
 import { mapAndParse } from "@/db/utils"

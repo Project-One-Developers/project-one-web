@@ -1,5 +1,5 @@
 import { match } from "ts-pattern"
-import { s } from "@/lib/safe-stringify"
+import { s } from "@/shared/libs/safe-stringify"
 
 /**
  * Formats a Unix timestamp to a relative day string.

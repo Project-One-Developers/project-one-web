@@ -1,5 +1,3 @@
-import { env } from "@/env"
-
 type LogLevel = "debug" | "info" | "warn" | "error"
 
 const LOG_LEVELS: Record<LogLevel, number> = {
@@ -10,7 +8,7 @@ const LOG_LEVELS: Record<LogLevel, number> = {
 }
 
 const getMinLogLevel = (): LogLevel => {
-    if (env.NODE_ENV === "production") {
+    if (process.env.NODE_ENV === "production") {
         return "warn"
     }
     return "debug"

@@ -1,10 +1,11 @@
+import "server-only"
 import type { CharacterBlizzardInsert } from "@/db/repositories/blizzard"
 import { bossRepo } from "@/db/repositories/bosses"
 import { itemRepo } from "@/db/repositories/items"
 import { logger } from "@/lib/logger"
-import { s } from "@/lib/safe-stringify"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import { evalRealSeason, parseItemTrack } from "@/shared/libs/items/item-bonus-utils"
+import { s } from "@/shared/libs/safe-stringify"
 import type { Boss } from "@/shared/models/boss.model"
 import type { GearItem, Item } from "@/shared/models/item.model"
 import type {

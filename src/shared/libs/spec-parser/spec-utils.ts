@@ -1,4 +1,4 @@
-import { s } from "@/lib/safe-stringify"
+import { s } from "@/shared/libs/safe-stringify"
 import type { Item } from "@/shared/models/item.model"
 import type { WowClassName, WoWRole, WowSpecName } from "@/shared/models/wow.model"
 import type { WowClass, WowSpec } from "@/shared/types/types"

@@ -7,11 +7,12 @@ import {
     type InferSelectModel,
     lte,
 } from "drizzle-orm"
+import "server-only"
 import { db } from "@/db"
 import { droptimizerTable, droptimizerUpgradesTable, itemTable } from "@/db/schema"
 import { mapAndParse, newUUID } from "@/db/utils"
 import { logger } from "@/lib/logger"
-import { s } from "@/lib/safe-stringify"
+import { s } from "@/shared/libs/safe-stringify"
 import {
     droptimizerSchema,
     type Droptimizer,

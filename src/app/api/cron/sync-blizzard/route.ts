@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { checkBlizzardUpdates } from "@/actions/blizzard"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
-import { s } from "@/lib/safe-stringify"
+import { s } from "@/shared/libs/safe-stringify"
 
 // Verify this is a cron request from Vercel
 function verifyCronSecret(request: Request): boolean {

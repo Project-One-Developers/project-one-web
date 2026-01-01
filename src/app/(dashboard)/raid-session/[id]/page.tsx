@@ -30,8 +30,8 @@ import {
     useDeleteRaidSession,
     useRaidSession,
 } from "@/lib/queries/raid-sessions"
-import { s } from "@/lib/safe-stringify"
 import { formaUnixTimestampToItalianDate } from "@/shared/libs/date/date-utils"
+import { s } from "@/shared/libs/safe-stringify"
 
 export default function RaidSessionPage() {
     const params = useParams<{ id: string }>()

@@ -27,18 +27,25 @@ pnpm drizzle-kit push # Push database schema changes to PostgreSQL
     - `(dashboard)/` - Protected routes (roster, raid-session, droptimizer, loot-table, etc.)
     - `api/cron/` - Scheduled sync endpoints for external data
 - `src/actions/` - Server Actions for mutations (RPC-style handlers)
+- `src/services/` - Server-only business logic
+    - `blizzard/` - Blizzard API client and sync
+    - `discord/` - Discord bot integration
+    - `droptimizer/` - Raidbots/QELive parsers
+    - `simc/` - SimC parsing
+    - `loot/` - Loot parsing utilities
 - `src/db/` - Database layer
     - `schema.ts` - Drizzle ORM schema definitions
     - `repositories/` - Data access layer functions per entity
 - `src/components/` - React components
     - `ui/` - shadcn/ui base components
     - `wow/` - WoW-specific display components
-- `src/lib/` - Utilities and integrations
+- `src/lib/` - Universal utilities (client-safe)
     - `queries/` - React Query hooks for data fetching
-    - `blizzard/`, `discord/`, `droptimizer/` - External API clients
+    - `utils.ts`, `logger.ts`, `filters.ts` - Shared utilities
 - `src/shared/` - Shared domain logic
-    - `schemas/` - Zod validation schemas
+    - `libs/` - Universal utility functions
     - `consts/wow.consts.ts` - WoW game constants
+    - `models/` - TypeScript types and Zod schemas
     - `types/types.ts` - TypeScript type definitions
 
 ### Key Patterns
@@ -53,10 +60,10 @@ pnpm drizzle-kit push # Push database schema changes to PostgreSQL
 
 **UI**: shadcn/ui components with Tailwind CSS 4, `cn()` utility for class merging, CVA for variants. See [Design System](#design-system) below for custom components
 
-**Template Literals**: Use `s()` from `@/lib/safe-stringify` for non-string values in template literals (ESLint requires this):
+**Template Literals**: Use `s()` from `@/shared/libs/safe-stringify` for non-string values in template literals (ESLint requires this):
 
 ```typescript
-import { s } from "@/lib/safe-stringify"
+import { s } from "@/shared/libs/safe-stringify"
 
 // ✓ Good
 logger.info(`Synced ${s(count)} characters`)
@@ -73,6 +80,42 @@ logger.info(`Synced ${count} characters`)
 import { env } from "@/env"
 
 env.DATABASE_URL // typed and validated
+```
+
+### Server/Client Boundaries
+
+The codebase enforces strict separation between server-only and client-safe code:
+
+**Import hierarchy** (each layer can only import from layers below it):
+
+1. `src/app/` - Pages and API routes (entry points)
+2. `src/actions/` - Server Actions (thin wrappers, validation)
+3. `src/services/` - Server-only business logic
+4. `src/db/repositories/` - Data access layer
+5. `src/shared/` - Universal types, constants, schemas
+
+**Cross-cutting:**
+
+- `src/lib/` - Universal utilities (client-safe)
+- `src/lib/queries/` - React Query hooks (client-side)
+- `src/components/` - UI components
+
+**Server-only modules** (marked with `import 'server-only'`):
+
+- `src/env.ts`, `src/auth.ts`
+- `src/db/**`
+- `src/services/**`
+
+**Enforcement:**
+
+- `server-only` package: Build-time error if client imports server module
+- ESLint `boundaries/element-types` rule: Lint-time error with clear message
+
+```typescript
+// ✗ Bad - ESLint error: "Components cannot import server-only code"
+// ✓ Good - Use a Server Action
+import { syncCharacterBlizzard } from "@/actions/blizzard"
+import { blizzardApi } from "@/services/blizzard/blizzard-api"
 ```
 
 ### Naming Conventions

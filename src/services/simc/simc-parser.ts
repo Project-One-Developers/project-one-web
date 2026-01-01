@@ -1,13 +1,14 @@
+import "server-only"
 import { itemRepo } from "@/db/repositories/items"
 import { type NewSimC } from "@/db/repositories/simc"
 import { logger } from "@/lib/logger"
-import { s } from "@/lib/safe-stringify"
 import { CURRENT_CATALYST_CHARGE_ID } from "@/shared/consts/wow.consts"
 import {
     evalRealSeason,
     parseItemLevelFromBonusIds,
     parseItemTrack,
 } from "@/shared/libs/items/item-bonus-utils"
+import { s } from "@/shared/libs/safe-stringify"
 import type { GearItem } from "@/shared/models/item.model"
 import type { DroptimizerCurrency } from "@/shared/models/simulation.model"
 import { wowItemEquippedSlotKeySchema } from "@/shared/models/wow.model"

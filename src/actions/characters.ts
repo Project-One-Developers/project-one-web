@@ -5,9 +5,12 @@ import { blizzardRepo } from "@/db/repositories/blizzard"
 import { characterRepo } from "@/db/repositories/characters"
 import { droptimizerRepo } from "@/db/repositories/droptimizer"
 import { playerRepo } from "@/db/repositories/player.repo"
-import { fetchCharacterMedia, fetchCharacterProfile } from "@/lib/blizzard/blizzard-api"
 import { logger } from "@/lib/logger"
-import { s } from "@/lib/safe-stringify"
+import {
+    fetchCharacterMedia,
+    fetchCharacterProfile,
+} from "@/services/blizzard/blizzard-api"
+import { s } from "@/shared/libs/safe-stringify"
 import type {
     Character,
     CharacterGameInfo,

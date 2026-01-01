@@ -1,6 +1,6 @@
 "use client"
 
-import { CheckedState } from "@radix-ui/react-checkbox"
+import type { CheckedState } from "@radix-ui/react-checkbox"
 import { Loader2 } from "lucide-react"
 import React, { useState, useMemo, type JSX } from "react"
 import { toast } from "sonner"

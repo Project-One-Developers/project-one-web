@@ -23,7 +23,7 @@ import {
 import { useRaidLootTable } from "@/lib/queries/bosses"
 import { useLootsBySessionsWithAssigned } from "@/lib/queries/loots"
 import { useRaidSessions } from "@/lib/queries/raid-sessions"
-import { s } from "@/lib/safe-stringify"
+import { s } from "@/shared/libs/safe-stringify"
 import type { LootWithAssigned } from "@/shared/models/loot.model"
 
 function AssignContent(): JSX.Element {

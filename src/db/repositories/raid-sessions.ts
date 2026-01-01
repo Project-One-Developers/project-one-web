@@ -1,4 +1,5 @@
 import { count, desc, eq, type InferInsertModel, sql } from "drizzle-orm"
+import "server-only"
 import { db } from "@/db"
 import {
     charTable,

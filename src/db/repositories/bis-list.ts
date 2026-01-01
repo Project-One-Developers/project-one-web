@@ -1,5 +1,6 @@
 import { eq, sql } from "drizzle-orm"
 import { unstable_cache, updateTag } from "next/cache"
+import "server-only"
 import { db } from "@/db"
 import { bisListTable } from "@/db/schema"
 import { newUUID } from "@/db/utils"

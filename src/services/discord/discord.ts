@@ -1,12 +1,13 @@
 import {
     Client,
-    FetchMessagesOptions,
     GatewayIntentBits,
     Message,
     TextChannel,
+    type FetchMessagesOptions,
 } from "discord.js"
+import "server-only"
 import { logger } from "@/lib/logger"
-import { s } from "@/lib/safe-stringify"
+import { s } from "@/shared/libs/safe-stringify"
 
 export type DiscordMessage = {
     content: string

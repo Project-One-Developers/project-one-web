@@ -1,8 +1,8 @@
 import { keyBy } from "es-toolkit"
+import "server-only"
 import { z } from "zod"
 import { itemRepo } from "@/db/repositories/items"
 import { logger } from "@/lib/logger"
-import { s } from "@/lib/safe-stringify"
 import { CURRENT_SEASON } from "@/shared/consts/wow.consts"
 import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
 import {
@@ -12,6 +12,7 @@ import {
     parseItemTrack,
 } from "@/shared/libs/items/item-bonus-utils"
 import { equippedSlotToSlot } from "@/shared/libs/items/item-slot-utils"
+import { s } from "@/shared/libs/safe-stringify"
 import type { GearItem, ItemTrack } from "@/shared/models/item.model"
 import {
     raidbotsURLSchema,
@@ -28,8 +29,8 @@ import {
 } from "@/shared/models/wow.model"
 import {
     droptimizerEquippedItemsSchema,
-    RaidbotJson,
     raidbotJsonSchema,
+    type RaidbotJson,
 } from "./raidbots.schemas"
 import {
     parseBagGearsFromSimc,

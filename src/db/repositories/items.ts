@@ -1,5 +1,6 @@
 import { and, eq, ilike, inArray, or } from "drizzle-orm"
 import { unstable_cache, updateTag } from "next/cache"
+import "server-only"
 import { db } from "@/db"
 import {
     itemNoteTable,

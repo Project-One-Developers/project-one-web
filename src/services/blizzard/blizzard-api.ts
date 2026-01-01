@@ -1,9 +1,10 @@
 import pLimit from "p-limit"
+import "server-only"
 import { z } from "zod"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
-import { s } from "@/lib/safe-stringify"
 import { realmNameToSlug } from "@/shared/consts/wow.consts"
+import { s } from "@/shared/libs/safe-stringify"
 import type { WowItemEquippedSlotKey, WowRaidDifficulty } from "@/shared/models/wow.model"
 
 // Rate limiting: Blizzard API allows ~36,000 requests/hour = 10/second

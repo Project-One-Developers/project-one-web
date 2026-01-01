@@ -1,4 +1,5 @@
 import { eq, isNull } from "drizzle-orm"
+import "server-only"
 import { db } from "@/db"
 import { charTable, playerTable } from "@/db/schema"
 import { identity, mapAndParse, newUUID } from "@/db/utils"

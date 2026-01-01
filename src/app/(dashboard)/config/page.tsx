@@ -19,7 +19,7 @@ import { syncItemsFromJson } from "@/actions/items"
 import { Button } from "@/components/ui/button"
 import { GlassCard } from "@/components/ui/glass-card"
 import { queryKeys } from "@/lib/queries/keys"
-import { s } from "@/lib/safe-stringify"
+import { s } from "@/shared/libs/safe-stringify"
 
 type SyncActionCardProps = {
     icon: ReactNode

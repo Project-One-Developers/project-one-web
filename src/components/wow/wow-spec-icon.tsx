@@ -2,9 +2,9 @@
 
 import Image from "next/image"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { s } from "@/lib/safe-stringify"
 import { cn } from "@/lib/utils"
 import { specIcon } from "@/lib/wow-icon"
+import { s } from "@/shared/libs/safe-stringify"
 
 type WowSpecIconProps = {
     specId: number

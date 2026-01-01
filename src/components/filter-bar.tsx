@@ -11,10 +11,10 @@ import { SectionHeader } from "@/components/ui/section-header"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useFilterContext } from "@/lib/filter-context"
-import { s } from "@/lib/safe-stringify"
 import { cn } from "@/lib/utils"
 import { armorTypesIcon, classIcon, itemSlotIcon } from "@/lib/wow-icon"
 import { formatWowSlotKey } from "@/shared/libs/items/item-slot-utils"
+import { s } from "@/shared/libs/safe-stringify"
 import {
     wowArmorTypeSchema,
     wowClassNameSchema,

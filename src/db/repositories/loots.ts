@@ -1,4 +1,5 @@
 import { and, eq, inArray, type InferInsertModel, isNotNull } from "drizzle-orm"
+import "server-only"
 import { db } from "@/db"
 import { charTable, itemTable, lootTable } from "@/db/schema"
 import { identity, mapAndParse, newUUID } from "@/db/utils"
