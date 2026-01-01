@@ -59,7 +59,7 @@ export default function LootsTradeHelperDialog({
 
     return (
         <Dialog open={isOpen} onOpenChange={setOpen}>
-            <DialogContent className="sm:max-w-[700px]">
+            <DialogContent className="sm:max-w-175">
                 <DialogHeader>
                     <DialogTitle>Trade Helper</DialogTitle>
                     <DialogDescription>

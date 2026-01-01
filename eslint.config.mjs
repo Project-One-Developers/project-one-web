@@ -3,6 +3,7 @@ import nextTs from "eslint-config-next/typescript"
 import boundaries from "eslint-plugin-boundaries"
 import react from "eslint-plugin-react"
 import reactHooks from "eslint-plugin-react-hooks"
+import tailwindCanonical from "eslint-plugin-tailwind-canonical-classes"
 import { defineConfig, globalIgnores } from "eslint/config"
 import tseslint from "typescript-eslint"
 import { noUnsafeZodParse } from "./eslint-rules/no-unsafe-zod-parse.mjs"
@@ -156,6 +157,17 @@ const eslintConfig = defineConfig([
                         },
                     ],
                 },
+            ],
+        },
+    },
+    // Tailwind canonical class names
+    {
+        files: ["**/*.tsx"],
+        plugins: { "tailwind-canonical-classes": tailwindCanonical },
+        rules: {
+            "tailwind-canonical-classes/tailwind-canonical-classes": [
+                "warn",
+                { cssPath: "./src/app/globals.css" },
             ],
         },
     },

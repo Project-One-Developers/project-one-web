@@ -39,7 +39,7 @@ export default function CharacterPaperdoll({ renderGearSlot }: CharacterPaperdol
             {/* Main gear area - left and right columns */}
             <div className="flex-1 flex">
                 {/* Left Column - fixed to left edge */}
-                <div className="flex flex-col justify-between py-2 w-[280px] shrink-0">
+                <div className="flex flex-col justify-between py-2 w-70 shrink-0">
                     {LEFT_SLOTS.map((slot) => (
                         <div key={slot} className="flex justify-start">
                             {renderGearSlot(slot, { rightSide: false })}
@@ -51,7 +51,7 @@ export default function CharacterPaperdoll({ renderGearSlot }: CharacterPaperdol
                 <div className="flex-1" />
 
                 {/* Right Column - fixed to right edge */}
-                <div className="flex flex-col justify-between py-2 w-[280px] shrink-0">
+                <div className="flex flex-col justify-between py-2 w-70 shrink-0">
                     {RIGHT_SLOTS.map((slot) => (
                         <div key={slot} className="flex justify-end">
                             {renderGearSlot(slot, { rightSide: true })}
@@ -62,12 +62,12 @@ export default function CharacterPaperdoll({ renderGearSlot }: CharacterPaperdol
 
             {/* Bottom Row - Weapons centered in the middle area (between columns) */}
             <div className="flex py-3 shrink-0">
-                <div className="w-[280px] shrink-0" />
+                <div className="w-70 shrink-0" />
                 <div className="flex-1 flex justify-center items-center gap-8">
                     <div>{renderGearSlot("main_hand", { rightSide: true })}</div>
                     <div>{renderGearSlot("off_hand", { rightSide: false })}</div>
                 </div>
-                <div className="w-[280px] shrink-0" />
+                <div className="w-70 shrink-0" />
             </div>
         </div>
     )

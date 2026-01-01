@@ -111,7 +111,7 @@ export function WowGearIcon({
         <div
             id="item-info"
             className={cn(
-                "flex flex-col space-y-0.5 max-w-[300px]",
+                "flex flex-col space-y-0.5 max-w-75",
                 flipExtendedInfo ? "mr-3" : "ml-3"
             )}
         >
@@ -179,7 +179,7 @@ export function WowGearIcon({
 
                 <div className="flex flex-col items-center">
                     {showSource && (
-                        <span className="text-[10px] text-gray-400 font-medium mb-0.5 truncate max-w-[32px] leading-tight">
+                        <span className="text-[10px] text-gray-400 font-medium mb-0.5 truncate max-w-8 leading-tight">
                             {source}
                         </span>
                     )}
@@ -196,10 +196,10 @@ export function WowGearIcon({
                             )}
                         />
                         {showTiersetLine && (tierset || token) && (
-                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-red-600"></div>
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600"></div>
                         )}
                         {showTiersetRibbon && tierset && (
-                            <div className="absolute -top-1 left-0 right-0 h-2 bg-gradient-to-r from-purple-400 via-purple-500 to-purple-400 flex items-center justify-center">
+                            <div className="absolute -top-1 left-0 right-0 h-2 bg-linear-to-r from-purple-400 via-purple-500 to-purple-400 flex items-center justify-center">
                                 <span className="text-white text-[6px] font-bold tracking-wide drop-shadow-sm">
                                     TIER
                                 </span>

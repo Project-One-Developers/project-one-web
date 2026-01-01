@@ -124,7 +124,7 @@ const BossPanel = ({ boss, progressData, selectedDifficulty }: BossPanelProps) =
         <BossCard
             bossId={boss.id}
             bossName={boss.name}
-            className="min-w-[280px]"
+            className="min-w-70"
             contentClassName="p-4"
         >
             <div className="text-xs text-center text-muted-foreground mb-3">

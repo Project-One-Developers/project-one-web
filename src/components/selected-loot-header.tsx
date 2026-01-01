@@ -47,7 +47,7 @@ export function SelectedLootHeader({
                         </div>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-sm">
-                        <div className="whitespace-pre-wrap break-words">
+                        <div className="whitespace-pre-wrap wrap-break-word">
                             <strong className="text-blue-400">Item Note:</strong>
                             <br />
                             {itemNote}

@@ -106,7 +106,7 @@ export default function ItemManagementDialog({
 
     return (
         <Dialog open={isOpen} onOpenChange={setOpen}>
-            <DialogContent className="sm:max-w-[900px] max-h-[80vh]">
+            <DialogContent className="sm:max-w-225 max-h-[80vh]">
                 <DialogHeader>
                     <div className="flex items-center justify-between">
                         <div>
@@ -140,7 +140,7 @@ export default function ItemManagementDialog({
 
                     {/* Tab 1: BiS Specs */}
                     <TabsContent value="bis-specs" className="mt-4">
-                        <div className="grid grid-cols-2 gap-4 max-h-[400px] overflow-y-auto">
+                        <div className="grid grid-cols-2 gap-4 max-h-100 overflow-y-auto">
                             {WOW_CLASS_WITH_SPECS.map((classWithSpecs, index) => {
                                 // Filter specs based on itemAndSpecs.item.specIds
                                 const itemSpecIds = itemAndSpecs.item.specIds
@@ -221,7 +221,7 @@ export default function ItemManagementDialog({
                                     onChange={(e) => {
                                         setItemNote(e.target.value)
                                     }}
-                                    className="min-h-[200px] resize-none"
+                                    className="min-h-50 resize-none"
                                 />
                             </div>
                             <Button
@@ -287,7 +287,7 @@ function CharacterInventoryContent({ itemId }: { itemId: number }) {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center h-[200px]">
+            <div className="flex items-center justify-center h-50">
                 <Loader2 className="animate-spin h-8 w-8" />
                 <span className="ml-2">Loading character inventory...</span>
             </div>
@@ -296,7 +296,7 @@ function CharacterInventoryContent({ itemId }: { itemId: number }) {
 
     if (error) {
         return (
-            <div className="flex items-center justify-center h-[200px] text-red-500">
+            <div className="flex items-center justify-center h-50 text-red-500">
                 Error loading character inventory
             </div>
         )
@@ -304,14 +304,14 @@ function CharacterInventoryContent({ itemId }: { itemId: number }) {
 
     if (!data) {
         return (
-            <div className="flex items-center justify-center h-[200px]">
+            <div className="flex items-center justify-center h-50">
                 No inventory data available
             </div>
         )
     }
 
     return (
-        <div className="flex flex-col gap-4 max-h-[450px] overflow-y-auto">
+        <div className="flex flex-col gap-4 max-h-112.5 overflow-y-auto">
             {/* Search Bar with Include Alts Checkbox */}
             <div className="sticky top-0 bg-background z-10 pb-2 border-b">
                 <div className="flex gap-3 items-center mr-3">
@@ -378,7 +378,7 @@ function CharacterInventoryContent({ itemId }: { itemId: number }) {
                                             {character.name}
                                         </span>
                                     </div>
-                                    <div className="flex gap-1 flex-shrink-0">
+                                    <div className="flex gap-1 shrink-0">
                                         {matchingGears.map((gear, index) => (
                                             <div
                                                 key={index}
@@ -411,7 +411,7 @@ function CharacterInventoryContent({ itemId }: { itemId: number }) {
                 </h3>
                 <div className="flex flex-wrap gap-3">
                     {filteredCharacters.withoutItem.map((character) => (
-                        <div key={character.id} className="flex-shrink-0">
+                        <div key={character.id} className="shrink-0">
                             <WowCharacterIcon
                                 character={character}
                                 showMainIndicator={includeAlts}

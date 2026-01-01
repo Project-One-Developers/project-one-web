@@ -41,10 +41,10 @@ function SyncActionCard({
             padding="lg"
             className="flex items-start gap-4 hover:border-primary/30 transition-colors"
         >
-            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+            <div className="shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                 {icon}
             </div>
-            <div className="flex-grow min-w-0">
+            <div className="grow min-w-0">
                 <h3 className="font-medium text-foreground">{title}</h3>
                 <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
             </div>
@@ -53,7 +53,7 @@ function SyncActionCard({
                 size="sm"
                 onClick={onSync}
                 disabled={isLoading}
-                className="flex-shrink-0"
+                className="shrink-0"
             >
                 {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -218,7 +218,7 @@ export default function SettingsPage(): JSX.Element {
 
             {/* Info Footer */}
             <div className="flex items-start gap-3 text-sm text-muted-foreground">
-                <Clock className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <Clock className="w-4 h-4 mt-0.5 shrink-0" />
                 <p>
                     These sync tasks also run automatically via scheduled jobs daily. Use
                     manual sync when you need immediate updates.

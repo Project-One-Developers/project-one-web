@@ -179,14 +179,14 @@ function AssignContent(): JSX.Element {
                     />
                 ) : (
                     <div className="flex w-full gap-5">
-                        <div className="flex flex-col flex-grow max-w-[450px]">
+                        <div className="flex flex-col grow max-w-112.5">
                             <LootsTabs
                                 loots={loots}
                                 selectedLoot={selectedLoot}
                                 setSelectedLoot={setSelectedLoot}
                             />
                         </div>
-                        <GlassCard padding="lg" className="flex flex-col flex-grow">
+                        <GlassCard padding="lg" className="flex flex-col grow">
                             {selectedLoot ? (
                                 <LootsEligibleChars
                                     allLoots={loots}

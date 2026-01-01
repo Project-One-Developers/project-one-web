@@ -66,7 +66,7 @@ const StatBadge = React.forwardRef<HTMLDivElement, StatBadgeProps>(
                 {...props}
             >
                 {icon && (
-                    <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
+                    <span className="w-4 h-4 shrink-0 flex items-center justify-center">
                         {icon}
                     </span>
                 )}

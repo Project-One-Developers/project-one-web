@@ -148,7 +148,7 @@ export default function SessionLootNewDialog({
 
     return (
         <Dialog open={isOpen} onOpenChange={setOpen}>
-            <DialogContent className="sm:max-w-[700px]">
+            <DialogContent className="sm:max-w-175">
                 <DialogHeader>
                     <DialogTitle>New Loots</DialogTitle>
                     <DialogDescription>

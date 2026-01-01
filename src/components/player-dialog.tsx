@@ -145,7 +145,7 @@ export default function PlayerDialog({
 
     return (
         <Dialog open={isOpen} onOpenChange={setOpen}>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-106.25">
                 <PlayerDialogContent
                     key={contentKey}
                     setOpen={setOpen}

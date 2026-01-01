@@ -48,7 +48,7 @@ export default function DroptimizerDetailDialog({
     const sortedBosses = [...bossMap.keys()].sort((a, b) => a.order - b.order)
 
     return (
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-150">
             <DialogHeader>
                 <DialogTitle>Droptimizer Details</DialogTitle>
                 <DialogDescription>

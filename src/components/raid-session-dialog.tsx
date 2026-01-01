@@ -201,7 +201,7 @@ function PlayerWithCharsRow({
                             )}
                         />
                         {char.main && (
-                            <div className="h-[2px] w-5 bg-foreground rounded-lg mt-1" />
+                            <div className="h-0.5 w-5 bg-foreground rounded-lg mt-1" />
                         )}
                     </div>
                 ))}
@@ -405,7 +405,7 @@ function RaidSessionDialogContent({
                     <Label>Roster Selection</Label>
                     <div className="grid grid-cols-4 gap-4">
                         {/* Tank + Healers column */}
-                        <ScrollArea className="h-[300px] border rounded-md p-3">
+                        <ScrollArea className="h-75 border rounded-md p-3">
                             <div className="space-y-1">
                                 <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">
                                     Tanks
@@ -436,7 +436,7 @@ function RaidSessionDialogContent({
                         </ScrollArea>
 
                         {/* DPS columns (2 columns) */}
-                        <ScrollArea className="h-[300px] border rounded-md p-3 col-span-2">
+                        <ScrollArea className="h-75 border rounded-md p-3 col-span-2">
                             <div className="grid grid-cols-2 gap-4">
                                 {(() => {
                                     const sortedDps = [...dpsPlayers].sort((a, b) =>
@@ -520,7 +520,7 @@ export default function RaidSessionDialog({
 
     return (
         <Dialog open={isOpen} onOpenChange={setOpen}>
-            <DialogContent className="sm:max-w-[900px]">
+            <DialogContent className="sm:max-w-225">
                 <RaidSessionDialogContent
                     key={contentKey}
                     setOpen={setOpen}

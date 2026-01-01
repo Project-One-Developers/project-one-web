@@ -42,7 +42,7 @@ export default function PlayerDeleteDialog({
 
     return (
         <Dialog open={isOpen} onOpenChange={setOpen}>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-106.25">
                 <DialogHeader>
                     <DialogTitle>Player Deletion</DialogTitle>
                     <DialogDescription>

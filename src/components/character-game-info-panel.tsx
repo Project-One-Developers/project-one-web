@@ -258,7 +258,7 @@ const GearInfo = ({
             {/* Character Render (transparent PNG over class gradient) */}
             {/* Centered in the middle area between gear columns (280px each side) */}
             {characterRenderUrl && (
-                <div className="absolute inset-0 flex items-end justify-center pointer-events-none overflow-hidden px-[280px]">
+                <div className="absolute inset-0 flex items-end justify-center pointer-events-none overflow-hidden px-70">
                     <Image
                         src={characterRenderUrl}
                         alt="Character render"
@@ -277,10 +277,10 @@ const GearInfo = ({
                     {blizzard && (
                         <TabsTrigger
                             value="blizzard"
-                            className="group relative flex items-center gap-2 px-3 py-2 rounded-lg border border-border/50 bg-muted/30 transition-all duration-200 hover:bg-muted/60 hover:border-border data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500/10 data-[state=active]:to-orange-500/10 data-[state=active]:border-amber-500/50 data-[state=active]:shadow-[0_0_12px_rgba(245,158,11,0.15)]"
+                            className="group relative flex items-center gap-2 px-3 py-2 rounded-lg border border-border/50 bg-muted/30 transition-all duration-200 hover:bg-muted/60 hover:border-border data-[state=active]:bg-linear-to-br data-[state=active]:from-amber-500/10 data-[state=active]:to-orange-500/10 data-[state=active]:border-amber-500/50 data-[state=active]:shadow-[0_0_12px_rgba(245,158,11,0.15)]"
                         >
                             <div className="relative">
-                                <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 opacity-0 group-data-[state=active]:opacity-100 blur-sm transition-opacity" />
+                                <div className="absolute -inset-1 rounded-full bg-linear-to-br from-amber-500/20 to-orange-500/20 opacity-0 group-data-[state=active]:opacity-100 blur-sm transition-opacity" />
                                 <Image
                                     src="https://wow.zamimg.com/images/wow/icons/large/wow_token01.jpg"
                                     alt="Blizzard"
@@ -300,10 +300,10 @@ const GearInfo = ({
                     {droptimizer && (
                         <TabsTrigger
                             value="droptimizer"
-                            className="group relative flex items-center gap-2 px-3 py-2 rounded-lg border border-border/50 bg-muted/30 transition-all duration-200 hover:bg-muted/60 hover:border-border data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-500/10 data-[state=active]:to-cyan-500/10 data-[state=active]:border-blue-500/50 data-[state=active]:shadow-[0_0_12px_rgba(59,130,246,0.15)]"
+                            className="group relative flex items-center gap-2 px-3 py-2 rounded-lg border border-border/50 bg-muted/30 transition-all duration-200 hover:bg-muted/60 hover:border-border data-[state=active]:bg-linear-to-br data-[state=active]:from-blue-500/10 data-[state=active]:to-cyan-500/10 data-[state=active]:border-blue-500/50 data-[state=active]:shadow-[0_0_12px_rgba(59,130,246,0.15)]"
                         >
                             <div className="relative">
-                                <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 opacity-0 group-data-[state=active]:opacity-100 blur-sm transition-opacity" />
+                                <div className="absolute -inset-1 rounded-full bg-linear-to-br from-blue-500/20 to-cyan-500/20 opacity-0 group-data-[state=active]:opacity-100 blur-sm transition-opacity" />
                                 <Image
                                     src="https://assets.rpglogs.com/img/warcraft/raidbots-icon.png"
                                     alt="Droptimizer"

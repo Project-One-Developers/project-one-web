@@ -115,7 +115,7 @@ export default function DroptimizerNewDialog(): JSX.Element {
                     />
                 </button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[525px]">
+            <DialogContent className="sm:max-w-131.25">
                 <DialogHeader>
                     <DialogTitle>New droptimizer</DialogTitle>
                     <DialogDescription>
@@ -146,7 +146,7 @@ export default function DroptimizerNewDialog(): JSX.Element {
                                                 <RefreshCw className="h-4 w-4" />
                                             )}
                                         </div>
-                                        <div className="flex-grow text-center">
+                                        <div className="grow text-center">
                                             {syncMutation.isPending
                                                 ? "Syncing..."
                                                 : "Sync last"}
@@ -213,7 +213,7 @@ export default function DroptimizerNewDialog(): JSX.Element {
                                         setSimcData(e.target.value)
                                     }}
                                     placeholder="Paste your SimC character data here..."
-                                    className="min-h-[200px] resize-y"
+                                    className="min-h-50 resize-y"
                                 />
                             </div>
                             <Button disabled={simcImportMutation.isPending} type="submit">
@@ -249,7 +249,7 @@ export default function DroptimizerNewDialog(): JSX.Element {
                                                 <Recycle className="h-4 w-4" />
                                             )}
                                         </div>
-                                        <div className="flex-grow text-center">
+                                        <div className="grow text-center">
                                             {cleanupMutation.isPending
                                                 ? "Cleaning..."
                                                 : "Clean older than"}

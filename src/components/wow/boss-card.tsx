@@ -20,7 +20,7 @@ const BossCard = React.forwardRef<HTMLDivElement, BossCardProps>(
             <GlassCard
                 ref={ref}
                 padding="none"
-                className={cn("flex flex-col overflow-hidden min-w-[300px]", className)}
+                className={cn("flex flex-col overflow-hidden min-w-75", className)}
             >
                 {/* Boss header: cover + name */}
                 <div className="flex flex-col gap-y-2">

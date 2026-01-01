@@ -23,7 +23,7 @@ export default function HomePage(): JSX.Element {
             </div>
 
             {/* Subtle decorative line */}
-            <div className="mt-8 w-24 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+            <div className="mt-8 w-24 h-px bg-linear-to-r from-transparent via-border to-transparent" />
         </div>
     )
 }

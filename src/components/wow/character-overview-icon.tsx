@@ -19,7 +19,7 @@ const CharacterTooltip = ({
     summary: CharacterSummaryType
     isLowItemLevel: boolean
 }) => (
-    <div className="flex flex-col gap-2 min-w-[180px]">
+    <div className="flex flex-col gap-2 min-w-45">
         <div className="flex items-center gap-2">
             <span className="font-semibold text-foreground">
                 {summary.character.name}
@@ -89,7 +89,7 @@ export const CharacterOverviewIcon = ({
                             <button
                                 style={{ zIndex }}
                                 className={cn(
-                                    "relative flex flex-col items-center cursor-pointer transition-all duration-200 hover:!z-50",
+                                    "relative flex flex-col items-center cursor-pointer transition-all duration-200 hover:z-50!",
                                     index > 0 && "-ml-2",
                                     "hover:scale-110"
                                 )}
@@ -126,7 +126,7 @@ export const CharacterOverviewIcon = ({
                                     {/* Item Level Badge */}
                                     <div
                                         className={cn(
-                                            "absolute -bottom-0 inset-x-0 text-center py-0.5 text-[10px] font-bold backdrop-blur-sm",
+                                            "absolute bottom-0 inset-x-0 text-center py-0.5 text-[10px] font-bold backdrop-blur-sm",
                                             isLow
                                                 ? "bg-orange-500/80 text-white"
                                                 : "bg-black/60 text-white"

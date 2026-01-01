@@ -68,7 +68,7 @@ export const DroptimizerCard = ({
     return (
         <GlassCard
             padding="lg"
-            className="flex flex-col justify-between h-[230px] w-[310px] relative group"
+            className="flex flex-col justify-between h-57.5 w-77.5 relative group"
         >
             {/* Delete Button */}
             <IconButton

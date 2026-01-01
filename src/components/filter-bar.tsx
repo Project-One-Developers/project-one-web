@@ -66,7 +66,7 @@ const FilterChip = ({ label, icon, onRemove }: FilterChipProps) => (
                 unoptimized
             />
         )}
-        <span className="max-w-[100px] truncate">{label}</span>
+        <span className="max-w-25 truncate">{label}</span>
         <X className="w-3 h-3 opacity-60 group-hover:opacity-100" />
     </button>
 )

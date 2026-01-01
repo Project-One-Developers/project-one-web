@@ -87,7 +87,7 @@ const BossPanel = ({ boss, bisLists, itemNotes, onEdit, filter }: BossPanelProps
     }, [boss.items, bisLists, filter])
 
     return (
-        <BossCard bossId={boss.id} bossName={boss.name} className="min-w-[350px]">
+        <BossCard bossId={boss.id} bossName={boss.name} className="min-w-87.5">
             {filteredItems.length > 0 ? (
                 filteredItems
                     .sort((a, b) => {

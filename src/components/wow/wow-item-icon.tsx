@@ -112,7 +112,7 @@ export function WowItemIcon({
                         unoptimized
                     />
                     {tierBanner && (itemData.tierset || itemData.token) && (
-                        <div className="absolute -bottom-1 left-0 right-0 h-[1px] bg-red-600"></div>
+                        <div className="absolute -bottom-1 left-0 right-0 h-px bg-red-600"></div>
                     )}
                     {healerItem && (
                         <div className="absolute -top-1 -left-1 w-4 h-4 bg-yellow-500 rounded-sm flex items-center justify-center">

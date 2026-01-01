@@ -216,7 +216,7 @@ export default function CharacterDialog({
 
     return (
         <Dialog open={isOpen} onOpenChange={setOpen}>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-106.25">
                 <DialogHeader>
                     <DialogTitle>
                         {mode === "add" ? "New" : "Edit"} character for {player?.name}
