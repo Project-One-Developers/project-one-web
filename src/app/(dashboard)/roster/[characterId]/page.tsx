@@ -1,8 +1,11 @@
 "use client"
 
-import { ArrowLeft, Crown, Edit, Trash2, Users } from "lucide-react"
+import { useQueryClient } from "@tanstack/react-query"
+import { ArrowLeft, Crown, Edit, RefreshCw, Trash2, Users } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
 import { useState } from "react"
+import { toast } from "sonner"
+import { syncCharacterBlizzard } from "@/actions/blizzard"
 import CharacterDeleteDialog from "@/components/character-delete-dialog"
 import CharacterDialog from "@/components/character-dialog"
 import { CharGameInfoPanel } from "@/components/character-game-info-panel"
@@ -13,15 +16,18 @@ import { IconButton } from "@/components/ui/icon-button"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { WowCharacterLink } from "@/components/wow/wow-character-links"
 import { WowClassIcon } from "@/components/wow/wow-class-icon"
+import { queryKeys } from "@/lib/queries/keys"
 import { useCharacter } from "@/lib/queries/players"
 
 export default function CharacterPage() {
     const params = useParams<{ characterId: string }>()
     const router = useRouter()
+    const queryClient = useQueryClient()
     const characterId = params.characterId
 
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+    const [isSyncing, setIsSyncing] = useState(false)
 
     const characterQuery = useCharacter(characterId)
     const character = characterQuery.data
@@ -120,6 +126,47 @@ export default function CharacterPage() {
                         <WowCharacterLink character={character} site="armory" />
                     </div>
 
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        className="rounded-xl bg-card/50 border border-border/50 hover:bg-primary/10 hover:border-primary/30 hover:text-primary"
+                        disabled={isSyncing}
+                        onClick={() => {
+                            setIsSyncing(true)
+                            syncCharacterBlizzard(
+                                character.id,
+                                character.name,
+                                character.realm
+                            )
+                                .then(() =>
+                                    Promise.all([
+                                        characterQuery.refetch(),
+                                        queryClient.invalidateQueries({
+                                            queryKey: [
+                                                queryKeys.characterGameInfo,
+                                                character.id,
+                                            ],
+                                        }),
+                                    ])
+                                )
+                                .then(() => {
+                                    toast.success("Character synced successfully")
+                                })
+                                .catch(() => {
+                                    toast.error("Failed to sync character")
+                                })
+                                .finally(() => {
+                                    setIsSyncing(false)
+                                })
+                        }}
+                    >
+                        <RefreshCw
+                            className={`h-4 w-4 sm:mr-2 ${isSyncing ? "animate-spin" : ""}`}
+                        />
+                        <span className="hidden sm:inline">
+                            {isSyncing ? "Syncing..." : "Sync"}
+                        </span>
+                    </Button>
                     <Button
                         variant="secondary"
                         size="sm"
