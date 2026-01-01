@@ -11,7 +11,7 @@ import { s } from "@/shared/libs/string-utils"
 import type { GearItem } from "@/shared/models/item.models"
 import type { DroptimizerCurrency } from "@/shared/models/simulation.models"
 import { wowItemEquippedSlotKeySchema } from "@/shared/models/wow.models"
-import { CURRENT_CATALYST_CHARGE_ID } from "@/shared/wow.consts"
+import { CURRENT_CATALYST_CHARGE_ID, realmSlugToName } from "@/shared/wow.consts"
 
 export async function parseSimC(simc: string): Promise<{
     charName: string
@@ -82,7 +82,8 @@ function parseCharacterInfo(simc: string): {
         throw new Error("Unable to parse server/realm from SimC data")
     }
 
-    const charRealm = serverValue.replace("_", "-")
+    const realmSlug = serverValue.replace("_", "-")
+    const charRealm = realmSlugToName(realmSlug)
 
     // Parse checksum: # Checksum: 77a3aabe
     const checksumRegex = /^# Checksum: (.+)$/m

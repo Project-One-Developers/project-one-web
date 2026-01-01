@@ -26,7 +26,7 @@ import {
     type WowItemEquippedSlotKey,
     type WowRaidDifficulty,
 } from "@/shared/models/wow.models"
-import { CURRENT_SEASON } from "@/shared/wow.consts"
+import { CURRENT_SEASON, realmSlugToName } from "@/shared/wow.consts"
 import {
     droptimizerEquippedItemsSchema,
     raidbotJsonSchema,
@@ -226,13 +226,14 @@ export const convertJsonToDroptimizer = async (
     if (!firstTalentLoadout) {
         throw new Error("No talent loadout found in raidbots data")
     }
+    const realmSlug = data.simbot.meta.rawFormData.character.realm
+        .toLowerCase()
+        .replaceAll("_", "-")
+        .replaceAll(" ", "-")
+        .replaceAll("'", "")
     const charInfo = {
         name: data.simbot.meta.rawFormData.character.name,
-        server: data.simbot.meta.rawFormData.character.realm
-            .toLowerCase()
-            .replaceAll("_", "-")
-            .replaceAll(" ", "-")
-            .replaceAll("'", ""),
+        server: realmSlugToName(realmSlug),
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Raidbots data matches WoW class names
         class: firstTalentLoadout.talents.className as WowClassName,
         classId: firstTalentLoadout.talents.classId,
