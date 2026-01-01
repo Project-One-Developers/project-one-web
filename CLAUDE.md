@@ -26,13 +26,17 @@ pnpm drizzle-kit push # Push database schema changes to PostgreSQL
     - `(auth)/` - Auth layout group (login page)
     - `(dashboard)/` - Protected routes (roster, raid-session, droptimizer, loot-table, etc.)
     - `api/cron/` - Scheduled sync endpoints for external data
-- `src/actions/` - Server Actions for mutations (RPC-style handlers)
-- `src/services/` - Server-only business logic
-    - `blizzard/` - Blizzard API client and sync
+- `src/actions/` - Server Actions (thin wrappers that call services)
+- `src/services/` - Server-only business logic (service objects)
+    - `blizzard/` - Blizzard API client, sync, and `blizzardService`
+    - `character/` - `characterService` for character operations
+    - `player/` - `playerService` for player operations
     - `discord/` - Discord bot integration
-    - `droptimizer/` - Raidbots/QELive parsers
-    - `simc/` - SimC parsing
-    - `loot/` - Loot parsing utilities
+    - `droptimizer/` - Raidbots/QELive parsers and `droptimizerService`
+    - `item/` - `itemService` for item operations
+    - `loot/` - Loot parsers and `lootService`
+    - `raid-session/` - `raidSessionService` for raid session operations
+    - `summary/` - `summaryService` for roster summaries
 - `src/db/` - Database layer
     - `schema.ts` - Drizzle ORM schema definitions
     - `repositories/` - Data access layer functions per entity
@@ -50,7 +54,29 @@ pnpm drizzle-kit push # Push database schema changes to PostgreSQL
 
 ### Key Patterns
 
-**Data Flow**: Server Actions (`/actions`) for mutations + React Query hooks (`/lib/queries`) for fetching
+**Data Flow**: Server Actions (`/actions`) → Services (`/services`) → Repositories (`/db/repositories`)
+
+**Service Layer Pattern**: Business logic lives in service objects. Actions are thin wrappers:
+
+```typescript
+// src/services/character/character.service.ts
+export const characterService = {
+    getById: async (id: string) => characterRepo.getWithPlayerById(id),
+    addWithSync: async (character) => {
+        // Business logic: fetch from Blizzard, map class, store, sync
+        const profile = await fetchCharacterProfile(character.name, character.realm)
+        const wowClass = mapBlizzardClassId(profile.character_class.id)
+        const id = await characterRepo.add({ ...character, class: wowClass })
+        await blizzardService.syncCharacter(id, character.name, character.realm, profile)
+        return characterRepo.getWithPlayerById(id)
+    },
+}
+
+// src/actions/characters.ts - thin wrapper
+export async function addCharacterWithSync(character: NewCharacterWithoutClass) {
+    return characterService.addWithSync(character)
+}
+```
 
 **Repository Pattern**: Each entity has a repository object in `/db/repositories` (e.g., `characterRepo.getList()`, `itemRepo.getAll()`)
 
@@ -122,6 +148,7 @@ import { blizzardApi } from "@/services/blizzard/blizzard-api"
 
 - Components: PascalCase (`CharacterDialog.tsx`)
 - Actions: camelCase (`addCharacter`, `getBosses`) - no suffix needed, they live in `/actions`
+- Services: camelCase + `Service` suffix (`characterService`, `blizzardService`)
 - Repositories: camelCase + `Repo` suffix (`characterRepo`, `itemRepo`)
 - Schemas: camelCase + `Schema` suffix (`characterSchema`)
 - Hooks: `use` prefix (`usePlayersSummary()`)
