@@ -7,12 +7,12 @@ import DroptimizerNewDialog from "@/components/droptimizer-new-dialog"
 import { FilterBar } from "@/components/filter-bar"
 import { EmptyState } from "@/components/ui/empty-state"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { FilterProvider, useFilterContext } from "@/lib/filter-context"
+import { useFilterContext } from "@/lib/filter-context"
 import { filterDroptimizer } from "@/lib/filters"
 import { useLatestDroptimizers } from "@/lib/queries/droptimizers"
 import { useCharacters } from "@/lib/queries/players"
 
-function DroptimizerPageContent(): JSX.Element {
+export default function DroptimizerPage(): JSX.Element {
     const { filter } = useFilterContext()
     const droptimizerQuery = useLatestDroptimizers()
     const charQuery = useCharacters()
@@ -40,6 +40,7 @@ function DroptimizerPageContent(): JSX.Element {
                     showRaidDifficulty={true}
                     showDroptimizerFilters={true}
                     showMainsAlts={true}
+                    showUpgradesToggle={true}
                     showClassFilter={true}
                     showSlotFilter={true}
                     showArmorTypeFilter={true}
@@ -67,13 +68,5 @@ function DroptimizerPageContent(): JSX.Element {
                 />
             )}
         </div>
-    )
-}
-
-export default function DroptimizerPage(): JSX.Element {
-    return (
-        <FilterProvider>
-            <DroptimizerPageContent />
-        </FilterProvider>
     )
 }

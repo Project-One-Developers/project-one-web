@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { BossCard } from "@/components/wow/boss-card"
 import { WowItemIcon } from "@/components/wow/wow-item-icon"
 import { WowSpecIcon } from "@/components/wow/wow-spec-icon"
-import { FilterProvider, useFilterContext } from "@/lib/filter-context"
+import { useFilterContext } from "@/lib/filter-context"
 import type { LootFilter } from "@/lib/filters"
 import { useBisList } from "@/lib/queries/bis-list"
 import { useRaidLootTable } from "@/lib/queries/bosses"
@@ -88,103 +88,111 @@ const BossPanel = ({ boss, bisLists, itemNotes, onEdit, filter }: BossPanelProps
 
     return (
         <BossCard bossId={boss.id} bossName={boss.name} className="min-w-[350px]">
-            {filteredItems
-                .sort((a, b) => {
-                    const aHasBis = bisLists.some((bis) => bis.itemId === a.id)
-                    const bHasBis = bisLists.some((bis) => bis.itemId === b.id)
-                    if (aHasBis && !bHasBis) {
-                        return -1
-                    }
-                    if (!aHasBis && bHasBis) {
-                        return 1
-                    }
-                    return a.id - b.id
-                })
-                .map((item) => {
-                    const bisForItem = bisLists.filter((bis) => bis.itemId === item.id)
-                    const allSpecIds = bisForItem.flatMap((bis) => bis.specIds)
-                    const itemNote =
-                        itemNotes.find((note) => note.itemId === item.id)?.note || ""
+            {filteredItems.length > 0 ? (
+                filteredItems
+                    .sort((a, b) => {
+                        const aHasBis = bisLists.some((bis) => bis.itemId === a.id)
+                        const bHasBis = bisLists.some((bis) => bis.itemId === b.id)
+                        if (aHasBis && !bHasBis) {
+                            return -1
+                        }
+                        if (!aHasBis && bHasBis) {
+                            return 1
+                        }
+                        return a.id - b.id
+                    })
+                    .map((item) => {
+                        const bisForItem = bisLists.filter(
+                            (bis) => bis.itemId === item.id
+                        )
+                        const allSpecIds = bisForItem.flatMap((bis) => bis.specIds)
+                        const itemNote =
+                            itemNotes.find((note) => note.itemId === item.id)?.note || ""
 
-                    return (
-                        <div
-                            key={item.id}
-                            className={cn(
-                                "flex flex-row gap-x-8 justify-between items-center p-2 hover:bg-card/60 transition-all duration-200 rounded-xl cursor-pointer relative group border border-transparent hover:border-primary/20",
-                                !allSpecIds.length && "opacity-30"
-                            )}
-                            onClick={(e) => {
-                                e.preventDefault()
-                                onEdit(item, itemNote)
-                            }}
-                        >
-                            <WowItemIcon
-                                item={item}
-                                iconOnly={false}
-                                raidDiff="Mythic"
-                                tierBanner={true}
-                                showIlvl={false}
-                                showRoleIcons={true}
-                            />
+                        return (
+                            <div
+                                key={item.id}
+                                className={cn(
+                                    "flex flex-row gap-x-8 justify-between items-center p-2 hover:bg-card/60 transition-all duration-200 rounded-xl cursor-pointer relative group border border-transparent hover:border-primary/20",
+                                    !allSpecIds.length && "opacity-30"
+                                )}
+                                onClick={(e) => {
+                                    e.preventDefault()
+                                    onEdit(item, itemNote)
+                                }}
+                            >
+                                <WowItemIcon
+                                    item={item}
+                                    iconOnly={false}
+                                    raidDiff="Mythic"
+                                    tierBanner={true}
+                                    showIlvl={false}
+                                    showRoleIcons={true}
+                                />
 
-                            <div className="flex flex-col items-center">
-                                <div className="text-xs text-muted-foreground flex items-center gap-1">
-                                    {allSpecIds.length ? (
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <span>
-                                                    {allSpecIds.length} spec
-                                                    {allSpecIds.length > 1 && "s"}
-                                                </span>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <div className="flex flex-col gap-y-1">
-                                                    {allSpecIds.map((s) => (
-                                                        <WowSpecIcon
-                                                            key={s}
-                                                            specId={s}
-                                                            className="object-cover object-top rounded-md full h-5 w-5 border border-background"
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    ) : null}
+                                <div className="flex flex-col items-center">
+                                    <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                        {allSpecIds.length ? (
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <span>
+                                                        {allSpecIds.length} spec
+                                                        {allSpecIds.length > 1 && "s"}
+                                                    </span>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <div className="flex flex-col gap-y-1">
+                                                        {allSpecIds.map((s) => (
+                                                            <WowSpecIcon
+                                                                key={s}
+                                                                specId={s}
+                                                                className="object-cover object-top rounded-md full h-5 w-5 border border-background"
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        ) : null}
 
-                                    {/* Note indicator */}
-                                    {itemNote && (
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <div className="text-primary">
-                                                    <Edit size={12} />
-                                                </div>
-                                            </TooltipTrigger>
-                                            <TooltipContent className="max-w-xs">
-                                                {itemNote}
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    )}
+                                        {/* Note indicator */}
+                                        {itemNote && (
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <div className="text-primary">
+                                                        <Edit size={12} />
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent className="max-w-xs">
+                                                    {itemNote}
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
 
-                            <button className="absolute -bottom-1 -right-1 hidden group-hover:flex items-center justify-center w-5 h-5 bg-primary text-primary-foreground rounded-full shadow-md">
-                                <Edit size={12} />
-                            </button>
-                        </div>
-                    )
-                })}
+                                <button className="absolute -bottom-1 -right-1 hidden group-hover:flex items-center justify-center w-5 h-5 bg-primary text-primary-foreground rounded-full shadow-md">
+                                    <Edit size={12} />
+                                </button>
+                            </div>
+                        )
+                    })
+            ) : (
+                <p className="text-center text-sm text-muted-foreground py-2">
+                    No items match filters
+                </p>
+            )}
         </BossCard>
     )
 }
 
-// Main Content Component (needs filter context)
+// Main Content Component
 type ItemWithBisSpecs = {
     item: Item
     specs: number[]
     note: string
 }
 
-function LootTableContent(): JSX.Element {
+export default function LootTablePage(): JSX.Element {
     const { filter } = useFilterContext()
 
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -213,23 +221,19 @@ function LootTableContent(): JSX.Element {
             return []
         }
 
-        return bossesWithItemRes.data
-            .map((boss) => ({
-                ...boss,
-                items: boss.items.filter((item) => {
-                    // Apply search filter first
-                    if (
-                        debouncedSearchQuery &&
-                        !item.name
-                            .toLowerCase()
-                            .includes(debouncedSearchQuery.toLowerCase())
-                    ) {
-                        return false
-                    }
-                    return true
-                }),
-            }))
-            .filter((boss) => boss.items.length > 0) // Remove bosses with no matching items
+        return bossesWithItemRes.data.map((boss) => ({
+            ...boss,
+            items: boss.items.filter((item) => {
+                // Apply search filter first
+                if (
+                    debouncedSearchQuery &&
+                    !item.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
+                ) {
+                    return false
+                }
+                return true
+            }),
+        }))
     }, [bossesWithItemRes.data, debouncedSearchQuery])
 
     if (bossesWithItemRes.isLoading || bisRes.isLoading || itemNotesRes.isLoading) {
@@ -310,14 +314,5 @@ function LootTableContent(): JSX.Element {
                 />
             )}
         </div>
-    )
-}
-
-// Main Component with FilterProvider
-export default function LootTablePage(): JSX.Element {
-    return (
-        <FilterProvider>
-            <LootTableContent />
-        </FilterProvider>
     )
 }

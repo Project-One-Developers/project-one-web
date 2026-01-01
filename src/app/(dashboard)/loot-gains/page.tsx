@@ -8,8 +8,8 @@ import { EmptyState } from "@/components/ui/empty-state"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { BossCard } from "@/components/wow/boss-card"
 import { WowItemIcon } from "@/components/wow/wow-item-icon"
-import { FilterProvider, useFilterContext } from "@/lib/filter-context"
-import { filterDroptimizer } from "@/lib/filters"
+import { useFilterContext } from "@/lib/filter-context"
+import { filterDroptimizer, type LootFilter } from "@/lib/filters"
 import { useRaidLootTable } from "@/lib/queries/bosses"
 import { useLatestDroptimizers } from "@/lib/queries/droptimizers"
 import { useCharacters } from "@/lib/queries/players"
@@ -25,31 +25,49 @@ type BossPanelProps = {
     droptimizers: Droptimizer[]
     characters: Character[]
     diff: WowRaidDifficulty
-    hideItemsWithoutDropt: boolean
+    filter: LootFilter
 }
 
-const BossPanel = ({
-    boss,
-    droptimizers,
-    characters,
-    diff,
-    hideItemsWithoutDropt,
-}: BossPanelProps) => {
-    const itemHasDroptimizers = (item: Item): boolean => {
-        if (hideItemsWithoutDropt) {
-            return droptimizers.some((dropt) =>
+const BossPanel = ({ boss, droptimizers, characters, diff, filter }: BossPanelProps) => {
+    const itemPassesFilter = (item: Item): boolean => {
+        // Filter by droptimizers if hideIfNoUpgrade is set
+        if (filter.hideIfNoUpgrade) {
+            const hasDroptimizer = droptimizers.some((dropt) =>
                 dropt.upgrades.some((upgrade) => upgrade.item.id === item.id)
             )
+            if (!hasDroptimizer) {
+                return false
+            }
         }
+
+        // Filter by class - only show items that have upgrades for selected classes
+        if (filter.selectedWowClassName.length > 0) {
+            const hasUpgradeForClass = droptimizers.some((dropt) =>
+                dropt.upgrades.some((upgrade) => upgrade.item.id === item.id)
+            )
+            if (!hasUpgradeForClass) {
+                return false
+            }
+        }
+
+        // Filter by slot
+        if (filter.selectedSlots.length > 0) {
+            if (!filter.selectedSlots.includes(item.slotKey)) {
+                return false
+            }
+        }
+
+        // Filter by armor type
+        if (filter.selectedArmorTypes.length > 0) {
+            if (!item.armorType || !filter.selectedArmorTypes.includes(item.armorType)) {
+                return false
+            }
+        }
+
         return true
     }
 
-    const filteredItems = boss.items.filter(itemHasDroptimizers)
-
-    // Don't render empty boss panels when hiding items without droptimizers
-    if (hideItemsWithoutDropt && filteredItems.length === 0) {
-        return null
-    }
+    const filteredItems = boss.items.filter(itemPassesFilter)
 
     return (
         <BossCard bossId={boss.id} bossName={boss.name}>
@@ -78,16 +96,16 @@ const BossPanel = ({
                         </div>
                     ))
             ) : (
-                <p className="text-center text-sm text-muted-foreground">
-                    No upgrades available
+                <p className="text-center text-sm text-muted-foreground py-2">
+                    No items match filters
                 </p>
             )}
         </BossCard>
     )
 }
 
-// Main Content Component (needs filter context)
-function LootGainsContent(): JSX.Element {
+// Main Content Component
+export default function LootGainsPage(): JSX.Element {
     const { filter } = useFilterContext()
 
     const droptimizersRes = useLatestDroptimizers()
@@ -114,6 +132,7 @@ function LootGainsContent(): JSX.Element {
                 showRaidDifficulty={true}
                 showDroptimizerFilters={true}
                 showMainsAlts={true}
+                showUpgradesToggle={true}
                 showClassFilter={true}
                 showSlotFilter={true}
                 showArmorTypeFilter={true}
@@ -131,7 +150,7 @@ function LootGainsContent(): JSX.Element {
                                 droptimizers={filteredDroptimizers}
                                 characters={charRes.data ?? []}
                                 diff={filter.selectedRaidDiff}
-                                hideItemsWithoutDropt={filter.hideIfNoUpgrade}
+                                filter={filter}
                             />
                         ))}
                 </div>
@@ -143,14 +162,5 @@ function LootGainsContent(): JSX.Element {
                 />
             )}
         </div>
-    )
-}
-
-// Main Component with FilterProvider
-export default function LootGainsPage(): JSX.Element {
-    return (
-        <FilterProvider>
-            <LootGainsContent />
-        </FilterProvider>
     )
 }

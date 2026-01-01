@@ -10,7 +10,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { BossCard } from "@/components/wow/boss-card"
 import { WowCharacterIcon } from "@/components/wow/wow-character-icon"
-import { FilterProvider, useFilterContext } from "@/lib/filter-context"
+import { useFilterContext } from "@/lib/filter-context"
 import { useBosses, useRosterProgression } from "@/lib/queries/bosses"
 import { s } from "@/lib/safe-stringify"
 import { defined } from "@/lib/utils"
@@ -219,14 +219,6 @@ const BossPanel = ({
 
 // Main Component
 export default function RaidProgressionPage(): JSX.Element {
-    return (
-        <FilterProvider defaultFilter={{ selectedRaidDiff: "Heroic" }}>
-            <RaidProgressionPageContent />
-        </FilterProvider>
-    )
-}
-
-function RaidProgressionPageContent(): JSX.Element {
     const { filter } = useFilterContext()
     const [searchQuery, setSearchQuery] = useState("")
     const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
@@ -387,18 +379,6 @@ function RaidProgressionPageContent(): JSX.Element {
                     </div>
                 </GlassCard>
             </div>
-
-            {/* Info */}
-            <p className="text-muted-foreground text-sm text-center">
-                Showing {filter.selectedRaidDiff} progression for{" "}
-                {s((rosterProgressionQuery.data ?? []).length)} characters
-                {debouncedSearchQuery && (
-                    <span className="text-primary">
-                        {" "}
-                        (filtered by &quot;{debouncedSearchQuery}&quot;)
-                    </span>
-                )}
-            </p>
 
             {/* Boss List */}
             <div className="flex flex-wrap gap-4 justify-center">

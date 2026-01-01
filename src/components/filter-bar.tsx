@@ -1,6 +1,6 @@
 "use client"
 
-import { Plus, RotateCcw, Star, Users, X } from "lucide-react"
+import { Plus, RotateCcw, Star, TrendingUp, Users, X } from "lucide-react"
 import Image from "next/image"
 import type { ReactNode } from "react"
 import { Button } from "@/components/ui/button"
@@ -9,6 +9,7 @@ import { GlassCard } from "@/components/ui/glass-card"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { SectionHeader } from "@/components/ui/section-header"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useFilterContext } from "@/lib/filter-context"
 import { s } from "@/lib/safe-stringify"
 import { cn } from "@/lib/utils"
@@ -36,6 +37,7 @@ type FilterBarProps = {
     showRaidDifficulty?: boolean
     showDroptimizerFilters?: boolean
     showMainsAlts?: boolean
+    showUpgradesToggle?: boolean
     showClassFilter?: boolean
     showSlotFilter?: boolean
     showArmorTypeFilter?: boolean
@@ -103,6 +105,7 @@ export const FilterBar = ({
     showRaidDifficulty = true,
     showDroptimizerFilters = true,
     showMainsAlts = true,
+    showUpgradesToggle = false,
     showClassFilter = true,
     showSlotFilter = true,
     showArmorTypeFilter = true,
@@ -134,13 +137,12 @@ export const FilterBar = ({
         updateFilter("selectedArmorTypes", newTypes)
     }
 
-    // Count active filters
+    // Count active filters (only count filters that are shown on this page)
     const activeFilterCount =
-        filter.selectedWowClassName.length +
-        filter.selectedSlots.length +
-        filter.selectedArmorTypes.length +
-        (filter.onlyUpgrades ? 1 : 0) +
-        (filter.hideIfNoUpgrade ? 1 : 0)
+        (showClassFilter ? filter.selectedWowClassName.length : 0) +
+        (showSlotFilter ? filter.selectedSlots.length : 0) +
+        (showArmorTypeFilter ? filter.selectedArmorTypes.length : 0) +
+        (showDroptimizerFilters && filter.onlyUpgrades ? 1 : 0)
 
     const hasAnyFilters = activeFilterCount > 0
 
@@ -240,9 +242,47 @@ export const FilterBar = ({
                 )}
 
                 {/* Separator */}
-                {(showRaidDifficulty || showMainsAlts) && showAddFilters && (
+                {(showRaidDifficulty || showMainsAlts) && showUpgradesToggle && (
                     <div className="w-px h-6 bg-border/50" />
                 )}
+
+                {/* Upgrades Only Toggle */}
+                {showUpgradesToggle && (
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div>
+                                <ToggleChip
+                                    label="Upgrades"
+                                    icon={
+                                        <TrendingUp
+                                            className={cn(
+                                                "w-4 h-4",
+                                                filter.hideIfNoUpgrade
+                                                    ? "text-emerald-400"
+                                                    : "text-muted-foreground"
+                                            )}
+                                        />
+                                    }
+                                    active={filter.hideIfNoUpgrade}
+                                    activeClassName="bg-emerald-500/15 text-emerald-400"
+                                    onClick={() => {
+                                        updateFilter(
+                                            "hideIfNoUpgrade",
+                                            !filter.hideIfNoUpgrade
+                                        )
+                                    }}
+                                />
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Only show items with droptimizer upgrades</p>
+                        </TooltipContent>
+                    </Tooltip>
+                )}
+
+                {/* Separator */}
+                {(showRaidDifficulty || showMainsAlts || showUpgradesToggle) &&
+                    showAddFilters && <div className="w-px h-6 bg-border/50" />}
 
                 {/* Add Filters Button */}
                 {showAddFilters && (
@@ -411,24 +451,6 @@ export const FilterBar = ({
                                                     />
                                                 )}
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <Checkbox
-                                                    id="hide-no-upgrade"
-                                                    checked={filter.hideIfNoUpgrade}
-                                                    onCheckedChange={(checked) => {
-                                                        updateFilter(
-                                                            "hideIfNoUpgrade",
-                                                            !!checked
-                                                        )
-                                                    }}
-                                                />
-                                                <label
-                                                    htmlFor="hide-no-upgrade"
-                                                    className="text-sm"
-                                                >
-                                                    Hide if no upgrade
-                                                </label>
-                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -437,58 +459,53 @@ export const FilterBar = ({
                     </Popover>
                 )}
 
-                {/* Active Filter Chips */}
+                {/* Active Filter Chips (only show chips for filters enabled on this page) */}
                 {hasAnyFilters && (
                     <>
                         <div className="w-px h-6 bg-border/50" />
                         <div className="flex flex-wrap items-center gap-2">
                             {/* Class chips */}
-                            {filter.selectedWowClassName.map((className) => (
-                                <FilterChip
-                                    key={className}
-                                    label={className}
-                                    icon={classIcon.get(className)}
-                                    onRemove={() => {
-                                        toggleClass(className)
-                                    }}
-                                />
-                            ))}
+                            {showClassFilter &&
+                                filter.selectedWowClassName.map((className) => (
+                                    <FilterChip
+                                        key={className}
+                                        label={className}
+                                        icon={classIcon.get(className)}
+                                        onRemove={() => {
+                                            toggleClass(className)
+                                        }}
+                                    />
+                                ))}
                             {/* Slot chips */}
-                            {filter.selectedSlots.map((slot) => (
-                                <FilterChip
-                                    key={slot}
-                                    label={formatWowSlotKey(slot)}
-                                    icon={itemSlotIcon.get(slot)}
-                                    onRemove={() => {
-                                        toggleSlot(slot)
-                                    }}
-                                />
-                            ))}
+                            {showSlotFilter &&
+                                filter.selectedSlots.map((slot) => (
+                                    <FilterChip
+                                        key={slot}
+                                        label={formatWowSlotKey(slot)}
+                                        icon={itemSlotIcon.get(slot)}
+                                        onRemove={() => {
+                                            toggleSlot(slot)
+                                        }}
+                                    />
+                                ))}
                             {/* Armor type chips */}
-                            {filter.selectedArmorTypes.map((type) => (
-                                <FilterChip
-                                    key={type}
-                                    label={type}
-                                    icon={armorTypesIcon.get(type)}
-                                    onRemove={() => {
-                                        toggleArmorType(type)
-                                    }}
-                                />
-                            ))}
+                            {showArmorTypeFilter &&
+                                filter.selectedArmorTypes.map((type) => (
+                                    <FilterChip
+                                        key={type}
+                                        label={type}
+                                        icon={armorTypesIcon.get(type)}
+                                        onRemove={() => {
+                                            toggleArmorType(type)
+                                        }}
+                                    />
+                                ))}
                             {/* Droptimizer filter chips */}
-                            {filter.onlyUpgrades && (
+                            {showDroptimizerFilters && filter.onlyUpgrades && (
                                 <FilterChip
                                     label={`Min ${s(filter.minUpgrade)} DPS`}
                                     onRemove={() => {
                                         updateFilter("onlyUpgrades", false)
-                                    }}
-                                />
-                            )}
-                            {filter.hideIfNoUpgrade && (
-                                <FilterChip
-                                    label="Hide no upgrade"
-                                    onRemove={() => {
-                                        updateFilter("hideIfNoUpgrade", false)
                                     }}
                                 />
                             )}

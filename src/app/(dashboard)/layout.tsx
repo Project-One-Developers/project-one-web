@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import AppSidebar from "@/components/app-sidebar"
+import { GlobalFilterProvider } from "@/components/global-filter-provider"
 import { SidebarProvider } from "@/components/ui/sidebar"
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -18,7 +19,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     return (
         <SidebarProvider defaultOpen={true}>
             <AppSidebar />
-            <main className="flex-1 overflow-auto">{children}</main>
+            <GlobalFilterProvider>
+                <main className="flex-1 overflow-auto">{children}</main>
+            </GlobalFilterProvider>
         </SidebarProvider>
     )
 }

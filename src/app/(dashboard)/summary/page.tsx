@@ -22,7 +22,7 @@ import { TiersetInfo } from "@/components/wow/tierset-info"
 import { WowClassIcon } from "@/components/wow/wow-class-icon"
 import { WowCurrencyIcon } from "@/components/wow/wow-currency-icon"
 import { WowGearIcon } from "@/components/wow/wow-gear-icon"
-import { FilterProvider, useFilterContext } from "@/lib/filter-context"
+import { useFilterContext } from "@/lib/filter-context"
 import { useRosterSummary } from "@/lib/queries/summary"
 import { isRelevantCurrency } from "@/shared/libs/currency/currency-utils"
 import {
@@ -318,14 +318,6 @@ const PlayerRow = ({ summary }: { summary: CharacterSummary }) => {
 
 // Main component
 export default function SummaryPage(): JSX.Element {
-    return (
-        <FilterProvider>
-            <SummaryPageContent />
-        </FilterProvider>
-    )
-}
-
-function SummaryPageContent(): JSX.Element {
     const { filter } = useFilterContext()
 
     // Local state for page-specific filters
