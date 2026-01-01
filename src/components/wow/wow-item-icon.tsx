@@ -17,6 +17,7 @@ type WowItemIconProps = {
     className?: string
     iconClassName?: string
     showSlot?: boolean
+    showSubclass?: boolean
     showIlvl?: boolean
     showRoleIcons?: boolean
     tierBanner?: boolean
@@ -30,6 +31,7 @@ export function WowItemIcon({
     className,
     iconClassName,
     showSlot = true,
+    showSubclass = true,
     showIlvl = true,
     showRoleIcons = false,
     tierBanner = false,
@@ -146,15 +148,23 @@ export function WowItemIcon({
                 {!iconOnly && (
                     <div id="item-info" className="flex flex-col ml-3">
                         <p className="font-black text-xs">{itemData.name}</p>
-                        <div className="flex">
+                        <div className="flex text-xs">
                             {showSlot && itemData.slot !== "Trinket" ? (
-                                <p className="text-xs mr-1">{itemData.slot}</p>
+                                <span className="mr-1">{itemData.slot}</span>
+                            ) : null}
+                            {showSubclass && itemData.itemSubclass ? (
+                                <span className="mr-1 text-muted-foreground/80">
+                                    {itemData.itemSubclass}
+                                </span>
                             ) : null}
                             {showIlvl && currentIlvl ? (
-                                <p className="text-xs">
-                                    {showSlot && itemData.slot !== "Trinket" ? " • " : ""}
+                                <span>
+                                    {(showSlot && itemData.slot !== "Trinket") ||
+                                    (showSubclass && itemData.itemSubclass)
+                                        ? "• "
+                                        : ""}
                                     {currentIlvl}
-                                </p>
+                                </span>
                             ) : null}
                         </div>
                     </div>
