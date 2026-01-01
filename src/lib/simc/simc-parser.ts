@@ -12,7 +12,14 @@ import type { GearItem } from "@/shared/models/item.model"
 import type { DroptimizerCurrency } from "@/shared/models/simulation.model"
 import { wowItemEquippedSlotKeySchema } from "@/shared/models/wow.model"
 
-export async function parseSimC(simc: string): Promise<NewSimC> {
+/** Result of parsing SimC data - includes character info for resolution + data to store */
+export type ParsedSimC = {
+    charName: string
+    charRealm: string
+    data: NewSimC
+}
+
+export async function parseSimC(simc: string): Promise<ParsedSimC> {
     const itemsInBag = await parseBagGearsFromSimc(simc)
     const itemsEquipped = await parseEquippedGearFromSimc(simc)
     const weeklyChest = await parseGreatVaultFromSimc(simc)
@@ -25,15 +32,17 @@ export async function parseSimC(simc: string): Promise<NewSimC> {
     const mergedCurrencies = [...upgradeCurrencies, ...catalystCurrencies]
 
     return {
-        hash: hash,
-        dateGenerated: dateGenerated,
-        charName: charName,
-        charRealm: charRealm,
-        itemsInBag: itemsInBag,
-        itemsEquipped: itemsEquipped,
-        weeklyChest: weeklyChest,
-        currencies: mergedCurrencies,
-        tiersetInfo: await parseTiersets(itemsEquipped, itemsInBag),
+        charName,
+        charRealm,
+        data: {
+            hash: hash,
+            dateGenerated: dateGenerated,
+            itemsInBag: itemsInBag,
+            itemsEquipped: itemsEquipped,
+            weeklyChest: weeklyChest,
+            currencies: mergedCurrencies,
+            tiersetInfo: await parseTiersets(itemsEquipped, itemsInBag),
+        },
     }
 }
 

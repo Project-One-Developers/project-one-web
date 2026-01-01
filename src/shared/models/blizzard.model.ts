@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { MAX_CHARACTER_NAME_LENGTH } from "@/shared/consts/wow.consts"
 import { gearItemSchema } from "./item.model"
 
 // Encounter schema - for raid progression tracking
@@ -11,7 +12,7 @@ export const encounterSchema = z.object({
 
 // Character Blizzard schema (character data from Blizzard API)
 export const charBlizzardSchema = z.object({
-    name: z.string().max(24),
+    name: z.string().max(MAX_CHARACTER_NAME_LENGTH),
     realm: z.string(),
     race: z.string().nullable(),
     blizzardCharacterId: z.number(),

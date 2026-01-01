@@ -1,5 +1,7 @@
 export const CURRENT_SEASON = 3 // todo: to be updated "manually" at the start of each season
 
+export const MAX_CHARACTER_NAME_LENGTH = 50 // WoW limit is ~12-24 depending on locale, using 50 for safety
+
 export const CURRENT_RAID_ID = (() => {
     switch (CURRENT_SEASON as number) {
         case 1:

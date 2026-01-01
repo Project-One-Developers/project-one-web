@@ -108,8 +108,6 @@ export const simcSchema = z.object({
     characterId: z.string(),
     hash: z.string(),
     dateGenerated: z.number(),
-    charName: z.string(),
-    charRealm: z.string(),
     weeklyChest: z.array(gearItemSchema),
     currencies: z.array(droptimizerCurrencySchema),
     itemsInBag: z.array(gearItemSchema),

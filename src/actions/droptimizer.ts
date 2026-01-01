@@ -6,7 +6,7 @@ import pLimit from "p-limit"
 import { match } from "ts-pattern"
 import { characterRepo } from "@/db/repositories/characters"
 import { droptimizerRepo } from "@/db/repositories/droptimizer"
-import { simcRepo, type NewSimC } from "@/db/repositories/simc"
+import { simcRepo } from "@/db/repositories/simc"
 import { env } from "@/env"
 import { extractUrlsFromMessages, readAllMessagesInDiscord } from "@/lib/discord/discord"
 import { fetchDroptimizerFromQELiveURL } from "@/lib/droptimizer/qelive-parser"
@@ -71,9 +71,9 @@ export async function deleteSimulationsOlderThan(lookback: DurationInput): Promi
  * Add SimC character data (for vault/tierset info without running a full droptimizer)
  */
 export async function addSimC(simcData: string): Promise<SimC> {
-    const simc: NewSimC = await parseSimC(simcData)
-    const characterId = await resolveCharacterId(simc.charName, simc.charRealm)
-    return await simcRepo.add(simc, characterId)
+    const { charName, charRealm, data } = await parseSimC(simcData)
+    const characterId = await resolveCharacterId(charName, charRealm)
+    return await simcRepo.add(data, characterId)
 }
 
 /**

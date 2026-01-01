@@ -18,6 +18,7 @@ import {
     ITEM_EQUIPPED_SLOTS_KEY,
     ITEM_SLOTS_DESC,
     ITEM_SLOTS_KEY,
+    MAX_CHARACTER_NAME_LENGTH,
     RAID_DIFF,
     ROLES,
 } from "@/shared/consts/wow.consts"
@@ -53,7 +54,7 @@ export const charTable = pgTable(
     "characters",
     {
         id: varchar("id").primaryKey(),
-        name: varchar("name", { length: 24 }).notNull(), // wow charname limit == 24
+        name: varchar("name", { length: MAX_CHARACTER_NAME_LENGTH }).notNull(),
         realm: varchar("realm").notNull(),
         class: pgClassEnum().notNull(),
         role: pgRoleEnum().notNull(),
@@ -194,8 +195,6 @@ export const simcTable = pgTable(
         characterId: varchar("character_id")
             .references(() => charTable.id, { onDelete: "cascade" })
             .notNull(),
-        charName: varchar("character_name", { length: 24 }).notNull(), // kept for import parsing
-        charRealm: varchar("character_server").notNull(), // kept for import parsing
         hash: text("hash").notNull(),
         dateGenerated: integer("date_generated").notNull(), // imported unix timestamp in this app
         weeklyChest: jsonb("weekly_chest").$type<GearItem[]>(),
