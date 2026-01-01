@@ -152,13 +152,13 @@ const LootsTabs = ({ loots, selectedLoot, setSelectedLoot }: LootsTabsProps) => 
                                 showArmorType={selectedSlot !== "tokens"}
                             />
                             {loot.assignedCharacter && (
-                                <div className="flex flex-row space-x-4 items-center">
-                                    <p className="text-sm -mr-2">
+                                <div className="flex flex-row gap-2 items-center shrink-0">
+                                    <span className="text-sm font-medium">
                                         {loot.assignedCharacter.name}
-                                    </p>
+                                    </span>
                                     <WowClassIcon
                                         wowClassName={loot.assignedCharacter.class}
-                                        className="h-8 w-8 border-2 border-background rounded-lg"
+                                        className="h-8 w-8 border-2 border-background rounded-lg shrink-0"
                                     />
                                 </div>
                             )}

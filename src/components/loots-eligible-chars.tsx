@@ -1,6 +1,6 @@
 "use client"
 
-import { LoaderCircle, MoreVertical, StickyNote } from "lucide-react"
+import { LoaderCircle, StickyNote, Users } from "lucide-react"
 import { useMemo, useState, type JSX } from "react"
 import { toast } from "sonner"
 import { useItemNote } from "@/lib/queries/items"
@@ -9,18 +9,12 @@ import {
     useLootAssignmentInfo,
     useUnassignLoot,
 } from "@/lib/queries/loots"
-import { getDpsHumanReadable } from "@/lib/utils"
+import { getDpsHumanReadable, cn } from "@/lib/utils"
 import type { LootWithAssigned } from "@/shared/models/loot.models"
 import { tierSetBonusSchema } from "@/shared/models/wow.models"
 import { DROPTIMIZER_WARN, type CharAssignmentInfo } from "@/shared/types"
 import { ITEM_SLOTS_KEY_TIERSET } from "@/shared/wow.consts"
 import { DroptimizerUpgradeForItemEquipped } from "./droptimizer-upgrade-for-item"
-import {
-    DropdownMenu,
-    DropdownMenuCheckboxItem,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
-} from "./ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 import { TiersetInfo } from "./wow/tierset-info"
@@ -129,26 +123,7 @@ export default function LootsEligibleChars({
     const showHightestInSlot = selectedLoot.gearItem.item.slotKey !== "omni"
 
     return (
-        <div className="flex flex-col gap-4 relative">
-            <div className="absolute top-4 right-2">
-                <DropdownMenu>
-                    <DropdownMenuTrigger
-                        className="p-2 rounded hover:bg-gray-700"
-                        aria-label="More options"
-                    >
-                        <MoreVertical className="h-5 w-5" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuCheckboxItem
-                            className="cursor-pointer"
-                            checked={showAlts}
-                            onCheckedChange={setShowAlts}
-                        >
-                            Show Alts
-                        </DropdownMenuCheckboxItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
+        <div className="flex flex-col gap-4">
             <div className="flex flex-row justify-center items-center p-2 rounded-lg gap-4">
                 <WowGearIcon
                     gearItem={selectedLoot.gearItem}
@@ -181,6 +156,21 @@ export default function LootsEligibleChars({
                         </TooltipContent>
                     </Tooltip>
                 )}
+                {/* Show Alts Toggle */}
+                <button
+                    onClick={() => {
+                        setShowAlts(!showAlts)
+                    }}
+                    className={cn(
+                        "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors",
+                        showAlts
+                            ? "bg-primary/20 text-primary border border-primary/50"
+                            : "bg-muted text-muted-foreground border border-border hover:bg-muted/80"
+                    )}
+                >
+                    <Users className="h-3 w-3" />
+                    {showAlts ? "All Characters" : "Mains Only"}
+                </button>
             </div>
             <Table className="w-full cursor-pointer">
                 <TableHeader className="bg-gray-800">
