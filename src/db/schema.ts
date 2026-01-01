@@ -172,7 +172,6 @@ export const droptimizerTable = pgTable(
         weeklyChest: jsonb("weekly_chest").$type<GearItem[]>(),
         currencies:
             jsonb("currencies").$type<{ id: number; type: string; amount: number }[]>(),
-        itemsAverageItemLevel: real("items_average_ilvl"),
         itemsAverageItemLevelEquipped: real("items_average_ilvl_equipped"),
         itemsEquipped: jsonb("items_equipped").$type<GearItem[]>().notNull(),
         itemsInBag: jsonb("items_in_bags").$type<GearItem[]>(),

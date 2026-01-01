@@ -282,8 +282,7 @@ const convertJsonToDroptimizer = async (
             upgrades: await parseUpgrades(transformedResults),
             currencies: [],
             weeklyChest: [], // QE Live doesn't have great vault data
-            itemsAverageItemLevel: null,
-            itemsAverageItemLevelEquipped: null,
+            itemsAverageItemLevelEquipped: null, // QE Live doesn't provide ilvl data
             itemsEquipped,
             itemsInBag: [],
             tiersetInfo: [],

@@ -275,10 +275,18 @@ export const convertJsonToDroptimizer = async (
         upgrades: await parseUpgrades(raidDiff, upgrades, itemsInBag, itemsEquipped),
         currencies: mergedCurrencies,
         weeklyChest: await parseGreatVaultFromSimc(data.simbot.meta.rawFormData.text),
-        itemsAverageItemLevel:
-            data.simbot.meta.rawFormData.character.items.averageItemLevelEquipped ?? null,
-        itemsAverageItemLevelEquipped:
-            data.simbot.meta.rawFormData.character.items.averageItemLevelEquipped ?? null,
+        // Calculate average ilvl from equipped items
+        // Raidbots doesn't provide a pre-calculated average, so we compute it ourselves
+        itemsAverageItemLevelEquipped: (() => {
+            const validItems = itemsEquipped.filter((item) => item.itemLevel > 0)
+            if (validItems.length === 0) {
+                return null
+            }
+            const avg =
+                validItems.reduce((sum, item) => sum + item.itemLevel, 0) /
+                validItems.length
+            return Math.round(avg * 100) / 100
+        })(),
         itemsEquipped,
         itemsInBag,
         tiersetInfo: await parseTiersets(itemsEquipped, itemsInBag),

@@ -216,10 +216,11 @@ const GearInfo = ({
         activeTab === "blizzard"
             ? blizzard?.equippedItemLevel
             : droptimizer?.itemsAverageItemLevelEquipped
+    // Droptimizer only has equipped ilvl, Blizzard API has both
     const averageItemLevel =
         activeTab === "blizzard"
             ? blizzard?.averageItemLevel
-            : droptimizer?.itemsAverageItemLevel
+            : droptimizer?.itemsAverageItemLevelEquipped
 
     if (initialTab === null) {
         return (
@@ -272,7 +273,7 @@ const GearInfo = ({
                             {averageItemLevel &&
                                 averageItemLevel !== equippedItemLevel && (
                                     <span className="text-xs text-muted-foreground">
-                                        {averageItemLevel} avg
+                                        {averageItemLevel} bag
                                     </span>
                                 )}
                         </div>

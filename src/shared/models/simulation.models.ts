@@ -74,7 +74,6 @@ export const droptimizerSchema = z.object({
     upgrades: z.array(droptimizerUpgradeSchema),
     weeklyChest: z.array(gearItemSchema),
     currencies: z.array(droptimizerCurrencySchema),
-    itemsAverageItemLevel: twoDecimals.nullable(),
     itemsAverageItemLevelEquipped: twoDecimals.nullable(),
     itemsInBag: z.array(gearItemSchema),
     itemsEquipped: z.array(gearItemSchema),
