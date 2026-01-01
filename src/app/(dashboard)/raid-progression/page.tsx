@@ -1,6 +1,5 @@
 "use client"
 
-import { groupBy, partition, sortBy } from "es-toolkit"
 import { Search } from "lucide-react"
 import { useEffect, useMemo, useState, type JSX } from "react"
 import { FilterBar } from "@/components/filter-bar"
@@ -12,11 +11,12 @@ import { BossCard } from "@/components/wow/boss-card"
 import { WowCharacterIcon } from "@/components/wow/wow-character-icon"
 import { useFilterContext } from "@/lib/filter-context"
 import { useBosses, useRosterProgression } from "@/lib/queries/bosses"
-import { s } from "@/lib/safe-stringify"
 import { defined } from "@/lib/utils"
-import type { BlizzardEncounter } from "@/shared/models/blizzard.model"
 import type { Boss } from "@/shared/models/boss.model"
-import type { Character } from "@/shared/models/character.model"
+import type {
+    DefeatedCharacter,
+    ProgressionCharacter,
+} from "@/shared/models/character.model"
 import type { WowRaidDifficulty } from "@/shared/models/wow.model"
 
 // Constants
@@ -26,70 +26,61 @@ const ROLE_COLORS = {
     DPS: "text-red-400",
 } as const
 
-// Types
-type CharacterEncounterInfo = {
-    character: Character
-    encounter: BlizzardEncounter | null
-}
-
-type BossProgressData = {
-    defeated: GroupedByRole<CharacterEncounterInfo>
-    notDefeated: CharacterEncounterInfo[]
+// Types for filtered/displayed data
+type FilteredBossProgress = {
+    defeated: {
+        Tank: DefeatedCharacter[]
+        Healer: DefeatedCharacter[]
+        DPS: DefeatedCharacter[]
+    }
+    notDefeated: ProgressionCharacter[]
     defeatedCount: number
-}
-
-type GroupedByRole<T> = {
-    Tank: T[]
-    Healer: T[]
-    DPS: T[]
+    totalCount: number
 }
 
 type BossPanelProps = {
     boss: Boss
-    progressData: BossProgressData
-    totalRosterSize: number
+    progressData: FilteredBossProgress
     selectedDifficulty: WowRaidDifficulty
 }
 
 // Components
 const CharacterTooltip = ({
     character,
-    encounter,
+    defeated,
+    selectedDifficulty,
 }: {
-    character: Character
-    encounter?: BlizzardEncounter | WowRaidDifficulty | null
+    character: ProgressionCharacter | DefeatedCharacter
+    defeated: boolean
+    selectedDifficulty: WowRaidDifficulty
 }) => (
     <div className="flex flex-col gap-1">
         <div className="font-medium">{character.name}</div>
-        {encounter && typeof encounter === "object" ? (
+        {defeated && "numKills" in character ? (
             <>
-                <div className="text-green-400">Kills: {encounter.numKills}</div>
-                {encounter.lastDefeated && (
+                <div className="text-green-400">Kills: {character.numKills}</div>
+                {character.lastDefeated && (
                     <div className="text-zinc-400">
-                        Last Kill: {new Date(encounter.lastDefeated).toLocaleDateString()}
+                        Last Kill: {new Date(character.lastDefeated).toLocaleDateString()}
                     </div>
                 )}
             </>
         ) : (
-            <div className="text-red-400">Not defeated on {encounter}</div>
+            <div className="text-red-400">Not defeated on {selectedDifficulty}</div>
         )}
     </div>
 )
 
-const CharacterGrid = ({
+const DefeatedCharacterGrid = ({
     characters,
     title,
     color,
     selectedDifficulty,
-    showRoleBadges = false,
-    hasDefeatedBoss = false,
 }: {
-    characters: CharacterEncounterInfo[]
+    characters: DefeatedCharacter[]
     title: string
     color: string
-    selectedDifficulty?: WowRaidDifficulty
-    showRoleBadges?: boolean
-    hasDefeatedBoss?: boolean
+    selectedDifficulty: WowRaidDifficulty
 }) => {
     if (characters.length === 0) {
         return null
@@ -99,45 +90,35 @@ const CharacterGrid = ({
         <div>
             <h4 className={`text-xs font-semibold ${color} mb-2`}>{title}</h4>
             <div className="grid grid-cols-8 gap-2">
-                {characters.map((item) => {
-                    const { character, encounter } = item
-
-                    return (
-                        <Tooltip key={character.id}>
-                            <TooltipTrigger asChild>
-                                <div className="flex justify-center">
-                                    <WowCharacterIcon
-                                        character={character}
-                                        showName={false}
-                                        showTooltip={false}
-                                        showMainIndicator={false}
-                                        showRoleBadges={
-                                            showRoleBadges && !hasDefeatedBoss
-                                        }
-                                    />
-                                </div>
-                            </TooltipTrigger>
-                            <TooltipContent sideOffset={5}>
-                                <CharacterTooltip
+                {characters.map((character) => (
+                    <Tooltip key={character.id}>
+                        <TooltipTrigger asChild>
+                            <div className="flex justify-center">
+                                <WowCharacterIcon
                                     character={character}
-                                    encounter={encounter ?? selectedDifficulty}
+                                    showName={false}
+                                    showTooltip={false}
+                                    showMainIndicator={false}
+                                    showRoleBadges={false}
                                 />
-                            </TooltipContent>
-                        </Tooltip>
-                    )
-                })}
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent sideOffset={5}>
+                            <CharacterTooltip
+                                character={character}
+                                defeated={true}
+                                selectedDifficulty={selectedDifficulty}
+                            />
+                        </TooltipContent>
+                    </Tooltip>
+                ))}
             </div>
         </div>
     )
 }
 
-const BossPanel = ({
-    boss,
-    progressData,
-    totalRosterSize,
-    selectedDifficulty,
-}: BossPanelProps) => {
-    const { defeated, notDefeated, defeatedCount } = progressData
+const BossPanel = ({ boss, progressData, selectedDifficulty }: BossPanelProps) => {
+    const { defeated, notDefeated, defeatedCount, totalCount } = progressData
 
     return (
         <BossCard
@@ -147,32 +128,29 @@ const BossPanel = ({
             contentClassName="p-4"
         >
             <div className="text-xs text-center text-muted-foreground mb-3">
-                {defeatedCount} / {totalRosterSize} defeated
+                {defeatedCount} / {totalCount} defeated
             </div>
 
             {/* Characters who have defeated the boss - grouped by role */}
             {defeatedCount > 0 && (
                 <div className="flex flex-col gap-y-3">
-                    <CharacterGrid
+                    <DefeatedCharacterGrid
                         characters={defeated.Tank}
                         title="Tanks"
                         color={ROLE_COLORS.Tank}
-                        showRoleBadges={true}
-                        hasDefeatedBoss={true}
+                        selectedDifficulty={selectedDifficulty}
                     />
-                    <CharacterGrid
+                    <DefeatedCharacterGrid
                         characters={defeated.Healer}
                         title="Healers"
                         color={ROLE_COLORS.Healer}
-                        showRoleBadges={true}
-                        hasDefeatedBoss={true}
+                        selectedDifficulty={selectedDifficulty}
                     />
-                    <CharacterGrid
+                    <DefeatedCharacterGrid
                         characters={defeated.DPS}
                         title="DPS"
                         color={ROLE_COLORS.DPS}
-                        showRoleBadges={true}
-                        hasDefeatedBoss={true}
+                        selectedDifficulty={selectedDifficulty}
                     />
                 </div>
             )}
@@ -182,12 +160,12 @@ const BossPanel = ({
                 <div className="flex flex-col gap-y-2 mt-4">
                     <h3 className="text-xs font-semibold text-red-400">Not Defeated</h3>
                     <div className="grid grid-cols-8 gap-2 opacity-60">
-                        {notDefeated.map((item) => (
-                            <Tooltip key={item.character.id}>
+                        {notDefeated.map((character) => (
+                            <Tooltip key={character.id}>
                                 <TooltipTrigger asChild>
                                     <div className="flex justify-center grayscale">
                                         <WowCharacterIcon
-                                            character={item.character}
+                                            character={character}
                                             showTooltip={false}
                                             showRoleBadges={true}
                                             showName={true}
@@ -197,8 +175,9 @@ const BossPanel = ({
                                 </TooltipTrigger>
                                 <TooltipContent sideOffset={5}>
                                     <CharacterTooltip
-                                        character={item.character}
-                                        encounter={selectedDifficulty}
+                                        character={character}
+                                        defeated={false}
+                                        selectedDifficulty={selectedDifficulty}
                                     />
                                 </TooltipContent>
                             </Tooltip>
@@ -215,6 +194,28 @@ const BossPanel = ({
             )}
         </BossCard>
     )
+}
+
+// Helper to filter characters by mains/alts and search
+// searchQueryLower should be pre-computed to avoid repeated toLowerCase() calls
+const filterCharacter = (
+    char: ProgressionCharacter,
+    showMains: boolean,
+    showAlts: boolean,
+    searchQueryLower: string
+): boolean => {
+    // Mains/alts filter
+    if (char.main && !showMains) {
+        return false
+    }
+    if (!char.main && !showAlts) {
+        return false
+    }
+    // Search filter (searchQueryLower is already lowercase)
+    if (searchQueryLower && !char.name.toLowerCase().includes(searchQueryLower)) {
+        return false
+    }
+    return true
 }
 
 // Main Component
@@ -252,96 +253,87 @@ export default function RaidProgressionPage(): JSX.Element {
     // Get raid slug from first boss (all bosses in same raid)
     const raidSlug = orderedBosses[0]?.raidSlug ?? undefined
 
-    // Fetch roster progression with pre-built encounter maps from server
-    const rosterProgressionQuery = useRosterProgression(
-        filter.showMains,
-        filter.showAlts,
-        raidSlug
-    )
+    // Fetch roster progression (pre-computed by difficulty -> bossId)
+    const rosterProgressionQuery = useRosterProgression(raidSlug)
 
-    // Build set of filtered names for O(1) lookup
-    const filteredNamesSet = useMemo(() => {
-        if (!debouncedSearchQuery || !rosterProgressionQuery.data) {
-            return null // null means no filter active
-        }
-
-        const searchLower = debouncedSearchQuery.toLowerCase()
-        return new Set(
-            rosterProgressionQuery.data
-                .filter(({ p1Character }) =>
-                    p1Character.name.toLowerCase().includes(searchLower)
-                )
-                .map(({ p1Character }) => p1Character.name)
-        )
-    }, [rosterProgressionQuery.data, debouncedSearchQuery])
-
-    // Pre-compute all boss progress data in a single pass
+    // Select current difficulty data and filter by mains/alts/search
+    // Note: We only track Mythic/Heroic/Normal, not LFR
     const progressByBoss = useMemo(() => {
         if (!rosterProgressionQuery.data) {
-            return new Map<number, BossProgressData>()
+            return new Map<number, FilteredBossProgress>()
         }
 
-        // Filter characters once if search is active
-        const activeCharacters = filteredNamesSet
-            ? rosterProgressionQuery.data.filter(({ p1Character }) =>
-                  filteredNamesSet.has(p1Character.name)
-              )
-            : rosterProgressionQuery.data
+        // Only Mythic/Heroic/Normal are tracked - return empty for LFR
+        const selectedDiff = filter.selectedRaidDiff
+        if (
+            selectedDiff !== "Mythic" &&
+            selectedDiff !== "Heroic" &&
+            selectedDiff !== "Normal"
+        ) {
+            return new Map<number, FilteredBossProgress>()
+        }
+
+        const difficultyData = rosterProgressionQuery.data[selectedDiff]
+
+        // Pre-compute lowercase search query once (avoids repeated toLowerCase in filter)
+        const searchLower = debouncedSearchQuery.toLowerCase()
+
+        // Create filter function with captured values to avoid repeated closures
+        const matchesFilter = (c: ProgressionCharacter) =>
+            filterCharacter(c, filter.showMains, filter.showAlts, searchLower)
 
         return new Map(
             orderedBosses.map((boss) => {
-                const allWithEncounters = activeCharacters.map(
-                    ({ p1Character, encounters }) => ({
-                        character: p1Character,
-                        encounter:
-                            encounters[
-                                `${filter.selectedRaidDiff}-${s(boss.blizzardEncounterId)}`
-                            ] ?? null,
-                    })
-                )
+                const bossProgress = difficultyData[boss.id]
+                if (!bossProgress) {
+                    // Boss not in data - return empty progress
+                    const emptyProgress: FilteredBossProgress = {
+                        defeated: { Tank: [], Healer: [], DPS: [] },
+                        notDefeated: [],
+                        defeatedCount: 0,
+                        totalCount: 0,
+                    }
+                    return [boss.id, emptyProgress] as const
+                }
 
-                const [defeated, notDefeated] = partition(
-                    allWithEncounters,
-                    (item) => item.encounter !== null
-                )
+                // Filter each role's defeated characters
+                const filteredDefeatedTank =
+                    bossProgress.defeated.Tank.filter(matchesFilter)
+                const filteredDefeatedHealer =
+                    bossProgress.defeated.Healer.filter(matchesFilter)
+                const filteredDefeatedDPS =
+                    bossProgress.defeated.DPS.filter(matchesFilter)
 
-                // Group defeated by role and sort by class
-                const defeatedByRole = groupBy(
-                    defeated,
-                    (item) => item.character.role
-                ) as Partial<Record<string, CharacterEncounterInfo[]>>
+                // Filter not-defeated characters
+                const filteredNotDefeated = bossProgress.notDefeated.filter(matchesFilter)
 
-                const byClass = (items: CharacterEncounterInfo[]) =>
-                    sortBy(items, [(item) => item.character.class])
+                const defeatedCount =
+                    filteredDefeatedTank.length +
+                    filteredDefeatedHealer.length +
+                    filteredDefeatedDPS.length
 
-                return [
-                    boss.id,
-                    {
-                        defeated: {
-                            Tank: byClass(defeatedByRole.Tank ?? []),
-                            Healer: byClass(defeatedByRole.Healer ?? []),
-                            DPS: byClass(defeatedByRole.DPS ?? []),
-                        },
-                        notDefeated: byClass(notDefeated),
-                        defeatedCount: defeated.length,
+                const progress: FilteredBossProgress = {
+                    defeated: {
+                        Tank: filteredDefeatedTank,
+                        Healer: filteredDefeatedHealer,
+                        DPS: filteredDefeatedDPS,
                     },
-                ] as const
+                    notDefeated: filteredNotDefeated,
+                    defeatedCount,
+                    totalCount: defeatedCount + filteredNotDefeated.length,
+                }
+
+                return [boss.id, progress] as const
             })
         )
     }, [
-        orderedBosses,
         rosterProgressionQuery.data,
         filter.selectedRaidDiff,
-        filteredNamesSet,
+        filter.showMains,
+        filter.showAlts,
+        debouncedSearchQuery,
+        orderedBosses,
     ])
-
-    // Calculate total roster size (filtered or not)
-    const totalRosterSize = useMemo(() => {
-        if (filteredNamesSet) {
-            return filteredNamesSet.size
-        }
-        return rosterProgressionQuery.data?.length ?? 0
-    }, [rosterProgressionQuery.data, filteredNamesSet])
 
     if (bossesQuery.isLoading || rosterProgressionQuery.isLoading) {
         return <LoadingSpinner size="lg" iconSize="lg" text="Loading progression..." />
@@ -393,7 +385,6 @@ export default function RaidProgressionPage(): JSX.Element {
                             key={boss.id}
                             boss={boss}
                             progressData={progressData}
-                            totalRosterSize={totalRosterSize}
                             selectedDifficulty={filter.selectedRaidDiff}
                         />
                     )

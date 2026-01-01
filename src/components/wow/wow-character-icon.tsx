@@ -1,11 +1,11 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import type { Character } from "@/shared/models/character.model"
+import type { ProgressionCharacter } from "@/shared/models/character.model"
 import { WowClassIcon } from "./wow-class-icon"
 
 export type WowCharacterIconProps = {
-    character: Character
+    character: ProgressionCharacter
     className?: string
     showTooltip?: boolean
     showMainIndicator?: boolean
@@ -75,13 +75,6 @@ export function WowCharacterIcon({
             className={`flex flex-col items-center rounded-lg cursor-pointer transition-transform hover:scale-110 ${className}`}
             onClick={handleClick}
         >
-            {showName && (
-                <div>
-                    <p className={`${textSizeClasses[size]} mb-2`}>
-                        {character.name.slice(0, truncateAfter)}
-                    </p>
-                </div>
-            )}
             <div className="relative inline-block">
                 <WowClassIcon
                     wowClassName={character.class}
@@ -129,6 +122,11 @@ export function WowCharacterIcon({
                     className={`${mainIndicatorSizeClasses[size]} bg-white rounded-lg mt-2`}
                 />
             ) : null}
+            {showName && (
+                <p className={`${textSizeClasses[size]} mt-1`}>
+                    {character.name.slice(0, truncateAfter)}
+                </p>
+            )}
         </div>
     )
 }

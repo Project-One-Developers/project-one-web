@@ -22,16 +22,10 @@ export function useRaidLootTable(raidId: number = CURRENT_RAID_ID) {
     })
 }
 
-export function useRosterProgression(
-    showMains: boolean,
-    showAlts: boolean,
-    raidSlug: string | undefined
-) {
+export function useRosterProgression(raidSlug: string | undefined) {
     return useQuery({
-        queryKey: [queryKeys.raidProgression, showMains, showAlts, raidSlug],
+        queryKey: [queryKeys.raidProgression, raidSlug],
         staleTime: 60000, // 1 minute - progression updates infrequently
-        queryFn: raidSlug
-            ? () => getRosterProgression(showMains, showAlts, raidSlug)
-            : skipToken,
+        queryFn: raidSlug ? () => getRosterProgression(raidSlug) : skipToken,
     })
 }

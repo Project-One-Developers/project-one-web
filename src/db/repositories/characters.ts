@@ -1,4 +1,4 @@
-import { and, eq, inArray, or } from "drizzle-orm"
+import { and, asc, eq, inArray, or } from "drizzle-orm"
 import { db } from "@/db"
 import { charTable, playerTable } from "@/db/schema"
 import { identity, mapAndParse, newUUID } from "@/db/utils"
@@ -49,7 +49,11 @@ export const characterRepo = {
 
         const filter = showMains && showAlts ? undefined : eq(charTable.main, showMains)
 
-        const result = await db.select().from(charTable).where(filter)
+        const result = await db
+            .select()
+            .from(charTable)
+            .where(filter)
+            .orderBy(asc(charTable.name))
         return mapAndParse(result, identity, characterSchema)
     },
 

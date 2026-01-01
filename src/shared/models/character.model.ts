@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { charBlizzardSchema, encounterSchema } from "./blizzard.model"
+import { charBlizzardSchema } from "./blizzard.model"
 import { gearItemSchema } from "./item.model"
 import { droptimizerSchema } from "./simulation.model"
 import { wowClassNameSchema, wowRolesSchema } from "./wow.model"
@@ -99,10 +99,40 @@ export const characterWithGears = characterSchema.extend({
 })
 export type CharacterWithGears = z.infer<typeof characterWithGears>
 
-// Character with pre-built encounter lookup map (for raid progression page)
-export const characterWithEncountersSchema = z.object({
-    p1Character: characterSchema,
-    // Pre-built map: "difficulty-blizzardEncounterId" → BlizzardEncounter
-    encounters: z.record(z.string(), encounterSchema),
+// Minimal character info for raid progression display
+export const progressionCharacterSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    class: wowClassNameSchema,
+    role: wowRolesSchema,
+    main: z.boolean(),
 })
-export type CharacterWithEncounters = z.infer<typeof characterWithEncountersSchema>
+export type ProgressionCharacter = z.infer<typeof progressionCharacterSchema>
+
+// Character with encounter info (for defeated characters)
+export const defeatedCharacterSchema = progressionCharacterSchema.extend({
+    numKills: z.number(),
+    lastDefeated: z.string().nullable(),
+})
+export type DefeatedCharacter = z.infer<typeof defeatedCharacterSchema>
+
+// Per-boss progress data (pre-computed on server)
+export const bossProgressSchema = z.object({
+    defeated: z.object({
+        Tank: z.array(defeatedCharacterSchema),
+        Healer: z.array(defeatedCharacterSchema),
+        DPS: z.array(defeatedCharacterSchema),
+    }),
+    notDefeated: z.array(progressionCharacterSchema),
+})
+export type BossProgress = z.infer<typeof bossProgressSchema>
+
+// Full roster progression keyed by difficulty, then by bossId (string keys since JSON serializes numbers as strings)
+export const rosterProgressionByDifficultySchema = z.object({
+    Mythic: z.record(z.string(), bossProgressSchema),
+    Heroic: z.record(z.string(), bossProgressSchema),
+    Normal: z.record(z.string(), bossProgressSchema),
+})
+export type RosterProgressionByDifficulty = z.infer<
+    typeof rosterProgressionByDifficultySchema
+>

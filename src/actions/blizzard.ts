@@ -1,6 +1,6 @@
 "use server"
 
-import { groupBy, keyBy, partition } from "es-toolkit"
+import { keyBy, partition } from "es-toolkit"
 import { match } from "ts-pattern"
 import { blizzardRepo, type CharacterBlizzardDb } from "@/db/repositories/blizzard"
 import { bossRepo } from "@/db/repositories/bosses"
@@ -19,15 +19,19 @@ import {
 } from "@/lib/blizzard/blizzard-sync"
 import { logger } from "@/lib/logger"
 import { s } from "@/lib/safe-stringify"
-import { defined } from "@/lib/utils"
 import {
     formaUnixTimestampToItalianDate,
     getUnixTimestamp,
 } from "@/shared/libs/date/date-utils"
 import type { BlizzardEncounter } from "@/shared/models/blizzard.model"
 import type { Boss } from "@/shared/models/boss.model"
-import type { CharacterWithEncounters } from "@/shared/models/character.model"
-import type { WowClassName } from "@/shared/models/wow.model"
+import type {
+    BossProgress,
+    DefeatedCharacter,
+    ProgressionCharacter,
+    RosterProgressionByDifficulty,
+} from "@/shared/models/character.model"
+import type { WowClassName, WowRaidDifficulty } from "@/shared/models/wow.model"
 import type { Result } from "@/shared/types/types"
 
 // ============================================================================
@@ -227,20 +231,36 @@ export async function getLastBlizzardSyncTime(): Promise<number | null> {
 
 /**
  * Get roster progression data with encounters from normalized table.
+ * Returns data pre-computed by difficulty -> bossId -> defeated/notDefeated.
+ * Client only needs to filter by mains/alts - no partition work needed.
  */
 export async function getRosterProgression(
-    showMains = true,
-    showAlts = true,
     raidSlug: string
-): Promise<CharacterWithEncounters[]> {
-    const roster = await characterRepo.getList(showMains, showAlts)
+): Promise<RosterProgressionByDifficulty> {
+    const roster = await characterRepo.getList(true, true)
     logger.info(
         "Blizzard",
-        `Fetching roster progression for ${s(roster.length)} characters (mains: ${s(showMains)}, alts: ${s(showAlts)}, raid: ${raidSlug})`
+        `Fetching roster progression for ${s(roster.length)} characters (raid: ${raidSlug})`
     )
 
+    const emptyResult: RosterProgressionByDifficulty = {
+        Mythic: {},
+        Heroic: {},
+        Normal: {},
+    }
+
     if (roster.length === 0) {
-        return []
+        return emptyResult
+    }
+
+    // Get bosses for this raid
+    const bosses = await bossRepo.getByRaidSlug(raidSlug)
+    const bossesWithEncounterId = bosses.filter(
+        (b): b is Boss & { blizzardEncounterId: number } => b.blizzardEncounterId !== null
+    )
+
+    if (bossesWithEncounterId.length === 0) {
+        return emptyResult
     }
 
     // Get encounters for all roster characters
@@ -250,37 +270,85 @@ export async function getRosterProgression(
         raidSlug
     )
 
-    // Group encounters by character ID
-    const encountersByCharacter = groupBy(allEncounters, (enc) => enc.characterId)
+    // Group encounters by "characterId-difficulty-blizzardEncounterId"
+    const encounterLookup = new Map<string, BlizzardEncounter>()
+    for (const enc of allEncounters) {
+        const encounterId = enc.boss.blizzardEncounterId
+        if (!encounterId) {
+            continue
+        }
+        const key = `${enc.characterId}-${enc.difficulty}-${s(encounterId)}`
+        encounterLookup.set(key, {
+            encounterId,
+            numKills: enc.numKills,
+            lastDefeated: enc.lastDefeated?.toISOString() ?? null,
+        })
+    }
 
-    return roster.map((character) => {
-        const charEncounters = encountersByCharacter[character.id] ?? []
+    // Build progression character data (minimal fields)
+    // Already sorted by class from DB query
+    const rosterChars: ProgressionCharacter[] = roster.map((c) => ({
+        id: c.id,
+        name: c.name,
+        class: c.class,
+        role: c.role,
+        main: c.main,
+    }))
 
-        // Build encounter lookup: "Difficulty-blizzardEncounterId" -> encounter
-        const encounters = Object.fromEntries(
-            charEncounters
-                .map((enc): [string, BlizzardEncounter] | null => {
-                    const encounterId = enc.boss.blizzardEncounterId
-                    if (!encounterId) {
-                        return null
-                    }
-                    return [
-                        `${enc.difficulty}-${s(encounterId)}`,
-                        {
-                            encounterId,
-                            numKills: enc.numKills,
-                            lastDefeated: enc.lastDefeated?.toISOString() ?? null,
-                        },
-                    ]
+    // We only track Mythic/Heroic/Normal progression (not LFR)
+    type SupportedDifficulty = Exclude<WowRaidDifficulty, "LFR">
+
+    // Build boss progress for a single difficulty+boss combination
+    const buildBossProgress = (
+        difficulty: SupportedDifficulty,
+        bossEncounterId: number
+    ): BossProgress => {
+        // Partition into defeated/not-defeated with single lookup per character
+        const defeated: DefeatedCharacter[] = []
+        const notDefeated: ProgressionCharacter[] = []
+
+        for (const char of rosterChars) {
+            const encounter = encounterLookup.get(
+                `${char.id}-${difficulty}-${s(bossEncounterId)}`
+            )
+            if (encounter) {
+                defeated.push({
+                    ...char,
+                    numKills: encounter.numKills,
+                    lastDefeated: encounter.lastDefeated,
                 })
-                .filter(defined)
-        )
+            } else {
+                notDefeated.push(char)
+            }
+        }
+
+        // Use native Object.groupBy (Node 21+) - faster than es-toolkit
+        const defeatedByRole = Object.groupBy(defeated, (c) => c.role)
 
         return {
-            p1Character: character,
-            encounters,
+            defeated: {
+                Tank: defeatedByRole.Tank ?? [],
+                Healer: defeatedByRole.Healer ?? [],
+                DPS: defeatedByRole.DPS ?? [],
+            },
+            notDefeated,
         }
-    })
+    }
+
+    // Build result using functional approach
+    const buildDifficultyData = (difficulty: SupportedDifficulty) =>
+        Object.fromEntries(
+            bossesWithEncounterId.map((boss) => [
+                boss.id,
+                buildBossProgress(difficulty, boss.blizzardEncounterId),
+            ])
+        )
+
+    return {
+        Mythic: buildDifficultyData("Mythic"),
+        Heroic: buildDifficultyData("Heroic"),
+        Normal: buildDifficultyData("Normal"),
+    }
 }
 
 // ============================================================================
