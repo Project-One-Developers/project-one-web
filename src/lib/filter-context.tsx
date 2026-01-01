@@ -10,7 +10,7 @@ const DEFAULT_FILTER: LootFilter = {
     minUpgrade: 0,
     showMains: true,
     showAlts: false,
-    hideIfNoUpgrade: false,
+    hideIfNoUpgrade: true,
     selectedSlots: [],
     selectedArmorTypes: [],
     selectedWowClassName: [],
