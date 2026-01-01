@@ -3,11 +3,11 @@
 import { useQueryClient } from "@tanstack/react-query"
 import {
     Clock,
+    CloudDownload,
     Database,
     Loader2,
     MessageSquare,
     Play,
-    Settings,
     Shield,
     Users,
 } from "lucide-react"
@@ -65,7 +65,7 @@ function SyncActionCard({
     )
 }
 
-export default function SettingsPage(): JSX.Element {
+export default function SyncPage(): JSX.Element {
     const queryClient = useQueryClient()
     const [isSyncingBlizzard, setIsSyncingBlizzard] = useState(false)
     const [isSyncingDiscord, setIsSyncingDiscord] = useState(false)
@@ -171,10 +171,10 @@ export default function SettingsPage(): JSX.Element {
             {/* Header */}
             <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-                    <Settings className="w-6 h-6 text-primary" />
+                    <CloudDownload className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-bold">Settings</h1>
+                    <h1 className="text-2xl font-bold">Sync</h1>
                     <p className="text-sm text-muted-foreground">
                         Manage sync operations and data imports
                     </p>

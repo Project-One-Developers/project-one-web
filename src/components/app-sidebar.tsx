@@ -1,16 +1,16 @@
 "use client"
 
 import {
+    CloudDownload,
     FileSpreadsheet,
     LucideAccessibility,
     LucideBot,
-    LucideGauge,
     LucideCpu,
+    LucideGauge,
     LucideMedal,
     LucideScrollText,
     LucideSnail,
     LucideSwords,
-    Settings,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -177,10 +177,10 @@ export default function AppSidebar(): JSX.Element {
                     </SidebarGroup>
                     <SidebarGroup className="mt-auto">
                         <Link
-                            href="/config"
+                            href="/sync"
                             className="p-2 rounded-full hover:bg-muted w-fit focus:outline-none"
                         >
-                            <Settings />
+                            <CloudDownload />
                         </Link>
                         <span className="text-xs text-muted-foreground px-2 mt-2">
                             {clientEnv.NEXT_PUBLIC_BUILD_ID ?? "dev"}
