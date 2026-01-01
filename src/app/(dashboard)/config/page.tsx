@@ -184,19 +184,19 @@ export default function SettingsPage(): JSX.Element {
             {/* Sync Actions Grid */}
             <div className="grid gap-4 md:grid-cols-2">
                 <SyncActionCard
+                    icon={<Users className="w-5 h-5" />}
+                    title="Guild Members"
+                    description="Import new members from the guild roster"
+                    isLoading={isImportingGuild}
+                    onSync={() => void handleImportGuild()}
+                />
+
+                <SyncActionCard
                     icon={<Shield className="w-5 h-5" />}
                     title="Blizzard API"
                     description="Sync character profiles, gear, and progression data"
                     isLoading={isSyncingBlizzard}
                     onSync={() => void handleSyncBlizzard()}
-                />
-
-                <SyncActionCard
-                    icon={<MessageSquare className="w-5 h-5" />}
-                    title="Discord Droptimizers"
-                    description="Import droptimizer reports from Discord (last 7 days)"
-                    isLoading={isSyncingDiscord}
-                    onSync={() => void handleSyncDiscord()}
                 />
 
                 <SyncActionCard
@@ -208,11 +208,11 @@ export default function SettingsPage(): JSX.Element {
                 />
 
                 <SyncActionCard
-                    icon={<Users className="w-5 h-5" />}
-                    title="Guild Members"
-                    description="Import new members from the guild roster"
-                    isLoading={isImportingGuild}
-                    onSync={() => void handleImportGuild()}
+                    icon={<MessageSquare className="w-5 h-5" />}
+                    title="Discord Droptimizers"
+                    description="Import droptimizer reports from Discord (last 7 days)"
+                    isLoading={isSyncingDiscord}
+                    onSync={() => void handleSyncDiscord()}
                 />
             </div>
 
@@ -220,8 +220,8 @@ export default function SettingsPage(): JSX.Element {
             <div className="flex items-start gap-3 text-sm text-muted-foreground">
                 <Clock className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 <p>
-                    These sync tasks also run automatically via scheduled jobs every few
-                    hours. Use manual sync when you need immediate updates.
+                    These sync tasks also run automatically via scheduled jobs daily. Use
+                    manual sync when you need immediate updates.
                 </p>
             </div>
         </div>
