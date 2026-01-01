@@ -1,192 +1,95 @@
+import { DateTime } from "luxon"
 import { match } from "ts-pattern"
 import { s } from "@/shared/libs/string-utils"
 
-/**
- * Formats a Unix timestamp to a relative day string.
- *
- * @param unixTimestamp - The Unix timestamp to format.
- * @returns A string representing the relative day (e.g., "Today", "Yesterday", "X days ago").
- */
-export function formatUnixTimestampToRelativeDays(unixTimestamp: number): string {
-    const diffDays = unixTimestampToRelativeDays(unixTimestamp)
+// Constants
+const WOW_LAUNCH_UNIX = 1101254400 // WoW launch date (Wednesday, Nov 24, 2004)
+const SECONDS_PER_DAY = 86400
 
-    return match(diffDays)
+// ============================================================================
+// Core timestamp utilities
+// ============================================================================
+
+/** Returns the current Unix timestamp in seconds. */
+export const getUnixTimestamp = (): number => DateTime.now().toSeconds()
+
+/** Converts an ISO 8601 datetime string to a Unix timestamp in seconds. */
+export const isoToUnixTimestamp = (isoDateTime: string): number =>
+    DateTime.fromISO(isoDateTime).toSeconds()
+
+// ============================================================================
+// Relative time utilities
+// ============================================================================
+
+/** Converts a Unix timestamp to the number of days relative to the current date. */
+export const unixTimestampToRelativeDays = (unixTimestamp: number): number =>
+    Math.round(DateTime.now().diff(DateTime.fromSeconds(unixTimestamp), "days").days)
+
+/** Formats a Unix timestamp to a relative day string (e.g., "Today", "Yesterday", "X days ago"). */
+export const formatUnixTimestampToRelativeDays = (unixTimestamp: number): string =>
+    match(unixTimestampToRelativeDays(unixTimestamp))
         .with(0, () => "Today")
         .with(1, () => "Yesterday")
         .otherwise((days) => `${s(days)} days ago`)
+
+// ============================================================================
+// WoW week utilities
+// ============================================================================
+
+/** Converts a Unix timestamp to the World of Warcraft week number. */
+export const unixTimestampToWowWeek = (unixTimestamp: number): number =>
+    Math.floor((unixTimestamp - WOW_LAUNCH_UNIX) / SECONDS_PER_DAY / 7)
+
+/** Gets the current World of Warcraft week number. */
+export const currentWowWeek = (): number => unixTimestampToWowWeek(getUnixTimestamp())
+
+/** Checks if the given Unix timestamp falls within the current WoW week. */
+export const isInCurrentWowWeek = (dateUnixTs: number): boolean =>
+    currentWowWeek() === unixTimestampToWowWeek(dateUnixTs)
+
+/** Formats the WoW week number to a date range string (e.g., "24/11/2004 - 30/11/2004"). */
+export const formatWowWeek = (wowWeek?: number): string => {
+    const week = wowWeek ?? currentWowWeek()
+    const startDate = DateTime.fromSeconds(WOW_LAUNCH_UNIX).plus({ weeks: week })
+    const endDate = startDate.plus({ days: 6 })
+    return `${startDate.toFormat("dd/MM/yyyy")} - ${endDate.toFormat("dd/MM/yyyy")}`
 }
 
-/**
- * Converts a Unix timestamp to the number of days relative to the current date.
- *
- * @param unixTimestamp - The Unix timestamp to convert.
- * @returns The number of days between the given timestamp and the current date.
- */
-export function unixTimestampToRelativeDays(unixTimestamp: number): number {
-    const now = new Date()
-    const date = new Date(unixTimestamp * 1000)
-    const diffTime = now.getTime() - date.getTime()
-    return Math.round(diffTime / (1000 * 60 * 60 * 24))
-}
+// ============================================================================
+// Formatting utilities
+// ============================================================================
 
-/**
- * Gets the current World of Warcraft week number.
- *
- * @returns The current WoW week number.
- */
-export function currentWowWeek(): number {
-    return unixTimestampToWowWeek(Math.floor(Date.now() / 1000)) // current unix timestamp
-}
+/** Formats a Unix timestamp to an Italian date string (e.g., "lunedì, 1 gennaio, 12:00"). */
+export const formatUnixTimestampToItalianDate = (unixTimestamp: number): string =>
+    DateTime.fromSeconds(unixTimestamp).setLocale("it-IT").toFormat("cccc, d MMMM, HH:mm")
 
-/**
- * Returns the current Unix timestamp in seconds.
- */
-export const getUnixTimestamp = (): number => Math.floor(Date.now() / 1000)
+/** Formats a Unix timestamp for display in DD/MM/YYYY HH:MM format. */
+export const formatUnixTimestampForDisplay = (unixTimestamp: number): string =>
+    DateTime.fromSeconds(unixTimestamp).toFormat("dd/MM/yyyy HH:mm")
 
-/**
- * Converts an ISO 8601 datetime string to a Unix timestamp in seconds.
- *
- * @param isoDateTime - The ISO 8601 datetime string to convert.
- * @returns The Unix timestamp in seconds.
- */
-export const isoToUnixTimestamp = (isoDateTime: string): number =>
-    Math.floor(new Date(isoDateTime).getTime() / 1000)
+// ============================================================================
+// Parsing utilities
+// ============================================================================
 
-/**
- * Converts a Unix timestamp to the World of Warcraft week number.
- *
- * @param unixTimestamp - The Unix timestamp to convert.
- * @returns The WoW week number corresponding to the given timestamp.
- */
-export function unixTimestampToWowWeek(unixTimestamp: number): number {
-    const startTimestamp = 1101254400 // WoW launch date (Wednesday) Unix timestamp
-
-    // Days difference adjusted for the WoW week starting on Wednesday
-    const daysDifference = Math.floor((unixTimestamp - startTimestamp) / 86400)
-
-    // Calculate the week number
-    return Math.floor(daysDifference / 7)
-}
-
-/**
- * Formats a Unix timestamp to an Italian date string.
- *
- * @param unixTimestamp - The Unix timestamp to format.
- * @returns A string representing the date in Italian format (e.g., "lunedì, 1 gennaio, 12:00").
- */
-export function formaUnixTimestampToItalianDate(unixTimestamp: number): string {
-    const date = new Date(unixTimestamp * 1000)
-    const options: Intl.DateTimeFormatOptions = {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    }
-    return new Intl.DateTimeFormat("it-IT", options).format(date)
-}
-
-/**
- * Formats the World of Warcraft week number to a date range string.
- *
- * @param wowWeek - The WoW week number to format (optional).
- * @returns A string representing the date range of the given WoW week (e.g., "24/11/2004 - 30/11/2004").
- */
-export function formatWowWeek(wowWeek?: number): string {
-    wowWeek ??= currentWowWeek()
-
-    const WOW_START_DATE = new Date("2004-11-24T00:00:00Z") // WoW start date (Wednesday)
-
-    // Calculate the start date of the given WoW week
-    const weekStartDate = new Date(WOW_START_DATE.getTime() + wowWeek * 7 * 86400000)
-
-    // Calculate the end date (Tuesday of the same week)
-    const weekEndDate = new Date(weekStartDate.getTime() + 6 * 86400000)
-
-    // Format the date range to DD/MM/YYYY
-    const options: Intl.DateTimeFormatOptions = {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-    }
-    const startDateString = weekStartDate.toLocaleDateString("it-IT", options)
-    const endDateString = weekEndDate.toLocaleDateString("it-IT", options)
-
-    return `${startDateString} - ${endDateString}`
-}
-
-/**
- * Formats a Unix timestamp for display in DD/MM/YYYY HH:MM format.
- *
- * @param unixTimestamp - The Unix timestamp to format.
- * @returns A string representing the formatted date and time.
- */
-export const formatUnixTimestampForDisplay = (unixTimestamp: number): string => {
-    const date = new Date(unixTimestamp * 1000)
-    return `${s(date.getDate()).padStart(2, "0")}/${s(date.getMonth() + 1).padStart(2, "0")}/${s(date.getFullYear())} ${s(date.getHours()).padStart(2, "0")}:${s(date.getMinutes()).padStart(2, "0")}`
-}
-
-/**
- * Parses a date string in the format "DD/MM/YYYY HH:MM" to a Unix timestamp.
- *
- * @param dateString - The date string to parse.
- * @returns The Unix timestamp corresponding to the given date string.
- */
+/** Parses a date string in "DD/MM/YYYY HH:MM" format to a Unix timestamp. */
 export const parseStringToUnixTimestamp = (dateString: string): number => {
-    const [datePart, timePart] = dateString.split(" ")
-    if (!datePart || !timePart) {
+    const dt = DateTime.fromFormat(dateString, "dd/MM/yyyy HH:mm")
+    if (!dt.isValid) {
         throw new Error(`Invalid date string format: ${dateString}`)
     }
-    const dateParts = datePart.split("/").map(Number)
-    const timeParts = timePart.split(":").map(Number)
-    const day = dateParts[0]
-    const month = dateParts[1]
-    const year = dateParts[2]
-    const hours = timeParts[0]
-    const minutes = timeParts[1]
-    if (
-        day === undefined ||
-        month === undefined ||
-        year === undefined ||
-        hours === undefined ||
-        minutes === undefined
-    ) {
-        throw new Error(`Invalid date string format: ${dateString}`)
-    }
-    const date = new Date(year, month - 1, day, hours, minutes)
-    return Math.floor(date.getTime() / 1000)
+    return dt.toSeconds()
 }
 
 /**
- * Checks if the given Unix timestamp falls within the current World of Warcraft (WoW) week.
- *
- * @param dateUnixTs - The Unix timestamp to check.
- * @returns `true` if the timestamp is within the current WoW week, `false` otherwise.
- */
-export const isInCurrentWowWeek = (dateUnixTs: number): boolean => {
-    return currentWowWeek() === unixTimestampToWowWeek(dateUnixTs)
-}
-
-/**
- * Parses date and time strings from addon exports (YYYY/M/D format) to Unix timestamp.
+ * Parses date and time strings from addon exports to Unix timestamp.
  * Used by loot parsers (MRT, RC Loot Council exports).
- *
  * @param dateStr - Date string in YYYY/M/D format
- * @param timeStr - Time string in HH:MM:SS format
- * @returns The Unix timestamp in seconds
+ * @param timeStr - Time string in HH:mm:ss format
  */
 export const parseDateTimeFromAddon = (dateStr: string, timeStr: string): number => {
-    // Split date components (format: YYYY/M/D)
-    const [year, month, day] = dateStr.split("/")
-
-    // Create ISO format date string (yyyy-mm-ddTHH:mm:ss)
-    const isoDateTime = `${s(year)}-${month?.padStart(2, "0") ?? ""}-${day?.padStart(2, "0") ?? ""}T${s(timeStr)}`
-
-    const dateTime = new Date(isoDateTime)
-
-    if (isNaN(dateTime.getTime())) {
+    const dt = DateTime.fromFormat(`${dateStr} ${timeStr}`, "yyyy/M/d HH:mm:ss")
+    if (!dt.isValid) {
         throw new Error(`Unable to parse date/time: ${dateStr} ${timeStr}`)
     }
-
-    return dateTime.getTime() / 1000
+    return dt.toSeconds()
 }

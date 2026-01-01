@@ -7,10 +7,20 @@ import type {
     DroptimizerUpgrade,
 } from "./models/simulation.models"
 import type {
+    BlizzardWarn,
+    DroptimizerWarn,
     WowClassName,
     WoWRole,
     WoWRolePosition,
     WowSpecName,
+} from "./models/wow.models"
+
+// Re-export warn types and constants from wow.models for backward compatibility
+export {
+    type BlizzardWarn,
+    BLIZZARD_WARN,
+    type DroptimizerWarn,
+    DROPTIMIZER_WARN,
 } from "./models/wow.models"
 
 // Manual types (not derived from Zod schemas)
@@ -42,18 +52,6 @@ export enum TierSetCompletion {
     ThreePiece = 3,
     FourPiece = 4,
     FivePiece = 5,
-}
-
-export enum DroptimizerWarn {
-    None = "none",
-    Outdated = "outdated",
-    NotImported = "missing",
-}
-
-export enum BlizzardWarn {
-    None = "none",
-    Outdated = "outdated",
-    NotTracked = "not-tracked",
 }
 
 export type CharacterSummary = {

@@ -8,8 +8,8 @@ import { playerRepo } from "@/db/repositories/player.repo"
 import type { CharacterGameInfoCompact } from "@/shared/models/character.models"
 import type { GearItem } from "@/shared/models/item.models"
 import {
-    BlizzardWarn,
-    DroptimizerWarn,
+    BLIZZARD_WARN,
+    DROPTIMIZER_WARN,
     type CharacterSummary,
     type PlayerWithSummaryCompact,
 } from "@/shared/types"
@@ -61,16 +61,16 @@ export const summaryService = {
                 []
 
             const warnDroptimizer = match(info?.droptimizer?.simDate)
-                .with(P.nullish, () => DroptimizerWarn.NotImported)
+                .with(P.nullish, () => DROPTIMIZER_WARN.NotImported)
                 .when(
                     (d) => d < oneWeekAgo,
-                    () => DroptimizerWarn.Outdated
+                    () => DROPTIMIZER_WARN.Outdated
                 )
-                .otherwise(() => DroptimizerWarn.None)
+                .otherwise(() => DROPTIMIZER_WARN.None)
 
             const warnBlizzard = match(info?.blizzard)
-                .with(P.nullish, () => BlizzardWarn.NotTracked)
-                .otherwise(() => BlizzardWarn.None)
+                .with(P.nullish, () => BLIZZARD_WARN.NotTracked)
+                .otherwise(() => BLIZZARD_WARN.None)
 
             return {
                 character: char,

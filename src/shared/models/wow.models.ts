@@ -5,6 +5,8 @@ import {
     ITEM_EQUIPPED_SLOTS_KEY,
     ITEM_SLOTS_DESC,
     ITEM_SLOTS_KEY,
+    ITEM_SLOTS_KEY_TIERSET,
+    ITEM_TRACK_NAMES,
     RAID_DIFF,
     ROLES,
     SPECS_NAME,
@@ -40,13 +42,7 @@ export type WowItemSlotKey = z.infer<typeof wowItemSlotKeySchema>
 export const wowItemEquippedSlotKeySchema = z.enum(ITEM_EQUIPPED_SLOTS_KEY)
 export type WowItemEquippedSlotKey = z.infer<typeof wowItemEquippedSlotKeySchema>
 
-export const wowItemSlotKeyTiersetSchema = z.enum([
-    "head",
-    "shoulder",
-    "chest",
-    "hands",
-    "legs",
-])
+export const wowItemSlotKeyTiersetSchema = z.enum(ITEM_SLOTS_KEY_TIERSET)
 export type WowTiersetSlot = z.infer<typeof wowItemSlotKeyTiersetSchema>
 
 export const wowArmorTypeSchema = z.enum(ARMOR_TYPES)
@@ -61,14 +57,7 @@ export type WoWRolePosition = z.infer<typeof wowRolePositionSchema>
 export const wowRaidDiffSchema = z.enum(RAID_DIFF)
 export type WowRaidDifficulty = z.infer<typeof wowRaidDiffSchema>
 
-export const wowItemTrackNameSchema = z.enum([
-    "Explorer",
-    "Adventurer",
-    "Veteran",
-    "Champion",
-    "Hero",
-    "Myth",
-])
+export const wowItemTrackNameSchema = z.enum(ITEM_TRACK_NAMES)
 export type WowItemTrackName = z.infer<typeof wowItemTrackNameSchema>
 
 export const tierSetBonusSchema = z.enum(["none", "2p", "4p"])
@@ -88,3 +77,22 @@ export const ROLES_CLASSES_MAP = {
     Healer: wowRoleClassSchema.shape.Healer.options,
     DPS: wowRoleClassSchema.shape.DPS.options,
 }
+
+// Warn status schemas
+export const droptimizerWarnSchema = z.enum(["none", "outdated", "missing"])
+export type DroptimizerWarn = z.infer<typeof droptimizerWarnSchema>
+
+export const blizzardWarnSchema = z.enum(["none", "outdated", "not-tracked"])
+export type BlizzardWarn = z.infer<typeof blizzardWarnSchema>
+
+export const DROPTIMIZER_WARN = {
+    None: "none",
+    Outdated: "outdated",
+    NotImported: "missing",
+} as const satisfies Record<string, DroptimizerWarn>
+
+export const BLIZZARD_WARN = {
+    None: "none",
+    Outdated: "outdated",
+    NotTracked: "not-tracked",
+} as const satisfies Record<string, BlizzardWarn>

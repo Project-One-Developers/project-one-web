@@ -5,7 +5,7 @@ import {
     gearAreTheSame,
     getItemTrack,
 } from "@/shared/libs/items/item-bonus-utils"
-import { equippedSlotToSlot } from "@/shared/libs/items/item-slot-utils"
+import { equippedSlotToSlot, formatWowSlotKey } from "@/shared/libs/items/item-slot-utils"
 import { getClassSpecsForRole } from "@/shared/libs/spec-parser/spec-utils"
 import type { BisList } from "@/shared/models/bis-list.models"
 import type { CharacterBlizzard } from "@/shared/models/blizzard.models"
@@ -31,8 +31,10 @@ import {
     type WowRaidDifficulty,
 } from "@/shared/models/wow.models"
 import {
-    BlizzardWarn,
-    DroptimizerWarn,
+    BLIZZARD_WARN,
+    type BlizzardWarn,
+    DROPTIMIZER_WARN,
+    type DroptimizerWarn,
     type CharAssignmentInfo,
     type WowClass,
     type WowSpec,
@@ -66,7 +68,7 @@ export const parseDroptimizerWarn = (
     charAssignedLoots: Loot[]
 ): DroptimizerWarn => {
     if (charDroptimizers.length === 0) {
-        return DroptimizerWarn.NotImported
+        return DROPTIMIZER_WARN.NotImported
     }
 
     const lastSimUnixTs = Math.max(...charDroptimizers.map((c) => c.simInfo.date))
@@ -74,17 +76,17 @@ export const parseDroptimizerWarn = (
     const currentUnixTs = getUnixTimestamp()
 
     if (charAssignedLoots.length > 0 || currentUnixTs - lastSimUnixTs > dayInSeconds) {
-        return DroptimizerWarn.Outdated
+        return DROPTIMIZER_WARN.Outdated
     }
 
-    return DroptimizerWarn.None
+    return DROPTIMIZER_WARN.None
 }
 
 export const parseBlizzardWarn = (
     blizzardData: CharacterBlizzard | null
 ): BlizzardWarn => {
     if (!blizzardData) {
-        return BlizzardWarn.NotTracked
+        return BLIZZARD_WARN.NotTracked
     }
 
     const lastSyncUnixTs = blizzardData.syncedAt
@@ -92,10 +94,10 @@ export const parseBlizzardWarn = (
     const currentUnixTs = getUnixTimestamp()
 
     if (currentUnixTs - lastSyncUnixTs > dayInSeconds) {
-        return BlizzardWarn.Outdated
+        return BLIZZARD_WARN.Outdated
     }
 
-    return BlizzardWarn.None
+    return BLIZZARD_WARN.None
 }
 
 export const parseBestItemInSlot = (
@@ -599,9 +601,7 @@ export const prepareLootData = (
                     ?.name.replaceAll(",", " ") ?? "",
             Item: loot.gearItem.item.name,
             Livello: loot.gearItem.itemLevel,
-            Slot: loot.gearItem.item.slotKey
-                .replaceAll("_", " ")
-                .replace(/\b\w/g, (char) => char.toUpperCase()),
+            Slot: formatWowSlotKey(loot.gearItem.item.slotKey),
             Character: loot.assignedCharacter?.name ?? "",
         }))
         .sort((a, b) => {

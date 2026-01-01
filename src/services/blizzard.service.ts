@@ -17,7 +17,7 @@ import {
 } from "@/services/libs/blizzard-sync"
 import { mapBlizzardClassId } from "@/shared/libs/blizzard-mappings"
 import {
-    formaUnixTimestampToItalianDate,
+    formatUnixTimestampToItalianDate,
     getUnixTimestamp,
 } from "@/shared/libs/date-utils"
 import { s } from "@/shared/libs/string-utils"
@@ -180,7 +180,7 @@ export const blizzardService = {
                 "BlizzardService",
                 `checkAndSync: Blizzard data needs to be updated (${
                     lastSync !== null
-                        ? formaUnixTimestampToItalianDate(lastSync)
+                        ? formatUnixTimestampToItalianDate(lastSync)
                         : "never"
                 }) - syncing now`
             )
@@ -191,7 +191,7 @@ export const blizzardService = {
                 result,
             }
         } else {
-            const message = `Blizzard data is up to date (last sync: ${formaUnixTimestampToItalianDate(lastSync)})`
+            const message = `Blizzard data is up to date (last sync: ${formatUnixTimestampToItalianDate(lastSync)})`
             logger.info("BlizzardService", `checkAndSync: ${message}`)
             return { synced: false, message }
         }

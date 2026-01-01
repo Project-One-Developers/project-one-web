@@ -12,7 +12,7 @@ import {
 import { getDpsHumanReadable } from "@/lib/utils"
 import type { LootWithAssigned } from "@/shared/models/loot.models"
 import { tierSetBonusSchema } from "@/shared/models/wow.models"
-import { DroptimizerWarn, type CharAssignmentInfo } from "@/shared/types"
+import { DROPTIMIZER_WARN, type CharAssignmentInfo } from "@/shared/types"
 import { ITEM_SLOTS_KEY_TIERSET } from "@/shared/wow.consts"
 import { DroptimizerUpgradeForItemEquipped } from "./droptimizer-upgrade-for-item"
 import {
@@ -361,7 +361,7 @@ export default function LootsEligibleChars({
                                             />
                                         ))}
                                         {charInfo.warnDroptimizer ===
-                                            DroptimizerWarn.NotImported && (
+                                            DROPTIMIZER_WARN.NotImported && (
                                             <div className="flex flex-wrap gap-2">
                                                 <span className="px-2 py-1 text-xs font-bold bg-yellow-500/20 text-yellow-400 rounded-full flex items-center space-x-1 border border-yellow-400/50">
                                                     {/* Warning Icon */}

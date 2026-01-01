@@ -1,5 +1,7 @@
+import { match } from "ts-pattern"
 import type { GearItem, Item, ItemTrack } from "@/shared/models/item.models"
 import type { WowItemTrackName, WowRaidDifficulty } from "@/shared/models/wow.models"
+import { RAID_DIFF_BONUS_IDS } from "@/shared/wow.consts"
 import {
     bonusItemTracks,
     queryByItemLevelAndDelta,
@@ -18,23 +20,20 @@ export function parseItemTrackName(
     isToken: boolean,
     isTierset: boolean
 ): WowItemTrackName | null {
-    const itemTrack = parseItemTrack(bonusIds)
-
-    if (itemTrack) {
-        return itemTrack.name
-    }
     if (bonusIds.length === 0) {
         return null
     }
 
-    if (bonusIds.includes(10356)) {
-        // bonus id for Mythic
+    const itemTrack = parseItemTrack(bonusIds)
+    if (itemTrack) {
+        return itemTrack.name
+    }
+
+    if (bonusIds.includes(RAID_DIFF_BONUS_IDS.Mythic)) {
         return "Myth"
-    } else if (bonusIds.includes(10355)) {
-        // bonus id for Heroic
+    } else if (bonusIds.includes(RAID_DIFF_BONUS_IDS.Heroic)) {
         return "Hero"
-    } else if (bonusIds.includes(10353)) {
-        // bonus id for lfr
+    } else if (bonusIds.includes(RAID_DIFF_BONUS_IDS.LFR)) {
         return "Veteran"
     }
 
@@ -143,18 +142,15 @@ export function parseItemLevelFromBonusIds(
     const diff = parseItemTrackName(bonusIds, item.token, item.tierset)
 
     if (diff !== null) {
-        switch (diff) {
-            case "Veteran":
-                return item.ilvlBase + 22
-            case "Champion":
-                return item.ilvlNormal
-            case "Hero":
-                return item.ilvlHeroic
-            case "Myth":
-                return item.ilvlMythic
-            default:
+        return match(diff)
+            .with("Veteran", () => item.ilvlBase + 22)
+            .with("Champion", () => item.ilvlNormal)
+            .with("Hero", () => item.ilvlHeroic)
+            .with("Myth", () => item.ilvlMythic)
+            .with("Explorer", "Adventurer", () => {
                 throw Error(`parseItemLevelFromBonusIds: ${diff} not mapped`)
-        }
+            })
+            .exhaustive()
     }
 
     // crafted items ilvl (10222 = Omen Crafted -> 593)
@@ -237,18 +233,12 @@ export function parseItemLevelFromRaidDiff(
     item: Item,
     raidDiff: WowRaidDifficulty
 ): number {
-    switch (raidDiff) {
-        case "LFR":
-            return item.ilvlBase + 22
-        case "Normal":
-            return item.ilvlNormal
-        case "Heroic":
-            return item.ilvlHeroic
-        case "Mythic":
-            return item.ilvlMythic
-        default:
-            throw new Error("parseItemLevelFromRaidLoot: unable to map raid diff")
-    }
+    return match(raidDiff)
+        .with("LFR", () => item.ilvlBase + 22)
+        .with("Normal", () => item.ilvlNormal)
+        .with("Heroic", () => item.ilvlHeroic)
+        .with("Mythic", () => item.ilvlMythic)
+        .exhaustive()
 }
 
 export function parseItemTrack(input: number[]): ItemTrack | null {
@@ -291,22 +281,9 @@ export function getItemTrack(ilvl: number, diff: WowRaidDifficulty): ItemTrack |
 // gear manipolation
 
 export function applyDiffBonusId(input: number[], diff: WowRaidDifficulty): void {
-    // Beware: normal diff has no modifier
-    switch (diff) {
-        case "LFR":
-            input.push(10353)
-            break
-        case "Normal":
-            // Normal has no bonus id modifier
-            break
-        case "Heroic":
-            input.push(10355)
-            break
-        case "Mythic":
-            input.push(10356)
-            break
-        default:
-            diff satisfies never
+    const bonusId = RAID_DIFF_BONUS_IDS[diff]
+    if (bonusId !== null) {
+        input.push(bonusId)
     }
 }
 

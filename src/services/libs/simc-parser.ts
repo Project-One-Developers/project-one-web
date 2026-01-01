@@ -13,14 +13,11 @@ import type { DroptimizerCurrency } from "@/shared/models/simulation.models"
 import { wowItemEquippedSlotKeySchema } from "@/shared/models/wow.models"
 import { CURRENT_CATALYST_CHARGE_ID } from "@/shared/wow.consts"
 
-/** Result of parsing SimC data - includes character info for resolution + data to store */
-export type ParsedSimC = {
+export async function parseSimC(simc: string): Promise<{
     charName: string
     charRealm: string
     data: NewSimC
-}
-
-export async function parseSimC(simc: string): Promise<ParsedSimC> {
+}> {
     const itemsInBag = await parseBagGearsFromSimc(simc)
     const itemsEquipped = await parseEquippedGearFromSimc(simc)
     const weeklyChest = await parseGreatVaultFromSimc(simc)

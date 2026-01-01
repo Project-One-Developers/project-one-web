@@ -30,7 +30,7 @@ import {
     useDeleteRaidSession,
     useRaidSession,
 } from "@/lib/queries/raid-sessions"
-import { formaUnixTimestampToItalianDate } from "@/shared/libs/date-utils"
+import { formatUnixTimestampToItalianDate } from "@/shared/libs/date-utils"
 import { s } from "@/shared/libs/string-utils"
 
 export default function RaidSessionPage() {
@@ -130,7 +130,7 @@ export default function RaidSessionPage() {
                             <div className="flex items-center">
                                 <Calendar className="mr-2 h-4 w-4" />
                                 <span>
-                                    {formaUnixTimestampToItalianDate(
+                                    {formatUnixTimestampToItalianDate(
                                         raidSession.raidDate
                                     )}
                                 </span>

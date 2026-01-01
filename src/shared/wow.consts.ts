@@ -170,6 +170,24 @@ export const ITEM_SLOTS_KEY_TIERSET = [
     "legs",
 ] as const
 
+// Raid difficulty bonus IDs
+export const RAID_DIFF_BONUS_IDS = {
+    LFR: 10353,
+    Normal: null,
+    Heroic: 10355,
+    Mythic: 10356,
+} as const satisfies Record<(typeof RAID_DIFF)[number], number | null>
+
+// Item track names
+export const ITEM_TRACK_NAMES = [
+    "Explorer",
+    "Adventurer",
+    "Veteran",
+    "Champion",
+    "Hero",
+    "Myth",
+] as const
+
 export const PROFESSION_TYPES = new Set([
     "Alchemy",
     "Blacksmithing",

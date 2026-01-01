@@ -1,27 +1,34 @@
 import { match } from "ts-pattern"
-import {
-    wowItemEquippedSlotKeySchema,
-    wowItemSlotKeySchema,
-    type WowItemEquippedSlotKey,
-    type WowItemSlotKey,
+import type {
+    WowItemEquippedSlotKey,
+    WowItemSlot,
+    WowItemSlotKey,
 } from "@/shared/models/wow.models"
 
-export const equippedSlotToSlot = (equipped: WowItemEquippedSlotKey): WowItemSlotKey => {
-    return wowItemSlotKeySchema.parse(equipped.replaceAll("1", "").replaceAll("2", ""))
-}
+export const equippedSlotToSlot = (equipped: WowItemEquippedSlotKey): WowItemSlotKey =>
+    match(equipped)
+        .returnType<WowItemSlotKey>()
+        .with("finger1", "finger2", () => "finger")
+        .with("trinket1", "trinket2", () => "trinket")
+        .with("shirt", "tabard", () => {
+            throw new Error(`Slot "${equipped}" has no base slot equivalent`)
+        })
+        .otherwise((slot) => slot)
 
-export const slotToEquippedSlot = (slotKey: WowItemSlotKey): WowItemEquippedSlotKey => {
-    if (slotKey === "finger") {
-        return wowItemEquippedSlotKeySchema.parse("finger1")
-    }
-    if (slotKey === "trinket") {
-        return wowItemEquippedSlotKeySchema.parse("trinket1")
-    }
-    return wowItemEquippedSlotKeySchema.parse(slotKey)
-}
+export const slotToEquippedSlot = (slotKey: WowItemSlotKey): WowItemEquippedSlotKey =>
+    match(slotKey)
+        .returnType<WowItemEquippedSlotKey>()
+        .with("finger", () => "finger1")
+        .with("trinket", () => "trinket1")
+        .with("omni", () => {
+            throw new Error(`Slot "omni" has no equipped slot equivalent`)
+        })
+        .otherwise((slot) => slot)
 
-export const formatWowSlotKey = (slot: WowItemSlotKey): string =>
+// Maps slot key to display name (subset of WowItemSlot - excludes "Two Hand" and "Ranged")
+export const formatWowSlotKey = (slot: WowItemSlotKey): WowItemSlot =>
     match(slot)
+        .returnType<WowItemSlot>()
         .with("head", () => "Head")
         .with("neck", () => "Neck")
         .with("shoulder", () => "Shoulder")
@@ -38,16 +45,6 @@ export const formatWowSlotKey = (slot: WowItemSlotKey): string =>
         .with("off_hand", () => "Off Hand")
         .with("omni", () => "Omni")
         .exhaustive()
-
-export const formatWowEquippedSlotKey = (slot: WowItemEquippedSlotKey): string =>
-    match(slot)
-        .with("finger1", () => "Finger")
-        .with("finger2", () => "Finger")
-        .with("trinket1", () => "Trinket")
-        .with("trinket2", () => "Trinket")
-        .with("shirt", () => "Shirt")
-        .with("tabard", () => "Tabard")
-        .otherwise((s) => formatWowSlotKey(s))
 
 // ============================================================================
 // Blizzard API Extraction Utilities

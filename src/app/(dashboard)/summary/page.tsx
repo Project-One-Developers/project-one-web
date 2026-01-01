@@ -26,8 +26,10 @@ import { useFilterContext } from "@/lib/filter-context"
 import { useRosterSummary } from "@/lib/queries/summary"
 import { isRelevantCurrency } from "@/shared/libs/currency-utils"
 import {
-    BlizzardWarn,
-    DroptimizerWarn,
+    BLIZZARD_WARN,
+    type BlizzardWarn,
+    DROPTIMIZER_WARN,
+    type DroptimizerWarn,
     TierSetCompletion,
     type CharacterSummary,
 } from "@/shared/types"
@@ -115,15 +117,15 @@ const StatusIndicator = ({
 
 const DroptimizerStatus = ({ warn }: { warn: DroptimizerWarn }) => {
     const { status, label } = match(warn)
-        .with(DroptimizerWarn.None, () => ({
+        .with(DROPTIMIZER_WARN.None, () => ({
             status: "success" as const,
             label: "Synced",
         }))
-        .with(DroptimizerWarn.NotImported, () => ({
+        .with(DROPTIMIZER_WARN.NotImported, () => ({
             status: "warning" as const,
             label: "Not Imported",
         }))
-        .with(DroptimizerWarn.Outdated, () => ({
+        .with(DROPTIMIZER_WARN.Outdated, () => ({
             status: "warning" as const,
             label: "Out of Date",
         }))
@@ -134,12 +136,12 @@ const DroptimizerStatus = ({ warn }: { warn: DroptimizerWarn }) => {
 
 const BlizzardStatus = ({ warn }: { warn: BlizzardWarn }) => {
     const { status, label } = match(warn)
-        .with(BlizzardWarn.None, () => ({ status: "success" as const, label: "Synced" }))
-        .with(BlizzardWarn.Outdated, () => ({
+        .with(BLIZZARD_WARN.None, () => ({ status: "success" as const, label: "Synced" }))
+        .with(BLIZZARD_WARN.Outdated, () => ({
             status: "warning" as const,
             label: "Outdated",
         }))
-        .with(BlizzardWarn.NotTracked, () => ({
+        .with(BLIZZARD_WARN.NotTracked, () => ({
             status: "error" as const,
             label: "Missing",
         }))
