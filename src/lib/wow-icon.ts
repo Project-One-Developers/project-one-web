@@ -2,7 +2,7 @@ import type {
     WowArmorType,
     WowClassName,
     WowItemSlotKey,
-} from "@/shared/models/wow.model"
+} from "@/shared/models/wow.models"
 
 export const classIcon = new Map<WowClassName, string>([
     [

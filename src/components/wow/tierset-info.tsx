@@ -2,7 +2,7 @@
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
-import type { GearItem } from "@/shared/models/item.model"
+import type { GearItem } from "@/shared/models/item.models"
 import { WowGearIcon } from "./wow-gear-icon"
 
 type TiersetInfoProps = {

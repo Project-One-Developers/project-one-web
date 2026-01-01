@@ -10,7 +10,7 @@ import {
     type NewPlayer,
     type Player,
     type PlayerWithCharacters,
-} from "@/shared/models/character.model"
+} from "@/shared/models/character.models"
 
 export const playerRepo = {
     getWithCharactersList: async (): Promise<PlayerWithCharacters[]> => {

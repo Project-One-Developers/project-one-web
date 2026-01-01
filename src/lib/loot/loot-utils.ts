@@ -1,6 +1,5 @@
 import { match } from "ts-pattern"
-import { CURRENT_CATALYST_CHARGE_ID, CURRENT_SEASON } from "@/shared/consts/wow.consts"
-import { getUnixTimestamp } from "@/shared/libs/date/date-utils"
+import { getUnixTimestamp } from "@/shared/libs/date-utils"
 import {
     compareGearItem,
     gearAreTheSame,
@@ -8,36 +7,37 @@ import {
 } from "@/shared/libs/items/item-bonus-utils"
 import { equippedSlotToSlot } from "@/shared/libs/items/item-slot-utils"
 import { getClassSpecsForRole } from "@/shared/libs/spec-parser/spec-utils"
-import type { BisList } from "@/shared/models/bis-list.model"
-import type { CharacterBlizzard } from "@/shared/models/blizzard.model"
-import type { BossWithItems } from "@/shared/models/boss.model"
-import type { Character } from "@/shared/models/character.model"
-import type { GearItem, Item } from "@/shared/models/item.model"
+import type { BisList } from "@/shared/models/bis-list.models"
+import type { CharacterBlizzard } from "@/shared/models/blizzard.models"
+import type { BossWithItems } from "@/shared/models/boss.models"
+import type { Character } from "@/shared/models/character.models"
+import type { GearItem, Item } from "@/shared/models/item.models"
 import type {
     CharAssignmentHighlights,
     Loot,
     LootWithAssigned,
     LootWithItem,
-} from "@/shared/models/loot.model"
+} from "@/shared/models/loot.models"
 import type {
     Droptimizer,
     DroptimizerCurrency,
     DroptimizerUpgrade,
     SimC,
-} from "@/shared/models/simulation.model"
+} from "@/shared/models/simulation.models"
 import {
     tierSetBonusSchema,
     type TierSetBonus,
     type WowItemSlotKey,
     type WowRaidDifficulty,
-} from "@/shared/models/wow.model"
+} from "@/shared/models/wow.models"
 import {
     BlizzardWarn,
     DroptimizerWarn,
     type CharAssignmentInfo,
     type WowClass,
     type WowSpec,
-} from "@/shared/types/types"
+} from "@/shared/types"
+import { CURRENT_CATALYST_CHARGE_ID, CURRENT_SEASON } from "@/shared/wow.consts"
 
 export const getLatestSyncDate = (
     charDroptimizers: Droptimizer[],

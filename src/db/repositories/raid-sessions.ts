@@ -9,7 +9,7 @@ import {
     raidSessionTable,
 } from "@/db/schema"
 import { identity, mapAndParse, newUUID } from "@/db/utils"
-import { characterSchema, type Character } from "@/shared/models/character.model"
+import { characterSchema, type Character } from "@/shared/models/character.models"
 import {
     raidSessionSchema,
     raidSessionWithRosterSchema,
@@ -19,7 +19,7 @@ import {
     type RaidSession,
     type RaidSessionWithRoster,
     type RaidSessionWithSummary,
-} from "@/shared/models/raid-session.model"
+} from "@/shared/models/raid-session.models"
 
 export const raidSessionRepo = {
     getWithRoster: async (id: string): Promise<RaidSessionWithRoster> => {

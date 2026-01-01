@@ -11,7 +11,7 @@ import {
     getDroptimizerList,
     syncDroptimizersFromDiscord,
 } from "@/actions/droptimizer"
-import type { WowRaidDifficulty } from "@/shared/models/wow.model"
+import type { WowRaidDifficulty } from "@/shared/models/wow.models"
 import { queryKeys } from "./keys"
 
 export function useDroptimizers() {

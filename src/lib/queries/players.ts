@@ -23,8 +23,8 @@ import type {
     NewCharacter,
     NewCharacterWithoutClass,
     NewPlayer,
-} from "@/shared/models/character.model"
-import type { PlayerWithSummaryCompact } from "@/shared/types/types"
+} from "@/shared/models/character.models"
+import type { PlayerWithSummaryCompact } from "@/shared/types"
 import { queryKeys } from "./keys"
 
 // ============== QUERIES ==============

@@ -24,13 +24,13 @@ import { WowCurrencyIcon } from "@/components/wow/wow-currency-icon"
 import { WowGearIcon } from "@/components/wow/wow-gear-icon"
 import { useFilterContext } from "@/lib/filter-context"
 import { useRosterSummary } from "@/lib/queries/summary"
-import { isRelevantCurrency } from "@/shared/libs/currency/currency-utils"
+import { isRelevantCurrency } from "@/shared/libs/currency-utils"
 import {
     BlizzardWarn,
     DroptimizerWarn,
     TierSetCompletion,
     type CharacterSummary,
-} from "@/shared/types/types"
+} from "@/shared/types"
 
 // Constants
 const DEFAULT_TIER_COMPLETION_FILTER = {

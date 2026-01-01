@@ -1,7 +1,7 @@
 "use server"
 
 import { bisListRepo } from "@/db/repositories/bis-list"
-import type { BisList } from "@/shared/models/bis-list.model"
+import type { BisList } from "@/shared/models/bis-list.models"
 
 export async function getBisList(): Promise<BisList[]> {
     return await bisListRepo.getAll()

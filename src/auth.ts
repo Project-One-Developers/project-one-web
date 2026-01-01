@@ -3,7 +3,7 @@ import Discord from "next-auth/providers/discord"
 import "server-only"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
-import { s } from "@/shared/libs/safe-stringify"
+import { s } from "@/shared/libs/string-utils"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
     providers: [

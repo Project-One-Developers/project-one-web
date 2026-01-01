@@ -11,8 +11,8 @@ import {
 } from "@/db/schema"
 import { conflictUpdateAllExcept, identity, mapAndParse } from "@/db/utils"
 import { logger } from "@/lib/logger"
-import { s } from "@/shared/libs/safe-stringify"
-import type { WowRaidDifficulty } from "@/shared/models/wow.model"
+import { s } from "@/shared/libs/string-utils"
+import type { WowRaidDifficulty } from "@/shared/models/wow.models"
 
 // Type for inserting encounters
 export type CharacterEncounterInsert = {

@@ -1,7 +1,7 @@
 "use server"
 
-import { summaryService } from "@/services/summary/summary.service"
-import type { CharacterSummary, PlayerWithSummaryCompact } from "@/shared/types/types"
+import { summaryService } from "@/services/summary.service"
+import type { CharacterSummary, PlayerWithSummaryCompact } from "@/shared/types"
 
 export async function getRosterSummary(): Promise<CharacterSummary[]> {
     return summaryService.getRosterSummary()

@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { queryKeys } from "@/lib/queries/keys"
-import { s } from "@/shared/libs/safe-stringify"
+import { s } from "@/shared/libs/string-utils"
 
 type LootImportDialogProps = {
     raidSessionId: string

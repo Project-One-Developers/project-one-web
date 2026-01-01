@@ -3,7 +3,7 @@ import "server-only"
 import { db } from "@/db"
 import { charTable, itemTable, lootTable } from "@/db/schema"
 import { identity, mapAndParse, newUUID } from "@/db/utils"
-import type { Character } from "@/shared/models/character.model"
+import type { Character } from "@/shared/models/character.models"
 import {
     lootSchema,
     lootWithAssignedSchema,
@@ -13,7 +13,7 @@ import {
     type LootWithAssigned,
     type LootWithItem,
     type NewLoot,
-} from "@/shared/models/loot.model"
+} from "@/shared/models/loot.models"
 
 type LootWithItemJoin = {
     loot: typeof lootTable.$inferSelect

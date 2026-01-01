@@ -1,10 +1,10 @@
 "use client"
 
 import { getDpsHumanReadable } from "@/lib/utils"
-import { formatUnixTimestampToRelativeDays } from "@/shared/libs/date/date-utils"
-import type { Character } from "@/shared/models/character.model"
-import type { Item } from "@/shared/models/item.model"
-import type { Droptimizer } from "@/shared/models/simulation.model"
+import { formatUnixTimestampToRelativeDays } from "@/shared/libs/date-utils"
+import type { Character } from "@/shared/models/character.models"
+import type { Item } from "@/shared/models/item.models"
+import type { Droptimizer } from "@/shared/models/simulation.models"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 import { WowSpecIcon } from "./wow/wow-spec-icon"
 

@@ -3,8 +3,8 @@
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { currencyIcon } from "@/lib/wow-icon"
-import { s } from "@/shared/libs/safe-stringify"
-import type { DroptimizerCurrency } from "@/shared/models/simulation.model"
+import { s } from "@/shared/libs/string-utils"
+import type { DroptimizerCurrency } from "@/shared/models/simulation.models"
 import { useRefreshWowheadTooltips } from "./wowhead-tooltips"
 
 type WowCurrencyIconProps = {

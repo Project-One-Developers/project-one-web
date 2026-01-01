@@ -1,8 +1,8 @@
 "use server"
 
-import { itemService, type SyncItemsResult } from "@/services/item/item.service"
-import type { ItemNote } from "@/shared/models/item-note.model"
-import type { Item } from "@/shared/models/item.model"
+import { itemService, type SyncItemsResult } from "@/services/item.service"
+import type { ItemNote } from "@/shared/models/item-note.models"
+import type { Item } from "@/shared/models/item.models"
 
 export async function getItems(): Promise<Item[]> {
     return itemService.getAll()

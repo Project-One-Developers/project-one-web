@@ -3,7 +3,7 @@ import "server-only"
 import { db } from "@/db"
 import { simcTable } from "@/db/schema"
 import { conflictUpdateAllExcept, mapAndParse, newUUID } from "@/db/utils"
-import { simcSchema, type SimC } from "@/shared/models/simulation.model"
+import { simcSchema, type SimC } from "@/shared/models/simulation.models"
 
 /** Input type for adding SimC data (before we have id/characterId) */
 export type NewSimC = Omit<SimC, "id" | "characterId">

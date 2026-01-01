@@ -1,4 +1,4 @@
-import type { WowClassName } from "@/shared/models/wow.model"
+import type { WowClassName } from "@/shared/models/wow.models"
 
 /** WoW class colors (official Blizzard colors) */
 const CLASS_COLORS: Record<WowClassName, string> = {

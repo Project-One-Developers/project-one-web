@@ -9,8 +9,7 @@ import {
     itemToTiersetTable,
 } from "@/db/schema"
 import { buildConflictUpdateColumns, identity, mapAndParse } from "@/db/utils"
-import { CURRENT_SEASON } from "@/shared/consts/wow.consts"
-import { itemNoteSchema, type ItemNote } from "@/shared/models/item-note.model"
+import { itemNoteSchema, type ItemNote } from "@/shared/models/item-note.models"
 import {
     itemSchema,
     itemToCatalystSchema,
@@ -18,7 +17,8 @@ import {
     type Item,
     type ItemToCatalyst,
     type ItemToTierset,
-} from "@/shared/models/item.model"
+} from "@/shared/models/item.models"
+import { CURRENT_SEASON } from "@/shared/wow.consts"
 
 const TIERSET_CACHE_TAG = "tierset-mapping"
 

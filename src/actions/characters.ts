@@ -1,7 +1,7 @@
 "use server"
 
-import { characterService } from "@/services/character/character.service"
-import { playerService } from "@/services/player/player.service"
+import { characterService } from "@/services/character.service"
+import { playerService } from "@/services/player.service"
 import type {
     Character,
     CharacterGameInfo,
@@ -13,7 +13,7 @@ import type {
     NewPlayer,
     Player,
     PlayerWithCharacters,
-} from "@/shared/models/character.model"
+} from "@/shared/models/character.models"
 
 // ============== CHARACTERS ==============
 

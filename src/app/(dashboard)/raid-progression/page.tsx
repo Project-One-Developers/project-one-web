@@ -12,12 +12,12 @@ import { WowCharacterIcon } from "@/components/wow/wow-character-icon"
 import { useFilterContext } from "@/lib/filter-context"
 import { useBosses, useRosterProgression } from "@/lib/queries/bosses"
 import { defined } from "@/lib/utils"
-import type { Boss } from "@/shared/models/boss.model"
+import type { Boss } from "@/shared/models/boss.models"
 import type {
     DefeatedCharacter,
     ProgressionCharacter,
-} from "@/shared/models/character.model"
-import type { WowRaidDifficulty } from "@/shared/models/wow.model"
+} from "@/shared/models/character.models"
+import type { WowRaidDifficulty } from "@/shared/models/wow.models"
 
 // Constants
 const ROLE_COLORS = {

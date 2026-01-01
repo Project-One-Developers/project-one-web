@@ -12,14 +12,14 @@ import { db } from "@/db"
 import { droptimizerTable, droptimizerUpgradesTable, itemTable } from "@/db/schema"
 import { mapAndParse, newUUID } from "@/db/utils"
 import { logger } from "@/lib/logger"
-import { s } from "@/shared/libs/safe-stringify"
+import { s } from "@/shared/libs/string-utils"
 import {
     droptimizerSchema,
     type Droptimizer,
     type DroptimizerUpgrade,
     type NewDroptimizer,
-} from "@/shared/models/simulation.model"
-import type { WowRaidDifficulty } from "@/shared/models/wow.model"
+} from "@/shared/models/simulation.models"
+import type { WowRaidDifficulty } from "@/shared/models/wow.models"
 
 type DbDroptimizer = InferSelectModel<typeof droptimizerTable>
 type DbDroptimizerUpgradeBase = InferSelectModel<typeof droptimizerUpgradesTable>

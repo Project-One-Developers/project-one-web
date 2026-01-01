@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils"
 import {
     formatUnixTimestampForDisplay,
     unixTimestampToWowWeek,
-} from "@/shared/libs/date/date-utils"
-import type { RaidSessionWithSummary } from "@/shared/models/raid-session.model"
+} from "@/shared/libs/date-utils"
+import type { RaidSessionWithSummary } from "@/shared/models/raid-session.models"
 import { Button } from "./ui/button"
 import { GlassCard } from "./ui/glass-card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"

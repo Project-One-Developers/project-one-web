@@ -1,8 +1,8 @@
 /// sources: https://www.raidbots.com/static/data/live/bonuses.json
 // parse tww item tracks:
 // jq 'map(select(.upgrade.fullName != null and (.upgrade.seasonId == 24 or .upgrade.seasonId == 25)) | {id, level: .upgrade.level, max: .upgrade.max, name: .upgrade.name, fullName: .upgrade.fullName, itemLevel: .upgrade.itemLevel})' bonus.json > parsed_bonus.json
-import { match } from "ts-pattern"
-import type { WowItemTrackName, WowRaidDifficulty } from "@/shared/models/wow.model"
+import { match, P } from "ts-pattern"
+import type { WowItemTrackName, WowRaidDifficulty } from "@/shared/models/wow.models"
 
 type BonusItemTrack = {
     level: number
@@ -34,14 +34,11 @@ export function queryByItemLevelAndDelta(
     return entry ? { key: entry[0], track: entry[1] } : null
 }
 
-export function trackNameToNumber(
+export const trackNameToNumber = (
     name: WowItemTrackName | null | undefined
-): number | null {
-    if (!name) {
-        // for gear item without item track
-        return null
-    }
-    return match(name)
+): number | null =>
+    match(name)
+        .with(P.nullish, () => null)
         .with("Explorer", () => 1)
         .with("Adventurer", () => 2)
         .with("Veteran", () => 3)
@@ -49,32 +46,27 @@ export function trackNameToNumber(
         .with("Hero", () => 5)
         .with("Myth", () => 6)
         .exhaustive()
-}
 
-export function wowRaidDiffToTrackName(diff: WowRaidDifficulty): WowItemTrackName {
-    return match(diff)
+export const wowRaidDiffToTrackName = (diff: WowRaidDifficulty): WowItemTrackName =>
+    match(diff)
         .returnType<WowItemTrackName>()
         .with("LFR", () => "Veteran")
         .with("Normal", () => "Champion")
         .with("Heroic", () => "Hero")
         .with("Mythic", () => "Myth")
         .exhaustive()
-}
 
-export function trackNameToWowDiff(name: WowItemTrackName): WowRaidDifficulty {
-    return (
-        match(name)
-            .returnType<WowRaidDifficulty>()
-            .with("Veteran", () => "LFR")
-            .with("Champion", () => "Normal")
-            .with("Hero", () => "Heroic")
-            .with("Myth", () => "Mythic")
-            // For non-raid tracks like Explorer/Adventurer, default to LFR
-            .with("Explorer", () => "LFR")
-            .with("Adventurer", () => "LFR")
-            .exhaustive()
-    )
-}
+export const trackNameToWowDiff = (name: WowItemTrackName): WowRaidDifficulty =>
+    match(name)
+        .returnType<WowRaidDifficulty>()
+        .with("Veteran", () => "LFR")
+        .with("Champion", () => "Normal")
+        .with("Hero", () => "Heroic")
+        .with("Myth", () => "Mythic")
+        // For non-raid tracks like Explorer/Adventurer, default to LFR
+        .with("Explorer", () => "LFR")
+        .with("Adventurer", () => "LFR")
+        .exhaustive()
 
 export const bonusItemTracks: Record<string, BonusItemTrack> = {
     "10256": {

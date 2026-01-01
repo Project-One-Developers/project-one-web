@@ -9,9 +9,9 @@ import {
 } from "@/shared/libs/items/item-bonus-utils"
 import { formatWowSlotKey } from "@/shared/libs/items/item-slot-utils"
 import { trackNameToWowDiff } from "@/shared/libs/items/item-tracks"
-import { s } from "@/shared/libs/safe-stringify"
 import { isHealerSpecs, isTankSpecs } from "@/shared/libs/spec-parser/spec-utils"
-import type { GearItem } from "@/shared/models/item.model"
+import { s } from "@/shared/libs/string-utils"
+import type { GearItem } from "@/shared/models/item.models"
 import { useRefreshWowheadTooltips } from "./wowhead-tooltips"
 
 type WowGearIconProps = {

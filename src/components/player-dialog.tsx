@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react"
 import { useState, useMemo, type JSX } from "react"
 import { toast } from "sonner"
 import { useAddPlayer, useEditPlayer } from "@/lib/queries/players"
-import type { NewPlayer, Player } from "@/shared/models/character.model"
+import type { NewPlayer, Player } from "@/shared/models/character.models"
 import { Button } from "./ui/button"
 import {
     Dialog,

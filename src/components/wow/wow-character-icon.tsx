@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import type { ProgressionCharacter } from "@/shared/models/character.model"
+import type { ProgressionCharacter } from "@/shared/models/character.models"
 import { WowClassIcon } from "./wow-class-icon"
 
 export type WowCharacterIconProps = {

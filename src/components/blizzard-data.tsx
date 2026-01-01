@@ -1,7 +1,7 @@
 "use client"
 
-import type { CharacterBlizzard } from "@/shared/models/blizzard.model"
-import type { WowItemEquippedSlotKey } from "@/shared/models/wow.model"
+import type { CharacterBlizzard } from "@/shared/models/blizzard.models"
+import type { WowItemEquippedSlotKey } from "@/shared/models/wow.models"
 import CharacterGearLayout from "./character-gear-layout"
 import BaseGearSlot, { createGearSlotMapping } from "./wow/character-paperdoll-gearslot"
 

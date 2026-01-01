@@ -3,8 +3,8 @@
 import { useMemo } from "react"
 import { GlassCard } from "@/components/ui/glass-card"
 import { SectionHeader } from "@/components/ui/section-header"
-import { isInCurrentWowWeek } from "@/shared/libs/date/date-utils"
-import type { Droptimizer } from "@/shared/models/simulation.model"
+import { isInCurrentWowWeek } from "@/shared/libs/date-utils"
+import type { Droptimizer } from "@/shared/models/simulation.models"
 import { WowGearIcon } from "./wow/wow-gear-icon"
 
 type CurrentGreatVaultPanelProps = {

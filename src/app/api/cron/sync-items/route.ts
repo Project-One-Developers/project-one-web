@@ -5,10 +5,14 @@ import { bossRepo } from "@/db/repositories/bosses"
 import { itemRepo } from "@/db/repositories/items"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
-import { s } from "@/shared/libs/safe-stringify"
-import type { Boss } from "@/shared/models/boss.model"
-import type { Item, ItemToCatalyst, ItemToTierset } from "@/shared/models/item.model"
-import type { WowArmorType, WowItemSlot, WowItemSlotKey } from "@/shared/models/wow.model"
+import { s } from "@/shared/libs/string-utils"
+import type { Boss } from "@/shared/models/boss.models"
+import type { Item, ItemToCatalyst, ItemToTierset } from "@/shared/models/item.models"
+import type {
+    WowArmorType,
+    WowItemSlot,
+    WowItemSlotKey,
+} from "@/shared/models/wow.models"
 
 // Verify this is a cron request from Vercel or local dev
 function verifyCronSecret(request: Request): boolean {

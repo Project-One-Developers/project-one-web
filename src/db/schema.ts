@@ -12,6 +12,8 @@ import {
     unique,
     varchar,
 } from "drizzle-orm/pg-core"
+import type { GearItem } from "@/shared/models/item.models"
+import type { CharAssignmentHighlights } from "@/shared/models/loot.models"
 import {
     ARMOR_TYPES,
     CLASSES_NAME,
@@ -21,9 +23,7 @@ import {
     MAX_CHARACTER_NAME_LENGTH,
     RAID_DIFF,
     ROLES,
-} from "@/shared/consts/wow.consts"
-import type { GearItem } from "@/shared/models/item.model"
-import type { CharAssignmentHighlights } from "@/shared/models/loot.model"
+} from "@/shared/wow.consts"
 
 //////////////////////////////////////////////////////////
 //                      ENUMS                           //

@@ -11,9 +11,9 @@ import { IconButton } from "@/components/ui/icon-button"
 import { Input } from "@/components/ui/input"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useRaidSessions } from "@/lib/queries/raid-sessions"
-import { unixTimestampToWowWeek } from "@/shared/libs/date/date-utils"
-import { s } from "@/shared/libs/safe-stringify"
-import type { RaidSessionWithSummary } from "@/shared/models/raid-session.model"
+import { unixTimestampToWowWeek } from "@/shared/libs/date-utils"
+import { s } from "@/shared/libs/string-utils"
+import type { RaidSessionWithSummary } from "@/shared/models/raid-session.models"
 
 type GroupedSessions = Record<number, RaidSessionWithSummary[]>
 

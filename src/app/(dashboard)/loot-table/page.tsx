@@ -19,10 +19,10 @@ import { useRaidLootTable } from "@/lib/queries/bosses"
 import { useItemNotes } from "@/lib/queries/items"
 import { cn, defined } from "@/lib/utils"
 import { getWowClassBySpecId } from "@/shared/libs/spec-parser/spec-utils"
-import type { BisList } from "@/shared/models/bis-list.model"
-import type { BossWithItems } from "@/shared/models/boss.model"
-import type { ItemNote } from "@/shared/models/item-note.model"
-import type { Item } from "@/shared/models/item.model"
+import type { BisList } from "@/shared/models/bis-list.models"
+import type { BossWithItems } from "@/shared/models/boss.models"
+import type { ItemNote } from "@/shared/models/item-note.models"
+import type { Item } from "@/shared/models/item.models"
 
 // Boss Panel Component
 type BossPanelProps = {

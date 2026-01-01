@@ -19,14 +19,14 @@ import { cn, defined } from "@/lib/utils"
 import {
     formatUnixTimestampForDisplay,
     parseStringToUnixTimestamp,
-} from "@/shared/libs/date/date-utils"
-import type { PlayerWithCharacters } from "@/shared/models/character.model"
+} from "@/shared/libs/date-utils"
+import type { PlayerWithCharacters } from "@/shared/models/character.models"
 import type {
     EditRaidSession,
     NewRaidSession,
     RaidSessionWithRoster,
-} from "@/shared/models/raid-session.model"
-import type { WowClassName } from "@/shared/models/wow.model"
+} from "@/shared/models/raid-session.models"
+import type { WowClassName } from "@/shared/models/wow.models"
 import { Button } from "./ui/button"
 import {
     Dialog,

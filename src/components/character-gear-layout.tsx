@@ -1,8 +1,8 @@
 "use client"
 
 import type { ReactNode } from "react"
-import type { GearItem } from "@/shared/models/item.model"
-import type { WowItemEquippedSlotKey } from "@/shared/models/wow.model"
+import type { GearItem } from "@/shared/models/item.models"
+import type { WowItemEquippedSlotKey } from "@/shared/models/wow.models"
 import CharacterPaperdoll from "./wow/character-paperdoll"
 import { WowGearIcon } from "./wow/wow-gear-icon"
 

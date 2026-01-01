@@ -3,10 +3,10 @@
 import Image from "next/image"
 import { useState } from "react"
 import { itemSlotIcon } from "@/lib/wow-icon"
-import { ITEM_SLOTS_KEY } from "@/shared/consts/wow.consts"
 import { formatWowSlotKey } from "@/shared/libs/items/item-slot-utils"
-import type { LootWithAssigned } from "@/shared/models/loot.model"
-import { wowItemSlotKeySchema, type WowItemSlotKey } from "@/shared/models/wow.model"
+import type { LootWithAssigned } from "@/shared/models/loot.models"
+import { wowItemSlotKeySchema, type WowItemSlotKey } from "@/shared/models/wow.models"
+import { ITEM_SLOTS_KEY } from "@/shared/wow.consts"
 import { WowClassIcon } from "./wow/wow-class-icon"
 import { WowGearIcon } from "./wow/wow-gear-icon"
 

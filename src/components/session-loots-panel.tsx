@@ -4,8 +4,8 @@ import { LoaderCircle, X } from "lucide-react"
 import { useMemo } from "react"
 import { useBosses } from "@/lib/queries/bosses"
 import { useDeleteLoot, useLootsBySessionWithItem } from "@/lib/queries/loots"
-import type { LootWithItem } from "@/shared/models/loot.model"
-import type { WowRaidDifficulty } from "@/shared/models/wow.model"
+import type { LootWithItem } from "@/shared/models/loot.models"
+import type { WowRaidDifficulty } from "@/shared/models/wow.models"
 import { WowGearIcon } from "./wow/wow-gear-icon"
 
 type SessionLootsPanelProps = {

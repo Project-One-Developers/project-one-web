@@ -1,5 +1,5 @@
-import type { GearItem, Item, ItemTrack } from "@/shared/models/item.model"
-import type { WowItemTrackName, WowRaidDifficulty } from "@/shared/models/wow.model"
+import type { GearItem, Item, ItemTrack } from "@/shared/models/item.models"
+import type { WowItemTrackName, WowRaidDifficulty } from "@/shared/models/wow.models"
 import {
     bonusItemTracks,
     queryByItemLevelAndDelta,

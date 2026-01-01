@@ -3,7 +3,7 @@
 import { skipToken, useQuery } from "@tanstack/react-query"
 import { getRosterProgression } from "@/actions/blizzard"
 import { getBosses, getRaidLootTable } from "@/actions/bosses"
-import { CURRENT_RAID_ID } from "@/shared/consts/wow.consts"
+import { CURRENT_RAID_ID } from "@/shared/wow.consts"
 import { queryKeys } from "./keys"
 
 export function useBosses(raidId: number = CURRENT_RAID_ID) {

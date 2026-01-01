@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { type JSX } from "react"
 import { toast } from "sonner"
 import { useDeleteCharacter } from "@/lib/queries/players"
-import type { Character } from "@/shared/models/character.model"
+import type { Character } from "@/shared/models/character.models"
 import { Button } from "./ui/button"
 import {
     Dialog,

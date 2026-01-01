@@ -5,7 +5,7 @@ import Image from "next/image"
 import { type JSX } from "react"
 import { toast } from "sonner"
 import { useDeletePlayer } from "@/lib/queries/players"
-import type { Player } from "@/shared/models/character.model"
+import type { Player } from "@/shared/models/character.models"
 import { Button } from "./ui/button"
 import {
     Dialog,

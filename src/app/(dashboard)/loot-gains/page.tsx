@@ -13,11 +13,11 @@ import { filterDroptimizer, type LootFilter } from "@/lib/filters"
 import { useRaidLootTable } from "@/lib/queries/bosses"
 import { useLatestDroptimizers } from "@/lib/queries/droptimizers"
 import { useCharacters } from "@/lib/queries/players"
-import type { BossWithItems } from "@/shared/models/boss.model"
-import type { Character } from "@/shared/models/character.model"
-import type { Item } from "@/shared/models/item.model"
-import type { Droptimizer } from "@/shared/models/simulation.model"
-import type { WowRaidDifficulty } from "@/shared/models/wow.model"
+import type { BossWithItems } from "@/shared/models/boss.models"
+import type { Character } from "@/shared/models/character.models"
+import type { Item } from "@/shared/models/item.models"
+import type { Droptimizer } from "@/shared/models/simulation.models"
+import type { WowRaidDifficulty } from "@/shared/models/wow.models"
 
 // Boss Panel Component
 type BossPanelProps = {

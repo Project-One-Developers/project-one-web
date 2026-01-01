@@ -14,7 +14,7 @@ import { useFilterContext } from "@/lib/filter-context"
 import { cn } from "@/lib/utils"
 import { armorTypesIcon, classIcon, itemSlotIcon } from "@/lib/wow-icon"
 import { formatWowSlotKey } from "@/shared/libs/items/item-slot-utils"
-import { s } from "@/shared/libs/safe-stringify"
+import { s } from "@/shared/libs/string-utils"
 import {
     wowArmorTypeSchema,
     wowClassNameSchema,
@@ -23,7 +23,7 @@ import {
     type WowClassName,
     type WowItemSlotKey,
     type WowRaidDifficulty,
-} from "@/shared/models/wow.model"
+} from "@/shared/models/wow.models"
 
 // Difficulty color mapping
 const DIFFICULTY_COLORS: Record<WowRaidDifficulty, string> = {

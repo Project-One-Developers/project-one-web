@@ -1,7 +1,7 @@
 "use server"
 
-import { lootService } from "@/services/loot/loot.service"
-import type { CharacterWithGears } from "@/shared/models/character.model"
+import { lootService } from "@/services/loot.service"
+import type { CharacterWithGears } from "@/shared/models/character.models"
 import type {
     CharAssignmentHighlights,
     Loot,
@@ -9,8 +9,8 @@ import type {
     LootWithItem,
     NewLoot,
     NewLootManual,
-} from "@/shared/models/loot.model"
-import type { LootAssignmentInfo } from "@/shared/types/types"
+} from "@/shared/models/loot.models"
+import type { LootAssignmentInfo } from "@/shared/types"
 
 export async function getLootsBySessionId(raidSessionId: string): Promise<Loot[]> {
     return lootService.getBySessionId(raidSessionId)

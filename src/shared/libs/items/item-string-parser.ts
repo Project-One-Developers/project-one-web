@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-export const itemStringDataSchema = z.object({
+const itemStringDataSchema = z.object({
     itemID: z.number(),
     enchantID: z.number(),
     gemIDs: z.array(z.number()).length(4),
@@ -14,7 +14,6 @@ export const itemStringDataSchema = z.object({
     bonusIds: z.array(z.number()),
     upgradeValue: z.number().optional(),
 })
-
 export type ItemStringData = z.infer<typeof itemStringDataSchema>
 
 export const parseItemString = (itemString: string): ItemStringData => {
@@ -82,9 +81,8 @@ export const parseItemString = (itemString: string): ItemStringData => {
         upgradeValue,
     }
 
+    // TODO: use mapAndParse directly
+
     // Parse and validate with Zod schema
     return itemStringDataSchema.parse(rawItemInfo)
 }
-
-export const getItemBonusString = (itemStringData: ItemStringData): string =>
-    itemStringData.bonusIds.join(":")

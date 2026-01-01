@@ -10,10 +10,10 @@ import {
     useUnassignLoot,
 } from "@/lib/queries/loots"
 import { getDpsHumanReadable } from "@/lib/utils"
-import { ITEM_SLOTS_KEY_TIERSET } from "@/shared/consts/wow.consts"
-import type { LootWithAssigned } from "@/shared/models/loot.model"
-import { tierSetBonusSchema } from "@/shared/models/wow.model"
-import { DroptimizerWarn, type CharAssignmentInfo } from "@/shared/types/types"
+import type { LootWithAssigned } from "@/shared/models/loot.models"
+import { tierSetBonusSchema } from "@/shared/models/wow.models"
+import { DroptimizerWarn, type CharAssignmentInfo } from "@/shared/types"
+import { ITEM_SLOTS_KEY_TIERSET } from "@/shared/wow.consts"
 import { DroptimizerUpgradeForItemEquipped } from "./droptimizer-upgrade-for-item"
 import {
     DropdownMenu,

@@ -8,7 +8,7 @@ import {
     bossWithItemsSchema,
     type Boss,
     type BossWithItems,
-} from "@/shared/models/boss.model"
+} from "@/shared/models/boss.models"
 
 export const bossRepo = {
     // Get boss by encounter slug

@@ -1,8 +1,8 @@
 "use server"
 
-import { droptimizerService } from "@/services/droptimizer/droptimizer.service"
-import type { Droptimizer, NewDroptimizer, SimC } from "@/shared/models/simulation.model"
-import type { WowRaidDifficulty } from "@/shared/models/wow.model"
+import { droptimizerService } from "@/services/droptimizer.service"
+import type { Droptimizer, NewDroptimizer, SimC } from "@/shared/models/simulation.models"
+import type { WowRaidDifficulty } from "@/shared/models/wow.models"
 
 type DurationInput = { days?: number; hours?: number }
 

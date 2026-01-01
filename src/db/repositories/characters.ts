@@ -10,7 +10,7 @@ import {
     type CharacterWithPlayer,
     type EditCharacter,
     type NewCharacter,
-} from "@/shared/models/character.model"
+} from "@/shared/models/character.models"
 
 export const characterRepo = {
     getWithPlayerById: async (id: string): Promise<CharacterWithPlayer | null> => {

@@ -5,18 +5,18 @@ import { Loader2 } from "lucide-react"
 import React, { useState, useMemo, type JSX } from "react"
 import { toast } from "sonner"
 import { useAddCharacterWithSync, useEditCharacter } from "@/lib/queries/players"
-import { REALMS, ROLES } from "@/shared/consts/wow.consts"
 import type {
     Character,
     EditCharacter,
     NewCharacterWithoutClass,
     Player,
-} from "@/shared/models/character.model"
+} from "@/shared/models/character.models"
 import {
     ROLES_CLASSES_MAP,
     type WowClassName,
     type WoWRole,
-} from "@/shared/models/wow.model"
+} from "@/shared/models/wow.models"
+import { REALMS, ROLES } from "@/shared/wow.consts"
 import { Button } from "./ui/button"
 import { Checkbox } from "./ui/checkbox"
 import {

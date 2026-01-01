@@ -24,7 +24,7 @@ import type {
     CharAssignmentHighlights,
     NewLoot,
     NewLootManual,
-} from "@/shared/models/loot.model"
+} from "@/shared/models/loot.models"
 import { queryKeys } from "./keys"
 
 // ============== QUERIES ==============

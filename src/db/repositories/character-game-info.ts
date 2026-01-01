@@ -6,7 +6,7 @@ import { mapAndParse } from "@/db/utils"
 import {
     characterGameInfoCompactSchema,
     type CharacterGameInfoCompact,
-} from "@/shared/models/character.model"
+} from "@/shared/models/character.models"
 
 export const characterGameInfoRepo = {
     getByCharsCompact: async (charIds: string[]): Promise<CharacterGameInfoCompact[]> => {

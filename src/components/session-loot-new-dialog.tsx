@@ -12,10 +12,10 @@ import {
     useImportRcAssignments,
     useImportRcLoot,
 } from "@/lib/queries/loots"
-import { RAID_DIFF } from "@/shared/consts/wow.consts"
-import type { Item } from "@/shared/models/item.model"
-import type { NewLootManual } from "@/shared/models/loot.model"
-import type { WowRaidDifficulty } from "@/shared/models/wow.model"
+import type { Item } from "@/shared/models/item.models"
+import type { NewLootManual } from "@/shared/models/loot.models"
+import type { WowRaidDifficulty } from "@/shared/models/wow.models"
+import { RAID_DIFF } from "@/shared/wow.consts"
 import { Button } from "./ui/button"
 import {
     Dialog,

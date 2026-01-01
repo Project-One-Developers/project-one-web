@@ -4,7 +4,7 @@ import Image from "next/image"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { specIcon } from "@/lib/wow-icon"
-import { s } from "@/shared/libs/safe-stringify"
+import { s } from "@/shared/libs/string-utils"
 
 type WowSpecIconProps = {
     specId: number

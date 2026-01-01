@@ -23,8 +23,8 @@ import {
 import { useRaidLootTable } from "@/lib/queries/bosses"
 import { useLootsBySessionsWithAssigned } from "@/lib/queries/loots"
 import { useRaidSessions } from "@/lib/queries/raid-sessions"
-import { s } from "@/shared/libs/safe-stringify"
-import type { LootWithAssigned } from "@/shared/models/loot.model"
+import { s } from "@/shared/libs/string-utils"
+import type { LootWithAssigned } from "@/shared/models/loot.models"
 
 function AssignContent(): JSX.Element {
     const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set())

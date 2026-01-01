@@ -1,9 +1,9 @@
 "use server"
 
 import { type CharacterBlizzardDb } from "@/db/repositories/blizzard"
-import { type CharacterProfileResponse } from "@/services/blizzard/blizzard-api"
-import { blizzardService } from "@/services/blizzard/blizzard.service"
-import type { RosterProgressionByDifficulty } from "@/shared/models/character.model"
+import { blizzardService } from "@/services/blizzard.service"
+import { type CharacterProfileResponse } from "@/services/libs/blizzard-api"
+import type { RosterProgressionByDifficulty } from "@/shared/models/character.models"
 
 export async function syncAllCharactersBlizzard(): Promise<{
     synced: number

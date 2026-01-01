@@ -10,7 +10,7 @@ import {
     getRaidSessionWithSummaryList,
     importRosterInRaidSession,
 } from "@/actions/raid-sessions"
-import type { EditRaidSession, NewRaidSession } from "@/shared/models/raid-session.model"
+import type { EditRaidSession, NewRaidSession } from "@/shared/models/raid-session.models"
 import { queryKeys } from "./keys"
 
 export function useRaidSessions() {

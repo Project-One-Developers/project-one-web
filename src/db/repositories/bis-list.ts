@@ -4,7 +4,7 @@ import "server-only"
 import { db } from "@/db"
 import { bisListTable } from "@/db/schema"
 import { newUUID } from "@/db/utils"
-import type { BisList } from "@/shared/models/bis-list.model"
+import type { BisList } from "@/shared/models/bis-list.models"
 
 const CACHE_TAG = "bis-list"
 

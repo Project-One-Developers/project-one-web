@@ -1,14 +1,14 @@
 "use server"
 
-import { raidSessionService } from "@/services/raid-session/raid-session.service"
-import type { Character } from "@/shared/models/character.model"
+import { raidSessionService } from "@/services/raid-session.service"
+import type { Character } from "@/shared/models/character.models"
 import type {
     EditRaidSession,
     NewRaidSession,
     RaidSession,
     RaidSessionWithRoster,
     RaidSessionWithSummary,
-} from "@/shared/models/raid-session.model"
+} from "@/shared/models/raid-session.models"
 
 export async function getRaidSessionWithRoster(
     id: string

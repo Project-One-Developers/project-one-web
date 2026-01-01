@@ -1,7 +1,7 @@
 import Image from "next/image"
 import { match } from "ts-pattern"
-import { realmNameToSlug } from "@/shared/consts/wow.consts"
-import type { Character } from "@/shared/models/character.model"
+import type { Character } from "@/shared/models/character.models"
+import { realmNameToSlug } from "@/shared/wow.consts"
 
 type WowCharacterLinkProps = {
     character: Character
