@@ -52,7 +52,7 @@ export const DroptimizerCard = ({
         if (
             window.confirm(`Are you sure you want to delete ${charName}'s droptimizer?`)
         ) {
-            deleteMutation.mutate(dropt.url, {
+            deleteMutation.mutate(dropt.id, {
                 onSuccess: () => {
                     toast.success("Droptimizer deleted")
                 },
@@ -79,7 +79,7 @@ export const DroptimizerCard = ({
                         <X className="h-4 w-4" />
                     )
                 }
-                variant="ghost"
+                variant="destructive"
                 size="sm"
                 className="absolute top-3 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                 onClick={handleDelete}
