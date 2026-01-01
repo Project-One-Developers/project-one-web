@@ -83,16 +83,16 @@ export async function addCharacterWithSync(
     }
     const id = await characterRepo.add(newCharacter)
 
-    // Sync gear and other Blizzard data in the background (don't block)
+    // Sync gear and other Blizzard data before returning
     // Pass the already-fetched profile to avoid duplicate API call
-    void syncCharacterBlizzard(id, character.name, character.realm, profile).catch(
-        (err: unknown) => {
-            logger.error(
-                "Characters",
-                `Failed to sync Blizzard data for ${character.name}: ${s(err)}`
-            )
-        }
-    )
+    try {
+        await syncCharacterBlizzard(id, character.name, character.realm, profile)
+    } catch (err: unknown) {
+        logger.error(
+            "Characters",
+            `Failed to sync Blizzard data for ${character.name}: ${s(err)}`
+        )
+    }
 
     logger.info(
         "Characters",
