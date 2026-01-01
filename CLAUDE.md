@@ -24,33 +24,26 @@ pnpm drizzle-kit push # Push database schema changes to PostgreSQL
 
 - `src/app/` - Next.js App Router pages and API routes
     - `(auth)/` - Auth layout group (login page)
-    - `(dashboard)/` - Protected routes (roster, raid-session, droptimizer, loot-table, etc.)
-    - `api/cron/` - Scheduled sync endpoints for external data
+    - `(dashboard)/` - Protected routes (each folder = a page/feature)
+    - `api/` - API routes (auth handlers, cron jobs)
 - `src/actions/` - Server Actions (thin wrappers that call services)
-- `src/services/` - Server-only business logic (service objects)
-    - `blizzard/` - Blizzard API client, sync, and `blizzardService`
-    - `character/` - `characterService` for character operations
-    - `player/` - `playerService` for player operations
-    - `discord/` - Discord bot integration
-    - `droptimizer/` - Raidbots/QELive parsers and `droptimizerService`
-    - `item/` - `itemService` for item operations
-    - `loot/` - Loot parsers and `lootService`
-    - `raid-session/` - `raidSessionService` for raid session operations
-    - `summary/` - `summaryService` for roster summaries
+- `src/services/` - Server-only business logic
+    - `*.service.ts` - Service objects (one per domain: character, loot, etc.)
+    - `libs/` - Utilities, API clients, and parsers used by services
 - `src/db/` - Database layer
     - `schema.ts` - Drizzle ORM schema definitions
-    - `repositories/` - Data access layer functions per entity
+    - `repositories/` - Data access layer (one file per entity)
 - `src/components/` - React components
-    - `ui/` - shadcn/ui base components
-    - `wow/` - WoW-specific display components
+    - `ui/` - shadcn/ui base components + custom design system (CVA-based)
+    - `wow/` - WoW-specific display components (icons, tooltips, gear display)
+- `src/hooks/` - React hooks
 - `src/lib/` - Universal utilities (client-safe)
     - `queries/` - React Query hooks for data fetching
-    - `utils.ts`, `logger.ts`, `filters.ts` - Shared utilities
-- `src/shared/` - Shared domain logic
+- `src/shared/` - Shared domain logic (used by both client and server)
     - `libs/` - Universal utility functions
-    - `consts/wow.consts.ts` - WoW game constants
-    - `models/` - TypeScript types and Zod schemas
-    - `types/types.ts` - TypeScript type definitions
+    - `models/` - TypeScript types and Zod schemas (one file per domain)
+    - `types.ts` - Shared TypeScript type definitions
+    - `wow.consts.ts` - WoW game constants
 
 ### Key Patterns
 
@@ -59,7 +52,7 @@ pnpm drizzle-kit push # Push database schema changes to PostgreSQL
 **Service Layer Pattern**: Business logic lives in service objects. Actions are thin wrappers:
 
 ```typescript
-// src/services/character/character.service.ts
+// src/services/character.service.ts
 export const characterService = {
     getById: async (id: string) => characterRepo.getWithPlayerById(id),
     addWithSync: async (character) => {
@@ -80,7 +73,7 @@ export async function addCharacterWithSync(character: NewCharacterWithoutClass) 
 
 **Repository Pattern**: Each entity has a repository object in `/db/repositories` (e.g., `characterRepo.getList()`, `itemRepo.getAll()`)
 
-**Validation**: Zod schemas in `/shared/schemas` for both DB response and form validation
+**Validation**: Zod schemas in `/shared/models` for both DB response and form validation
 
 **Authentication**: Auth.js with Discord OAuth, role-based access via Discord server roles
 
@@ -166,14 +159,16 @@ Custom reusable components in `src/components/ui/` built with CVA (Class Varianc
 
 ### Core Components
 
-| Component        | File                  | Purpose                                                       |
-| ---------------- | --------------------- | ------------------------------------------------------------- |
-| `GlassCard`      | `glass-card.tsx`      | Glassmorphic container - the foundation for cards and panels  |
-| `StatBadge`      | `stat-badge.tsx`      | Metric pills for displaying stats (count, averages, warnings) |
-| `EmptyState`     | `empty-state.tsx`     | Empty/not-found states with icon, title, description          |
-| `LoadingSpinner` | `loading-spinner.tsx` | Animated spinner with glow effect                             |
-| `IconButton`     | `icon-button.tsx`     | Icon-only buttons (back, delete, FABs)                        |
-| `SectionHeader`  | `section-header.tsx`  | Panel/section titles (uppercase, tracking)                    |
+Custom CVA-based components in `src/components/ui/`. Check the directory for the full list. Key patterns:
+
+| Component        | Purpose                                                       |
+| ---------------- | ------------------------------------------------------------- |
+| `GlassCard`      | Glassmorphic container - the foundation for cards and panels  |
+| `StatBadge`      | Metric pills for displaying stats (count, averages, warnings) |
+| `EmptyState`     | Empty/not-found states with icon, title, description          |
+| `LoadingSpinner` | Animated spinner with glow effect                             |
+| `IconButton`     | Icon-only buttons (back, delete, FABs)                        |
+| `SectionHeader`  | Panel/section titles (uppercase, tracking)                    |
 
 ### Usage Guidelines
 
@@ -309,10 +304,4 @@ When you need to use raw classes, prefer these consistent patterns:
 
 ### WoW-Specific Components
 
-Located in `src/components/wow/`:
-
-- `CharacterOverviewIcon` - Character icons with ilvl badges and main indicator
-- `WowClassIcon` - Class icon display
-- `WowCharacterLink` - External links (Raider.io, WarcraftLogs, Armory)
-- `WowGearIcon` - Gear item display with tooltips
-- `WowCurrencyIcon` - Currency display
+Located in `src/components/wow/`. These handle WoW-specific UI concerns like character/item icons, gear displays, external links (Raider.io, WarcraftLogs, Armory), and Wowhead tooltip integration. Check the directory for available components.
