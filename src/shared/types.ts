@@ -62,6 +62,7 @@ export type CharacterSummary = {
     currencies: DroptimizerCurrency[]
     warnDroptimizer: DroptimizerWarn
     warnBlizzard: BlizzardWarn
+    blizzardSyncedAt?: number
 }
 
 export type CharacterSummaryCompact = {

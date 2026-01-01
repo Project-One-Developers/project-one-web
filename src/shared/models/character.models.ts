@@ -83,6 +83,7 @@ export const characterGameInfoCompactSchema = z.object({
         .object({
             equippedItemLevel: charBlizzardSchema.shape.equippedItemLevel,
             itemsEquipped: charBlizzardSchema.shape.itemsEquipped.nullable(),
+            syncedAt: charBlizzardSchema.shape.syncedAt,
         })
         .nullable(),
 })

@@ -80,6 +80,7 @@ export const summaryService = {
                 currencies: info?.droptimizer?.currencies ?? [],
                 warnDroptimizer,
                 warnBlizzard,
+                blizzardSyncedAt: info?.blizzard?.syncedAt,
             }
         })
     },

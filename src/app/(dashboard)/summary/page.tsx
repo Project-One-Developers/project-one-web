@@ -18,6 +18,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { TiersetInfo } from "@/components/wow/tierset-info"
 import { WowClassIcon } from "@/components/wow/wow-class-icon"
 import { WowCurrencyIcon } from "@/components/wow/wow-currency-icon"
@@ -25,6 +26,7 @@ import { WowGearIcon } from "@/components/wow/wow-gear-icon"
 import { useFilterContext } from "@/lib/filter-context"
 import { useRosterSummary } from "@/lib/queries/summary"
 import { isRelevantCurrency } from "@/shared/libs/currency-utils"
+import { formatUnixTimestampForDisplay } from "@/shared/libs/date-utils"
 import {
     BLIZZARD_WARN,
     type BlizzardWarn,
@@ -134,7 +136,13 @@ const DroptimizerStatus = ({ warn }: { warn: DroptimizerWarn }) => {
     return <StatusIndicator status={status} label={label} />
 }
 
-const BlizzardStatus = ({ warn }: { warn: BlizzardWarn }) => {
+const BlizzardStatus = ({
+    warn,
+    syncedAt,
+}: {
+    warn: BlizzardWarn
+    syncedAt?: number
+}) => {
     const { status, label } = match(warn)
         .with(BLIZZARD_WARN.None, () => ({ status: "success" as const, label: "Synced" }))
         .with(BLIZZARD_WARN.Outdated, () => ({
@@ -146,6 +154,21 @@ const BlizzardStatus = ({ warn }: { warn: BlizzardWarn }) => {
             label: "Missing",
         }))
         .exhaustive()
+
+    if (syncedAt) {
+        return (
+            <Tooltip>
+                <TooltipTrigger>
+                    <StatusIndicator status={status} label={label} />
+                </TooltipTrigger>
+                <TooltipContent>
+                    <span className="text-xs">
+                        Last synced: {formatUnixTimestampForDisplay(syncedAt)}
+                    </span>
+                </TooltipContent>
+            </Tooltip>
+        )
+    }
 
     return <StatusIndicator status={status} label={label} />
 }
@@ -312,7 +335,10 @@ const PlayerRow = ({ summary }: { summary: CharacterSummary }) => {
             </TableCell>
 
             <TableCell className="p-3">
-                <BlizzardStatus warn={summary.warnBlizzard} />
+                <BlizzardStatus
+                    warn={summary.warnBlizzard}
+                    syncedAt={summary.blizzardSyncedAt}
+                />
             </TableCell>
         </TableRow>
     )

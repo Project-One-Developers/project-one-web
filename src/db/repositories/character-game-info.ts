@@ -36,6 +36,7 @@ export const characterGameInfoRepo = {
                 droptimizerTiersetInfo: latestDroptimizerSq.tiersetInfo,
                 blizzardEquippedIlvl: charBlizzardTable.equippedItemLevel,
                 blizzardItemsEquipped: charBlizzardTable.itemsEquipped,
+                blizzardSyncedAt: charBlizzardTable.syncedAt,
             })
             .from(charTable)
             .where(inArray(charTable.id, charIds))
@@ -58,12 +59,14 @@ export const characterGameInfoRepo = {
                           currencies: null,
                       }
                     : null,
-                blizzard: row.blizzardEquippedIlvl
-                    ? {
-                          equippedItemLevel: row.blizzardEquippedIlvl,
-                          itemsEquipped: row.blizzardItemsEquipped,
-                      }
-                    : null,
+                blizzard:
+                    row.blizzardEquippedIlvl && row.blizzardSyncedAt
+                        ? {
+                              equippedItemLevel: row.blizzardEquippedIlvl,
+                              itemsEquipped: row.blizzardItemsEquipped,
+                              syncedAt: row.blizzardSyncedAt,
+                          }
+                        : null,
             }),
             characterGameInfoCompactSchema
         )
@@ -100,6 +103,7 @@ export const characterGameInfoRepo = {
                 droptimizerCurrencies: latestDroptimizerSq.currencies,
                 blizzardEquippedIlvl: charBlizzardTable.equippedItemLevel,
                 blizzardItemsEquipped: charBlizzardTable.itemsEquipped,
+                blizzardSyncedAt: charBlizzardTable.syncedAt,
             })
             .from(charTable)
             .where(inArray(charTable.id, charIds))
@@ -122,12 +126,14 @@ export const characterGameInfoRepo = {
                           currencies: row.droptimizerCurrencies,
                       }
                     : null,
-                blizzard: row.blizzardEquippedIlvl
-                    ? {
-                          equippedItemLevel: row.blizzardEquippedIlvl,
-                          itemsEquipped: row.blizzardItemsEquipped,
-                      }
-                    : null,
+                blizzard:
+                    row.blizzardEquippedIlvl && row.blizzardSyncedAt
+                        ? {
+                              equippedItemLevel: row.blizzardEquippedIlvl,
+                              itemsEquipped: row.blizzardItemsEquipped,
+                              syncedAt: row.blizzardSyncedAt,
+                          }
+                        : null,
             }),
             characterGameInfoCompactSchema
         )

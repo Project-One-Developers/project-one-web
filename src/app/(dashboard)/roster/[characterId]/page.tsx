@@ -15,10 +15,12 @@ import { GlassCard } from "@/components/ui/glass-card"
 import { HighlightBadge } from "@/components/ui/highlight-badge"
 import { IconButton } from "@/components/ui/icon-button"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { WowCharacterLink } from "@/components/wow/wow-character-links"
 import { WowClassIcon } from "@/components/wow/wow-class-icon"
 import { queryKeys } from "@/lib/queries/keys"
-import { useCharacter } from "@/lib/queries/players"
+import { useCharacter, useCharacterGameInfo } from "@/lib/queries/players"
+import { formatUnixTimestampForDisplay } from "@/shared/libs/date-utils"
 
 export default function CharacterPage() {
     const params = useParams<{ characterId: string }>()
@@ -32,6 +34,9 @@ export default function CharacterPage() {
 
     const characterQuery = useCharacter(characterId)
     const character = characterQuery.data
+    const gameInfoQuery = useCharacterGameInfo(characterId)
+    const gameInfo = gameInfoQuery.data
+    const syncedAt = gameInfo?.blizzard?.syncedAt
 
     if (characterQuery.isLoading) {
         return <LoadingSpinner size="lg" iconSize="lg" text="Loading character..." />
@@ -125,47 +130,61 @@ export default function CharacterPage() {
                         <WowCharacterLink character={character} site="armory" />
                     </div>
 
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        className="rounded-xl bg-card/50 border border-border/50 hover:bg-primary/10 hover:border-primary/30 hover:text-primary"
-                        disabled={isSyncing}
-                        onClick={() => {
-                            setIsSyncing(true)
-                            syncCharacterBlizzard(
-                                character.id,
-                                character.name,
-                                character.realm
-                            )
-                                .then(() =>
-                                    Promise.all([
-                                        characterQuery.refetch(),
-                                        queryClient.invalidateQueries({
-                                            queryKey: [
-                                                queryKeys.characterGameInfo,
-                                                character.id,
-                                            ],
-                                        }),
-                                    ])
-                                )
-                                .then(() => {
-                                    toast.success("Character synced successfully")
-                                })
-                                .catch(() => {
-                                    toast.error("Failed to sync character")
-                                })
-                                .finally(() => {
-                                    setIsSyncing(false)
-                                })
-                        }}
-                    >
-                        <RefreshCw
-                            className={`h-4 w-4 sm:mr-2 ${isSyncing ? "animate-spin" : ""}`}
-                        />
-                        <span className="hidden sm:inline">
-                            {isSyncing ? "Syncing..." : "Sync"}
-                        </span>
-                    </Button>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                className="rounded-xl bg-card/50 border border-border/50 hover:bg-primary/10 hover:border-primary/30 hover:text-primary"
+                                disabled={isSyncing}
+                                onClick={() => {
+                                    setIsSyncing(true)
+                                    syncCharacterBlizzard(
+                                        character.id,
+                                        character.name,
+                                        character.realm
+                                    )
+                                        .then(() =>
+                                            Promise.all([
+                                                characterQuery.refetch(),
+                                                gameInfoQuery.refetch(),
+                                                queryClient.invalidateQueries({
+                                                    queryKey: [
+                                                        queryKeys.characterGameInfo,
+                                                        character.id,
+                                                    ],
+                                                }),
+                                            ])
+                                        )
+                                        .then(() => {
+                                            toast.success("Character synced successfully")
+                                        })
+                                        .catch(() => {
+                                            toast.error("Failed to sync character")
+                                        })
+                                        .finally(() => {
+                                            setIsSyncing(false)
+                                        })
+                                }}
+                            >
+                                <RefreshCw
+                                    className={`h-4 w-4 sm:mr-2 ${isSyncing ? "animate-spin" : ""}`}
+                                />
+                                <span className="hidden sm:inline">
+                                    {isSyncing ? "Syncing..." : "Sync"}
+                                </span>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            {syncedAt ? (
+                                <span className="text-xs">
+                                    Last synced: {formatUnixTimestampForDisplay(syncedAt)}
+                                </span>
+                            ) : (
+                                <span className="text-xs">Never synced</span>
+                            )}
+                        </TooltipContent>
+                    </Tooltip>
                     <Button
                         variant="secondary"
                         size="sm"
@@ -192,7 +211,7 @@ export default function CharacterPage() {
 
             {/* Character Game Info Panel */}
             <div className="flex-1 min-h-0">
-                <CharGameInfoPanel character={character} />
+                <CharGameInfoPanel character={character} gameInfo={gameInfo} />
             </div>
 
             {/* Dialogs */}

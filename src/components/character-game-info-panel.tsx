@@ -13,15 +13,13 @@ import {
 } from "@/components/ui/collapsible"
 import { EmptyState } from "@/components/ui/empty-state"
 import { GlassCard } from "@/components/ui/glass-card"
-import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { SectionHeader } from "@/components/ui/section-header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useCharacterGameInfo } from "@/lib/queries/players"
 import { getClassBackgroundStyle } from "@/shared/libs/class-backgrounds"
 import { isCurrencyBlacklisted, isRelevantCurrency } from "@/shared/libs/currency-utils"
 import { formatUnixTimestampForDisplay } from "@/shared/libs/date-utils"
 import type { CharacterBlizzard } from "@/shared/models/blizzard.models"
-import type { Character } from "@/shared/models/character.models"
+import type { Character, CharacterGameInfo } from "@/shared/models/character.models"
 import type { Droptimizer } from "@/shared/models/simulation.models"
 import type { WowClassName } from "@/shared/models/wow.models"
 import BlizzardData from "./blizzard-data"
@@ -31,14 +29,13 @@ import { WowCurrencyIcon } from "./wow/wow-currency-icon"
 
 type CharGameInfoPanelProps = {
     character: Character
+    gameInfo?: CharacterGameInfo | null
 }
 
-export const CharGameInfoPanel = ({ character }: CharGameInfoPanelProps) => {
-    const charGameInfoQuery = useCharacterGameInfo(character.id)
-
-    const droptimizer = charGameInfoQuery.data?.droptimizer ?? null
-    const currencies = charGameInfoQuery.data?.droptimizer?.currencies ?? null
-    const blizzardData = charGameInfoQuery.data?.blizzard ?? null
+export const CharGameInfoPanel = ({ character, gameInfo }: CharGameInfoPanelProps) => {
+    const droptimizer = gameInfo?.droptimizer ?? null
+    const currencies = gameInfo?.droptimizer?.currencies ?? null
+    const blizzardData = gameInfo?.blizzard ?? null
 
     // Memoize sidebar data check to prevent unnecessary re-renders
     const hasSidebarData = useMemo(() => {
@@ -51,10 +48,6 @@ export const CharGameInfoPanel = ({ character }: CharGameInfoPanelProps) => {
     }, [currencies, droptimizer?.weeklyChest])
 
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(hasSidebarData)
-
-    if (charGameInfoQuery.isLoading) {
-        return <LoadingSpinner size="default" text="Loading gear data..." />
-    }
 
     return (
         <div className="flex gap-4 h-full">
