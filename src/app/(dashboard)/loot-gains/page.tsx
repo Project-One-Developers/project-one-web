@@ -119,9 +119,8 @@ export default function LootGainsPage(): JSX.Element {
         return filterDroptimizer(droptimizersRes.data, charRes.data ?? [], filter)
     }, [droptimizersRes.data, charRes.data, filter])
 
-    if (raidLootTableRes.isLoading || droptimizersRes.isLoading || charRes.isLoading) {
-        return <LoadingSpinner size="lg" iconSize="lg" text="Loading loot gains..." />
-    }
+    const isLoading =
+        raidLootTableRes.isLoading || droptimizersRes.isLoading || charRes.isLoading
 
     const encounterList = raidLootTableRes.data ?? []
 
@@ -138,8 +137,13 @@ export default function LootGainsPage(): JSX.Element {
                 showArmorTypeFilter={true}
             />
 
+            {/* Loading State */}
+            {isLoading && (
+                <LoadingSpinner size="lg" iconSize="lg" text="Loading loot gains..." />
+            )}
+
             {/* Boss List */}
-            {encounterList.length > 0 ? (
+            {!isLoading && encounterList.length > 0 && (
                 <div className="flex flex-wrap gap-4 justify-center">
                     {encounterList
                         .sort((a, b) => a.order - b.order)
@@ -154,7 +158,10 @@ export default function LootGainsPage(): JSX.Element {
                             />
                         ))}
                 </div>
-            ) : (
+            )}
+
+            {/* Empty State */}
+            {!isLoading && encounterList.length === 0 && (
                 <EmptyState
                     icon={<Package className="w-8 h-8" />}
                     title="No loot data"

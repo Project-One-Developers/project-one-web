@@ -335,9 +335,7 @@ export default function RaidProgressionPage(): JSX.Element {
         orderedBosses,
     ])
 
-    if (bossesQuery.isLoading || rosterProgressionQuery.isLoading) {
-        return <LoadingSpinner size="lg" iconSize="lg" text="Loading progression..." />
-    }
+    const isLoading = bossesQuery.isLoading || rosterProgressionQuery.isLoading
 
     return (
         <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-6 p-8">
@@ -372,24 +370,31 @@ export default function RaidProgressionPage(): JSX.Element {
                 </GlassCard>
             </div>
 
-            {/* Boss List */}
-            <div className="flex flex-wrap gap-4 justify-center">
-                {orderedBosses.map((boss) => {
-                    const progressData = progressByBoss.get(boss.id)
-                    if (!progressData) {
-                        return null
-                    }
+            {/* Loading State */}
+            {isLoading && (
+                <LoadingSpinner size="lg" iconSize="lg" text="Loading progression..." />
+            )}
 
-                    return (
-                        <BossPanel
-                            key={boss.id}
-                            boss={boss}
-                            progressData={progressData}
-                            selectedDifficulty={filter.selectedRaidDiff}
-                        />
-                    )
-                })}
-            </div>
+            {/* Boss List */}
+            {!isLoading && (
+                <div className="flex flex-wrap gap-4 justify-center">
+                    {orderedBosses.map((boss) => {
+                        const progressData = progressByBoss.get(boss.id)
+                        if (!progressData) {
+                            return null
+                        }
+
+                        return (
+                            <BossPanel
+                                key={boss.id}
+                                boss={boss}
+                                progressData={progressData}
+                                selectedDifficulty={filter.selectedRaidDiff}
+                            />
+                        )
+                    })}
+                </div>
+            )}
         </div>
     )
 }

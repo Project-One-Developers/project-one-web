@@ -374,10 +374,6 @@ export default function SummaryPage(): JSX.Element {
         showOnlyWithVaultTier,
     ])
 
-    if (characterQuery.isLoading) {
-        return <LoadingSpinner size="lg" iconSize="lg" text="Loading summary..." />
-    }
-
     return (
         <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-6 p-8">
             {/* Filter Bar with Search */}
@@ -417,41 +413,48 @@ export default function SummaryPage(): JSX.Element {
                 />
             </GlassCard>
 
+            {/* Loading State */}
+            {characterQuery.isLoading && (
+                <LoadingSpinner size="lg" iconSize="lg" text="Loading summary..." />
+            )}
+
             {/* Players Table */}
-            <GlassCard padding="none" className="overflow-hidden">
-                <Table className="w-full">
-                    <TableHeader className="bg-card/60">
-                        <TableRow className="hover:bg-card/60 border-b border-border/50">
-                            <TableHead className="text-muted-foreground font-semibold">
-                                Name
-                            </TableHead>
-                            <TableHead className="text-muted-foreground font-semibold">
-                                Tierset
-                            </TableHead>
-                            <TableHead className="text-muted-foreground font-semibold">
-                                Completion
-                            </TableHead>
-                            <TableHead className="text-muted-foreground font-semibold">
-                                Vault
-                            </TableHead>
-                            <TableHead className="text-muted-foreground font-semibold">
-                                Currency
-                            </TableHead>
-                            <TableHead className="text-muted-foreground font-semibold">
-                                Droptimizer
-                            </TableHead>
-                            <TableHead className="text-muted-foreground font-semibold">
-                                Blizzard
-                            </TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {filteredPlayers.map((summary) => (
-                            <PlayerRow key={summary.character.id} summary={summary} />
-                        ))}
-                    </TableBody>
-                </Table>
-            </GlassCard>
+            {!characterQuery.isLoading && (
+                <GlassCard padding="none" className="overflow-hidden">
+                    <Table className="w-full">
+                        <TableHeader className="bg-card/60">
+                            <TableRow className="hover:bg-card/60 border-b border-border/50">
+                                <TableHead className="text-muted-foreground font-semibold">
+                                    Name
+                                </TableHead>
+                                <TableHead className="text-muted-foreground font-semibold">
+                                    Tierset
+                                </TableHead>
+                                <TableHead className="text-muted-foreground font-semibold">
+                                    Completion
+                                </TableHead>
+                                <TableHead className="text-muted-foreground font-semibold">
+                                    Vault
+                                </TableHead>
+                                <TableHead className="text-muted-foreground font-semibold">
+                                    Currency
+                                </TableHead>
+                                <TableHead className="text-muted-foreground font-semibold">
+                                    Droptimizer
+                                </TableHead>
+                                <TableHead className="text-muted-foreground font-semibold">
+                                    Blizzard
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredPlayers.map((summary) => (
+                                <PlayerRow key={summary.character.id} summary={summary} />
+                            ))}
+                        </TableBody>
+                    </Table>
+                </GlassCard>
+            )}
         </div>
     )
 }

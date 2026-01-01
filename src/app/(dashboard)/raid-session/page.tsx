@@ -61,10 +61,6 @@ export default function RaidSessionListPage(): JSX.Element {
         return { groupedSessions: grouped, weekNumbers: weeks }
     }, [data, searchQuery])
 
-    if (isLoading) {
-        return <LoadingSpinner size="lg" iconSize="lg" text="Loading sessions..." />
-    }
-
     return (
         <div className="w-full min-h-screen flex flex-col gap-y-8 p-8 relative">
             {/* Page Header */}
@@ -87,64 +83,73 @@ export default function RaidSessionListPage(): JSX.Element {
                 </div>
             </GlassCard>
 
+            {/* Loading State */}
+            {isLoading && (
+                <LoadingSpinner size="lg" iconSize="lg" text="Loading sessions..." />
+            )}
+
             {/* Sessions Grouped by Week */}
-            <div className="flex-1 overflow-y-auto">
-                <div className="space-y-8">
-                    {weekNumbers.map((weekNumber) => {
-                        const sessions = groupedSessions[weekNumber] ?? []
-                        return (
-                            <div key={weekNumber} className="space-y-4">
-                                {/* Week Header */}
-                                <div className="flex items-center gap-4">
-                                    <div className="bg-primary/20 text-primary px-4 py-2 rounded-xl">
-                                        <span className="font-semibold text-sm">
-                                            Week {weekNumber}
+            {!isLoading && (
+                <div className="flex-1 overflow-y-auto">
+                    <div className="space-y-8">
+                        {weekNumbers.map((weekNumber) => {
+                            const sessions = groupedSessions[weekNumber] ?? []
+                            return (
+                                <div key={weekNumber} className="space-y-4">
+                                    {/* Week Header */}
+                                    <div className="flex items-center gap-4">
+                                        <div className="bg-primary/20 text-primary px-4 py-2 rounded-xl">
+                                            <span className="font-semibold text-sm">
+                                                Week {weekNumber}
+                                            </span>
+                                        </div>
+                                        <div className="h-px bg-border/50 flex-1" />
+                                        <span className="text-sm text-muted-foreground">
+                                            {s(sessions.length)} session
+                                            {sessions.length !== 1 ? "s" : ""}
                                         </span>
                                     </div>
-                                    <div className="h-px bg-border/50 flex-1" />
-                                    <span className="text-sm text-muted-foreground">
-                                        {s(sessions.length)} session
-                                        {sessions.length !== 1 ? "s" : ""}
-                                    </span>
+
+                                    {/* Sessions Grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                                        {sessions.map((session) => (
+                                            <SessionCard
+                                                key={session.id}
+                                                session={session}
+                                                onClick={() => {
+                                                    router.push(
+                                                        `/raid-session/${session.id}`
+                                                    )
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
                                 </div>
+                            )
+                        })}
+                    </div>
 
-                                {/* Sessions Grid */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                                    {sessions.map((session) => (
-                                        <SessionCard
-                                            key={session.id}
-                                            session={session}
-                                            onClick={() => {
-                                                router.push(`/raid-session/${session.id}`)
-                                            }}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        )
-                    })}
-                </div>
-
-                {weekNumbers.length === 0 && searchQuery.trim() && (
-                    <EmptyState
-                        icon={<Search className="w-8 h-8" />}
-                        title="No sessions found"
-                        description={`No sessions found matching "${searchQuery}"`}
-                    />
-                )}
-
-                {weekNumbers.length === 0 &&
-                    !searchQuery.trim() &&
-                    data?.length === 0 && (
+                    {weekNumbers.length === 0 && searchQuery.trim() && (
                         <EmptyState
-                            icon={<Calendar className="w-8 h-8" />}
-                            title="No raid sessions yet"
-                            description="Create your first session to get started"
+                            icon={<Search className="w-8 h-8" />}
+                            title="No sessions found"
+                            description={`No sessions found matching "${searchQuery}"`}
                         />
                     )}
 
-                <div className="pb-20" />
-            </div>
+                    {weekNumbers.length === 0 &&
+                        !searchQuery.trim() &&
+                        data?.length === 0 && (
+                            <EmptyState
+                                icon={<Calendar className="w-8 h-8" />}
+                                title="No raid sessions yet"
+                                description="Create your first session to get started"
+                            />
+                        )}
+
+                    <div className="pb-20" />
+                </div>
+            )}
 
             {/* Add Session Button */}
             <div className="fixed bottom-6 right-6 z-10">

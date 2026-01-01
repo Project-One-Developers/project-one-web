@@ -236,9 +236,8 @@ export default function LootTablePage(): JSX.Element {
         }))
     }, [bossesWithItemRes.data, debouncedSearchQuery])
 
-    if (bossesWithItemRes.isLoading || bisRes.isLoading || itemNotesRes.isLoading) {
-        return <LoadingSpinner size="lg" iconSize="lg" text="Loading loot table..." />
-    }
+    const isLoading =
+        bossesWithItemRes.isLoading || bisRes.isLoading || itemNotesRes.isLoading
 
     const bisLists = bisRes.data ?? []
     const itemNotes = itemNotesRes.data ?? []
@@ -282,8 +281,13 @@ export default function LootTablePage(): JSX.Element {
                 </GlassCard>
             </div>
 
+            {/* Loading State */}
+            {isLoading && (
+                <LoadingSpinner size="lg" iconSize="lg" text="Loading loot table..." />
+            )}
+
             {/* Boss List */}
-            {filteredBosses.length > 0 ? (
+            {!isLoading && filteredBosses.length > 0 && (
                 <div className="flex flex-wrap gap-4 justify-center">
                     {filteredBosses
                         .sort((a, b) => a.order - b.order)
@@ -298,7 +302,10 @@ export default function LootTablePage(): JSX.Element {
                             />
                         ))}
                 </div>
-            ) : (
+            )}
+
+            {/* Empty State */}
+            {!isLoading && filteredBosses.length === 0 && (
                 <EmptyState
                     icon={<Package className="w-8 h-8" />}
                     title="No items found"

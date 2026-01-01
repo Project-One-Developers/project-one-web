@@ -144,10 +144,6 @@ export default function RosterPage(): JSX.Element {
         link.click()
     }
 
-    if (playersQuery.isLoading) {
-        return <LoadingSpinner size="lg" iconSize="lg" text="Loading roster..." />
-    }
-
     const filteredPlayers = players
         .sort((a, b) => a.name.localeCompare(b.name))
         .filter((player) => {
@@ -254,109 +250,120 @@ export default function RosterPage(): JSX.Element {
                 </div>
             </GlassCard>
 
-            {/* Stats Row */}
-            <div className="flex flex-wrap gap-3">
-                <StatBadge
-                    variant="primary"
-                    icon={<Users className="w-4 h-4 text-primary" />}
-                    label="Players"
-                    value={s(players.length)}
-                />
-                <StatBadge
-                    variant="primary"
-                    icon={<Swords className="w-4 h-4 text-primary" />}
-                    label="Characters"
-                    value={s(totalCharacters)}
-                />
-                {itemLevelStats.mainMedian > 0 && (
+            {/* Stats Row - only show when data is loaded */}
+            {!playersQuery.isLoading && (
+                <div className="flex flex-wrap gap-3">
                     <StatBadge
-                        variant="info"
-                        icon={<span className="text-blue-400 font-bold">◆</span>}
-                        label="Median iLvl (Mains)"
-                        value={Math.round(itemLevelStats.mainMedian)}
+                        variant="primary"
+                        icon={<Users className="w-4 h-4 text-primary" />}
+                        label="Players"
+                        value={s(players.length)}
                     />
-                )}
-                {itemLevelStats.median > 0 && (
                     <StatBadge
-                        icon={<span className="text-muted-foreground font-bold">◆</span>}
-                        label="Median iLvl (All)"
-                        value={Math.round(itemLevelStats.median)}
+                        variant="primary"
+                        icon={<Swords className="w-4 h-4 text-primary" />}
+                        label="Characters"
+                        value={s(totalCharacters)}
                     />
-                )}
-                {itemLevelStats.lowCount > 0 && (
-                    <StatBadge
-                        variant="warning"
-                        icon={<AlertTriangle className="w-4 h-4 text-orange-400" />}
-                        label="Low Gear"
-                        value={s(itemLevelStats.lowCount)}
-                    />
-                )}
-            </div>
+                    {itemLevelStats.mainMedian > 0 && (
+                        <StatBadge
+                            variant="info"
+                            icon={<span className="text-blue-400 font-bold">◆</span>}
+                            label="Median iLvl (Mains)"
+                            value={Math.round(itemLevelStats.mainMedian)}
+                        />
+                    )}
+                    {itemLevelStats.median > 0 && (
+                        <StatBadge
+                            icon={
+                                <span className="text-muted-foreground font-bold">◆</span>
+                            }
+                            label="Median iLvl (All)"
+                            value={Math.round(itemLevelStats.median)}
+                        />
+                    )}
+                    {itemLevelStats.lowCount > 0 && (
+                        <StatBadge
+                            variant="warning"
+                            icon={<AlertTriangle className="w-4 h-4 text-orange-400" />}
+                            label="Low Gear"
+                            value={s(itemLevelStats.lowCount)}
+                        />
+                    )}
+                </div>
+            )}
+
+            {/* Loading State */}
+            {playersQuery.isLoading && (
+                <LoadingSpinner size="lg" iconSize="lg" text="Loading roster..." />
+            )}
 
             {/* Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-                {filteredPlayers.map((player) => (
-                    <GlassCard
-                        key={player.id}
-                        interactive
-                        padding="lg"
-                        className="group relative flex flex-col"
-                    >
-                        {/* Hover Actions */}
-                        <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 rounded-lg hover:bg-destructive/20 hover:text-destructive"
-                                onClick={() => {
-                                    handleDeleteClick(player)
-                                }}
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </div>
+            {!playersQuery.isLoading && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                    {filteredPlayers.map((player) => (
+                        <GlassCard
+                            key={player.id}
+                            interactive
+                            padding="lg"
+                            className="group relative flex flex-col"
+                        >
+                            {/* Hover Actions */}
+                            <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 rounded-lg hover:bg-destructive/20 hover:text-destructive"
+                                    onClick={() => {
+                                        handleDeleteClick(player)
+                                    }}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
 
-                        {/* Player Name */}
-                        <h2 className="font-bold text-lg mb-4 pr-10 truncate">
-                            {player.name}
-                        </h2>
+                            {/* Player Name */}
+                            <h2 className="font-bold text-lg mb-4 pr-10 truncate">
+                                {player.name}
+                            </h2>
 
-                        {/* Characters Row */}
-                        <div className="flex items-end gap-2 mt-auto">
-                            {player.charsSummary.length > 0 ? (
-                                <CharacterOverviewIcon
-                                    charsWithSummary={player.charsSummary}
-                                    isLowItemLevel={isLowItemLevel}
-                                />
-                            ) : (
-                                <div className="flex flex-col items-center opacity-50">
-                                    <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-muted/50 border-2 border-dashed border-muted-foreground/30">
-                                        <Users className="w-5 h-5 text-muted-foreground/50" />
+                            {/* Characters Row */}
+                            <div className="flex items-end gap-2 mt-auto">
+                                {player.charsSummary.length > 0 ? (
+                                    <CharacterOverviewIcon
+                                        charsWithSummary={player.charsSummary}
+                                        isLowItemLevel={isLowItemLevel}
+                                    />
+                                ) : (
+                                    <div className="flex flex-col items-center opacity-50">
+                                        <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-muted/50 border-2 border-dashed border-muted-foreground/30">
+                                            <Users className="w-5 h-5 text-muted-foreground/50" />
+                                        </div>
+                                        <span className="text-[10px] mt-1.5 text-muted-foreground/50 font-medium">
+                                            No chars
+                                        </span>
                                     </div>
-                                    <span className="text-[10px] mt-1.5 text-muted-foreground/50 font-medium">
-                                        No chars
-                                    </span>
-                                </div>
-                            )}
+                                )}
 
-                            {/* Add Character Button */}
-                            <button
-                                onClick={() => {
-                                    handleNewCharClick(player)
-                                }}
-                                className="flex flex-col items-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-105"
-                            >
-                                <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10 border border-dashed border-primary/40 hover:bg-primary/20 hover:border-primary/60 transition-colors">
-                                    <PlusIcon className="w-4 h-4 text-primary" />
-                                </div>
-                            </button>
-                        </div>
-                    </GlassCard>
-                ))}
-            </div>
+                                {/* Add Character Button */}
+                                <button
+                                    onClick={() => {
+                                        handleNewCharClick(player)
+                                    }}
+                                    className="flex flex-col items-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-105"
+                                >
+                                    <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10 border border-dashed border-primary/40 hover:bg-primary/20 hover:border-primary/60 transition-colors">
+                                        <PlusIcon className="w-4 h-4 text-primary" />
+                                    </div>
+                                </button>
+                            </div>
+                        </GlassCard>
+                    ))}
+                </div>
+            )}
 
             {/* Empty State */}
-            {filteredPlayers.length === 0 && (
+            {!playersQuery.isLoading && filteredPlayers.length === 0 && (
                 <EmptyState
                     icon={<Users className="w-8 h-8" />}
                     title="No players found"

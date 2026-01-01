@@ -28,9 +28,7 @@ export default function DroptimizerPage(): JSX.Element {
         return charQuery.data ?? []
     }, [charQuery.data])
 
-    if (droptimizerQuery.isLoading || charQuery.isLoading) {
-        return <LoadingSpinner size="lg" iconSize="lg" text="Loading droptimizers..." />
-    }
+    const isLoading = droptimizerQuery.isLoading || charQuery.isLoading
 
     return (
         <div className="w-full min-h-screen overflow-y-auto flex flex-col gap-y-6 p-8">
@@ -49,8 +47,13 @@ export default function DroptimizerPage(): JSX.Element {
                 <DroptimizerNewDialog />
             </div>
 
+            {/* Loading State */}
+            {isLoading && (
+                <LoadingSpinner size="lg" iconSize="lg" text="Loading droptimizers..." />
+            )}
+
             {/* Droptimizer Cards */}
-            {filteredDroptimizers.length > 0 ? (
+            {!isLoading && filteredDroptimizers.length > 0 && (
                 <div className="flex flex-wrap gap-4 justify-center">
                     {filteredDroptimizers.map((dropt) => (
                         <DroptimizerCard
@@ -60,7 +63,10 @@ export default function DroptimizerPage(): JSX.Element {
                         />
                     ))}
                 </div>
-            ) : (
+            )}
+
+            {/* Empty State */}
+            {!isLoading && filteredDroptimizers.length === 0 && (
                 <EmptyState
                     icon={<FileSpreadsheet className="w-8 h-8" />}
                     title="No droptimizers found"
