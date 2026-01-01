@@ -18,7 +18,7 @@ import {
 } from "@/actions/characters"
 import { getPlayersWithSummaryCompact } from "@/actions/summary"
 import type {
-    EditCharacter,
+    EditCharacterData,
     EditPlayer,
     NewCharacter,
     NewCharacterWithoutClass,
@@ -189,13 +189,17 @@ export function useEditCharacter() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (character: EditCharacter) => editCharacter(character),
-        onSuccess: () => {
+        mutationFn: ({ id, data }: { id: string; data: EditCharacterData }) =>
+            editCharacter(id, data),
+        onSuccess: (_data, variables) => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithCharacters],
             })
             void queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.character, variables.id],
+            })
         },
     })
 }

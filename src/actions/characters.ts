@@ -6,7 +6,7 @@ import type {
     Character,
     CharacterGameInfo,
     CharacterWithPlayer,
-    EditCharacter,
+    EditCharacterData,
     EditPlayer,
     NewCharacter,
     NewCharacterWithoutClass,
@@ -46,9 +46,10 @@ export async function deleteCharacter(id: string): Promise<void> {
 }
 
 export async function editCharacter(
-    edited: EditCharacter
+    id: string,
+    data: EditCharacterData
 ): Promise<CharacterWithPlayer | null> {
-    return characterService.edit(edited)
+    return characterService.edit(id, data)
 }
 
 // ============== PLAYERS ==============

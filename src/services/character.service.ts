@@ -11,7 +11,7 @@ import type {
     Character,
     CharacterGameInfo,
     CharacterWithPlayer,
-    EditCharacter,
+    EditCharacterData,
     NewCharacter,
     NewCharacterWithoutClass,
 } from "@/shared/models/character.models"
@@ -92,9 +92,12 @@ export const characterService = {
         return characterRepo.getWithPlayerById(id)
     },
 
-    edit: async (edited: EditCharacter): Promise<CharacterWithPlayer | null> => {
-        await characterRepo.edit(edited)
-        return characterRepo.getWithPlayerById(edited.id)
+    edit: async (
+        id: string,
+        data: EditCharacterData
+    ): Promise<CharacterWithPlayer | null> => {
+        await characterRepo.edit(id, data)
+        return characterRepo.getWithPlayerById(id)
     },
 
     delete: async (id: string): Promise<void> => {

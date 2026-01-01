@@ -55,10 +55,13 @@ export const newCharacterWithoutClassSchema = newCharacterSchema.omit({
 })
 export type NewCharacterWithoutClass = z.infer<typeof newCharacterWithoutClassSchema>
 
-export const editCharacterSchema = characterSchema.extend({
-    id: characterSchema.shape.id,
+export const editCharacterDataSchema = characterSchema.pick({
+    name: true,
+    realm: true,
+    role: true,
+    main: true,
 })
-export type EditCharacter = z.infer<typeof editCharacterSchema>
+export type EditCharacterData = z.infer<typeof editCharacterDataSchema>
 
 export const characterGameInfoSchema = z.object({
     droptimizer: droptimizerSchema.nullable(),

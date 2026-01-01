@@ -7,7 +7,7 @@ import { toast } from "sonner"
 import { useAddCharacterWithSync, useEditCharacter } from "@/lib/queries/players"
 import type {
     Character,
-    EditCharacter,
+    EditCharacterData,
     NewCharacterWithoutClass,
     Player,
 } from "@/shared/models/character.models"
@@ -132,11 +132,6 @@ export default function CharacterDialog({
             newErrors.realm = "Realm is required"
         }
 
-        // Class is only required in edit mode (in add mode it's fetched from Blizzard)
-        if (mode === "edit" && !formData.class.trim()) {
-            newErrors.class = "Class is required"
-        }
-
         if (!formData.role.trim()) {
             newErrors.role = "Role is required"
         }
@@ -153,24 +148,26 @@ export default function CharacterDialog({
         }
 
         if (mode === "edit" && existingCharacter) {
-            const editData: EditCharacter = {
-                id: existingCharacter.id,
+            const editData: EditCharacterData = {
                 name: formData.name,
                 realm: formData.realm,
-                class: formData.class,
                 role: formData.role,
                 main: formData.main,
-                playerId: existingCharacter.playerId,
             }
-            editMutation.mutate(editData, {
-                onSuccess: () => {
-                    setOpen(false)
-                    toast.success(`Character ${formData.name} edited successfully`)
-                },
-                onError: (error) => {
-                    toast.error(`Unable to edit the character. Error: ${error.message}`)
-                },
-            })
+            editMutation.mutate(
+                { id: existingCharacter.id, data: editData },
+                {
+                    onSuccess: () => {
+                        setOpen(false)
+                        toast.success(`Character ${formData.name} edited successfully`)
+                    },
+                    onError: (error) => {
+                        toast.error(
+                            `Unable to edit the character. Error: ${error.message}`
+                        )
+                    },
+                }
+            )
         } else {
             if (!player) {
                 throw Error("Unable to add character without selecting a player")
@@ -211,7 +208,6 @@ export default function CharacterDialog({
         }
     }
 
-    const filteredClasses = ROLES_CLASSES_MAP[formData.role]
     const isLoading = addMutation.isPending || editMutation.isPending
 
     return (
@@ -290,34 +286,6 @@ export default function CharacterDialog({
                             <p className="text-sm text-red-500">{errors.role}</p>
                         )}
                     </div>
-
-                    {mode === "edit" && (
-                        <div className="space-y-2">
-                            <Label htmlFor="class">Class</Label>
-                            <Select
-                                value={formData.class}
-                                onValueChange={(value) => {
-                                    handleInputChange("class", value)
-                                }}
-                            >
-                                <SelectTrigger
-                                    className={errors.class ? "border-red-500" : ""}
-                                >
-                                    <SelectValue placeholder="Select a class" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {filteredClasses.map((c) => (
-                                        <SelectItem key={c} value={c}>
-                                            {c}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            {errors.class && (
-                                <p className="text-sm text-red-500">{errors.class}</p>
-                            )}
-                        </div>
-                    )}
 
                     <div className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                         <Checkbox

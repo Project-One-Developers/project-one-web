@@ -8,7 +8,7 @@ import {
     characterWithPlayerSchema,
     type Character,
     type CharacterWithPlayer,
-    type EditCharacter,
+    type EditCharacterData,
     type NewCharacter,
 } from "@/shared/models/character.models"
 
@@ -74,17 +74,16 @@ export const characterRepo = {
         return id
     },
 
-    edit: async (edited: EditCharacter): Promise<void> => {
+    edit: async (id: string, data: EditCharacterData): Promise<void> => {
         await db
             .update(charTable)
             .set({
-                name: edited.name,
-                realm: edited.realm,
-                class: edited.class,
-                role: edited.role,
-                main: edited.main,
+                name: data.name,
+                realm: data.realm,
+                role: data.role,
+                main: data.main,
             })
-            .where(eq(charTable.id, edited.id))
+            .where(eq(charTable.id, id))
     },
 
     delete: async (id: string): Promise<void> => {
