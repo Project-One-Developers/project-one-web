@@ -10,12 +10,12 @@ const SECONDS_PER_DAY = 86400
 // Core timestamp utilities
 // ============================================================================
 
-/** Returns the current Unix timestamp in seconds. */
-export const getUnixTimestamp = (): number => DateTime.now().toSeconds()
+/** Returns the current Unix timestamp in seconds (integer). */
+export const getUnixTimestamp = (): number => Math.floor(DateTime.now().toSeconds())
 
-/** Converts an ISO 8601 datetime string to a Unix timestamp in seconds. */
+/** Converts an ISO 8601 datetime string to a Unix timestamp in seconds (integer). */
 export const isoToUnixTimestamp = (isoDateTime: string): number =>
-    DateTime.fromISO(isoDateTime).toSeconds()
+    Math.floor(DateTime.fromISO(isoDateTime).toSeconds())
 
 // ============================================================================
 // Relative time utilities
