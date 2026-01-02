@@ -35,43 +35,40 @@ const RIGHT_SLOTS: WowItemEquippedSlotKey[] = [
 
 export default function CharacterPaperdoll({ renderGearSlot }: CharacterPaperdollProps) {
     return (
-        <div className="relative w-full h-full flex flex-col">
-            {/* Main gear area - left and right columns */}
-            <div className="flex-1 flex">
-                {/* Left Column - fixed to left edge */}
-                <div className="flex flex-col justify-between py-2 w-70 shrink-0">
-                    {LEFT_SLOTS.map((slot) => (
-                        <div key={slot} className="flex justify-start">
-                            {renderGearSlot(slot, { rightSide: false })}
-                        </div>
-                    ))}
-                </div>
-
-                {/* Center spacer - character render area */}
-                <div className="flex-1" />
-
-                {/* Right Column - fixed to right edge */}
-                <div className="flex flex-col justify-between py-2 w-70 shrink-0">
-                    {RIGHT_SLOTS.map((slot) => (
-                        <div key={slot} className="flex justify-end">
-                            {renderGearSlot(slot, { rightSide: true })}
-                        </div>
-                    ))}
-                </div>
+        <div className="relative w-full h-full grid grid-cols-[22%_1fr_22%] grid-rows-[1fr_auto]">
+            {/* Left Column - gear slots with consistent spacing */}
+            <div className="flex flex-col justify-around py-1">
+                {LEFT_SLOTS.map((slot) => (
+                    <div key={slot} className="flex justify-start">
+                        {renderGearSlot(slot, { rightSide: false })}
+                    </div>
+                ))}
             </div>
 
-            {/* Bottom Row - Weapons centered in the middle area (between columns) */}
-            <div className="flex py-3 shrink-0">
-                <div className="w-70 shrink-0" />
-                <div className="flex-1 flex items-center gap-8">
-                    <div className="flex-1 flex justify-end">
+            {/* Center spacer - character render area */}
+            <div />
+
+            {/* Right Column - gear slots with consistent spacing */}
+            <div className="flex flex-col justify-around py-1">
+                {RIGHT_SLOTS.map((slot) => (
+                    <div key={slot} className="flex justify-end">
+                        {renderGearSlot(slot, { rightSide: true })}
+                    </div>
+                ))}
+            </div>
+
+            {/* Bottom Row - Weapons centered, spans all columns */}
+            <div className="col-span-3 flex py-2">
+                <div className="w-[22%] shrink-0" />
+                <div className="flex-1 flex items-center justify-center gap-8">
+                    <div className="flex justify-end">
                         {renderGearSlot("main_hand", { rightSide: true })}
                     </div>
-                    <div className="flex-1 flex justify-start">
+                    <div className="flex justify-start">
                         {renderGearSlot("off_hand", { rightSide: false })}
                     </div>
                 </div>
-                <div className="w-70 shrink-0" />
+                <div className="w-[22%] shrink-0" />
             </div>
         </div>
     )

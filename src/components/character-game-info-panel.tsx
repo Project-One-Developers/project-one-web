@@ -15,6 +15,7 @@ import { EmptyState } from "@/components/ui/empty-state"
 import { GlassCard } from "@/components/ui/glass-card"
 import { SectionHeader } from "@/components/ui/section-header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useIsWideScreen } from "@/hooks/use-wide-screen"
 import { getClassBackgroundStyle } from "@/shared/libs/class-backgrounds"
 import { isCurrencyBlacklisted, isRelevantCurrency } from "@/shared/libs/currency-utils"
 import { formatUnixTimestampForDisplay } from "@/shared/libs/date-utils"
@@ -37,6 +38,8 @@ export const CharGameInfoPanel = ({ character, gameInfo }: CharGameInfoPanelProp
     const currencies = gameInfo?.droptimizer?.currencies ?? null
     const blizzardData = gameInfo?.blizzard ?? null
 
+    // Scale up on wide screens to match appearance at 125% OS scaling
+    const isWideScreen = useIsWideScreen()
     const [sidebarOpen, setSidebarOpen] = useState(false)
 
     return (
@@ -64,7 +67,13 @@ export const CharGameInfoPanel = ({ character, gameInfo }: CharGameInfoPanelProp
             </Collapsible>
 
             {/* Main Content - Character Gear */}
-            <div className="flex-1 min-w-0 h-full">
+            {/* Scale up on wide screens to match appearance at 125% OS scaling */}
+            <div
+                className="flex-1 min-w-0 h-full origin-top-left"
+                style={{
+                    zoom: isWideScreen ? 1.25 : 1,
+                }}
+            >
                 <GlassCard padding="none" className="relative h-full overflow-hidden">
                     <GearInfo
                         blizzard={blizzardData}
@@ -246,15 +255,15 @@ const GearInfo = ({
                 }}
             />
             {/* Character Render (transparent PNG over class gradient) */}
-            {/* Centered in the middle area between gear columns (280px each side) */}
+            {/* Centered in the middle area between gear columns */}
             {characterRenderUrl && (
-                <div className="absolute inset-0 flex items-end justify-center pointer-events-none overflow-hidden px-70">
+                <div className="absolute inset-x-[22%] inset-y-0 flex items-end justify-center pointer-events-none overflow-hidden">
                     <Image
                         src={characterRenderUrl}
                         alt="Character render"
                         width={936}
                         height={1170}
-                        className="object-contain object-bottom h-full max-w-none opacity-90 origin-bottom scale-[1.3] translate-y-[-6%]"
+                        className="object-contain object-bottom h-full max-w-none opacity-90 origin-bottom scale-130 -translate-y-[6%]"
                         unoptimized
                     />
                 </div>

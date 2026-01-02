@@ -22,6 +22,7 @@ export default function CharacterGearLayout({
 
     return (
         <div className="w-full h-full flex flex-col">
+            {/* Paperdoll that fills available space */}
             <div className="flex-1 min-h-0">
                 <CharacterPaperdoll renderGearSlot={renderGearSlot} />
             </div>
