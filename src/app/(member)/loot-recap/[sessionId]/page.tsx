@@ -162,24 +162,26 @@ export default function LootRecapDetailPage() {
                                             showExtendedInfo
                                             showTiersetRibbon
                                         />
-                                        <div className="flex-1 min-w-0 text-xs text-muted-foreground">
-                                            <p className="truncate">{bossName}</p>
-                                            <p className="capitalize">
-                                                {loot.raidDifficulty.replace("_", " ")}
-                                            </p>
+                                        <div className="flex-1" />
+                                        <div className="flex flex-col items-end shrink-0 text-right">
+                                            <span className="text-xs text-muted-foreground truncate max-w-32">
+                                                {bossName}
+                                            </span>
+                                            {loot.assignedHighlights?.dpsGain !==
+                                                undefined &&
+                                                loot.assignedHighlights.dpsGain > 0 && (
+                                                    <span className="text-xs font-medium text-green-400">
+                                                        +
+                                                        {s(
+                                                            Math.round(
+                                                                loot.assignedHighlights
+                                                                    .dpsGain
+                                                            )
+                                                        )}{" "}
+                                                        DPS
+                                                    </span>
+                                                )}
                                         </div>
-                                        {loot.assignedHighlights?.dpsGain !== undefined &&
-                                            loot.assignedHighlights.dpsGain > 0 && (
-                                                <span className="text-xs font-medium text-green-400 shrink-0">
-                                                    +
-                                                    {s(
-                                                        Math.round(
-                                                            loot.assignedHighlights
-                                                                .dpsGain
-                                                        )
-                                                    )}
-                                                </span>
-                                            )}
                                     </div>
                                 ))}
                             </div>
