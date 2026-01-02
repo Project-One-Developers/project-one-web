@@ -69,6 +69,11 @@ export const characterGameInfoSchema = z.object({
 })
 export type CharacterGameInfo = z.infer<typeof characterGameInfoSchema>
 
+export const characterWithGameInfoSchema = characterWithPlayerSchema.extend({
+    gameInfo: characterGameInfoSchema,
+})
+export type CharacterWithGameInfo = z.infer<typeof characterWithGameInfoSchema>
+
 // Compact schemas for summary display - fields nullable due to LEFT JOINs
 export const characterGameInfoCompactSchema = z.object({
     charId: z.string(),

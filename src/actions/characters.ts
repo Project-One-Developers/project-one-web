@@ -4,7 +4,7 @@ import { characterService } from "@/services/character.service"
 import { playerService } from "@/services/player.service"
 import type {
     Character,
-    CharacterGameInfo,
+    CharacterWithGameInfo,
     CharacterWithPlayer,
     EditCharacterData,
     EditPlayer,
@@ -29,8 +29,10 @@ export async function addCharacterWithSync(
     return characterService.addWithSync(character)
 }
 
-export async function getCharacter(id: string): Promise<CharacterWithPlayer | null> {
-    return characterService.getById(id)
+export async function getCharacterWithGameInfo(
+    id: string
+): Promise<CharacterWithGameInfo | null> {
+    return characterService.getByIdWithGameInfo(id)
 }
 
 export async function getCharacterList(): Promise<Character[]> {
@@ -72,14 +74,6 @@ export async function getPlayerWithCharactersList(): Promise<PlayerWithCharacter
 
 export async function getPlayersWithoutCharacters(): Promise<Player[]> {
     return playerService.getWithoutCharacters()
-}
-
-// ============== CHARACTER INFO ==============
-
-export async function getCharLatestGameInfo(
-    characterId: string
-): Promise<CharacterGameInfo> {
-    return characterService.getLatestGameInfo(characterId)
 }
 
 // ============== CHARACTER MEDIA ==============

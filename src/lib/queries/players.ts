@@ -9,10 +9,9 @@ import {
     deletePlayer,
     editCharacter,
     editPlayer,
-    getCharacter,
     getCharacterList,
     getCharactersWithPlayerList,
-    getCharLatestGameInfo,
+    getCharacterWithGameInfo,
     getPlayerWithCharactersList,
     getPlayersWithoutCharacters,
     assignCharacterToPlayer,
@@ -62,29 +61,16 @@ export function useCharactersWithPlayer() {
     })
 }
 
-export function useCharacter(id: string | undefined) {
+export function useCharacterWithGameInfo(id: string | undefined) {
     return useQuery({
-        queryKey: [queryKeys.character, id],
+        queryKey: [queryKeys.character, id, "withGameInfo"],
         queryFn: () => {
             if (!id) {
                 throw new Error("No character id provided")
             }
-            return getCharacter(id)
+            return getCharacterWithGameInfo(id)
         },
         enabled: !!id,
-    })
-}
-
-export function useCharacterGameInfo(characterId?: string) {
-    return useQuery({
-        queryKey: [queryKeys.characterGameInfo, characterId],
-        queryFn: () => {
-            if (!characterId) {
-                throw new Error("Character ID is required")
-            }
-            return getCharLatestGameInfo(characterId)
-        },
-        enabled: !!characterId,
     })
 }
 

@@ -1,6 +1,5 @@
 "use client"
 
-import { useQueryClient } from "@tanstack/react-query"
 import { ArrowLeft, Crown, Edit, RefreshCw, Trash2, Users } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
 import { useState } from "react"
@@ -18,27 +17,24 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { WowCharacterLink } from "@/components/wow/wow-character-links"
 import { WowClassIcon } from "@/components/wow/wow-class-icon"
-import { queryKeys } from "@/lib/queries/keys"
-import { useCharacter, useCharacterGameInfo } from "@/lib/queries/players"
+import { useCharacterWithGameInfo } from "@/lib/queries/players"
 import { formatUnixTimestampForDisplay } from "@/shared/libs/date-utils"
 
 export default function CharacterPage() {
     const params = useParams<{ characterId: string }>()
     const router = useRouter()
-    const queryClient = useQueryClient()
     const characterId = params.characterId
 
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [isSyncing, setIsSyncing] = useState(false)
 
-    const characterQuery = useCharacter(characterId)
-    const character = characterQuery.data
-    const gameInfoQuery = useCharacterGameInfo(characterId)
-    const gameInfo = gameInfoQuery.data
+    const { data, isLoading, refetch } = useCharacterWithGameInfo(characterId)
+    const character = data
+    const gameInfo = data?.gameInfo
     const syncedAt = gameInfo?.blizzard?.syncedAt
 
-    if (characterQuery.isLoading) {
+    if (isLoading) {
         return <LoadingSpinner size="lg" iconSize="lg" text="Loading character..." />
     }
 
@@ -144,18 +140,7 @@ export default function CharacterPage() {
                                         character.name,
                                         character.realm
                                     )
-                                        .then(() =>
-                                            Promise.all([
-                                                characterQuery.refetch(),
-                                                gameInfoQuery.refetch(),
-                                                queryClient.invalidateQueries({
-                                                    queryKey: [
-                                                        queryKeys.characterGameInfo,
-                                                        character.id,
-                                                    ],
-                                                }),
-                                            ])
-                                        )
+                                        .then(() => refetch())
                                         .then(() => {
                                             toast.success("Character synced successfully")
                                         })

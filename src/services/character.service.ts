@@ -9,7 +9,7 @@ import { mapBlizzardClassId } from "@/shared/libs/blizzard-mappings"
 import { s } from "@/shared/libs/string-utils"
 import type {
     Character,
-    CharacterGameInfo,
+    CharacterWithGameInfo,
     CharacterWithPlayer,
     EditCharacterData,
     NewCharacter,
@@ -17,8 +17,24 @@ import type {
 } from "@/shared/models/character.models"
 
 export const characterService = {
-    getById: async (id: string): Promise<CharacterWithPlayer | null> => {
-        return characterRepo.getWithPlayerById(id)
+    /**
+     * Get character with player info and all game data (droptimizer + blizzard) in one call
+     */
+    getByIdWithGameInfo: async (id: string): Promise<CharacterWithGameInfo | null> => {
+        const [character, droptimizer, blizzard] = await Promise.all([
+            characterRepo.getWithPlayerById(id),
+            droptimizerRepo.getByCharacterId(id),
+            blizzardRepo.getByCharId(id),
+        ])
+
+        if (!character) {
+            return null
+        }
+
+        return {
+            ...character,
+            gameInfo: { droptimizer, blizzard },
+        }
     },
 
     getList: async (): Promise<Character[]> => {
@@ -102,21 +118,6 @@ export const characterService = {
 
     delete: async (id: string): Promise<void> => {
         await characterRepo.delete(id)
-    },
-
-    /**
-     * Get latest game info (droptimizer + blizzard data) for a character
-     */
-    getLatestGameInfo: async (characterId: string): Promise<CharacterGameInfo> => {
-        const [lastDroptimizer, lastBlizzard] = await Promise.all([
-            droptimizerRepo.getByCharacterId(characterId),
-            blizzardRepo.getByCharId(characterId),
-        ])
-
-        return {
-            droptimizer: lastDroptimizer,
-            blizzard: lastBlizzard,
-        }
     },
 
     /**
