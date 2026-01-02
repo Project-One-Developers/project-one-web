@@ -2,13 +2,14 @@ import "server-only"
 import { itemRepo } from "@/db/repositories/items"
 import { type NewSimC } from "@/db/repositories/simc"
 import { logger } from "@/lib/logger"
+import type { SyncContext } from "@/services/droptimizer.service"
 import {
     evalRealSeason,
     parseItemLevelFromBonusIds,
     parseItemTrack,
 } from "@/shared/libs/items/item-bonus-utils"
 import { s } from "@/shared/libs/string-utils"
-import type { GearItem } from "@/shared/models/item.models"
+import type { GearItem, Item } from "@/shared/models/item.models"
 import type { DroptimizerCurrency } from "@/shared/models/simulation.models"
 import { wowItemEquippedSlotKeySchema } from "@/shared/models/wow.models"
 import { CURRENT_CATALYST_CHARGE_ID, realmSlugToName } from "@/shared/wow.consts"
@@ -216,7 +217,10 @@ function parseCurrenciesFromSimc(simc: string): DroptimizerCurrency[] {
     return currencies
 }
 
-export async function parseGreatVaultFromSimc(simc: string): Promise<GearItem[]> {
+export async function parseGreatVaultFromSimc(
+    simc: string,
+    context?: SyncContext
+): Promise<GearItem[]> {
     const rewardSectionRegex =
         /### Weekly Reward Choices\n([\s\S]*?)\n### End of Weekly Reward Choices/
     const match = rewardSectionRegex.exec(simc)
@@ -227,10 +231,11 @@ export async function parseGreatVaultFromSimc(simc: string): Promise<GearItem[]>
     }
 
     const items: GearItem[] = []
-    const itemsInDb = await itemRepo.getAll()
 
-    // Create a Map for O(1) lookups instead of O(n) array.find()
-    const itemsMap = new Map(itemsInDb.map((item) => [item.id, item]))
+    // Use context if provided, otherwise fetch from DB
+    const itemsMap: Map<number, Item> = context
+        ? context.itemsById
+        : new Map((await itemRepo.getAll()).map((item) => [item.id, item]))
 
     // Simple regex to match gear lines only
     const gearRegex = /^#.*?id=(\d+),bonus_id=([\d/]+)/gm
@@ -294,18 +299,23 @@ export async function parseGreatVaultFromSimc(simc: string): Promise<GearItem[]>
 
 export async function parseTiersets(
     equipped: GearItem[],
-    bags: GearItem[]
+    bags: GearItem[],
+    context?: SyncContext
 ): Promise<GearItem[]> {
-    const tiersetItems = await itemRepo.getTiersetAndTokenList()
-
-    const tiersetItemIds = new Set(tiersetItems.map((item) => item.id))
+    // Use context if provided, otherwise fetch from DB
+    const tiersetItemIds: Set<number> = context
+        ? context.tiersetItemIds
+        : new Set((await itemRepo.getTiersetAndTokenList()).map((item) => item.id))
 
     const allItems = [...equipped, ...bags]
 
     return allItems.filter((item) => tiersetItemIds.has(item.item.id))
 }
 
-export async function parseBagGearsFromSimc(simc: string): Promise<GearItem[]> {
+export async function parseBagGearsFromSimc(
+    simc: string,
+    context?: SyncContext
+): Promise<GearItem[]> {
     // Extract "Gear from Bags" section
     const gearSectionMatch = /Gear from Bags[\s\S]*?(?=\n\n|$)/.exec(simc)
     if (!gearSectionMatch) {
@@ -316,7 +326,10 @@ export async function parseBagGearsFromSimc(simc: string): Promise<GearItem[]> {
     const gearSection = gearSectionMatch[0]
     const itemLines = gearSection.split("\n").filter((line) => line.includes("="))
 
-    const itemsInDb = await itemRepo.getAll()
+    // Use context if provided, otherwise fetch from DB
+    const itemsInDb = context
+        ? Array.from(context.itemsById.values())
+        : await itemRepo.getAll()
     const items: GearItem[] = []
 
     for (const line of itemLines) {

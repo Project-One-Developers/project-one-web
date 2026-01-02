@@ -1,10 +1,11 @@
-import { partition } from "es-toolkit"
+import { keyBy, partition } from "es-toolkit"
 import { DateTime } from "luxon"
 import pLimit from "p-limit"
 import "server-only"
 import { match } from "ts-pattern"
 import { characterRepo } from "@/db/repositories/characters"
 import { droptimizerRepo } from "@/db/repositories/droptimizer"
+import { itemRepo } from "@/db/repositories/items"
 import { simcRepo } from "@/db/repositories/simc"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
@@ -13,11 +14,46 @@ import { fetchDroptimizerFromQELiveURL } from "@/services/libs/qelive-parser"
 import { fetchDroptimizerFromURL } from "@/services/libs/raidbots-parser"
 import { parseSimC } from "@/services/libs/simc-parser"
 import { s } from "@/shared/libs/string-utils"
+import type { Item, ItemToCatalyst, ItemToTierset } from "@/shared/models/item.models"
 import type { Droptimizer, NewDroptimizer, SimC } from "@/shared/models/simulation.models"
 import type { WowRaidDifficulty } from "@/shared/models/wow.models"
 import type { VoidResult } from "@/shared/types"
 
 type DurationInput = { days?: number; hours?: number }
+
+/**
+ * Shared context containing pre-fetched reference data.
+ * Passed through the parsing chain to avoid redundant DB queries.
+ */
+export type SyncContext = {
+    itemsById: Map<number, Item>
+    tiersetByItemId: Record<string, ItemToTierset>
+    catalystByKey: Record<string, ItemToCatalyst>
+    tiersetItemIds: Set<number>
+}
+
+/**
+ * Build sync context by pre-fetching all reference data in parallel.
+ * This is called once per sync batch instead of per URL.
+ */
+async function buildSyncContext(): Promise<SyncContext> {
+    const [items, tiersetMapping, catalystMapping, tiersetItems] = await Promise.all([
+        itemRepo.getAll(),
+        itemRepo.getTiersetMapping(),
+        itemRepo.getCatalystMapping(),
+        itemRepo.getTiersetAndTokenList(),
+    ])
+
+    return {
+        itemsById: new Map(items.map((i) => [i.id, i])),
+        tiersetByItemId: keyBy(tiersetMapping, (i) => s(i.itemId)),
+        catalystByKey: keyBy(
+            catalystMapping,
+            (i) => `${s(i.catalyzedItemId)}-${s(i.encounterId)}`
+        ),
+        tiersetItemIds: new Set(tiersetItems.map((i) => i.id)),
+    }
+}
 
 /**
  * Resolve a character ID from name and realm.
@@ -78,18 +114,20 @@ export const droptimizerService = {
     /**
      * Add a simulation from a URL (Raidbots or QE Live)
      * Returns an array because QE Live can contain multiple difficulties
+     * @param url - The simulation URL
+     * @param context - Optional pre-fetched reference data (for batch processing)
      */
-    addFromUrl: async (url: string): Promise<Droptimizer[]> => {
+    addFromUrl: async (url: string, context?: SyncContext): Promise<Droptimizer[]> => {
         logger.info("DroptimizerService", `Adding simulation from url ${url}`)
 
         const droptimizers = await match(url)
             .when(
                 (u) => u.startsWith("https://questionablyepic.com/live/upgradereport/"),
-                () => fetchDroptimizerFromQELiveURL(url)
+                () => fetchDroptimizerFromQELiveURL(url, context)
             )
             .when(
                 (u) => u.startsWith("https://www.raidbots.com/simbot/"),
-                async () => [await fetchDroptimizerFromURL(url)]
+                async () => [await fetchDroptimizerFromURL(url, context)]
             )
             .otherwise(() => {
                 throw new Error("Invalid URL format for droptimizer")
@@ -113,16 +151,28 @@ export const droptimizerService = {
 
     /**
      * Sync droptimizers from Discord channel
-     * Fetches all messages from the droptimizers channel and imports any URLs found
+     * Fetches messages from the droptimizers channel and imports any URLs found
+     *
+     * Performance optimizations:
+     * 1. Date-filtered Discord fetching - stops when messages are older than cutoff
+     * 2. URL deduplication - skips URLs already imported recently
+     * 3. Shared reference data - pre-fetches items/tierset/catalyst once for all URLs
+     * 4. Increased concurrency - processes 10 URLs in parallel
      */
     syncFromDiscord: async (
         lookback: DurationInput
-    ): Promise<{ imported: number; errors: string[] }> => {
+    ): Promise<{ imported: number; skipped: number; errors: string[] }> => {
         const botKey = env.DISCORD_BOT_TOKEN
         const channelId = env.DISCORD_DROPTIMIZER_CHANNEL_ID
-
-        const messages = await discordService.readAllMessages(botKey, channelId)
         const cutoffDate = DateTime.now().minus(lookback).toJSDate()
+        const cutoffUnixTs = Math.floor(cutoffDate.getTime() / 1000)
+
+        // Optimization 1: Only fetch messages since cutoff date (stops early)
+        const messages = await discordService.readMessagesSince(
+            botKey,
+            channelId,
+            cutoffDate
+        )
 
         const uniqueUrls = discordService.extractUrlsFromMessages(messages, cutoffDate)
 
@@ -131,14 +181,34 @@ export const droptimizerService = {
             `Found ${s(uniqueUrls.size)} unique valid URLs since ${s(cutoffDate)}`
         )
 
-        // Process URLs with concurrency limit, returning results
-        const limit = pLimit(5)
+        // Optimization 2: Filter out URLs already imported recently
+        const existingUrls = await droptimizerRepo.getExistingUrls(
+            Array.from(uniqueUrls),
+            cutoffUnixTs
+        )
+        const newUrls = Array.from(uniqueUrls).filter((url) => !existingUrls.has(url))
+        const skippedCount = uniqueUrls.size - newUrls.length
+
+        logger.info(
+            "DroptimizerService",
+            `Skipping ${s(skippedCount)} already imported URLs, processing ${s(newUrls.length)} new URLs`
+        )
+
+        if (newUrls.length === 0) {
+            return { imported: 0, skipped: skippedCount, errors: [] }
+        }
+
+        // Optimization 3: Pre-fetch all reference data once
+        const syncContext = await buildSyncContext()
+
+        // Optimization 4: Increased concurrency (10 instead of 5)
+        const limit = pLimit(10)
 
         const results = await Promise.all(
-            Array.from(uniqueUrls).map((url) =>
+            newUrls.map((url) =>
                 limit(async (): Promise<VoidResult> => {
                     try {
-                        await droptimizerService.addFromUrl(url)
+                        await droptimizerService.addFromUrl(url, syncContext)
                         return { success: true }
                     } catch (error) {
                         const errorMsg = `Failed to import ${url}: ${s(error)}`
@@ -154,9 +224,9 @@ export const droptimizerService = {
 
         logger.info(
             "DroptimizerService",
-            `Discord sync completed: ${s(successes.length)} imported, ${s(errors.length)} errors`
+            `Discord sync completed: ${s(successes.length)} imported, ${s(skippedCount)} skipped, ${s(errors.length)} errors`
         )
 
-        return { imported: successes.length, errors }
+        return { imported: successes.length, skipped: skippedCount, errors }
     },
 }

@@ -2,6 +2,7 @@ import {
     and,
     desc,
     eq,
+    gte,
     inArray,
     type InferInsertModel,
     type InferSelectModel,
@@ -155,6 +156,32 @@ const distinctOnColumns = [
 ]
 
 export const droptimizerRepo = {
+    /**
+     * Check which URLs already exist in the database (imported after cutoff date).
+     * Used to skip re-fetching URLs that have already been imported.
+     * Only checks recent imports since older ones would be replaced anyway.
+     */
+    getExistingUrls: async (
+        urls: string[],
+        importedAfterUnixTs: number
+    ): Promise<Set<string>> => {
+        if (urls.length === 0) {
+            return new Set()
+        }
+
+        const results = await db
+            .select({ url: droptimizerTable.url })
+            .from(droptimizerTable)
+            .where(
+                and(
+                    inArray(droptimizerTable.url, urls),
+                    gte(droptimizerTable.dateImported, importedAfterUnixTs)
+                )
+            )
+
+        return new Set(results.map((r) => r.url))
+    },
+
     getById: async (id: string): Promise<Droptimizer | null> => {
         const droptimizer = await db
             .select()

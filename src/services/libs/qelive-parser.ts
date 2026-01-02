@@ -4,6 +4,7 @@ import { match } from "ts-pattern"
 import { z } from "zod"
 import { itemRepo } from "@/db/repositories/items"
 import { logger } from "@/lib/logger"
+import type { SyncContext } from "@/services/droptimizer.service"
 import { getUnixTimestamp } from "@/shared/libs/date-utils"
 import { evalRealSeason, parseItemTrack } from "@/shared/libs/items/item-bonus-utils"
 import { slotToEquippedSlot } from "@/shared/libs/items/item-slot-utils"
@@ -12,7 +13,13 @@ import {
     getWowSpecByClassNameAndSpecName,
 } from "@/shared/libs/spec-parser/spec-utils"
 import { s } from "@/shared/libs/string-utils"
-import type { GearItem, Item, ItemTrack } from "@/shared/models/item.models"
+import type {
+    GearItem,
+    Item,
+    ItemToCatalyst,
+    ItemToTierset,
+    ItemTrack,
+} from "@/shared/models/item.models"
 import {
     qeLiveURLSchema,
     type NewDroptimizer,
@@ -33,7 +40,8 @@ import {
 } from "./schemas/qelive.schema"
 
 export const fetchDroptimizerFromQELiveURL = async (
-    url: string
+    url: string,
+    context?: SyncContext
 ): Promise<NewDroptimizer[]> => {
     const reportUrl = qeLiveURLSchema.parse(url)
     const reportId = reportUrl.split("/").pop()
@@ -43,7 +51,7 @@ export const fetchDroptimizerFromQELiveURL = async (
     const textRawData = await fetchQELiveData(reportId)
     const parsedJson = parseQELiveData(JSON.parse(textRawData))
 
-    const droptimizer = await convertJsonToDroptimizer(url, parsedJson)
+    const droptimizer = await convertJsonToDroptimizer(url, parsedJson, context)
 
     return droptimizer
 }
@@ -72,16 +80,25 @@ const parseUpgrades = async (
         itemId: number
         ilvl: number
         slot: WowItemEquippedSlotKey
-    }[]
+    }[],
+    context?: SyncContext
 ): Promise<NewDroptimizerUpgrade[]> => {
-    const itemToTiersetMapping = await itemRepo.getTiersetMapping()
-    const itemToCatalystMapping = await itemRepo.getCatalystMapping()
+    // Use context if provided, otherwise fetch from DB
+    let tiersetByItemId: Record<string, ItemToTierset>
+    let catalystByKey: Record<string, ItemToCatalyst>
 
-    const tiersetByItemId = keyBy(itemToTiersetMapping, (i) => s(i.itemId))
-    const catalystByKey = keyBy(
-        itemToCatalystMapping,
-        (i) => `${s(i.catalyzedItemId)}-${s(i.encounterId)}`
-    )
+    if (context) {
+        tiersetByItemId = context.tiersetByItemId
+        catalystByKey = context.catalystByKey
+    } else {
+        const itemToTiersetMapping = await itemRepo.getTiersetMapping()
+        const itemToCatalystMapping = await itemRepo.getCatalystMapping()
+        tiersetByItemId = keyBy(itemToTiersetMapping, (i) => s(i.itemId))
+        catalystByKey = keyBy(
+            itemToCatalystMapping,
+            (i) => `${s(i.catalyzedItemId)}-${s(i.encounterId)}`
+        )
+    }
 
     const upgradesMap = upgrades
         // filter out item without dps gain
@@ -194,7 +211,8 @@ const parseDateToUnixTimestamp = (dateString: string): number => {
 
 const convertJsonToDroptimizer = async (
     url: string,
-    data: QELiveJson
+    data: QELiveJson,
+    context?: SyncContext
 ): Promise<NewDroptimizer[]> => {
     const raidId = CURRENT_RAID_ID
 
@@ -221,8 +239,10 @@ const convertJsonToDroptimizer = async (
         talents: "qe_no_support",
     }
 
-    const itemsInDb = await itemRepo.getAll()
-    const itemsById = keyBy(itemsInDb, (i) => i.id)
+    // Use context if provided, otherwise fetch from DB
+    const itemsById: Record<number, Item> = context
+        ? Object.fromEntries(context.itemsById)
+        : keyBy(await itemRepo.getAll(), (i) => i.id)
 
     const itemsEquipped = parseEquippedGear(itemsById, data.equippedItems, url)
 
@@ -279,7 +299,7 @@ const convertJsonToDroptimizer = async (
                 upgradeEquipped: false, // QE Live does not have upgrade equipped
             },
             dateImported: getUnixTimestamp(),
-            upgrades: await parseUpgrades(transformedResults),
+            upgrades: await parseUpgrades(transformedResults, context),
             currencies: [],
             weeklyChest: [], // QE Live doesn't have great vault data
             itemsAverageItemLevelEquipped: null, // QE Live doesn't provide ilvl data

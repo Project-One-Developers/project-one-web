@@ -3,6 +3,7 @@ import "server-only"
 import { z } from "zod"
 import { itemRepo } from "@/db/repositories/items"
 import { logger } from "@/lib/logger"
+import type { SyncContext } from "@/services/droptimizer.service"
 import { getUnixTimestamp } from "@/shared/libs/date-utils"
 import {
     applyItemTrackByIlvlAndDiff,
@@ -12,7 +13,13 @@ import {
 } from "@/shared/libs/items/item-bonus-utils"
 import { equippedSlotToSlot } from "@/shared/libs/items/item-slot-utils"
 import { s } from "@/shared/libs/string-utils"
-import type { GearItem, ItemTrack } from "@/shared/models/item.models"
+import type {
+    GearItem,
+    Item,
+    ItemToCatalyst,
+    ItemToTierset,
+    ItemTrack,
+} from "@/shared/models/item.models"
 import {
     raidbotsURLSchema,
     type NewDroptimizer,
@@ -39,12 +46,15 @@ import {
     parseTiersets,
 } from "./simc-parser"
 
-export const fetchDroptimizerFromURL = async (url: string): Promise<NewDroptimizer> => {
+export const fetchDroptimizerFromURL = async (
+    url: string,
+    context?: SyncContext
+): Promise<NewDroptimizer> => {
     const raidbotsURL = raidbotsURLSchema.parse(url)
     const jsonData = await fetchRaidbotsData(raidbotsURL)
     const parsedJson = parseRaidbotsData(jsonData)
 
-    const droptimizer = await convertJsonToDroptimizer(url, parsedJson)
+    const droptimizer = await convertJsonToDroptimizer(url, parsedJson, context)
 
     return droptimizer
 }
@@ -90,16 +100,25 @@ const parseUpgrades = async (
         slot: WowItemEquippedSlotKey
     }[],
     itemsInBag: GearItem[],
-    itemsEquipped: GearItem[]
+    itemsEquipped: GearItem[],
+    context?: SyncContext
 ): Promise<NewDroptimizerUpgrade[]> => {
-    const itemToTiersetMapping = await itemRepo.getTiersetMapping()
-    const itemToCatalystMapping = await itemRepo.getCatalystMapping()
+    // Use context if provided, otherwise fetch from DB
+    let tiersetByItemId: Record<string, ItemToTierset>
+    let catalystByKey: Record<string, ItemToCatalyst>
 
-    const tiersetByItemId = keyBy(itemToTiersetMapping, (i) => s(i.itemId))
-    const catalystByKey = keyBy(
-        itemToCatalystMapping,
-        (i) => `${s(i.catalyzedItemId)}-${s(i.encounterId)}`
-    )
+    if (context) {
+        tiersetByItemId = context.tiersetByItemId
+        catalystByKey = context.catalystByKey
+    } else {
+        const itemToTiersetMapping = await itemRepo.getTiersetMapping()
+        const itemToCatalystMapping = await itemRepo.getCatalystMapping()
+        tiersetByItemId = keyBy(itemToTiersetMapping, (i) => s(i.itemId))
+        catalystByKey = keyBy(
+            itemToCatalystMapping,
+            (i) => `${s(i.catalyzedItemId)}-${s(i.encounterId)}`
+        )
+    }
 
     // One Armed Bandit workaround for Best-In-Slots item
     const bestInSlotUpgrades = upgrades.find(
@@ -188,7 +207,8 @@ const parseUpgrades = async (
 
 export const convertJsonToDroptimizer = async (
     url: string,
-    data: RaidbotJson
+    data: RaidbotJson,
+    context?: SyncContext
 ): Promise<NewDroptimizer> => {
     // transform
     const firstResult = data.sim.profilesets.results[0]
@@ -243,9 +263,13 @@ export const convertJsonToDroptimizer = async (
     }
 
     const itemsEquipped = await parseEquippedGear(
-        data.simbot.meta.rawFormData.droptimizer.equipped
+        data.simbot.meta.rawFormData.droptimizer.equipped,
+        context
     )
-    const itemsInBag = await parseBagGearsFromSimc(data.simbot.meta.rawFormData.text)
+    const itemsInBag = await parseBagGearsFromSimc(
+        data.simbot.meta.rawFormData.text,
+        context
+    )
 
     if (itemsInBag.length === 0) {
         throw new Error(`No items found in bags: ${url}`)
@@ -272,9 +296,18 @@ export const convertJsonToDroptimizer = async (
             upgradeEquipped: data.simbot.meta.rawFormData.droptimizer.upgradeEquipped,
         },
         dateImported: getUnixTimestamp(),
-        upgrades: await parseUpgrades(raidDiff, upgrades, itemsInBag, itemsEquipped),
+        upgrades: await parseUpgrades(
+            raidDiff,
+            upgrades,
+            itemsInBag,
+            itemsEquipped,
+            context
+        ),
         currencies: mergedCurrencies,
-        weeklyChest: await parseGreatVaultFromSimc(data.simbot.meta.rawFormData.text),
+        weeklyChest: await parseGreatVaultFromSimc(
+            data.simbot.meta.rawFormData.text,
+            context
+        ),
         // Calculate average ilvl from equipped items
         // Raidbots doesn't provide a pre-calculated average, so we compute it ourselves
         itemsAverageItemLevelEquipped: (() => {
@@ -289,15 +322,18 @@ export const convertJsonToDroptimizer = async (
         })(),
         itemsEquipped,
         itemsInBag,
-        tiersetInfo: await parseTiersets(itemsEquipped, itemsInBag),
+        tiersetInfo: await parseTiersets(itemsEquipped, itemsInBag, context),
     }
 }
 
 export const parseEquippedGear = async (
-    droptEquipped: z.infer<typeof droptimizerEquippedItemsSchema>
+    droptEquipped: z.infer<typeof droptimizerEquippedItemsSchema>,
+    context?: SyncContext
 ): Promise<GearItem[]> => {
-    const itemsInDb = await itemRepo.getAll()
-    const itemsById = keyBy(itemsInDb, (i) => i.id)
+    // Use context if provided, otherwise fetch from DB
+    const itemsById: Map<number, Item> = context
+        ? context.itemsById
+        : new Map((await itemRepo.getAll()).map((i) => [i.id, i]))
 
     const res: GearItem[] = []
 
@@ -310,7 +346,7 @@ export const parseEquippedGear = async (
             )
         }
         const bonusIds = droptGearItem.bonus_id.split("/").map(Number)
-        const wowItem = itemsById[droptGearItem.id]
+        const wowItem = itemsById.get(droptGearItem.id)
         if (!wowItem) {
             logger.debug(
                 "RaidbotsParser",

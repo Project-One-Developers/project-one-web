@@ -46,6 +46,6 @@ export async function addSimulationFromUrl(url: string): Promise<Droptimizer[]> 
 
 export async function syncDroptimizersFromDiscord(
     lookback: DurationInput
-): Promise<{ imported: number; errors: string[] }> {
+): Promise<{ imported: number; skipped: number; errors: string[] }> {
     return droptimizerService.syncFromDiscord(lookback)
 }

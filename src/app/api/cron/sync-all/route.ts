@@ -25,7 +25,7 @@ export async function GET(request: Request) {
         logger.info("Cron", `Full sync started at ${new Date().toISOString()}`)
 
         const results = {
-            discord: { success: false, imported: 0, errors: [] as string[] },
+            discord: { success: false, imported: 0, skipped: 0, errors: [] as string[] },
             cleanup: { success: false, error: null as string | null },
         }
 
@@ -34,6 +34,7 @@ export async function GET(request: Request) {
             const discordResult = await syncDroptimizersFromDiscord({ days: 2 })
             results.discord.success = true
             results.discord.imported = discordResult.imported
+            results.discord.skipped = discordResult.skipped
             results.discord.errors = discordResult.errors
         } catch (error) {
             results.discord.success = false

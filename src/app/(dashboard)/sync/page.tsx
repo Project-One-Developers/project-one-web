@@ -101,7 +101,7 @@ export default function SyncPage(): JSX.Element {
         try {
             const result = await syncDroptimizersFromDiscord({ days: 7 })
             toast.success(
-                `Discord sync completed: ${s(result.imported)} droptimizers imported`
+                `Discord sync completed: ${s(result.imported)} imported, ${s(result.skipped)} skipped`
             )
             if (result.errors.length > 0) {
                 toast.warning(`${s(result.errors.length)} errors occurred during import`)
