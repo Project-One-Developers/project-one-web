@@ -234,7 +234,75 @@ export function useAssignCharacterToPlayer() {
             characterId: string
             targetPlayerId: string
         }) => assignCharacterToPlayer(characterId, targetPlayerId),
-        onSuccess: () => {
+
+        onMutate: async ({ characterId, targetPlayerId }) => {
+            // Cancel outgoing refetches
+            await queryClient.cancelQueries({
+                queryKey: [queryKeys.playersSummary, "compact"],
+            })
+
+            // Snapshot previous value
+            const previousData = queryClient.getQueryData<PlayerWithSummaryCompact[]>([
+                queryKeys.playersSummary,
+                "compact",
+            ])
+
+            // Optimistically update
+            if (previousData) {
+                const newData = previousData.map((player) => {
+                    // Find and remove character from source player
+                    const charIndex = player.charsSummary.findIndex(
+                        (cs) => cs.character.id === characterId
+                    )
+
+                    if (charIndex !== -1) {
+                        // This is the source player - remove the character
+                        return {
+                            ...player,
+                            charsSummary: player.charsSummary.filter(
+                                (cs) => cs.character.id !== characterId
+                            ),
+                        }
+                    }
+
+                    if (player.id === targetPlayerId) {
+                        // This is the target player - add the character
+                        const sourcePlayer = previousData.find((p) =>
+                            p.charsSummary.some((cs) => cs.character.id === characterId)
+                        )
+                        const charSummary = sourcePlayer?.charsSummary.find(
+                            (cs) => cs.character.id === characterId
+                        )
+
+                        if (charSummary) {
+                            return {
+                                ...player,
+                                charsSummary: [...player.charsSummary, charSummary],
+                            }
+                        }
+                    }
+
+                    return player
+                })
+
+                queryClient.setQueryData([queryKeys.playersSummary, "compact"], newData)
+            }
+
+            return { previousData }
+        },
+
+        onError: (_err, _variables, context) => {
+            // Roll back on error
+            if (context?.previousData) {
+                queryClient.setQueryData(
+                    [queryKeys.playersSummary, "compact"],
+                    context.previousData
+                )
+            }
+        },
+
+        onSettled: () => {
+            // Always refetch to ensure consistency
             void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithCharacters],
