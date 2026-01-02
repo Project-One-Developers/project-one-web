@@ -1,4 +1,4 @@
-import { eq, isNull } from "drizzle-orm"
+import { asc, eq, isNull } from "drizzle-orm"
 import "server-only"
 import { db } from "@/db"
 import { charTable, playerTable } from "@/db/schema"
@@ -15,7 +15,7 @@ import {
 export const playerRepo = {
     getWithCharactersList: async (): Promise<PlayerWithCharacters[]> => {
         const players = await db.select().from(playerTable)
-        const characters = await db.select().from(charTable)
+        const characters = await db.select().from(charTable).orderBy(asc(charTable.name))
         const charsByPlayer = Map.groupBy(characters, (c) => c.playerId)
 
         return mapAndParse(

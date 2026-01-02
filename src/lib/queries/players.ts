@@ -275,9 +275,16 @@ export function useAssignCharacterToPlayer() {
                         )
 
                         if (charSummary) {
+                            // Insert in alphabetical order
+                            const newCharsSummary = [
+                                ...player.charsSummary,
+                                charSummary,
+                            ].sort((a, b) =>
+                                a.character.name.localeCompare(b.character.name)
+                            )
                             return {
                                 ...player,
-                                charsSummary: [...player.charsSummary, charSummary],
+                                charsSummary: newCharsSummary,
                             }
                         }
                     }
