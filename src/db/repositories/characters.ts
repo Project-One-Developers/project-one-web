@@ -141,4 +141,14 @@ export const characterRepo = {
 
         return new Map(results.map((r) => [`${r.name}-${r.realm}`, r.id]))
     },
+
+    assignToPlayer: async (
+        characterId: string,
+        targetPlayerId: string
+    ): Promise<void> => {
+        await db
+            .update(charTable)
+            .set({ playerId: targetPlayerId })
+            .where(eq(charTable.id, characterId))
+    },
 }

@@ -3,11 +3,12 @@
 import { Crown } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { type JSX } from "react"
+import { type JSX, useState } from "react"
 import { HighlightBadge } from "@/components/ui/highlight-badge"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { classIcon } from "@/lib/wow-icon"
+import type { WowClassName } from "@/shared/models/wow.models"
 import type { CharacterSummary, CharacterSummaryCompact } from "@/shared/types"
 import { WowCharacterLink } from "./wow-character-links"
 
@@ -56,18 +57,62 @@ export const CharacterOverviewIcon = ({
     charsWithSummary,
     className,
     isLowItemLevel,
+    draggable = false,
 }: {
     charsWithSummary: CharacterSummaryType[]
     className?: string
     isLowItemLevel?: (itemLevel: string) => boolean
+    draggable?: boolean
 }): JSX.Element => {
     const router = useRouter()
+    const [draggingId, setDraggingId] = useState<string | null>(null)
 
     const sortedChars = charsWithSummary.sort(
         (a, b) => (b.character.main ? 1 : 0) - (a.character.main ? 1 : 0)
     )
 
     const totalChars = sortedChars.length
+
+    const handleDragStart = (
+        e: React.DragEvent<HTMLButtonElement>,
+        characterId: string,
+        characterClass: WowClassName,
+        isMain: boolean
+    ) => {
+        setDraggingId(characterId)
+        e.dataTransfer.setData("characterId", characterId)
+        e.dataTransfer.effectAllowed = "move"
+
+        // Create a simple drag image with just the class icon
+        const size = isMain ? 52 : 40
+        const iconUrl = classIcon.get(characterClass) ?? ""
+
+        const dragEl = document.createElement("div")
+        dragEl.style.cssText = `
+            width: ${String(size)}px;
+            height: ${String(size)}px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+            background-image: url(${iconUrl});
+            background-size: cover;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        `
+        document.body.appendChild(dragEl)
+
+        e.dataTransfer.setDragImage(dragEl, size / 2, size / 2)
+
+        requestAnimationFrame(() => {
+            document.body.removeChild(dragEl)
+        })
+    }
+
+    const handleDragEnd = () => {
+        setDraggingId(null)
+    }
 
     return (
         <div className={cn("flex items-end gap-1", className)}>
@@ -78,15 +123,32 @@ export const CharacterOverviewIcon = ({
                 // Main (first) should be on top, then descending z-index for alts
                 const zIndex = totalChars - index
 
+                const isDragging = draggingId === item.character.id
+
                 return (
-                    <Tooltip key={item.character.id}>
+                    <Tooltip
+                        key={item.character.id}
+                        open={draggingId ? false : undefined}
+                    >
                         <TooltipTrigger asChild>
                             <button
                                 style={{ zIndex }}
+                                draggable={draggable}
+                                onDragStart={(e) => {
+                                    handleDragStart(
+                                        e,
+                                        item.character.id,
+                                        item.character.class,
+                                        isMain
+                                    )
+                                }}
+                                onDragEnd={handleDragEnd}
                                 className={cn(
                                     "relative flex flex-col items-center cursor-pointer transition-all duration-200 hover:z-50!",
                                     index > 0 && "-ml-2",
-                                    "hover:scale-110"
+                                    "hover:scale-110",
+                                    draggable && "cursor-grab active:cursor-grabbing",
+                                    isDragging && "opacity-40 scale-95"
                                 )}
                                 onClick={() => {
                                     router.push(`/roster/${item.character.id}`)
@@ -103,11 +165,13 @@ export const CharacterOverviewIcon = ({
                                 <div
                                     className={cn(
                                         "relative rounded-xl overflow-hidden border-2 transition-all",
-                                        isMain
-                                            ? "border-amber-500/60 shadow-md shadow-amber-500/20"
-                                            : isLow
-                                              ? "border-orange-500/50"
-                                              : "border-border/50"
+                                        isDragging
+                                            ? "border-dashed border-muted-foreground/50"
+                                            : isMain
+                                              ? "border-amber-500/60 shadow-md shadow-amber-500/20"
+                                              : isLow
+                                                ? "border-orange-500/50"
+                                                : "border-border/50"
                                     )}
                                 >
                                     <Image

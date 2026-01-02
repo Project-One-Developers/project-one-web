@@ -15,6 +15,7 @@ import {
     getCharLatestGameInfo,
     getPlayerWithCharactersList,
     getPlayersWithoutCharacters,
+    assignCharacterToPlayer,
 } from "@/actions/characters"
 import { getPlayersWithSummaryCompact } from "@/actions/summary"
 import type {
@@ -216,6 +217,27 @@ export function useDeleteCharacter() {
             })
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithoutCharacters],
+            })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
+        },
+    })
+}
+
+export function useAssignCharacterToPlayer() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: ({
+            characterId,
+            targetPlayerId,
+        }: {
+            characterId: string
+            targetPlayerId: string
+        }) => assignCharacterToPlayer(characterId, targetPlayerId),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithCharacters],
             })
             void queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
         },

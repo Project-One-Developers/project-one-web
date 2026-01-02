@@ -90,3 +90,12 @@ export async function getCharacterRenderUrl(
 ): Promise<string | null> {
     return characterService.getRenderUrl(name, realm)
 }
+
+// ============== CHARACTER ASSIGNMENT ==============
+
+export async function assignCharacterToPlayer(
+    characterId: string,
+    targetPlayerId: string
+): Promise<CharacterWithPlayer | null> {
+    return characterService.assignToPlayer(characterId, targetPlayerId)
+}

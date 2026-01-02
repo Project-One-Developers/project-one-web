@@ -22,7 +22,11 @@ import { GlassCard } from "@/components/ui/glass-card"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { StatBadge } from "@/components/ui/stat-badge"
 import { CharacterOverviewIcon } from "@/components/wow/character-overview-icon"
-import { usePlayersSummaryCompact } from "@/lib/queries/players"
+import {
+    useAssignCharacterToPlayer,
+    usePlayersSummaryCompact,
+} from "@/lib/queries/players"
+import { cn } from "@/lib/utils"
 import { s } from "@/shared/libs/string-utils"
 import type { Player } from "@/shared/models/character.models"
 import type { PlayerWithSummaryCompact } from "@/shared/types"
@@ -41,8 +45,10 @@ export default function RosterPage(): JSX.Element {
     const [isNewCharDialogOpen, setIsNewCharDialogOpen] = useState(false)
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
     const [searchQuery, setSearchQuery] = useState("")
+    const [dragOverPlayerId, setDragOverPlayerId] = useState<string | null>(null)
 
     const playersQuery = usePlayersSummaryCompact()
+    const assignMutation = useAssignCharacterToPlayer()
 
     const players = useMemo(() => playersQuery.data ?? [], [playersQuery.data])
 
@@ -165,6 +171,37 @@ export default function RosterPage(): JSX.Element {
     const handleNewCharClick = (player: PlayerWithSummaryCompact) => {
         setSelectedPlayer({ id: player.id, name: player.name })
         setIsNewCharDialogOpen(true)
+    }
+
+    const handleDragOver = (e: React.DragEvent, playerId: string) => {
+        e.preventDefault()
+        e.dataTransfer.dropEffect = "move"
+        setDragOverPlayerId(playerId)
+    }
+
+    const handleDragLeave = () => {
+        setDragOverPlayerId(null)
+    }
+
+    const handleDrop = (e: React.DragEvent, targetPlayerId: string) => {
+        e.preventDefault()
+        setDragOverPlayerId(null)
+
+        const characterId = e.dataTransfer.getData("characterId")
+        if (!characterId) {
+            return
+        }
+
+        // Check if character is already owned by this player
+        const targetPlayer = players.find((p) => p.id === targetPlayerId)
+        const alreadyOwned = targetPlayer?.charsSummary.some(
+            (cs) => cs.character.id === characterId
+        )
+        if (alreadyOwned) {
+            return
+        }
+
+        assignMutation.mutate({ characterId, targetPlayerId })
     }
 
     return (
@@ -306,7 +343,18 @@ export default function RosterPage(): JSX.Element {
                             key={player.id}
                             interactive
                             padding="lg"
-                            className="group relative flex flex-col"
+                            className={cn(
+                                "group relative flex flex-col transition-all duration-200",
+                                dragOverPlayerId === player.id &&
+                                    "ring-2 ring-primary border-primary/50 bg-primary/5"
+                            )}
+                            onDragOver={(e) => {
+                                handleDragOver(e, player.id)
+                            }}
+                            onDragLeave={handleDragLeave}
+                            onDrop={(e) => {
+                                handleDrop(e, player.id)
+                            }}
                         >
                             {/* Hover Actions */}
                             <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -333,6 +381,7 @@ export default function RosterPage(): JSX.Element {
                                     <CharacterOverviewIcon
                                         charsWithSummary={player.charsSummary}
                                         isLowItemLevel={isLowItemLevel}
+                                        draggable
                                     />
                                 ) : (
                                     <div className="flex flex-col items-center opacity-50">

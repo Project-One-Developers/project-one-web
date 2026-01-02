@@ -126,4 +126,15 @@ export const characterService = {
     getRenderUrl: async (name: string, realm: string): Promise<string | null> => {
         return fetchCharacterMedia(name, realm)
     },
+
+    /**
+     * Assign a character to a different player
+     */
+    assignToPlayer: async (
+        characterId: string,
+        targetPlayerId: string
+    ): Promise<CharacterWithPlayer | null> => {
+        await characterRepo.assignToPlayer(characterId, targetPlayerId)
+        return characterRepo.getWithPlayerById(characterId)
+    },
 }
