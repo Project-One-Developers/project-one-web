@@ -3,6 +3,7 @@ import { auth } from "@/auth"
 import AppSidebar from "@/components/app-sidebar"
 import { GlobalFilterProvider } from "@/components/global-filter-provider"
 import { SidebarProvider } from "@/components/ui/sidebar"
+import { spreadsheetLinkService } from "@/services/spreadsheet-link.service"
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
     let session
@@ -26,9 +27,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         redirect("/loot-recap")
     }
 
+    // Fetch spreadsheet links for sidebar
+    const spreadsheetLinks = await spreadsheetLinkService.getList()
+
     return (
         <SidebarProvider defaultOpen={true}>
-            <AppSidebar userRole={session.user.role} />
+            <AppSidebar
+                userRole={session.user.role}
+                spreadsheetLinks={spreadsheetLinks}
+            />
             <GlobalFilterProvider>
                 <main className="flex-1 overflow-auto">{children}</main>
             </GlobalFilterProvider>

@@ -372,3 +372,15 @@ export const itemToCatalystTable = pgTable(
     },
     (t) => [primaryKey({ columns: [t.itemId, t.encounterId, t.catalyzedItemId] })]
 )
+
+//////////////////////////////////////////////////////////
+//                 SPREADSHEET LINKS                    //
+//////////////////////////////////////////////////////////
+
+export const spreadsheetLinkTable = pgTable("spreadsheet_links", {
+    id: varchar("id").primaryKey(),
+    title: varchar("title", { length: 100 }).notNull(),
+    url: text("url").notNull(),
+    order: integer("order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+})

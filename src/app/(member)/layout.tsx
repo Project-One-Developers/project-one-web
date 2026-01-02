@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import AppSidebar from "@/components/app-sidebar"
 import { SidebarProvider } from "@/components/ui/sidebar"
+import { spreadsheetLinkService } from "@/services/spreadsheet-link.service"
 
 export default async function MemberLayout({ children }: { children: React.ReactNode }) {
     let session
@@ -21,10 +22,16 @@ export default async function MemberLayout({ children }: { children: React.React
     }
 
     // Both officers and members can access these routes
+    // Fetch spreadsheet links for officers (members won't see them anyway)
+    const spreadsheetLinks =
+        session.user.role === "officer" ? await spreadsheetLinkService.getList() : []
 
     return (
         <SidebarProvider defaultOpen={true}>
-            <AppSidebar userRole={session.user.role} />
+            <AppSidebar
+                userRole={session.user.role}
+                spreadsheetLinks={spreadsheetLinks}
+            />
             <main className="flex-1 overflow-auto">{children}</main>
         </SidebarProvider>
     )

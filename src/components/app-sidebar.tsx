@@ -12,12 +12,14 @@ import {
     LucideScrollText,
     LucideSnail,
     LucideSwords,
+    Settings,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import type { JSX } from "react"
 import { clientEnv } from "@/env.client"
 import type { UserRole } from "@/shared/models/auth.models"
+import type { SpreadsheetLink } from "@/shared/models/spreadsheet-link.models"
 import {
     Sidebar,
     SidebarContent,
@@ -77,29 +79,6 @@ const raidItems = [
     },
 ]
 
-const spreadsheetItems = [
-    {
-        title: "Split",
-        url: "https://docs.google.com/spreadsheets/d/1kA2AIMB65xXnOY-dHKhOkaecwbmymdXP_jLg1Bu7xTI/edit?gid=2067098323#gid=2067098323",
-        icon: FileSpreadsheet,
-    },
-    {
-        title: "Farm 11.1",
-        url: "https://docs.google.com/spreadsheets/d/1U8kKbRJQ13-cdH93otDlmc-6qbzQ1g55q9lRokvwSME/edit?pli=1&gid=0#gid=0",
-        icon: FileSpreadsheet,
-    },
-    {
-        title: "Ulria PI/Tier",
-        url: "https://docs.google.com/spreadsheets/d/1exJeu5eVe4bTmyg3WFx5PTxIWvDLi0j-WW-XWpGoG88/htmlview?gid=8138119#",
-        icon: FileSpreadsheet,
-    },
-    {
-        title: "WoW Audit",
-        url: "https://docs.google.com/spreadsheets/d/1oXDiksY6UFl6QEW0cFqF0iuxUE3ZM3g5WrrCBIx4OTA/edit?gid=0#gid=0",
-        icon: FileSpreadsheet,
-    },
-]
-
 // Items accessible to all users (both officers and members)
 const memberItems = [
     {
@@ -111,9 +90,13 @@ const memberItems = [
 
 type AppSidebarProps = {
     userRole: UserRole
+    spreadsheetLinks: SpreadsheetLink[]
 }
 
-export default function AppSidebar({ userRole }: AppSidebarProps): JSX.Element {
+export default function AppSidebar({
+    userRole,
+    spreadsheetLinks,
+}: AppSidebarProps): JSX.Element {
     const pathname = usePathname()
     const { open } = useSidebar()
 
@@ -193,41 +176,61 @@ export default function AppSidebar({ userRole }: AppSidebarProps): JSX.Element {
                                     </SidebarMenu>
                                 </SidebarGroupContent>
                             </SidebarGroup>
-                            <SidebarGroup>
-                                <SidebarGroupLabel>Spreadsheet</SidebarGroupLabel>
-                                <SidebarGroupContent>
-                                    <SidebarMenu>
-                                        {spreadsheetItems.map((item) => (
-                                            <SidebarMenuItem
-                                                key={item.title}
-                                                className="hover:bg-muted"
-                                            >
-                                                <SidebarMenuButton asChild>
-                                                    <a
-                                                        href={item.url}
-                                                        rel="noreferrer"
-                                                        target="_blank"
-                                                    >
-                                                        <item.icon />
-                                                        <span>{item.title}</span>
-                                                    </a>
-                                                </SidebarMenuButton>
-                                            </SidebarMenuItem>
-                                        ))}
-                                    </SidebarMenu>
-                                </SidebarGroupContent>
-                            </SidebarGroup>
+                            {spreadsheetLinks.length > 0 && (
+                                <SidebarGroup>
+                                    <SidebarGroupLabel className="flex items-center justify-between">
+                                        Spreadsheet
+                                        <Link
+                                            href="/settings"
+                                            className="p-1 rounded hover:bg-muted transition-colors"
+                                        >
+                                            <Settings className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                                        </Link>
+                                    </SidebarGroupLabel>
+                                    <SidebarGroupContent>
+                                        <SidebarMenu>
+                                            {spreadsheetLinks.map((link) => (
+                                                <SidebarMenuItem
+                                                    key={link.id}
+                                                    className="hover:bg-muted"
+                                                >
+                                                    <SidebarMenuButton asChild>
+                                                        <a
+                                                            href={link.url}
+                                                            rel="noreferrer"
+                                                            target="_blank"
+                                                        >
+                                                            <FileSpreadsheet />
+                                                            <span>{link.title}</span>
+                                                        </a>
+                                                    </SidebarMenuButton>
+                                                </SidebarMenuItem>
+                                            ))}
+                                        </SidebarMenu>
+                                    </SidebarGroupContent>
+                                </SidebarGroup>
+                            )}
                         </>
                     )}
 
                     <SidebarGroup className="mt-auto">
                         {isOfficer && (
-                            <Link
-                                href="/sync"
-                                className="p-2 rounded-full hover:bg-muted w-fit focus:outline-none"
-                            >
-                                <CloudDownload />
-                            </Link>
+                            <div className="flex items-center gap-1">
+                                <Link
+                                    href="/settings"
+                                    className="p-2 rounded-full hover:bg-muted w-fit focus:outline-none"
+                                    title="Settings"
+                                >
+                                    <Settings />
+                                </Link>
+                                <Link
+                                    href="/sync"
+                                    className="p-2 rounded-full hover:bg-muted w-fit focus:outline-none"
+                                    title="Sync"
+                                >
+                                    <CloudDownload />
+                                </Link>
+                            </div>
                         )}
                         <span className="text-xs text-muted-foreground px-2 mt-2">
                             {clientEnv.NEXT_PUBLIC_BUILD_ID ?? "dev"}
