@@ -57,6 +57,7 @@ const charBlizzardDbSchema = z.object({
     averageItemLevel: z.number().nullable(),
     equippedItemLevel: z.number().nullable(),
     itemsEquipped: z.array(z.any()),
+    mountIds: z.array(z.number()).nullable(),
 })
 
 export type CharacterBlizzardDb = z.infer<typeof charBlizzardDbSchema>
@@ -200,6 +201,7 @@ export const blizzardRepo = {
                 averageItemLevel: charBlizzardTable.averageItemLevel,
                 equippedItemLevel: charBlizzardTable.equippedItemLevel,
                 itemsEquipped: charBlizzardTable.itemsEquipped,
+                mountIds: charBlizzardTable.mountIds,
             })
             .from(charBlizzardTable)
             .innerJoin(charTable, eq(charBlizzardTable.characterId, charTable.id))
@@ -221,6 +223,7 @@ export const blizzardRepo = {
                 averageItemLevel: charBlizzardTable.averageItemLevel,
                 equippedItemLevel: charBlizzardTable.equippedItemLevel,
                 itemsEquipped: charBlizzardTable.itemsEquipped,
+                mountIds: charBlizzardTable.mountIds,
             })
             .from(charBlizzardTable)
             .innerJoin(charTable, eq(charBlizzardTable.characterId, charTable.id))
@@ -242,6 +245,7 @@ export const blizzardRepo = {
                 averageItemLevel: charBlizzardTable.averageItemLevel,
                 equippedItemLevel: charBlizzardTable.equippedItemLevel,
                 itemsEquipped: charBlizzardTable.itemsEquipped,
+                mountIds: charBlizzardTable.mountIds,
             })
             .from(charBlizzardTable)
             .innerJoin(charTable, eq(charBlizzardTable.characterId, charTable.id))
@@ -265,6 +269,7 @@ export const blizzardRepo = {
                 averageItemLevel: charBlizzardTable.averageItemLevel,
                 equippedItemLevel: charBlizzardTable.equippedItemLevel,
                 itemsEquipped: charBlizzardTable.itemsEquipped,
+                mountIds: charBlizzardTable.mountIds,
             })
             .from(charBlizzardTable)
             .innerJoin(charTable, eq(charBlizzardTable.characterId, charTable.id))

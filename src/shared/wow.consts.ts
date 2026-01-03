@@ -28,6 +28,17 @@ export const CURRENT_CATALYST_CHARGE_ID = (() => {
     }
 })()
 
+// Mount dropped from the last boss of the current raid (for mount tracker)
+// Note: Use Blizzard API mount ID (not Wowhead spell ID). Find IDs at warcraftmounts.com
+export const CURRENT_MOUNT_ID = (() => {
+    switch (CURRENT_SEASON as number) {
+        case 3:
+            return 2569 // Unbound Star-Eater https://warcraftmounts.com/mounts/unboundstareater.php
+        default:
+            return 2569
+    }
+})()
+
 export const CLASSES_NAME = [
     "Death Knight",
     "Demon Hunter",

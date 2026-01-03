@@ -88,6 +88,7 @@ export default function SyncPage(): JSX.Element {
                     queryKey: [queryKeys.characterGameInfo],
                 }),
                 queryClient.invalidateQueries({ queryKey: [queryKeys.rosterSummary] }),
+                queryClient.invalidateQueries({ queryKey: [queryKeys.mountTracker] }),
             ])
         } catch (error) {
             toast.error(`Blizzard sync failed: ${s(error)}`)

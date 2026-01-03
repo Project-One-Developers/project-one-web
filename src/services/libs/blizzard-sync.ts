@@ -29,6 +29,7 @@ import {
     fetchCharacterProfile,
     fetchCharacterEquipment,
     fetchCharacterEncountersRaids,
+    fetchCharacterMounts,
     fetchJournalInstance,
     fetchItem,
     fetchItemMedia,
@@ -36,6 +37,7 @@ import {
     type EquipmentResponse,
     type EncountersRaidsResponse,
     type EquipmentSlot,
+    type MountCollectionResponse,
 } from "./blizzard-api"
 
 // ============================================================================
@@ -169,10 +171,11 @@ export async function fetchAndParseCharacter(
     preloadedProfile?: CharacterProfileResponse
 ): Promise<ParsedBlizzardData | null> {
     // Fetch data in parallel (skip profile fetch if already provided)
-    const [profile, equipment, raids] = await Promise.all([
+    const [profile, equipment, raids, mounts] = await Promise.all([
         preloadedProfile ?? fetchCharacterProfile(name, realm),
         fetchCharacterEquipment(name, realm),
         fetchCharacterEncountersRaids(name, realm),
+        fetchCharacterMounts(name, realm),
     ])
 
     if (!profile) {
@@ -183,7 +186,7 @@ export async function fetchAndParseCharacter(
     // Load items from DB if not cached
     itemsInDb ??= await itemRepo.getAll()
 
-    const character = await parseCharacterData(characterId, profile, equipment)
+    const character = await parseCharacterData(characterId, profile, equipment, mounts)
     const encounters = await parseEncounterData(characterId, raids, bossLookup)
 
     return { character, encounters }
@@ -195,7 +198,8 @@ export async function fetchAndParseCharacter(
 async function parseCharacterData(
     characterId: string,
     profile: CharacterProfileResponse,
-    equipment: EquipmentResponse | null
+    equipment: EquipmentResponse | null,
+    mounts: MountCollectionResponse | null
 ): Promise<CharacterBlizzardInsert> {
     return {
         characterId,
@@ -208,6 +212,7 @@ async function parseCharacterData(
         itemsEquipped: equipment
             ? await mapEquipmentToGearItems(equipment.equipped_items)
             : [],
+        mountIds: mounts?.mounts.map((m) => m.mount.id) ?? null,
     }
 }
 

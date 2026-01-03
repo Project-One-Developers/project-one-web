@@ -19,4 +19,5 @@ export const queryKeys = {
     lootRecapSessions: "lootRecapSessions",
     lootRecap: "lootRecap",
     spreadsheetLinks: "spreadsheetLinks",
+    mountTracker: "mountTracker",
 } as const

@@ -82,6 +82,7 @@ export const charBlizzardTable = pgTable("characters_blizzard", {
     averageItemLevel: real("average_item_level"),
     equippedItemLevel: real("equipped_item_level"),
     itemsEquipped: jsonb("items_equipped").$type<GearItem[]>().notNull(),
+    mountIds: integer("mount_ids").array(), // mount IDs from Blizzard API (null = not synced yet)
 })
 
 // Normalized raid encounter progression

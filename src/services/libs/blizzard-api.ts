@@ -461,6 +461,75 @@ export async function fetchCharacterEncountersRaids(
 }
 
 // ============================================================================
+// Character Mounts (Collections) API
+// ============================================================================
+
+const mountEntrySchema = z.object({
+    mount: z.object({
+        id: z.number(),
+        name: z.string(),
+    }),
+})
+
+export const mountCollectionResponseSchema = z.object({
+    mounts: z.array(mountEntrySchema),
+})
+export type MountCollectionResponse = z.infer<typeof mountCollectionResponseSchema>
+
+/**
+ * Fetch character mount collection
+ * Note: Requires character to have public profile
+ */
+export async function fetchCharacterMounts(
+    name: string,
+    realm: string,
+    region = "eu"
+): Promise<MountCollectionResponse | null> {
+    return blizzardRateLimit(async () => {
+        const token = await getAccessToken()
+        if (!token) {
+            return null
+        }
+
+        try {
+            const realmSlug = realmNameToSlug(realm)
+            const charName = name.toLowerCase()
+            const namespace = `profile-${region}`
+
+            const url = encodeURI(
+                `https://${region}.api.blizzard.com/profile/wow/character/${realmSlug}/${charName}/collections/mounts?namespace=${namespace}&locale=en_GB`
+            )
+
+            const response = await fetch(url, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    logger.debug(
+                        "Blizzard",
+                        `Character mounts not found: ${s(name)}-${s(realm)}`
+                    )
+                } else {
+                    logger.error(
+                        "Blizzard",
+                        `Failed to fetch character mounts: ${s(response.status)}`
+                    )
+                }
+                return null
+            }
+
+            return mountCollectionResponseSchema.parse(await response.json())
+        } catch (error) {
+            logger.error("Blizzard", `Error fetching character mounts: ${s(error)}`)
+            return null
+        }
+    })
+}
+
+// ============================================================================
 // Slot Mapping Utilities
 // ============================================================================
 

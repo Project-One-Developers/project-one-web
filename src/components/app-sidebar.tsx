@@ -2,6 +2,7 @@
 
 import {
     CloudDownload,
+    Compass,
     FileSpreadsheet,
     History,
     LucideAccessibility,
@@ -85,6 +86,11 @@ const memberItems = [
         title: "Loot Recap",
         url: "/loot-recap",
         icon: History,
+    },
+    {
+        title: "Mount Tracker",
+        url: "/mount-tracker",
+        icon: Compass,
     },
 ]
 
