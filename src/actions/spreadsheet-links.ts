@@ -11,6 +11,12 @@ export async function getSpreadsheetLinks(): Promise<SpreadsheetLink[]> {
     return spreadsheetLinkService.getList()
 }
 
+export async function getSpreadsheetLinkById(
+    id: string
+): Promise<SpreadsheetLink | null> {
+    return spreadsheetLinkService.getById(id)
+}
+
 export async function addSpreadsheetLink(
     link: NewSpreadsheetLink
 ): Promise<SpreadsheetLink | null> {

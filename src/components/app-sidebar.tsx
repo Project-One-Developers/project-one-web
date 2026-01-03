@@ -192,17 +192,15 @@ export default function AppSidebar({
                                             {spreadsheetLinks.map((link) => (
                                                 <SidebarMenuItem
                                                     key={link.id}
-                                                    className="hover:bg-muted"
+                                                    className={`hover:bg-muted ${pathname === `/spreadsheets/${link.id}` ? "bg-muted" : ""}`}
                                                 >
                                                     <SidebarMenuButton asChild>
-                                                        <a
-                                                            href={link.url}
-                                                            rel="noreferrer"
-                                                            target="_blank"
+                                                        <Link
+                                                            href={`/spreadsheets/${link.id}`}
                                                         >
                                                             <FileSpreadsheet />
                                                             <span>{link.title}</span>
-                                                        </a>
+                                                        </Link>
                                                     </SidebarMenuButton>
                                                 </SidebarMenuItem>
                                             ))}
