@@ -24,7 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
     // Only officers can access dashboard routes
     if (session.user.role !== "officer") {
-        redirect("/loot-recap")
+        redirect("/")
     }
 
     // Fetch spreadsheet links for sidebar

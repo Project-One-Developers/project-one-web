@@ -100,6 +100,7 @@ const DefeatedCharacterGrid = ({
                                     showTooltip={false}
                                     showMainIndicator={false}
                                     showRoleBadges={false}
+                                    basePath="/character"
                                 />
                             </div>
                         </TooltipTrigger>
@@ -170,6 +171,7 @@ const BossPanel = ({ boss, progressData, selectedDifficulty }: BossPanelProps) =
                                             showRoleBadges={true}
                                             showName={true}
                                             showMainIndicator={false}
+                                            basePath="/character"
                                         />
                                     </div>
                                 </TooltipTrigger>

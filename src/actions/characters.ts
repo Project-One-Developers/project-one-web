@@ -1,5 +1,6 @@
 "use server"
 
+import { requireOfficer } from "@/lib/auth-helpers"
 import { characterService } from "@/services/character.service"
 import { playerService } from "@/services/player.service"
 import type {
@@ -20,12 +21,14 @@ import type {
 export async function addCharacter(
     character: NewCharacter
 ): Promise<CharacterWithPlayer | null> {
+    await requireOfficer()
     return characterService.add(character)
 }
 
 export async function addCharacterWithSync(
     character: NewCharacterWithoutClass
 ): Promise<CharacterWithPlayer | null> {
+    await requireOfficer()
     return characterService.addWithSync(character)
 }
 
@@ -44,6 +47,7 @@ export async function getCharactersWithPlayerList(): Promise<CharacterWithPlayer
 }
 
 export async function deleteCharacter(id: string): Promise<void> {
+    await requireOfficer()
     return characterService.delete(id)
 }
 
@@ -51,20 +55,24 @@ export async function editCharacter(
     id: string,
     data: EditCharacterData
 ): Promise<CharacterWithPlayer | null> {
+    await requireOfficer()
     return characterService.edit(id, data)
 }
 
 // ============== PLAYERS ==============
 
 export async function addPlayer(player: NewPlayer): Promise<Player | null> {
+    await requireOfficer()
     return playerService.add(player)
 }
 
 export async function deletePlayer(playerId: string): Promise<void> {
+    await requireOfficer()
     return playerService.delete(playerId)
 }
 
 export async function editPlayer(edited: EditPlayer): Promise<Player | null> {
+    await requireOfficer()
     return playerService.edit(edited)
 }
 
@@ -91,5 +99,6 @@ export async function assignCharacterToPlayer(
     characterId: string,
     targetPlayerId: string
 ): Promise<CharacterWithPlayer | null> {
+    await requireOfficer()
     return characterService.assignToPlayer(characterId, targetPlayerId)
 }

@@ -14,6 +14,8 @@ export type WowCharacterIconProps = {
     size?: "sm" | "md" | "lg"
     showRoleBadges?: boolean
     onClick?: () => void
+    /** Base path for character links. Defaults to "/roster" (officer), use "/character" for member-accessible view */
+    basePath?: "/roster" | "/character"
 }
 
 export function WowCharacterIcon({
@@ -26,6 +28,7 @@ export function WowCharacterIcon({
     size = "md",
     showRoleBadges = false,
     onClick,
+    basePath = "/roster",
 }: WowCharacterIconProps) {
     const router = useRouter()
 
@@ -33,7 +36,7 @@ export function WowCharacterIcon({
         if (onClick) {
             onClick()
         } else {
-            router.push(`/roster/${character.id}`)
+            router.push(`${basePath}/${character.id}`)
         }
     }
 

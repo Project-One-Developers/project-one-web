@@ -5,6 +5,7 @@ import {
     Compass,
     FileSpreadsheet,
     History,
+    Home,
     LucideAccessibility,
     LucideBot,
     LucideCpu,
@@ -56,11 +57,6 @@ const preparationItems = [
         icon: LucideScrollText,
     },
     {
-        title: "Raid Progression",
-        url: "/raid-progression",
-        icon: LucideSnail,
-    },
-    {
         title: "Summary",
         url: "/summary",
         icon: LucideCpu,
@@ -83,6 +79,11 @@ const raidItems = [
 // Items accessible to all users (both officers and members)
 const memberItems = [
     {
+        title: "Home",
+        url: "/",
+        icon: Home,
+    },
+    {
         title: "Loot Recap",
         url: "/loot-recap",
         icon: History,
@@ -91,6 +92,11 @@ const memberItems = [
         title: "Mount Tracker",
         url: "/mount-tracker",
         icon: Compass,
+    },
+    {
+        title: "Raid Progression",
+        url: "/raid-progression",
+        icon: LucideSnail,
     },
 ]
 
