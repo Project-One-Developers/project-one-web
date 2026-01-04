@@ -21,7 +21,6 @@ import type {
 } from "@/shared/models/loot.models"
 import type {
     Droptimizer,
-    DroptimizerCurrency,
     DroptimizerUpgrade,
     SimC,
 } from "@/shared/models/simulation.models"
@@ -291,22 +290,6 @@ export const parseGreatVault = (
     return lastDroptimizer?.weeklyChest ?? []
 }
 
-export const parseCurrencies = (
-    droptimizers: Droptimizer[],
-    simc: SimC | null
-): DroptimizerCurrency[] => {
-    const lastDroptimizer = droptimizers.sort(
-        (a, b) => b.simInfo.date - a.simInfo.date
-    )[0]
-    const lastSimcDate = simc?.dateGenerated ?? -1
-
-    if (simc && lastSimcDate > (lastDroptimizer?.simInfo.date ?? -1)) {
-        return simc.currencies
-    }
-
-    return lastDroptimizer?.currencies ?? []
-}
-
 export const parseLootBisSpecForChar = (
     bisList: BisList[],
     itemId: number,
@@ -544,7 +527,7 @@ export const evalHighlightsAndScore = (
     return { ...res, score: evalScore(res, maxDpsGain) }
 }
 
-export const evalScore = (
+const evalScore = (
     highlights: Omit<CharAssignmentHighlights, "score">,
     maxDdpsGain: number
 ): number => {

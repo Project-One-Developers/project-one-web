@@ -2,47 +2,22 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
-    addLoots,
     addManualLoot,
     assignLoot,
     deleteLoot,
     getCharactersWithLootsByItemId,
     getLootAssignmentInfo,
-    getLootsBySessionId,
-    getLootsBySessionIdWithAssigned,
     getLootsBySessionIdsWithAssigned,
     getLootsBySessionIdWithItem,
-    getLootWithItemById,
     importMrtLoot,
     importRcLootAssignments,
     importRcLootCsv,
-    tradeLoot,
     unassignLoot,
-    untradeLoot,
 } from "@/actions/loots"
-import type {
-    CharAssignmentHighlights,
-    NewLoot,
-    NewLootManual,
-} from "@/shared/models/loot.models"
+import type { CharAssignmentHighlights, NewLootManual } from "@/shared/models/loot.models"
 import { queryKeys } from "./keys"
 
 // ============== QUERIES ==============
-
-export function useLootsBySession(raidSessionId: string | undefined) {
-    return useQuery({
-        queryKey: [queryKeys.loots, "session", raidSessionId],
-        queryFn: () => {
-            if (!raidSessionId) {
-                throw new Error("No raid session id provided")
-            }
-            return getLootsBySessionId(raidSessionId)
-        },
-        enabled: !!raidSessionId,
-        refetchInterval: 5000,
-        refetchOnWindowFocus: true,
-    })
-}
 
 export function useLootsBySessionWithItem(raidSessionId: string | undefined) {
     return useQuery({
@@ -52,21 +27,6 @@ export function useLootsBySessionWithItem(raidSessionId: string | undefined) {
                 throw new Error("No raid session id provided")
             }
             return getLootsBySessionIdWithItem(raidSessionId)
-        },
-        enabled: !!raidSessionId,
-        refetchInterval: 5000,
-        refetchOnWindowFocus: true,
-    })
-}
-
-export function useLootsBySessionWithAssigned(raidSessionId: string | undefined) {
-    return useQuery({
-        queryKey: [queryKeys.loots, "session", raidSessionId, "withAssigned"],
-        queryFn: () => {
-            if (!raidSessionId) {
-                throw new Error("No raid session id provided")
-            }
-            return getLootsBySessionIdWithAssigned(raidSessionId)
         },
         enabled: !!raidSessionId,
         refetchInterval: 5000,
@@ -84,42 +44,7 @@ export function useLootsBySessionsWithAssigned(raidSessionIds: string[]) {
     })
 }
 
-export function useLootWithItem(lootId: string | undefined) {
-    return useQuery({
-        queryKey: [queryKeys.loots, lootId, "withItem"],
-        queryFn: () => {
-            if (!lootId) {
-                throw new Error("No loot id provided")
-            }
-            return getLootWithItemById(lootId)
-        },
-        enabled: !!lootId,
-    })
-}
-
 // ============== MUTATIONS ==============
-
-export function useAddLoots() {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: ({
-            raidSessionId,
-            loots,
-        }: {
-            raidSessionId: string
-            loots: NewLoot[]
-        }) => addLoots(raidSessionId, loots),
-        onSuccess: (_, vars) => {
-            void queryClient.invalidateQueries({
-                queryKey: [queryKeys.loots, "session", vars.raidSessionId],
-            })
-            void queryClient.invalidateQueries({
-                queryKey: [queryKeys.raidSession, vars.raidSessionId],
-            })
-        },
-    })
-}
 
 export function useAssignLoot() {
     const queryClient = useQueryClient()
@@ -156,48 +81,6 @@ export function useUnassignLoot() {
     return useMutation({
         mutationFn: ({ lootId }: { lootId: string; raidSessionId?: string }) =>
             unassignLoot(lootId),
-        onSuccess: (_, vars) => {
-            if (vars.raidSessionId) {
-                void queryClient.invalidateQueries({
-                    queryKey: [queryKeys.loots, "session", vars.raidSessionId],
-                })
-                void queryClient.invalidateQueries({
-                    queryKey: [queryKeys.loots, "sessions"],
-                })
-            } else {
-                void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
-            }
-        },
-    })
-}
-
-export function useTradeLoot() {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: ({ lootId }: { lootId: string; raidSessionId?: string }) =>
-            tradeLoot(lootId),
-        onSuccess: (_, vars) => {
-            if (vars.raidSessionId) {
-                void queryClient.invalidateQueries({
-                    queryKey: [queryKeys.loots, "session", vars.raidSessionId],
-                })
-                void queryClient.invalidateQueries({
-                    queryKey: [queryKeys.loots, "sessions"],
-                })
-            } else {
-                void queryClient.invalidateQueries({ queryKey: [queryKeys.loots] })
-            }
-        },
-    })
-}
-
-export function useUntradeLoot() {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: ({ lootId }: { lootId: string; raidSessionId?: string }) =>
-            untradeLoot(lootId),
         onSuccess: (_, vars) => {
             if (vars.raidSessionId) {
                 void queryClient.invalidateQueries({

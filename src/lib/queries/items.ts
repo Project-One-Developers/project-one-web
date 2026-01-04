@@ -2,34 +2,15 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
-    deleteItemNote,
     getAllItemNotes,
     getItemById,
     getItemNote,
-    getItems,
-    getRaidItems,
     searchItems,
     setItemNote,
 } from "@/actions/items"
 import { queryKeys } from "./keys"
 
 // ============== QUERIES ==============
-
-export function useItems() {
-    return useQuery({
-        queryKey: [queryKeys.items],
-        queryFn: () => getItems(),
-        staleTime: 3600000, // 1 hour - item data is static per patch
-    })
-}
-
-export function useRaidItems() {
-    return useQuery({
-        queryKey: [queryKeys.items, "raid"],
-        queryFn: () => getRaidItems(),
-        staleTime: 3600000, // 1 hour - item data is static per patch
-    })
-}
 
 export function useItem(id: number | undefined) {
     return useQuery({
@@ -85,20 +66,6 @@ export function useSetItemNote() {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.items, "notes"] })
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.items, "notes", vars.id],
-            })
-        },
-    })
-}
-
-export function useDeleteItemNote() {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: (id: number) => deleteItemNote(id),
-        onSuccess: (_, id) => {
-            void queryClient.invalidateQueries({ queryKey: [queryKeys.items, "notes"] })
-            void queryClient.invalidateQueries({
-                queryKey: [queryKeys.items, "notes", id],
             })
         },
     })

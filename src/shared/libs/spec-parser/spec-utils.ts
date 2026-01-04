@@ -1,5 +1,4 @@
 import { s } from "@/shared/libs/string-utils"
-import type { Item } from "@/shared/models/item.models"
 import type { WowClassName, WoWRole, WowSpecName } from "@/shared/models/wow.models"
 import type { WowClass, WowSpec } from "@/shared/types"
 import { WOW_CLASS_WITH_SPECS } from "./spec-utils.schemas"
@@ -44,10 +43,6 @@ export const getWowSpecByClassNameAndSpecName = (
     return spec ?? null
 }
 
-export const getClassSpecs = (wowClass: number | WowClassName): WowSpec[] => {
-    return getWowClassFromIdOrName(wowClass).specs
-}
-
 export const getClassSpecsForRole = (
     wowClass: number | WowClassName,
     role: WoWRole
@@ -55,14 +50,6 @@ export const getClassSpecsForRole = (
     const matchingClass = getWowClassFromIdOrName(wowClass)
 
     return matchingClass.specs.filter((spec) => spec.role === role)
-}
-
-export const getSpecById = (id: number): WowSpec => {
-    const res = WOW_CLASS_WITH_SPECS.flatMap((c) => c.specs).find((s) => s.id === id)
-    if (!res) {
-        throw Error(`getSpec(): spec ${s(id)} not mapped`)
-    }
-    return res
 }
 
 export const getWowClassBySpecId = (id: number): WowClass => {
@@ -73,19 +60,11 @@ export const getWowClassBySpecId = (id: number): WowClass => {
     return res
 }
 
-export const isTankSpec = (id: number): boolean => {
+const isTankSpec = (id: number): boolean => {
     return tankSpecIds.includes(id)
 }
-export const isHealerSpec = (id: number): boolean => {
+const isHealerSpec = (id: number): boolean => {
     return healerSpecIds.includes(id)
-}
-
-export const isTankItem = (item: Item): boolean => {
-    return isTankSpecs(item.specIds)
-}
-
-export const isHealerItem = (item: Item): boolean => {
-    return isHealerSpecs(item.specIds)
 }
 
 export const isHealerSpecs = (specIds: number[] | null): boolean => {

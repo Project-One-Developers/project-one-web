@@ -361,5 +361,3 @@ const GearInfo = ({
         </div>
     )
 }
-
-export default CharGameInfoPanel

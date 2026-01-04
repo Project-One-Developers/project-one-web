@@ -97,12 +97,6 @@ export const characterGameInfoCompactSchema = z.object({
 })
 export type CharacterGameInfoCompact = z.infer<typeof characterGameInfoCompactSchema>
 
-export const characterWithProgressionSchema = z.object({
-    p1Character: characterSchema,
-    blizzard: charBlizzardSchema.nullable(),
-})
-export type CharacterWithProgression = z.infer<typeof characterWithProgressionSchema>
-
 export const characterWithGears = characterSchema.extend({
     gears: gearItemSchema.array(),
 })

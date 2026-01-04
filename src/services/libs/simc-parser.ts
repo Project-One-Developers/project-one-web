@@ -104,7 +104,7 @@ function parseCharacterInfo(simc: string): {
     }
 }
 
-export function parseSimcDateToUnixTimestamp(dateString: string): number {
+function parseSimcDateToUnixTimestamp(dateString: string): number {
     const parts = dateString.split(" ")
     const datePart = parts[0]
     const timePart = parts[1]

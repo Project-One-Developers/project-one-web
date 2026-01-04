@@ -101,7 +101,7 @@ async function scrapeItem(itemId: number): Promise<WowheadItemData | null> {
 /**
  * Scrape a single item with rate limiting
  */
-export async function scrapeWowheadItem(itemId: number): Promise<WowheadItemData | null> {
+async function scrapeWowheadItem(itemId: number): Promise<WowheadItemData | null> {
     return wowheadRateLimit(() => scrapeItem(itemId))
 }
 
@@ -147,19 +147,4 @@ export async function scrapeWowheadBatch(
     )
 
     return results
-}
-
-/**
- * Check if Wowhead scraping is available (simple connectivity test)
- */
-export async function testWowheadConnectivity(): Promise<boolean> {
-    try {
-        const response = await fetch("https://www.wowhead.com", {
-            method: "HEAD",
-            headers: { "User-Agent": USER_AGENT },
-        })
-        return response.ok
-    } catch {
-        return false
-    }
 }

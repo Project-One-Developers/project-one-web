@@ -37,16 +37,6 @@ export function queryByItemLevelAndName(
     return entry ? { key: entry[0], track: entry[1] } : null
 }
 
-export function queryByItemLevelAndDelta(
-    ilvl: number,
-    delta: number
-): { key: string; track: BonusItemTrack } | null {
-    const entry = Object.entries(bonusItemTracks).find(
-        ([, track]) => track.itemLevel === ilvl && track.max - track.level === delta
-    )
-    return entry ? { key: entry[0], track: entry[1] } : null
-}
-
 export const trackNameToNumber = (
     name: WowItemTrackName | null | undefined
 ): number | null =>

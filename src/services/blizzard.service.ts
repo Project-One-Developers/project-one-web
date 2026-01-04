@@ -1,6 +1,6 @@
 import { keyBy, partition } from "es-toolkit"
 import "server-only"
-import { blizzardRepo, type CharacterBlizzardDb } from "@/db/repositories/blizzard"
+import { blizzardRepo } from "@/db/repositories/blizzard"
 import { bossRepo } from "@/db/repositories/bosses"
 import { characterRepo } from "@/db/repositories/characters"
 import { playerRepo } from "@/db/repositories/player.repo"
@@ -21,7 +21,6 @@ import {
     getUnixTimestamp,
 } from "@/shared/libs/date-utils"
 import { s } from "@/shared/libs/string-utils"
-import type { BlizzardEncounter } from "@/shared/models/blizzard.models"
 import type { Boss } from "@/shared/models/boss.models"
 import type {
     BossProgress,
@@ -198,20 +197,6 @@ export const blizzardService = {
     },
 
     /**
-     * Get all stored Blizzard data
-     */
-    getAll: async (): Promise<CharacterBlizzardDb[]> => {
-        return blizzardRepo.getAll()
-    },
-
-    /**
-     * Get the last sync timestamp
-     */
-    getLastSyncTime: async (): Promise<number | null> => {
-        return blizzardRepo.getLastTimeSynced()
-    },
-
-    /**
      * Get roster progression data with encounters from normalized table.
      */
     getRosterProgression: async (
@@ -251,20 +236,13 @@ export const blizzardService = {
             raidSlug
         )
 
-        // Group encounters by "characterId-difficulty-blizzardEncounterId"
-        const encounterLookup = new Map<string, BlizzardEncounter>()
-        for (const enc of allEncounters) {
-            const encounterId = enc.boss.blizzardEncounterId
-            if (!encounterId) {
-                continue
-            }
-            const key = `${enc.characterId}-${enc.difficulty}-${s(encounterId)}`
-            encounterLookup.set(key, {
-                encounterId,
-                numKills: enc.numKills,
-                lastDefeated: enc.lastDefeated?.toISOString() ?? null,
-            })
-        }
+        // Build lookup keyed by "characterId-difficulty-encounterId"
+        const encounterByKey = new Map(
+            allEncounters.map((enc) => [
+                `${enc.characterId}-${enc.difficulty}-${s(enc.encounter.encounterId)}`,
+                enc,
+            ])
+        )
 
         // Build progression character data (minimal fields)
         const rosterChars: ProgressionCharacter[] = roster.map((c) => ({
@@ -286,9 +264,8 @@ export const blizzardService = {
             const notDefeated: ProgressionCharacter[] = []
 
             for (const char of rosterChars) {
-                const encounter = encounterLookup.get(
-                    `${char.id}-${difficulty}-${s(bossEncounterId)}`
-                )
+                const key = `${char.id}-${difficulty}-${s(bossEncounterId)}`
+                const encounter = encounterByKey.get(key)?.encounter
                 if (encounter) {
                     defeated.push({
                         ...char,

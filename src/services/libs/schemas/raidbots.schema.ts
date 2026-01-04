@@ -1,7 +1,7 @@
 import "server-only"
 import { z } from "zod"
 
-export const droptimizerEquippedItemSchema = z.object({
+const droptimizerEquippedItemSchema = z.object({
     itemLevel: z.number(),
     id: z.number(),
     name: z.string(),

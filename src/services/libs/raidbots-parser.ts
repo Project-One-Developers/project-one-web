@@ -60,7 +60,7 @@ export const fetchDroptimizerFromURL = async (
     return droptimizer
 }
 
-export const fetchRaidbotsData = async (url: RaidbotsURL): Promise<unknown> => {
+const fetchRaidbotsData = async (url: RaidbotsURL): Promise<unknown> => {
     const responseJson = await fetch(`${url}/data.json`)
     if (!responseJson.ok) {
         throw new Error(
@@ -70,7 +70,7 @@ export const fetchRaidbotsData = async (url: RaidbotsURL): Promise<unknown> => {
     return (await responseJson.json()) as unknown
 }
 
-export const parseRaidbotsData = (jsonData: unknown): RaidbotJson => {
+const parseRaidbotsData = (jsonData: unknown): RaidbotJson => {
     // Type guard to check for Top Gear simulations
     if (
         typeof jsonData === "object" &&
@@ -205,7 +205,7 @@ const parseUpgrades = async (
     return Array.from(upgradesMap.values())
 }
 
-export const convertJsonToDroptimizer = async (
+const convertJsonToDroptimizer = async (
     url: string,
     data: RaidbotJson,
     context?: SyncContext
@@ -326,7 +326,7 @@ export const convertJsonToDroptimizer = async (
     }
 }
 
-export const parseEquippedGear = async (
+const parseEquippedGear = async (
     droptEquipped: z.infer<typeof droptimizerEquippedItemsSchema>,
     context?: SyncContext
 ): Promise<GearItem[]> => {

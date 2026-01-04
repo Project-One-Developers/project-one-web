@@ -13,10 +13,9 @@ export const mountTrackerService = {
         // 1. Get all players with their characters
         const playersWithChars = await playerRepo.getWithCharactersList()
 
-        // 2. Get blizzard data for all characters
+        // 2. Get blizzard data for all characters (returns Map<characterId, CharacterBlizzard>)
         const allCharIds = playersWithChars.flatMap((p) => p.characters.map((c) => c.id))
-        const blizzardData = await blizzardRepo.getByCharIds(allCharIds)
-        const blizzardMap = new Map(blizzardData.map((b) => [b.characterId, b]))
+        const blizzardMap = await blizzardRepo.getByCharIds(allCharIds)
 
         // 3. For each player, select representative character
         const results: PlayerMountStatus[] = []

@@ -4,7 +4,6 @@
  */
 
 const ICON_URL_BASE = "https://wow.zamimg.com/images/wow/icons/large"
-const WOWHEAD_ITEM_BASE = "https://www.wowhead.com/item"
 
 /** Default icon name when icon is missing */
 export const DEFAULT_ICON_NAME = "inv_misc_questionmark"
@@ -30,25 +29,4 @@ export function extractIconNameFromUrl(url: string | null | undefined): string {
     // Extract filename from URL and remove .jpg extension
     const match = /\/([^/]+)\.jpg$/i.exec(url)
     return match?.[1] ?? DEFAULT_ICON_NAME
-}
-
-/**
- * Get the Wowhead URL for an item
- * @param itemId - The WoW item ID
- * @param ilvl - Optional item level to include
- * @param bonusIds - Optional bonus IDs to include
- */
-export function getWowheadItemUrl(
-    itemId: number,
-    ilvl?: number,
-    bonusIds?: number[]
-): string {
-    let url = `${WOWHEAD_ITEM_BASE}=${String(itemId)}`
-    if (ilvl) {
-        url += `&ilvl=${String(ilvl)}`
-    }
-    if (bonusIds?.length) {
-        url += `&bonus=${bonusIds.join(":")}`
-    }
-    return url
 }

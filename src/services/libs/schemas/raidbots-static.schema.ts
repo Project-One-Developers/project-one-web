@@ -9,18 +9,18 @@ import { z } from "zod"
 // encounter-items.json schemas
 // ============================================================================
 
-export const raidbotsItemSourceSchema = z.object({
+const raidbotsItemSourceSchema = z.object({
     instanceId: z.number().optional(),
     encounterId: z.number(),
     veryRare: z.boolean().optional(),
 })
 
-export const raidbotsItemStatSchema = z.object({
+const raidbotsItemStatSchema = z.object({
     id: z.number(),
     alloc: z.number(),
 })
 
-export const raidbotsItemSchema = z.object({
+const raidbotsItemSchema = z.object({
     id: z.number(),
     name: z.string(),
     icon: z.string(),
@@ -39,7 +39,6 @@ export const raidbotsItemSchema = z.object({
     itemSetId: z.number().optional(), // Tier set ID
     allowableClasses: z.array(z.number()).optional(), // Classes that can use item
 })
-
 export type RaidbotsItem = z.infer<typeof raidbotsItemSchema>
 
 export const raidbotsEncounterItemsSchema = z.array(raidbotsItemSchema)
@@ -49,7 +48,7 @@ export const raidbotsEncounterItemsSchema = z.array(raidbotsItemSchema)
 // ============================================================================
 
 /** Known instance types from Raidbots API */
-export const instanceTypeSchema = z.enum([
+const instanceTypeSchema = z.enum([
     "raid",
     "mplus-chest",
     "catalyst",
@@ -60,16 +59,14 @@ export const instanceTypeSchema = z.enum([
     "pvp",
 ])
 
-export type InstanceType = z.infer<typeof instanceTypeSchema>
-
-export const raidbotsEncounterSchema = z.object({
+const raidbotsEncounterSchema = z.object({
     id: z.number(),
     name: z.string(),
     order: z.number().optional(),
     icon_button: z.string().optional(),
 })
 
-export const raidbotsInstanceSchema = z.object({
+const raidbotsInstanceSchema = z.object({
     id: z.number(),
     name: z.string(),
     description: z.string().optional(),
@@ -87,7 +84,7 @@ export const raidbotsInstancesSchema = z.array(raidbotsInstanceSchema)
 // bonuses.json schemas
 // ============================================================================
 
-export const raidbotsBonusUpgradeSchema = z.object({
+const raidbotsBonusUpgradeSchema = z.object({
     group: z.number(),
     level: z.number(),
     max: z.number(),
@@ -98,7 +95,7 @@ export const raidbotsBonusUpgradeSchema = z.object({
     seasonId: z.number().optional(),
 })
 
-export const raidbotsBonusEntrySchema = z.object({
+const raidbotsBonusEntrySchema = z.object({
     id: z.number(),
     quality: z.number().optional(),
     tag: z.string().optional(),
@@ -108,9 +105,6 @@ export const raidbotsBonusEntrySchema = z.object({
     upgrade: raidbotsBonusUpgradeSchema.optional(),
 })
 
-export type RaidbotsBonusEntry = z.infer<typeof raidbotsBonusEntrySchema>
-
 // The bonuses.json is an object with string keys (bonus IDs)
 export const raidbotsBonusesSchema = z.record(z.string(), raidbotsBonusEntrySchema)
-
 export type RaidbotsBonuses = z.infer<typeof raidbotsBonusesSchema>

@@ -37,6 +37,3 @@ export const rawMrtRecordSchema = z.object({
     itemLink: z.string(),
     rollType: z.number().nullable(), // 0 = pass (if personal this is null)
 })
-
-export type RawLootRecord = z.infer<typeof rawLootRecordSchema>
-export type RawMrtRecord = z.infer<typeof rawMrtRecordSchema>

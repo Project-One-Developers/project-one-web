@@ -1,7 +1,7 @@
 "use client"
 
 import Script from "next/script"
-import { useEffect, useCallback } from "react"
+import { useEffect } from "react"
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
@@ -30,16 +30,6 @@ export function WowheadTooltips() {
             />
         </>
     )
-}
-
-export function useWowheadTooltips() {
-    const refresh = useCallback(() => {
-        if (typeof window !== "undefined" && window.$WowheadPower) {
-            window.$WowheadPower.refreshLinks()
-        }
-    }, [])
-
-    return { refresh }
 }
 
 export function useRefreshWowheadTooltips(deps: unknown[] = []) {

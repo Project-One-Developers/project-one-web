@@ -1,6 +1,5 @@
 "use server"
 
-import { type CharacterBlizzardDb } from "@/db/repositories/blizzard"
 import { requireOfficer } from "@/lib/auth-helpers"
 import { blizzardService } from "@/services/blizzard.service"
 import { type CharacterProfileResponse } from "@/services/libs/blizzard-api"
@@ -36,14 +35,6 @@ export async function checkBlizzardUpdates(): Promise<{
 }> {
     await requireOfficer()
     return blizzardService.checkAndSync()
-}
-
-export async function getAllCharacterBlizzard(): Promise<CharacterBlizzardDb[]> {
-    return blizzardService.getAll()
-}
-
-export async function getLastBlizzardSyncTime(): Promise<number | null> {
-    return blizzardService.getLastSyncTime()
 }
 
 export async function getRosterProgression(

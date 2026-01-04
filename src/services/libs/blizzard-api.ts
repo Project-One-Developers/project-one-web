@@ -4,10 +4,6 @@ import { z } from "zod"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
 import { s } from "@/shared/libs/string-utils"
-import type {
-    WowItemEquippedSlotKey,
-    WowRaidDifficulty,
-} from "@/shared/models/wow.models"
 import { realmNameToSlug } from "@/shared/wow.consts"
 
 // Rate limiting: Blizzard API allows ~36,000 requests/hour = 10/second
@@ -33,7 +29,7 @@ const characterMediaResponseSchema = z.object({
 })
 
 // Character Profile Response
-export const characterProfileResponseSchema = z.object({
+const characterProfileResponseSchema = z.object({
     id: z.number(),
     name: z.string(),
     race: z.object({
@@ -93,7 +89,7 @@ const equipmentSlotSchema = z.object({
 })
 export type EquipmentSlot = z.infer<typeof equipmentSlotSchema>
 
-export const equipmentResponseSchema = z.object({
+const equipmentResponseSchema = z.object({
     equipped_items: z.array(equipmentSlotSchema),
 })
 export type EquipmentResponse = z.infer<typeof equipmentResponseSchema>
@@ -140,7 +136,7 @@ const expansionSchema = z.object({
     instances: z.array(instanceSchema),
 })
 
-export const encountersRaidsResponseSchema = z.object({
+const encountersRaidsResponseSchema = z.object({
     expansions: z.array(expansionSchema).optional(),
 })
 export type EncountersRaidsResponse = z.infer<typeof encountersRaidsResponseSchema>
@@ -161,9 +157,8 @@ const guildMemberSchema = z.object({
     }),
     rank: z.number(),
 })
-export type GuildMember = z.infer<typeof guildMemberSchema>
 
-export const guildRosterResponseSchema = z.object({
+const guildRosterResponseSchema = z.object({
     guild: z.object({
         id: z.number(),
         name: z.string(),
@@ -471,7 +466,7 @@ const mountEntrySchema = z.object({
     }),
 })
 
-export const mountCollectionResponseSchema = z.object({
+const mountCollectionResponseSchema = z.object({
     mounts: z.array(mountEntrySchema),
 })
 export type MountCollectionResponse = z.infer<typeof mountCollectionResponseSchema>
@@ -530,47 +525,6 @@ export async function fetchCharacterMounts(
 }
 
 // ============================================================================
-// Slot Mapping Utilities
-// ============================================================================
-
-/**
- * Map Blizzard API slot types to our internal slot keys
- */
-export const BLIZZARD_SLOT_MAP: Record<
-    string,
-    WowItemEquippedSlotKey | "shirt" | "tabard"
-> = {
-    HEAD: "head",
-    NECK: "neck",
-    SHOULDER: "shoulder",
-    BACK: "back",
-    CHEST: "chest",
-    WRIST: "wrist",
-    HANDS: "hands",
-    WAIST: "waist",
-    LEGS: "legs",
-    FEET: "feet",
-    FINGER_1: "finger1",
-    FINGER_2: "finger2",
-    TRINKET_1: "trinket1",
-    TRINKET_2: "trinket2",
-    MAIN_HAND: "main_hand",
-    OFF_HAND: "off_hand",
-    SHIRT: "shirt",
-    TABARD: "tabard",
-}
-
-/**
- * Map Blizzard difficulty types to our internal difficulty names
- */
-export const BLIZZARD_DIFFICULTY_MAP: Record<string, WowRaidDifficulty> = {
-    NORMAL: "Normal",
-    HEROIC: "Heroic",
-    MYTHIC: "Mythic",
-    LFR: "LFR",
-}
-
-// ============================================================================
 // Journal Instance API (for raid boss data)
 // ============================================================================
 
@@ -579,7 +533,7 @@ const journalEncounterRefSchema = z.object({
     name: z.string(),
 })
 
-export const journalInstanceResponseSchema = z.object({
+const journalInstanceResponseSchema = z.object({
     id: z.number(),
     name: z.string(),
     encounters: z.array(journalEncounterRefSchema).optional(),
@@ -706,7 +660,7 @@ const itemClassSchema = z.object({
     name: z.string(),
 })
 
-export const itemResponseSchema = z.object({
+const itemResponseSchema = z.object({
     id: z.number(),
     name: z.string(),
     quality: z.object({
@@ -727,9 +681,9 @@ export const itemResponseSchema = z.object({
         })
         .optional(),
 })
-export type ItemResponse = z.infer<typeof itemResponseSchema>
+type ItemResponse = z.infer<typeof itemResponseSchema>
 
-export const itemMediaResponseSchema = z.object({
+const itemMediaResponseSchema = z.object({
     assets: z.array(
         z.object({
             key: z.string(),
@@ -737,7 +691,6 @@ export const itemMediaResponseSchema = z.object({
         })
     ),
 })
-export type ItemMediaResponse = z.infer<typeof itemMediaResponseSchema>
 
 /**
  * Fetch item data from Blizzard API

@@ -228,18 +228,6 @@ export function getRaidIdsByCatalystId(catalystId: number): number[] {
 }
 
 /**
- * Get season number for a given raid ID
- */
-export function getSeasonByRaidId(raidId: number): number | null {
-    for (const [season, config] of Object.entries(SEASONS)) {
-        if (config.raidIds.includes(raidId)) {
-            return parseInt(season)
-        }
-    }
-    return null
-}
-
-/**
  * Determine item level based on raid config and boss order
  */
 export function getItemLevelsForBoss(

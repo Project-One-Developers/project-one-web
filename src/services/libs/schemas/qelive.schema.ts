@@ -18,7 +18,7 @@ export const qeliveEquippedItemSchema = z.object({
     gemString: z.string(), // colon separated string of gem IDs
 })
 
-export const qeliveResultSchema = z.object({
+const qeliveResultSchema = z.object({
     item: z.number(),
     dropLoc: z.string(),
     dropDifficulty: z.preprocess((val) => {

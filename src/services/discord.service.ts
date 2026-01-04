@@ -9,7 +9,7 @@ import "server-only"
 import { logger } from "@/lib/logger"
 import { s } from "@/shared/libs/string-utils"
 
-export type DiscordMessage = {
+type DiscordMessage = {
     content: string
     createdAt: Date
 }

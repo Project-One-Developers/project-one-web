@@ -88,12 +88,3 @@ export function extractEnchantIds(
     const enchants = enchantments.map((e) => e.enchantment_id)
     return enchants.length > 0 ? enchants : null
 }
-
-/**
- * Extract icon name from Blizzard media URL
- * e.g., "https://render.worldofwarcraft.com/eu/icons/56/inv_boots_cloth_01.jpg" -> "inv_boots_cloth_01"
- */
-export function extractIconNameFromUrl(url: string): string {
-    const match = /\/([^/]+)\.(jpg|png)$/i.exec(url)
-    return match?.[1] ?? "inv_misc_questionmark"
-}

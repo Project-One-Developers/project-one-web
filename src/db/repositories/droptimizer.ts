@@ -79,14 +79,6 @@ function mapDbToDroptimizer(dbRow: DbDroptimizerWithUpgrades): Droptimizer {
     }
 }
 
-// Compact version for roster page - only fetches fields needed for item level display
-export type DroptimizerCompact = {
-    characterId: string
-    simDate: number
-    itemsAverageItemLevelEquipped: number | null
-    tiersetInfo: unknown[] | null // We only need the array length for counting
-}
-
 /**
  * Helper to fetch upgrades with items for given droptimizer IDs.
  */
@@ -413,29 +405,5 @@ export const droptimizerRepo = {
 
         const ids = latestDroptimizers.map((row) => row.id)
         return droptimizerRepo.getByIds(ids)
-    },
-
-    getLatestByCharacterIdsCompact: async (
-        characterIds: string[]
-    ): Promise<DroptimizerCompact[]> => {
-        if (characterIds.length === 0) {
-            return []
-        }
-
-        // Use DISTINCT ON to get latest per character+raid+difficulty+spec
-        // Only select fields needed for roster display
-        const result = await db
-            .selectDistinctOn(distinctOnColumns, {
-                characterId: droptimizerTable.characterId,
-                simDate: droptimizerTable.simDate,
-                itemsAverageItemLevelEquipped:
-                    droptimizerTable.itemsAverageItemLevelEquipped,
-                tiersetInfo: droptimizerTable.tiersetInfo,
-            })
-            .from(droptimizerTable)
-            .where(inArray(droptimizerTable.characterId, characterIds))
-            .orderBy(...distinctOnColumns, desc(droptimizerTable.simDate))
-
-        return result
     },
 }

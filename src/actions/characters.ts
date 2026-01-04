@@ -9,7 +9,6 @@ import type {
     CharacterWithPlayer,
     EditCharacterData,
     EditPlayer,
-    NewCharacter,
     NewCharacterWithoutClass,
     NewPlayer,
     Player,
@@ -17,13 +16,6 @@ import type {
 } from "@/shared/models/character.models"
 
 // ============== CHARACTERS ==============
-
-export async function addCharacter(
-    character: NewCharacter
-): Promise<CharacterWithPlayer | null> {
-    await requireOfficer()
-    return characterService.add(character)
-}
 
 export async function addCharacterWithSync(
     character: NewCharacterWithoutClass
@@ -40,10 +32,6 @@ export async function getCharacterWithGameInfo(
 
 export async function getCharacterList(): Promise<Character[]> {
     return characterService.getList()
-}
-
-export async function getCharactersWithPlayerList(): Promise<CharacterWithPlayer[]> {
-    return characterService.getWithPlayerList()
 }
 
 export async function deleteCharacter(id: string): Promise<void> {
@@ -78,10 +66,6 @@ export async function editPlayer(edited: EditPlayer): Promise<Player | null> {
 
 export async function getPlayerWithCharactersList(): Promise<PlayerWithCharacters[]> {
     return playerService.getWithCharactersList()
-}
-
-export async function getPlayersWithoutCharacters(): Promise<Player[]> {
-    return playerService.getWithoutCharacters()
 }
 
 // ============== CHARACTER MEDIA ==============

@@ -62,13 +62,13 @@ export const INVENTORY_TYPE_IDS = {
 // Spec ID → Class info mapping
 // ============================================================================
 
-export type SpecInfo = {
+type SpecInfo = {
     classId: number
     className: string
     specName: string
 }
 
-export const SPEC_MAP: Record<number, SpecInfo> = {
+const SPEC_MAP: Record<number, SpecInfo> = {
     // Death Knight
     250: { classId: 6, className: "Death Knight", specName: "Blood Death Knight" },
     251: { classId: 6, className: "Death Knight", specName: "Frost Death Knight" },
@@ -149,7 +149,7 @@ export const ITEM_CLASS_MAP: Record<number, string> = {
 }
 
 // Armor subclass mapping
-export type ArmorTypeInfo = {
+type ArmorTypeInfo = {
     subclass: string
     armorType: WowArmorType | null
 }
@@ -194,7 +194,7 @@ export const WEAPON_TYPE_MAP: Record<number, string> = {
 }
 
 // Inventory type mapping
-export type InventoryTypeInfo = {
+type InventoryTypeInfo = {
     slot: WowItemSlot
     slotKey: WowItemSlotKey | null
 }
@@ -254,50 +254,5 @@ export function expandSpecsToClasses(specIds: number[]): {
         classIds: [...classIds].sort((a, b) => a - b),
         classNames: [...classNames].sort(),
         specNames: specNames.sort(),
-    }
-}
-
-// Helper function to parse stats from Wowhead format
-export function parseStats(wowheadStats: string[]): {
-    stats: string
-    mainStats: string
-    secondaryStats: string
-} {
-    const mainStatsList: string[] = []
-    const secondaryStatsList: string[] = []
-
-    const statsDesc = wowheadStats.join(",")
-
-    // Main stats
-    if (statsDesc.includes("Agility")) {
-        mainStatsList.push("AGI")
-    }
-    if (statsDesc.includes("Strength")) {
-        mainStatsList.push("STR")
-    }
-    if (statsDesc.includes("Intellect")) {
-        mainStatsList.push("INT")
-    }
-
-    // Secondary stats
-    for (const stat of wowheadStats) {
-        if (stat.includes("Mastery")) {
-            secondaryStatsList.push("MAS")
-        }
-        if (stat.includes("Haste")) {
-            secondaryStatsList.push("HASTE")
-        }
-        if (stat.includes("Critical")) {
-            secondaryStatsList.push("CRIT")
-        }
-        if (stat.includes("Versatility")) {
-            secondaryStatsList.push("VERS")
-        }
-    }
-
-    return {
-        stats: wowheadStats.join(","),
-        mainStats: mainStatsList.join("/"),
-        secondaryStats: secondaryStatsList.join("/"),
     }
 }

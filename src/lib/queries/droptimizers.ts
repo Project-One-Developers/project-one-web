@@ -6,21 +6,10 @@ import {
     addSimulationFromUrl,
     deleteDroptimizer,
     deleteSimulationsOlderThan,
-    getDroptimizerByCharacterIdAndDiff,
     getDroptimizerLatestList,
-    getDroptimizerList,
     syncDroptimizersFromDiscord,
 } from "@/actions/droptimizer"
-import type { WowRaidDifficulty } from "@/shared/models/wow.models"
 import { queryKeys } from "./keys"
-
-export function useDroptimizers() {
-    return useQuery({
-        queryKey: [queryKeys.droptimizers],
-        queryFn: () => getDroptimizerList(),
-        staleTime: 30000,
-    })
-}
 
 export function useLatestDroptimizers() {
     return useQuery({
@@ -38,23 +27,6 @@ export function useDeleteDroptimizer() {
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
         },
-    })
-}
-
-export function useDroptimizerByCharacterIdAndDiff(
-    characterId: string | undefined,
-    raidDiff: WowRaidDifficulty | undefined
-) {
-    return useQuery({
-        queryKey: [queryKeys.droptimizers, "byCharacterIdAndDiff", characterId, raidDiff],
-        queryFn: () => {
-            if (!characterId || !raidDiff) {
-                throw new Error("Missing parameters")
-            }
-            return getDroptimizerByCharacterIdAndDiff(characterId, raidDiff)
-        },
-        enabled: !!characterId && !!raidDiff,
-        staleTime: 30000,
     })
 }
 

@@ -110,31 +110,3 @@ export function processBonuses(bonuses: RaidbotsBonuses): BonusItemTrack[] {
 
     return tracks
 }
-
-/**
- * Filter tracks to only include specific seasons
- */
-export function filterTracksBySeason(
-    tracks: BonusItemTrack[],
-    seasons: number[]
-): BonusItemTrack[] {
-    const seasonSet = new Set(seasons)
-    return tracks.filter((t) => seasonSet.has(t.season) || t.season === -1)
-}
-
-/**
- * Group tracks by season for analysis
- */
-export function groupTracksBySeason(
-    tracks: BonusItemTrack[]
-): Map<number, BonusItemTrack[]> {
-    const groups = new Map<number, BonusItemTrack[]>()
-
-    for (const track of tracks) {
-        const existing = groups.get(track.season) ?? []
-        existing.push(track)
-        groups.set(track.season, existing)
-    }
-
-    return groups
-}

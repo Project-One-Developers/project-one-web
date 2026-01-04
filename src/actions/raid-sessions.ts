@@ -1,7 +1,6 @@
 "use server"
 
 import { raidSessionService } from "@/services/raid-session.service"
-import type { Character } from "@/shared/models/character.models"
 import type {
     EditRaidSession,
     NewRaidSession,
@@ -43,8 +42,4 @@ export async function importRosterInRaidSession(
     csv: string
 ): Promise<void> {
     return raidSessionService.importRoster(raidSessionId, csv)
-}
-
-export async function getRaidSessionRoster(id: string): Promise<Character[]> {
-    return raidSessionService.getRoster(id)
 }

@@ -328,7 +328,7 @@ export const lootService = {
 
         // Step 4: Build lookup objects O(1) access by characterId
         const droptimizerByCharId = groupBy(droptimizers, (d) => d.characterId)
-        const blizzardByCharId = keyBy(blizzardData, (b) => b.characterId)
+        // blizzardData is already a Map<characterId, CharacterBlizzard>
         const simcByCharId = keyBy(simcData, (s) => s.characterId)
 
         const maxGainFromAllDroptimizers = Math.max(
@@ -341,7 +341,7 @@ export const lootService = {
         const charAssignmentInfo: CharAssignmentInfo[] = filteredRoster.map((char) => {
             // O(1) lookups by characterId
             const charDroptimizers = droptimizerByCharId[char.id] ?? []
-            const charBlizzard = blizzardByCharId[char.id] ?? null
+            const charBlizzard = blizzardData.get(char.id) ?? null
             const charSimc = simcByCharId[char.id] ?? null
 
             const lowerBound = getLatestSyncDate(charDroptimizers, charBlizzard, charSimc)
@@ -434,13 +434,13 @@ export const lootService = {
             ])
 
         const droptimizerByCharId = groupBy(latestDroptimizer, (d) => d.characterId)
-        const blizzardByCharId = keyBy(blizzardData, (b) => b.characterId)
+        // blizzardData is already a Map<characterId, CharacterBlizzard>
         const simcByCharId = keyBy(simcData, (s) => s.characterId)
 
         const res = filteredRoster.map((char) => {
             const charDroptimizers = droptimizerByCharId[char.id] ?? []
             const charBlizzard: CharacterBlizzard | null =
-                blizzardByCharId[char.id] ?? null
+                blizzardData.get(char.id) ?? null
             const charSimc: SimC | null = simcByCharId[char.id] ?? null
 
             const lowerBound = getLatestSyncDate(charDroptimizers, charBlizzard, charSimc)

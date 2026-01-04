@@ -147,7 +147,7 @@ const parseUpgrades = async (
  * @param id - The raid difficulty ID (3=LFR, 4=Normal, 5=Heroic, 6=Mythic)
  * @returns The corresponding WowRaidDifficulty value
  */
-export function parseRaidDiff(id: number): WowRaidDifficulty {
+function parseRaidDiff(id: number): WowRaidDifficulty {
     return match(id)
         .returnType<WowRaidDifficulty>()
         .with(4, () => "Heroic")
@@ -161,7 +161,7 @@ export function parseRaidDiff(id: number): WowRaidDifficulty {
         })
 }
 
-export function parseQELiveSlotToEquippedSlot(slot: string): WowItemEquippedSlotKey {
+function parseQELiveSlotToEquippedSlot(slot: string): WowItemEquippedSlotKey {
     return match(slot)
         .returnType<WowItemEquippedSlotKey>()
         .with("1H Weapon", () => "main_hand")
@@ -283,7 +283,7 @@ const convertJsonToDroptimizer = async (
     return droptimizers
 }
 
-export const parseEquippedGear = (
+const parseEquippedGear = (
     itemsById: Record<number, Item>,
     equipped: z.infer<typeof qeliveEquippedItemSchema>[],
     url: string

@@ -25,10 +25,6 @@ export const raidSessionService = {
         return raidSessionRepo.getWithSummaryList()
     },
 
-    getRoster: async (id: string): Promise<Character[]> => {
-        return raidSessionRepo.getRoster(id)
-    },
-
     add: async (raidSession: NewRaidSession): Promise<RaidSession> => {
         const id = await raidSessionRepo.add(raidSession)
         return raidSessionRepo.getById(id)

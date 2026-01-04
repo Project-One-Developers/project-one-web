@@ -9,10 +9,8 @@ import type { WowItemTrackName, WowRaidDifficulty } from "@/shared/models/wow.mo
 import { DIFF_BONUS_ID_TO_TRACK, RAID_DIFF_BONUS_IDS } from "@/shared/wow.consts"
 import {
     bonusItemTracks,
-    queryByItemLevelAndDelta,
     queryByItemLevelAndName,
     trackNameToNumber,
-    trackNameToWowDiff,
     wowRaidDiffToTrackName,
 } from "./item-tracks"
 
@@ -194,13 +192,13 @@ export function parseItemTrack(input: number[]): ItemTrack | null {
     return bonusItemTracks[matchingBonus] ?? null
 }
 
-export const gearHasAvoidance = (input: number[] | null): boolean =>
+const gearHasAvoidance = (input: number[] | null): boolean =>
     input ? input.includes(40) : false
 
-export const gearHasLeech = (input: number[] | null): boolean =>
+const gearHasLeech = (input: number[] | null): boolean =>
     input ? input.includes(41) : false
 
-export const gearHasSpeed = (input: number[] | null): boolean =>
+const gearHasSpeed = (input: number[] | null): boolean =>
     input ? input.includes(42) : false
 
 // 10397,12055 Primastic Socket
@@ -227,29 +225,6 @@ export function applyDiffBonusId(input: number[], diff: WowRaidDifficulty): void
     if (bonusId !== null) {
         input.push(bonusId)
     }
-}
-
-/**
- * Apply track bonus ids and return
- * @param input Bonus id array to fill
- * @param ilvl Gear ilvl
- * @param delta Gear delta to reach max track upgrade (eg: for 4/6M delta is 2)
- */
-export function applyItemTrackByIlvlAndDelta(
-    input: number[],
-    ilvl: number,
-    delta: number
-): ItemTrack | null {
-    const res = queryByItemLevelAndDelta(ilvl, delta)
-    if (res === null) {
-        return null
-    }
-    input.push(Number(res.key))
-
-    // apply diff bonus id
-    applyDiffBonusId(input, trackNameToWowDiff(res.track.name))
-
-    return res.track
 }
 
 /**

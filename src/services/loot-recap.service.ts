@@ -4,7 +4,6 @@ import { lootRepo } from "@/db/repositories/loots"
 import { raidSessionRepo } from "@/db/repositories/raid-sessions"
 import { CURRENT_RAID_ID } from "@/shared/libs/season-config"
 import type { BossWithItems } from "@/shared/models/boss.models"
-import type { Character } from "@/shared/models/character.models"
 import type { LootWithAssigned } from "@/shared/models/loot.models"
 import type {
     RaidSession,
@@ -12,12 +11,12 @@ import type {
 } from "@/shared/models/raid-session.models"
 import type { WowClassName } from "@/shared/models/wow.models"
 
-export type LootRecapItem = {
+type LootRecapItem = {
     loot: LootWithAssigned
     bossName: string
 }
 
-export type LootRecapByCharacter = {
+type LootRecapByCharacter = {
     character: {
         id: string
         name: string
@@ -34,7 +33,7 @@ export type LootRecapByCharacter = {
     }
 }
 
-export type LootRecapDetail = {
+type LootRecapDetail = {
     session: RaidSession
     recapByCharacter: LootRecapByCharacter[]
     totalStats: {
@@ -49,16 +48,6 @@ export type LootRecapDetail = {
 function findBossForItem(itemId: number, encounterList: BossWithItems[]): string {
     const boss = encounterList.find((b) => b.items.some((item) => item.id === itemId))
     return boss?.name ?? "Unknown"
-}
-
-// Helper function to extract character info from full character object
-function extractCharacterInfo(char: Character) {
-    return {
-        id: char.id,
-        name: char.name,
-        class: char.class,
-        main: char.main,
-    }
 }
 
 export const lootRecapService = {
@@ -115,7 +104,12 @@ export const lootRecapService = {
             )
 
             recapByCharacter.push({
-                character: extractCharacterInfo(char),
+                character: {
+                    id: char.id,
+                    name: char.name,
+                    class: char.class,
+                    main: char.main,
+                },
                 items,
                 stats: {
                     totalDpsGain,

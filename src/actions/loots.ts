@@ -4,17 +4,11 @@ import { lootService } from "@/services/loot.service"
 import type { CharacterWithGears } from "@/shared/models/character.models"
 import type {
     CharAssignmentHighlights,
-    Loot,
     LootWithAssigned,
     LootWithItem,
-    NewLoot,
     NewLootManual,
 } from "@/shared/models/loot.models"
 import type { LootAssignmentInfo } from "@/shared/types"
-
-export async function getLootsBySessionId(raidSessionId: string): Promise<Loot[]> {
-    return lootService.getBySessionId(raidSessionId)
-}
 
 export async function getLootsBySessionIdWithItem(
     raidSessionId: string
@@ -22,20 +16,10 @@ export async function getLootsBySessionIdWithItem(
     return lootService.getBySessionIdWithItem(raidSessionId)
 }
 
-export async function getLootsBySessionIdWithAssigned(
-    raidSessionId: string
-): Promise<LootWithAssigned[]> {
-    return lootService.getBySessionIdWithAssigned(raidSessionId)
-}
-
 export async function getLootsBySessionIdsWithAssigned(
     raidSessionIds: string[]
 ): Promise<LootWithAssigned[]> {
     return lootService.getBySessionIdsWithAssigned(raidSessionIds)
-}
-
-export async function getLootWithItemById(lootId: string): Promise<LootWithItem> {
-    return lootService.getWithItemById(lootId)
 }
 
 export async function assignLoot(
@@ -50,20 +34,8 @@ export async function unassignLoot(lootId: string): Promise<void> {
     return lootService.unassign(lootId)
 }
 
-export async function tradeLoot(lootId: string): Promise<void> {
-    return lootService.trade(lootId)
-}
-
-export async function untradeLoot(lootId: string): Promise<void> {
-    return lootService.untrade(lootId)
-}
-
 export async function deleteLoot(lootId: string): Promise<void> {
     return lootService.delete(lootId)
-}
-
-export async function addLoots(raidSessionId: string, loots: NewLoot[]): Promise<void> {
-    return lootService.addMany(raidSessionId, loots)
 }
 
 // ============== LOOT IMPORT ACTIONS ==============

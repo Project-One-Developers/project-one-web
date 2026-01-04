@@ -24,6 +24,7 @@ export const charBlizzardSchema = z.object({
     averageItemLevel: twoDecimals.nullable(),
     equippedItemLevel: twoDecimals.nullable(),
     itemsEquipped: z.array(gearItemSchema),
+    mountIds: z.array(z.number()).nullable(), // Mount collection from Blizzard API
 })
 
 // Types

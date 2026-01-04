@@ -100,18 +100,12 @@ function classifyItem(rawItem: RaidbotsItem): ItemClassification {
 // Types
 // ============================================================================
 
-export type EncounterContext = {
+type EncounterContext = {
     encounter: RaidbotsEncounter
     instance: RaidbotsInstance
 }
 
 export type EncounterMap = Map<number, EncounterContext>
-
-export type EnrichmentResult = {
-    items: Item[]
-    tiersetMappings: ItemToTierset[]
-    catalystMappings: ItemToCatalyst[]
-}
 
 // ============================================================================
 // Encounter Context Building
