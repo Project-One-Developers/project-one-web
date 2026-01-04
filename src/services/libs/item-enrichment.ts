@@ -39,6 +39,22 @@ type ItemClassification = {
 }
 
 /**
+ * Determine the slot key for an item
+ * Tokens and items without inventoryType default to "omni"
+ */
+function getSlotKey(rawItem: RaidbotsItem): WowItemSlotKey {
+    // Reagent tokens are always omni
+    if (rawItem.itemClass === ITEM_CLASSES.REAGENT && rawItem.itemSubClass === 2) {
+        return "omni"
+    }
+    // Items without inventoryType (tokens) are omni
+    if (rawItem.inventoryType === undefined) {
+        return "omni"
+    }
+    return INVENTORY_TYPE_MAP[rawItem.inventoryType]?.slotKey ?? "omni"
+}
+
+/**
  * Classify an item based on its class and subclass
  * Uses ts-pattern for cleaner pattern matching
  */
@@ -163,11 +179,7 @@ export function enrichItem(
             )
             .otherwise(() => classification.itemSubclass)
 
-        // Determine slot key (reagent tokens force omni)
-        const slotKey = match([rawItem.itemClass, rawItem.itemSubClass])
-            .returnType<WowItemSlotKey>()
-            .with([ITEM_CLASSES.REAGENT, 2], () => "omni")
-            .otherwise(() => INVENTORY_TYPE_MAP[rawItem.inventoryType]?.slotKey ?? "omni")
+        const slotKey = getSlotKey(rawItem)
 
         // Determine if it's a tierset piece
         const isTierset =
@@ -313,7 +325,7 @@ export function buildCatalystMappings(
     const raidItemsBySlot = new Map<string, { item: Item; raw: RaidbotsItem }[]>()
     for (const raidItem of raidItems) {
         const rawRaidItem = rawItemLookup.get(raidItem.id)
-        if (!rawRaidItem) {
+        if (rawRaidItem?.inventoryType === undefined) {
             continue
         }
 
@@ -326,7 +338,7 @@ export function buildCatalystMappings(
     // For each catalyst item, look up matching raid items by slot key
     for (const catalystItem of catalystItems) {
         const rawCatalystItem = rawItemLookup.get(catalystItem.id)
-        if (!rawCatalystItem) {
+        if (rawCatalystItem?.inventoryType === undefined) {
             continue
         }
 

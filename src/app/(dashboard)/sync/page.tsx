@@ -118,7 +118,7 @@ export default function SyncPage(): JSX.Element {
     const handleSyncItems = async () => {
         setIsSyncingItems(true)
         try {
-            const result = await syncItemsFromRaidbots({ skipWowhead: true })
+            const result = await syncItemsFromRaidbots({ skipWowhead: false })
             const totalCount =
                 result.bosses.count +
                 result.items.count +

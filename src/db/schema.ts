@@ -338,13 +338,19 @@ export const itemNoteTable = pgTable("items_note", {
 })
 
 // Maps tierset items to the token that generates them
-export const itemToTiersetTable = pgTable("items_to_tierset", {
-    itemId: integer("item_id").primaryKey(),
-    classId: integer("class_id").notNull(),
-    tokenId: integer("token_id")
-        .references(() => itemTable.id, { onDelete: "cascade" })
-        .notNull(),
-})
+// PK is (tokenId, itemId) - the natural key for "token contains item"
+// classId is derived from the item's allowableClasses, denormalized for convenience
+export const itemToTiersetTable = pgTable(
+    "items_to_tierset",
+    {
+        tokenId: integer("token_id")
+            .references(() => itemTable.id, { onDelete: "cascade" })
+            .notNull(),
+        itemId: integer("item_id").notNull(),
+        classId: integer("class_id").notNull(),
+    },
+    (t) => [primaryKey({ columns: [t.tokenId, t.itemId] })]
+)
 
 // Maps items to their catalyzed variants
 // catalyzedItemId is the item obtained by catalyzing itemId from a boss (encounterId)
