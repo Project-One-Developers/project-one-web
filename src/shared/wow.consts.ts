@@ -160,6 +160,37 @@ export const ITEM_TRACK_NAMES = [
     "Myth",
 ] as const
 
+// Single source of truth: raid difficulty → track name
+export const RAID_DIFF_TO_TRACK = {
+    LFR: "Veteran",
+    Normal: "Champion",
+    Heroic: "Hero",
+    Mythic: "Myth",
+} as const satisfies Record<(typeof RAID_DIFF)[number], (typeof ITEM_TRACK_NAMES)[number]>
+
+// Reverse lookup: track name → raid difficulty (Explorer/Adventurer default to LFR)
+export const TRACK_TO_RAID_DIFF = {
+    Explorer: "LFR",
+    Adventurer: "LFR",
+    Veteran: "LFR",
+    Champion: "Normal",
+    Hero: "Heroic",
+    Myth: "Mythic",
+} as const satisfies Record<(typeof ITEM_TRACK_NAMES)[number], (typeof RAID_DIFF)[number]>
+
+// Derived: difficulty bonus ID → track name
+type DiffBonusId = NonNullable<
+    (typeof RAID_DIFF_BONUS_IDS)[keyof typeof RAID_DIFF_BONUS_IDS]
+>
+export const DIFF_BONUS_ID_TO_TRACK: Record<
+    DiffBonusId,
+    (typeof ITEM_TRACK_NAMES)[number]
+> = {
+    [RAID_DIFF_BONUS_IDS.LFR]: RAID_DIFF_TO_TRACK.LFR,
+    [RAID_DIFF_BONUS_IDS.Heroic]: RAID_DIFF_TO_TRACK.Heroic,
+    [RAID_DIFF_BONUS_IDS.Mythic]: RAID_DIFF_TO_TRACK.Mythic,
+}
+
 export const PROFESSION_TYPES = new Set([
     "Alchemy",
     "Blacksmithing",

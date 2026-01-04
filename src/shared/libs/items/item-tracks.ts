@@ -15,6 +15,7 @@
  */
 import { match, P } from "ts-pattern"
 import type { WowItemTrackName, WowRaidDifficulty } from "@/shared/models/wow.models"
+import { RAID_DIFF_TO_TRACK, TRACK_TO_RAID_DIFF } from "@/shared/wow.consts"
 
 type BonusItemTrack = {
     level: number
@@ -60,25 +61,10 @@ export const trackNameToNumber = (
         .exhaustive()
 
 export const wowRaidDiffToTrackName = (diff: WowRaidDifficulty): WowItemTrackName =>
-    match(diff)
-        .returnType<WowItemTrackName>()
-        .with("LFR", () => "Veteran")
-        .with("Normal", () => "Champion")
-        .with("Heroic", () => "Hero")
-        .with("Mythic", () => "Myth")
-        .exhaustive()
+    RAID_DIFF_TO_TRACK[diff]
 
 export const trackNameToWowDiff = (name: WowItemTrackName): WowRaidDifficulty =>
-    match(name)
-        .returnType<WowRaidDifficulty>()
-        .with("Veteran", () => "LFR")
-        .with("Champion", () => "Normal")
-        .with("Hero", () => "Heroic")
-        .with("Myth", () => "Mythic")
-        // For non-raid tracks like Explorer/Adventurer, default to LFR
-        .with("Explorer", () => "LFR")
-        .with("Adventurer", () => "LFR")
-        .exhaustive()
+    TRACK_TO_RAID_DIFF[name]
 
 export const bonusItemTracks: Record<string, BonusItemTrack> = {
     "10256": {

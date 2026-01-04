@@ -1,7 +1,12 @@
 import { match } from "ts-pattern"
+import {
+    getCraftedItemLevel,
+    getSeasonByCraftedIlvl,
+    getSpecialItemLevel,
+} from "@/shared/libs/season-config"
 import type { GearItem, Item, ItemTrack } from "@/shared/models/item.models"
 import type { WowItemTrackName, WowRaidDifficulty } from "@/shared/models/wow.models"
-import { RAID_DIFF_BONUS_IDS } from "@/shared/wow.consts"
+import { DIFF_BONUS_ID_TO_TRACK, RAID_DIFF_BONUS_IDS } from "@/shared/wow.consts"
 import {
     bonusItemTracks,
     queryByItemLevelAndDelta,
@@ -29,20 +34,19 @@ export function parseItemTrackName(
         return itemTrack.name
     }
 
-    if (bonusIds.includes(RAID_DIFF_BONUS_IDS.Mythic)) {
-        return "Myth"
-    } else if (bonusIds.includes(RAID_DIFF_BONUS_IDS.Heroic)) {
-        return "Hero"
-    } else if (bonusIds.includes(RAID_DIFF_BONUS_IDS.LFR)) {
-        return "Veteran"
+    // Check for difficulty bonus ID
+    const diffBonusId = bonusIds.find(
+        (id): id is keyof typeof DIFF_BONUS_ID_TO_TRACK => id in DIFF_BONUS_ID_TO_TRACK
+    )
+    if (diffBonusId !== undefined) {
+        return DIFF_BONUS_ID_TO_TRACK[diffBonusId]
     }
 
+    // Token/tierset without diff bonus → Champion
     if (isToken || isTierset) {
-        // if i am here and its a tierset/token -> Champion track becouse it doesnt have diff bonus ids
         return "Champion"
     }
 
-    //all other items -> no info
     return null
 }
 
@@ -135,111 +139,49 @@ export function compareGearItem(a: GearItem, b: GearItem): number {
     return Math.sign(delta)
 }
 
-export function parseItemLevelFromBonusIds(
-    item: Item,
-    bonusIds: number[]
-): number | null {
-    const diff = parseItemTrackName(bonusIds, item.token, item.tierset)
-
-    if (diff !== null) {
-        return match(diff)
-            .with("Veteran", () => item.ilvlBase + 22)
-            .with("Champion", () => item.ilvlNormal)
-            .with("Hero", () => item.ilvlHeroic)
-            .with("Myth", () => item.ilvlMythic)
-            .with("Explorer", "Adventurer", () => {
-                throw Error(`parseItemLevelFromBonusIds: ${diff} not mapped`)
-            })
-            .exhaustive()
+function getItemLevelFromTrack(item: Item, bonusIds: number[]): number | null {
+    const track = parseItemTrackName(bonusIds, item.token, item.tierset)
+    if (!track) {
+        return null
     }
 
-    // crafted items ilvl (10222 = Omen Crafted -> 593)
-    // TWW season 1
-    if (bonusIds.includes(10222)) {
-        //const baseLevel = 597
-        if (bonusIds.includes(11144)) {
-            // tww season 1 mythic crest
-            return 636
-        } else if (bonusIds.includes(11143)) {
-            // tww season 1 hc crest
-            return 619
-        }
-    }
-    // craft items ilvl (12040 = Fortune Crafted -> 632)
-    // TWW season 2
-    if (bonusIds.includes(12040)) {
-        // tww season 2 crafted item
-        if (bonusIds.includes(12043)) {
-            // tww season 2 mythic crest
-            return 681
-        } else if (bonusIds.includes(12042)) {
-            // tww season 2 hc crest
-            return 664
-        }
-    }
-
-    // craft items ilvl (12050 = Starlight Crafted)
-    // TWW season 3
-    if (bonusIds.includes(12050)) {
-        // tww season 2 crafted item
-        if (bonusIds.includes(12053)) {
-            // tww season 3 mythic crest
-            return 720
-        } else if (bonusIds.includes(12052)) {
-            // tww season 3 hc crest
-            return 710
-        }
-    }
-
-    // edge case items (not worth mapping all possible states with bonus id, assume player has maxed them)
-    if (item.id === 228411 || item.sourceType === "special-tww-s1-finger") {
-        // tww season 1 -  Cyrce's Circlet (Siren Isles)
-        return 658
-    }
-    if (item.sourceType === "special-tww-s2-belt") {
-        // tww season 2 -  Durable Information Securing Container
-        return 701
-    }
-    if (item.sourceType === "special-tww-s3-back") {
-        // tww season 3 -  Reshii Wraps
-        return 730
-    }
-
-    return null
+    return match(track)
+        .with("Veteran", () => item.ilvlBase + 22)
+        .with("Champion", () => item.ilvlNormal)
+        .with("Hero", () => item.ilvlHeroic)
+        .with("Myth", () => item.ilvlMythic)
+        .with("Explorer", "Adventurer", () => {
+            throw Error(`getItemLevelFromTrack: ${track} not mapped`)
+        })
+        .exhaustive()
 }
 
-export function evalRealSeason(item: Item, ilvl: number) {
+export const parseItemLevelFromBonusIds = (
+    item: Item,
+    bonusIds: number[]
+): number | null =>
+    getItemLevelFromTrack(item, bonusIds) ??
+    getCraftedItemLevel(bonusIds) ??
+    getSpecialItemLevel(item.id, item.sourceType)
+
+export function evalRealSeason(item: Item, ilvl: number): number {
+    // Epic crafted item
     if (item.sourceType === "profession593") {
-        // crafted item
-        if (ilvl <= 636) {
-            return 1
-        }
-        if (ilvl > 636 && ilvl <= 681) {
-            return 2
-        }
-        if (ilvl > 681 && ilvl <= 730) {
-            return 3
-        }
-        throw new Error(
-            `evalRealSeason: impossible to detect real season for crafted item - ${JSON.stringify(
-                item
-            )}`
-        )
+        return getSeasonByCraftedIlvl(ilvl)
     }
     return item.season
 }
 
-export function parseItemLevelFromRaidDiff(
+export const parseItemLevelFromRaidDiff = (
     item: Item,
     raidDiff: WowRaidDifficulty
-): number {
-    return match(raidDiff)
+): number =>
+    match(raidDiff)
         .with("LFR", () => item.ilvlBase + 22)
         .with("Normal", () => item.ilvlNormal)
         .with("Heroic", () => item.ilvlHeroic)
         .with("Mythic", () => item.ilvlMythic)
         .exhaustive()
-}
 
 export function parseItemTrack(input: number[]): ItemTrack | null {
     const matchingBonus = input.find((bonus) => bonus in bonusItemTracks)
