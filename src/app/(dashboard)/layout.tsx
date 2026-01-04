@@ -3,6 +3,7 @@ import { auth } from "@/auth"
 import AppSidebar from "@/components/app-sidebar"
 import { GlobalFilterProvider } from "@/components/global-filter-provider"
 import { SidebarProvider } from "@/components/ui/sidebar"
+import { UserRoleProvider } from "@/lib/user-role-context"
 import { spreadsheetLinkService } from "@/services/spreadsheet-link.service"
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -31,14 +32,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     const spreadsheetLinks = await spreadsheetLinkService.getList()
 
     return (
-        <SidebarProvider defaultOpen={true}>
-            <AppSidebar
-                userRole={session.user.role}
-                spreadsheetLinks={spreadsheetLinks}
-            />
-            <GlobalFilterProvider>
-                <main className="flex-1 overflow-auto">{children}</main>
-            </GlobalFilterProvider>
-        </SidebarProvider>
+        <UserRoleProvider role={session.user.role}>
+            <SidebarProvider defaultOpen={true}>
+                <AppSidebar
+                    userRole={session.user.role}
+                    spreadsheetLinks={spreadsheetLinks}
+                />
+                <GlobalFilterProvider>
+                    <main className="flex-1 overflow-auto">{children}</main>
+                </GlobalFilterProvider>
+            </SidebarProvider>
+        </UserRoleProvider>
     )
 }
