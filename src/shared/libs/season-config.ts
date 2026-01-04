@@ -29,6 +29,7 @@ export type SeasonConfig = {
     // Currency/Item IDs
     catalystChargeId: number // Currency for catalyst charges
     mountId: number | null // Raid mount (null if none)
+    relevantCurrencyIds: number[] // Currencies shown as "relevant" in UI (valorstones, crests, etc.)
 
     // Bonus configuration
     bonusGroupIds: number[]
@@ -49,6 +50,7 @@ export const SEASONS: Record<Season, SeasonConfig> = {
         catalystSourceId: -70,
         catalystChargeId: 3116, // https://www.wowhead.com/currency=3116/essence-of-kajamite
         mountId: null,
+        relevantCurrencyIds: [], // S1 currencies not tracked
         bonusGroupIds: [],
         raidIlvl: {
             1273: {
@@ -67,6 +69,7 @@ export const SEASONS: Record<Season, SeasonConfig> = {
         catalystSourceId: -71,
         catalystChargeId: 2813, // https://www.wowhead.com/currency=2813/harmonized-silk
         mountId: null,
+        relevantCurrencyIds: [], // S2 currencies not tracked
         bonusGroupIds: [],
         raidIlvl: {
             1296: {
@@ -85,6 +88,7 @@ export const SEASONS: Record<Season, SeasonConfig> = {
         catalystSourceId: -82,
         catalystChargeId: 3269, // https://www.wowhead.com/currency=3269/ethereal-voidsplinter
         mountId: 2569, // Unbound Star-Eater https://warcraftmounts.com/mounts/unboundstareater.php
+        relevantCurrencyIds: [3008, 3269, 3288, 3290], // valorstone, catalyst, runed crest, gilded crest
         bonusGroupIds: [513, 514, 515, 516, 517, 518],
         raidIlvl: {
             1302: {
@@ -103,6 +107,7 @@ export const SEASONS: Record<Season, SeasonConfig> = {
         catalystSourceId: 0, // TBD
         catalystChargeId: 0, // TBD
         mountId: null,
+        relevantCurrencyIds: [], // TBD
         bonusGroupIds: [607, 608, 609, 610, 611, 612],
         raidIlvl: {
             // The Voidspire (6 bosses)
@@ -276,4 +281,12 @@ export function determineItemSeason(
         }
     }
     return defaultSeason
+}
+
+/**
+ * Check if a currency ID is relevant for the current season
+ * Used to highlight important currencies in the UI (valorstones, crests, catalyst charges)
+ */
+export function isRelevantCurrency(currencyId: number): boolean {
+    return currentSeason.relevantCurrencyIds.includes(currencyId)
 }

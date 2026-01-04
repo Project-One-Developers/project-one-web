@@ -17,8 +17,8 @@ import { SectionHeader } from "@/components/ui/section-header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useIsWideScreen } from "@/hooks/use-wide-screen"
 import { getClassBackgroundStyle } from "@/shared/libs/class-backgrounds"
-import { isCurrencyBlacklisted, isRelevantCurrency } from "@/shared/libs/currency-utils"
 import { formatUnixTimestampForDisplay } from "@/shared/libs/date-utils"
+import { isRelevantCurrency } from "@/shared/libs/season-config"
 import type { CharacterBlizzard } from "@/shared/models/blizzard.models"
 import type { Character, CharacterGameInfo } from "@/shared/models/character.models"
 import type { Droptimizer } from "@/shared/models/simulation.models"
@@ -99,12 +99,10 @@ type CurrenciesPanelProps = {
 }
 
 export const CurrenciesPanel = ({ currencies }: CurrenciesPanelProps) => {
-    // Filter out blacklisted currencies at the data level
-    const filteredCurrencies =
-        currencies?.filter((currency) => !isCurrencyBlacklisted(currency.id)) ?? []
-    const relevantCurrencies = filteredCurrencies
-        .filter((c) => isRelevantCurrency(c.id))
-        .sort((a, b) => a.id - b.id)
+    // Filter to only relevant currencies for the current season
+    const relevantCurrencies =
+        currencies?.filter((c) => isRelevantCurrency(c.id)).sort((a, b) => a.id - b.id) ??
+        []
 
     return (
         <GlassCard className="flex flex-col">
