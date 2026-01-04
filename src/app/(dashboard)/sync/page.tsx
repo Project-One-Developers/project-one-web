@@ -15,7 +15,7 @@ import { useState, type JSX, type ReactNode } from "react"
 import { toast } from "sonner"
 import { importGuildMembers, syncAllCharactersBlizzard } from "@/actions/blizzard"
 import { syncDroptimizersFromDiscord } from "@/actions/droptimizer"
-import { syncItemsFromJson } from "@/actions/items"
+import { syncItemsFromRaidbots } from "@/actions/items"
 import { Button } from "@/components/ui/button"
 import { GlassCard } from "@/components/ui/glass-card"
 import { queryKeys } from "@/lib/queries/keys"
@@ -118,20 +118,21 @@ export default function SyncPage(): JSX.Element {
     const handleSyncItems = async () => {
         setIsSyncingItems(true)
         try {
-            // eslint-disable-next-line @typescript-eslint/no-deprecated -- keeping legacy button for now
-            const result = await syncItemsFromJson()
+            const result = await syncItemsFromRaidbots({ skipWowhead: true })
             const totalCount =
                 result.bosses.count +
                 result.items.count +
                 result.itemsToTierset.count +
-                result.itemsToCatalyst.count
+                result.itemsToCatalyst.count +
+                result.bonusItemTracks.count
             toast.success(`Items sync completed: ${s(totalCount)} records synced`)
-            if (
+            const hasErrors =
                 result.bosses.error ??
                 result.items.error ??
                 result.itemsToTierset.error ??
-                result.itemsToCatalyst.error
-            ) {
+                result.itemsToCatalyst.error ??
+                result.bonusItemTracks.error
+            if (hasErrors) {
                 toast.warning("Some errors occurred during sync, check logs")
             }
         } catch (error) {
