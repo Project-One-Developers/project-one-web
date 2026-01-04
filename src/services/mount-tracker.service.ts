@@ -1,8 +1,8 @@
 import "server-only"
 import { blizzardRepo } from "@/db/repositories/blizzard"
 import { playerRepo } from "@/db/repositories/player.repo"
+import { CURRENT_MOUNT_ID } from "@/shared/libs/season-config"
 import type { PlayerMountStatus } from "@/shared/models/mount.models"
-import { CURRENT_MOUNT_ID } from "@/shared/wow.consts"
 
 export const mountTrackerService = {
     /**
@@ -79,7 +79,8 @@ export const mountTrackerService = {
             }
 
             const hasMount =
-                representative.blizz.mountIds?.includes(CURRENT_MOUNT_ID) ?? false
+                CURRENT_MOUNT_ID !== null &&
+                (representative.blizz.mountIds?.includes(CURRENT_MOUNT_ID) ?? false)
 
             results.push({
                 playerId: player.id,

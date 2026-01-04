@@ -1,4 +1,4 @@
-import { CURRENT_SEASON } from "@/shared/wow.consts"
+import { CURRENT_SEASON } from "@/shared/libs/season-config"
 
 /**
  * List of currency IDs that should not be displayed in the UI
@@ -48,7 +48,6 @@ export const isCurrencyBlacklisted = (currencyId: number): boolean => {
  * Checks if a currency ID is relevant in this season
  */
 export const isRelevantCurrency = (currencyId: number): boolean => {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- season-dependent config
     if (CURRENT_SEASON === 3) {
         if (
             currencyId === 3008 || // valorstone

@@ -2,6 +2,7 @@ import "server-only"
 import { bossRepo } from "@/db/repositories/bosses"
 import { lootRepo } from "@/db/repositories/loots"
 import { raidSessionRepo } from "@/db/repositories/raid-sessions"
+import { CURRENT_RAID_ID } from "@/shared/libs/season-config"
 import type { BossWithItems } from "@/shared/models/boss.models"
 import type { Character } from "@/shared/models/character.models"
 import type { LootWithAssigned } from "@/shared/models/loot.models"
@@ -10,7 +11,6 @@ import type {
     RaidSessionWithSummary,
 } from "@/shared/models/raid-session.models"
 import type { WowClassName } from "@/shared/models/wow.models"
-import { CURRENT_RAID_ID } from "@/shared/wow.consts"
 
 export type LootRecapItem = {
     loot: LootWithAssigned

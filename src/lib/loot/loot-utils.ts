@@ -6,6 +6,7 @@ import {
     getItemTrack,
 } from "@/shared/libs/items/item-bonus-utils"
 import { equippedSlotToSlot, formatWowSlotKey } from "@/shared/libs/items/item-slot-utils"
+import { CURRENT_CATALYST_CHARGE_ID, CURRENT_SEASON } from "@/shared/libs/season-config"
 import { getClassSpecsForRole } from "@/shared/libs/spec-parser/spec-utils"
 import type { BisList } from "@/shared/models/bis-list.models"
 import type { CharacterBlizzard } from "@/shared/models/blizzard.models"
@@ -39,7 +40,6 @@ import {
     type WowClass,
     type WowSpec,
 } from "@/shared/types"
-import { CURRENT_CATALYST_CHARGE_ID, CURRENT_SEASON } from "@/shared/wow.consts"
 
 export const getLatestSyncDate = (
     charDroptimizers: Droptimizer[],

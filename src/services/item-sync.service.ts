@@ -11,13 +11,12 @@ import { logger } from "@/lib/logger"
 import {
     SOURCE_TYPES_TO_MATCH,
     ENCOUNTER_IDS_TO_IGNORE,
-    getRaidIdsByCatalystId,
 } from "@/shared/libs/items/raid-config"
+import { CURRENT_SEASON, getRaidIdsByCatalystId } from "@/shared/libs/season-config"
 import { toSlug } from "@/shared/libs/slug-utils"
 import { s } from "@/shared/libs/string-utils"
 import type { Boss } from "@/shared/models/boss.models"
 import type { Item, ItemToCatalyst } from "@/shared/models/item.models"
-import { CURRENT_SEASON } from "@/shared/wow.consts"
 import { processBonuses } from "./libs/bonus-processing"
 import { invalidateBonusTracksCache } from "./libs/bonus-tracks"
 import {

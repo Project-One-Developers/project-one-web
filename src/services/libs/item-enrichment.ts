@@ -16,11 +16,8 @@ import {
     expandSpecsToClasses,
     parseStats,
 } from "@/shared/libs/items/item-mappings"
-import {
-    getItemLevelsForBoss,
-    determineItemSeason,
-    SOURCE_TYPES_TO_MATCH,
-} from "@/shared/libs/items/raid-config"
+import { SOURCE_TYPES_TO_MATCH } from "@/shared/libs/items/raid-config"
+import { getItemLevelsForBoss, determineItemSeason } from "@/shared/libs/season-config"
 import { s } from "@/shared/libs/string-utils"
 import type { Item, ItemToCatalyst, ItemToTierset } from "@/shared/models/item.models"
 import type {

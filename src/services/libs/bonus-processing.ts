@@ -5,7 +5,7 @@
  */
 import "server-only"
 import { logger } from "@/lib/logger"
-import { getSeasonByBonusGroup } from "@/shared/libs/items/raid-config"
+import { getSeasonByBonusGroup } from "@/shared/libs/season-config"
 import { s } from "@/shared/libs/string-utils"
 import type { BonusItemTrack } from "@/shared/models/item.models"
 import type { WowItemTrackName } from "@/shared/models/wow.models"
