@@ -19,6 +19,26 @@ export type RaidIlvlConfig = {
     }
 }
 
+// Crafted item configuration per season
+export type CraftedConfig = {
+    primaryBonusId: number // Identifies crafted items (10222, 12040, 12050)
+    crestBonusIds: {
+        heroic: number // Crest bonus ID for heroic quality
+        mythic: number // Crest bonus ID for mythic quality
+    }
+    ilvl: {
+        heroic: number // Item level with heroic crest
+        mythic: number // Item level with mythic crest (also max ilvl threshold)
+    }
+}
+
+// Special items that need assumed item level (edge cases per season)
+export type SpecialItemConfig = {
+    itemId?: number // Match by item ID
+    sourceType?: string // Match by sourceType
+    assumedIlvl: number // Assumed item level
+}
+
 // Season configuration type
 export type SeasonConfig = {
     // Instance IDs
@@ -36,6 +56,12 @@ export type SeasonConfig = {
 
     // Raid item level config
     raidIlvl: Record<number, RaidIlvlConfig>
+
+    // Crafted item configuration (null for seasons without crafted config)
+    craftedConfig: CraftedConfig | null
+
+    // Special items that need assumed ilvl (edge cases per season)
+    specialItems: SpecialItemConfig[]
 }
 
 /**
@@ -60,6 +86,15 @@ export const SEASONS: Record<Season, SeasonConfig> = {
                 boeIlvl: { champion: 606, hero: 619, mythic: 632 },
             },
         },
+        craftedConfig: {
+            primaryBonusId: 10222, // Omen Crafted
+            crestBonusIds: { heroic: 11143, mythic: 11144 },
+            ilvl: { heroic: 619, mythic: 636 },
+        },
+        specialItems: [
+            { itemId: 228411, assumedIlvl: 658 }, // Cyrce's Circlet
+            { sourceType: "special-tww-s1-finger", assumedIlvl: 658 },
+        ],
     },
 
     // TWW Season 2 - Liberation of Undermine
@@ -79,6 +114,12 @@ export const SEASONS: Record<Season, SeasonConfig> = {
                 boeIlvl: { champion: 642, hero: 655, mythic: 668 },
             },
         },
+        craftedConfig: {
+            primaryBonusId: 12040, // Fortune Crafted
+            crestBonusIds: { heroic: 12042, mythic: 12043 },
+            ilvl: { heroic: 664, mythic: 681 },
+        },
+        specialItems: [{ sourceType: "special-tww-s2-belt", assumedIlvl: 701 }],
     },
 
     // TWW Season 3 - Manaforge Omega
@@ -98,6 +139,12 @@ export const SEASONS: Record<Season, SeasonConfig> = {
                 boeIlvl: { champion: 681, hero: 694, mythic: 714 },
             },
         },
+        craftedConfig: {
+            primaryBonusId: 12050, // Starlight Crafted
+            crestBonusIds: { heroic: 12052, mythic: 12053 },
+            ilvl: { heroic: 710, mythic: 720 },
+        },
+        specialItems: [{ sourceType: "special-tww-s3-back", assumedIlvl: 730 }],
     },
 
     // Midnight expansion (future)
@@ -132,6 +179,8 @@ export const SEASONS: Record<Season, SeasonConfig> = {
                 boeIlvl: { champion: 253, hero: 266, mythic: 279 },
             },
         },
+        craftedConfig: null, // TBD
+        specialItems: [],
     },
 }
 
@@ -289,4 +338,64 @@ export function determineItemSeason(
  */
 export function isRelevantCurrency(currencyId: number): boolean {
     return currentSeason.relevantCurrencyIds.includes(currencyId)
+}
+
+/**
+ * Get item level for a crafted item based on its bonus IDs.
+ * Searches all seasons to find matching crafted config.
+ */
+export function getCraftedItemLevel(bonusIds: number[]): number | null {
+    for (const config of Object.values(SEASONS)) {
+        if (!config.craftedConfig) {
+            continue
+        }
+        const { primaryBonusId, crestBonusIds, ilvl } = config.craftedConfig
+        if (bonusIds.includes(primaryBonusId)) {
+            if (bonusIds.includes(crestBonusIds.mythic)) {
+                return ilvl.mythic
+            }
+            if (bonusIds.includes(crestBonusIds.heroic)) {
+                return ilvl.heroic
+            }
+        }
+    }
+    return null
+}
+
+/**
+ * Get assumed item level for special edge-case items.
+ * Searches all seasons to find matching special item config.
+ */
+export function getSpecialItemLevel(itemId: number, sourceType: string): number | null {
+    for (const config of Object.values(SEASONS)) {
+        for (const special of config.specialItems) {
+            if (special.itemId === itemId) {
+                return special.assumedIlvl
+            }
+            if (special.sourceType === sourceType) {
+                return special.assumedIlvl
+            }
+        }
+    }
+    return null
+}
+
+/**
+ * Determine season for a crafted item based on its final item level.
+ * Uses max crafted ilvl per season as thresholds.
+ */
+export function getSeasonByCraftedIlvl(ilvl: number): number {
+    // Build thresholds from season config (sorted by max ilvl ascending)
+    const thresholds = SEASON_NUMBERS.flatMap((s) => {
+        const config = SEASONS[s].craftedConfig
+        return config ? [{ season: s, maxIlvl: config.ilvl.mythic }] : []
+    }).sort((a, b) => a.maxIlvl - b.maxIlvl)
+
+    for (const { season, maxIlvl } of thresholds) {
+        if (ilvl <= maxIlvl) {
+            return season
+        }
+    }
+    // Fallback to highest known season
+    return thresholds[thresholds.length - 1]?.season ?? CURRENT_SEASON
 }
