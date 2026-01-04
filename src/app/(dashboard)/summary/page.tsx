@@ -25,8 +25,8 @@ import { WowCurrencyIcon } from "@/components/wow/wow-currency-icon"
 import { WowGearIcon } from "@/components/wow/wow-gear-icon"
 import { useFilterContext } from "@/lib/filter-context"
 import { useRosterSummary } from "@/lib/queries/summary"
-import { isRelevantCurrency } from "@/shared/libs/currency-utils"
 import { formatUnixTimestampForDisplay } from "@/shared/libs/date-utils"
+import { isRelevantCurrency } from "@/shared/libs/season-config"
 import {
     BLIZZARD_WARN,
     type BlizzardWarn,
