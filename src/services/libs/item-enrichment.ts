@@ -6,6 +6,7 @@
 import "server-only"
 import { match, P } from "ts-pattern"
 import { logger } from "@/lib/logger"
+import { defined } from "@/lib/utils"
 import {
     ITEM_CLASS_MAP,
     ITEM_CLASSES,
@@ -19,11 +20,7 @@ import { SOURCE_TYPES_TO_MATCH } from "@/shared/libs/items/raid-config"
 import { getItemLevelsForBoss, determineItemSeason } from "@/shared/libs/season-config"
 import { s } from "@/shared/libs/string-utils"
 import type { Item, ItemToCatalyst, ItemToTierset } from "@/shared/models/item.models"
-import {
-    wowItemSlotKeySchema,
-    type WowArmorType,
-    type WowItemSlotKey,
-} from "@/shared/models/wow.models"
+import { type WowArmorType, type WowItemSlotKey } from "@/shared/models/wow.models"
 import type {
     RaidbotsItem,
     RaidbotsInstance,
@@ -83,19 +80,6 @@ function classifyItem(rawItem: RaidbotsItem): ItemClassification {
         }))
 }
 
-/**
- * Get slot subclass override based on inventory type
- * Uses ts-pattern for cleaner pattern matching
- */
-function getSlotSubclassOverride(inventoryType: number): string | null | undefined {
-    return match(inventoryType)
-        .with(INVENTORY_TYPE_IDS.NECK, () => "" as const)
-        .with(INVENTORY_TYPE_IDS.BACK, () => "" as const)
-        .with(INVENTORY_TYPE_IDS.FINGER, () => "" as const)
-        .with(INVENTORY_TYPE_IDS.TRINKET, () => "Trinket" as const)
-        .otherwise(() => undefined) // undefined means no override
-}
-
 // ============================================================================
 // Types
 // ============================================================================
@@ -121,19 +105,14 @@ export type EnrichmentResult = {
  * Build a map of encounterId -> EncounterContext from instances data
  */
 export function buildEncounterMap(instances: RaidbotsInstance[]): EncounterMap {
-    const map = new Map<number, EncounterContext>()
-
-    for (const instance of instances) {
-        if (!instance.encounters) {
-            continue
-        }
-
-        for (const encounter of instance.encounters) {
-            map.set(encounter.id, { encounter, instance })
-        }
-    }
-
-    return map
+    return new Map(
+        instances.flatMap((instance) =>
+            (instance.encounters ?? []).map((encounter) => [
+                encounter.id,
+                { encounter, instance },
+            ])
+        )
+    )
 }
 
 /**
@@ -171,55 +150,48 @@ export function enrichItem(
 
         // Classify item using ts-pattern-based helper
         const classification = classifyItem(rawItem)
-        let { itemSubclass } = classification
         const { armorType, isToken } = classification
 
-        // Determine slot key from inventory type
-        let slotKey: WowItemSlotKey | null = null
+        // Determine subclass (special slots override classification)
+        const itemSubclass = match(rawItem.inventoryType)
+            .with(INVENTORY_TYPE_IDS.TRINKET, () => "Trinket")
+            .with(
+                INVENTORY_TYPE_IDS.NECK,
+                INVENTORY_TYPE_IDS.BACK,
+                INVENTORY_TYPE_IDS.FINGER,
+                () => null
+            )
+            .otherwise(() => classification.itemSubclass)
 
-        const inventoryInfo = INVENTORY_TYPE_MAP[rawItem.inventoryType]
-        if (inventoryInfo) {
-            slotKey = inventoryInfo.slotKey
-
-            // Apply slot-specific subclass overrides (Neck, Back, Finger -> "", Trinket -> "Trinket")
-            const subclassOverride = getSlotSubclassOverride(rawItem.inventoryType)
-            if (subclassOverride !== undefined) {
-                itemSubclass = subclassOverride
-            }
-        }
-
-        // For reagent tokens, force slot to Omni
-        if (rawItem.itemClass === ITEM_CLASSES.REAGENT && rawItem.itemSubClass === 2) {
-            slotKey = "omni"
-        }
+        // Determine slot key (reagent tokens force omni)
+        const slotKey = match([rawItem.itemClass, rawItem.itemSubClass])
+            .returnType<WowItemSlotKey>()
+            .with([ITEM_CLASSES.REAGENT, 2], () => "omni")
+            .otherwise(() => INVENTORY_TYPE_MAP[rawItem.inventoryType]?.slotKey ?? "omni")
 
         // Determine if it's a tierset piece
-        const isTierset = Boolean(
-            rawItem.itemSetId && rawItem.allowableClasses?.length === 1
-        )
+        const isTierset =
+            defined(rawItem.itemSetId) && rawItem.allowableClasses?.length === 1
 
         // Determine item levels
         const isVeryRare = rawItem.sources.some((src) => src.veryRare)
         const bossOrder = encounter.order ?? 0
-        const isBoeOrCatalyst = bossOrder === 99 || instance.type === "catalyst"
+        // Determine if catalyzed item
+        const isCatalyzed = instance.type === "catalyst"
+        const isBoeOrCatalyst = bossOrder === 99 || isCatalyzed
 
-        let ilvlNormal = rawItem.itemLevel
-        let ilvlHeroic = rawItem.itemLevel
-        let ilvlMythic = rawItem.itemLevel
-
-        if (instance.type === "raid") {
-            const levels = getItemLevelsForBoss(
-                instance.id,
-                bossOrder,
-                isVeryRare,
-                isBoeOrCatalyst
-            )
-            if (levels) {
-                ilvlNormal = levels.normal
-                ilvlHeroic = levels.heroic
-                ilvlMythic = levels.mythic
-            }
-        }
+        const raidLevels =
+            instance.type === "raid"
+                ? getItemLevelsForBoss(
+                      instance.id,
+                      bossOrder,
+                      isVeryRare,
+                      isBoeOrCatalyst
+                  )
+                : null
+        const ilvlNormal = raidLevels?.normal ?? rawItem.itemLevel
+        const ilvlHeroic = raidLevels?.heroic ?? rawItem.itemLevel
+        const ilvlMythic = raidLevels?.mythic ?? rawItem.itemLevel
 
         // Determine season
         const season = determineItemSeason(instance.id, encounter.id, defaultSeason)
@@ -228,9 +200,6 @@ export function enrichItem(
         const specIds = rawItem.specs ?? wowheadData?.specs ?? []
         const { classNames } = expandSpecsToClasses(specIds)
 
-        // Determine if catalyzed item
-        const isCatalyzed = instance.type === "catalyst"
-
         return {
             id: rawItem.id,
             name: rawItem.name,
@@ -238,7 +207,7 @@ export function enrichItem(
             ilvlNormal,
             ilvlHeroic,
             ilvlMythic,
-            slotKey: slotKey ?? wowItemSlotKeySchema.enum.omni, // Default to omni if no slot key
+            slotKey,
             itemSubclass,
             armorType,
             tierset: isTierset,
