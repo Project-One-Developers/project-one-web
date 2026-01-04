@@ -1,6 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import { useUserRole } from "@/lib/user-role-context"
 import type { ProgressionCharacter } from "@/shared/models/character.models"
 import { WowClassIcon } from "./wow-class-icon"
 
@@ -14,8 +15,6 @@ export type WowCharacterIconProps = {
     size?: "sm" | "md" | "lg"
     showRoleBadges?: boolean
     onClick?: () => void
-    /** Base path for character links. Defaults to "/roster" (officer), use "/character" for member-accessible view */
-    basePath?: "/roster" | "/character"
 }
 
 export function WowCharacterIcon({
@@ -28,9 +27,10 @@ export function WowCharacterIcon({
     size = "md",
     showRoleBadges = false,
     onClick,
-    basePath = "/roster",
 }: WowCharacterIconProps) {
     const router = useRouter()
+    const userRole = useUserRole()
+    const basePath = userRole === "officer" ? "/roster" : "/character"
 
     const handleClick = () => {
         if (onClick) {

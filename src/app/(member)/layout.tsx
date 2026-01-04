@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import AppSidebar from "@/components/app-sidebar"
 import { SidebarProvider } from "@/components/ui/sidebar"
+import { UserRoleProvider } from "@/lib/user-role-context"
 import { spreadsheetLinkService } from "@/services/spreadsheet-link.service"
 
 export default async function MemberLayout({ children }: { children: React.ReactNode }) {
@@ -27,12 +28,14 @@ export default async function MemberLayout({ children }: { children: React.React
         session.user.role === "officer" ? await spreadsheetLinkService.getList() : []
 
     return (
-        <SidebarProvider defaultOpen={true}>
-            <AppSidebar
-                userRole={session.user.role}
-                spreadsheetLinks={spreadsheetLinks}
-            />
-            <main className="flex-1 overflow-auto">{children}</main>
-        </SidebarProvider>
+        <UserRoleProvider role={session.user.role}>
+            <SidebarProvider defaultOpen={true}>
+                <AppSidebar
+                    userRole={session.user.role}
+                    spreadsheetLinks={spreadsheetLinks}
+                />
+                <main className="flex-1 overflow-auto">{children}</main>
+            </SidebarProvider>
+        </UserRoleProvider>
     )
 }
