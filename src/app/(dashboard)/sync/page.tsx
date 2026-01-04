@@ -118,6 +118,7 @@ export default function SyncPage(): JSX.Element {
     const handleSyncItems = async () => {
         setIsSyncingItems(true)
         try {
+            // eslint-disable-next-line @typescript-eslint/no-deprecated -- keeping legacy button for now
             const result = await syncItemsFromJson()
             const totalCount =
                 result.bosses.count +

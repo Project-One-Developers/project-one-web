@@ -23,6 +23,10 @@ import type {
     WowItemSlotKey,
 } from "@/shared/models/wow.models"
 import { CURRENT_SEASON } from "@/shared/wow.consts"
+import {
+    itemSyncService,
+    type SyncItemsResult as RaidbotsSyncResult,
+} from "./item-sync.service"
 
 // Raw JSON item type from resources
 type RawItem = {
@@ -161,8 +165,24 @@ export const itemService = {
         await itemNoteRepo.delete(id)
     },
 
-    // ============== SYNC FROM JSON ==============
+    // ============== SYNC FROM RAIDBOTS ==============
 
+    /**
+     * Sync items directly from Raidbots API
+     * This is the new preferred method that eliminates intermediate JSON files
+     */
+    syncFromRaidbots: async (options?: {
+        skipWowhead?: boolean
+    }): Promise<RaidbotsSyncResult> => {
+        return itemSyncService.syncFromRaidbots(options)
+    },
+
+    // ============== SYNC FROM JSON (LEGACY) ==============
+
+    /**
+     * @deprecated Use syncFromRaidbots() instead.
+     * This method loads from local JSON files and will be removed in a future version.
+     */
     syncFromJson: async (): Promise<SyncItemsResult> => {
         logger.info("ItemService", `Items sync started at ${new Date().toISOString()}`)
 
