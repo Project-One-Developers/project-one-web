@@ -15,8 +15,11 @@ import {
     equippedSlotToSlot,
     extractEnchantIds,
     extractGemIds,
-    extractIconNameFromUrl,
 } from "@/shared/libs/items/item-slot-utils"
+import {
+    extractIconNameFromUrl,
+    DEFAULT_ICON_NAME,
+} from "@/shared/libs/items/item-url-utils"
 import { s, slugify } from "@/shared/libs/string-utils"
 import type { Boss } from "@/shared/models/boss.models"
 import type { GearItem, Item } from "@/shared/models/item.models"
@@ -75,7 +78,6 @@ type FetchedItemData = {
     name: string
     armorType: "Cloth" | "Leather" | "Mail" | "Plate" | null
     slotKey: WowItemSlotKey | null
-    boe: boolean
     iconName: string
 } | null
 
@@ -344,7 +346,6 @@ async function createGearPiece(
                 slotKey: wowItem.slotKey,
                 token: wowItem.token,
                 tierset: wowItem.tierset,
-                boe: wowItem.boe,
                 veryRare: wowItem.veryRare,
                 iconName: wowItem.iconName,
                 season: evalRealSeason(wowItem, ilvl),
@@ -378,7 +379,6 @@ async function createGearPiece(
             slotKey: fetchedData.slotKey ?? equippedSlotToSlot(equippedInSlot),
             token: false,
             tierset: false,
-            boe: fetchedData.boe,
             veryRare: false,
             iconName: fetchedData.iconName,
             season: itemTrack?.season ?? 0,
@@ -441,8 +441,7 @@ async function doFetchItemData(itemId: number): Promise<FetchedItemData> {
             blizzItem.item_subclass.name
         ),
         slotKey: mapBlizzardInventoryTypeToSlotKey(blizzItem.inventory_type.type),
-        boe: blizzItem.binding?.type === "ON_EQUIP",
-        iconName: iconUrl ? extractIconNameFromUrl(iconUrl) : "inv_misc_questionmark",
+        iconName: extractIconNameFromUrl(iconUrl) || DEFAULT_ICON_NAME,
     }
 }
 

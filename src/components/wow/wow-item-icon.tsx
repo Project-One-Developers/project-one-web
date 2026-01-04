@@ -4,6 +4,8 @@ import { LoaderCircle } from "lucide-react"
 import Image from "next/image"
 import { useItem } from "@/lib/queries/items"
 import { cn } from "@/lib/utils"
+import { formatWowSlotKey } from "@/shared/libs/items/item-slot-utils"
+import { getIconUrl } from "@/shared/libs/items/item-url-utils"
 import { isHealerSpecs, isTankSpecs } from "@/shared/libs/spec-parser/spec-utils"
 import type { Item } from "@/shared/models/item.models"
 import type { WowRaidDifficulty } from "@/shared/models/wow.models"
@@ -88,7 +90,6 @@ export function WowItemIcon({
     }
 
     const currentIlvl = getIlvl()
-    const iconUrl = `https://wow.zamimg.com/images/wow/icons/large/${itemData.iconName}.jpg`
     const hrefString = `https://www.wowhead.com/item=${String(itemData.id)}&ilvl=${String(currentIlvl)}`
     const dataWowhead = `item=${String(itemData.id)}&ilvl=${String(currentIlvl)}`
 
@@ -101,7 +102,7 @@ export function WowItemIcon({
             <div className={cn("flex items-center", className)}>
                 <div className="relative inline-block">
                     <Image
-                        src={iconUrl}
+                        src={getIconUrl(itemData.iconName)}
                         alt={itemData.name}
                         width={40}
                         height={40}
@@ -149,8 +150,10 @@ export function WowItemIcon({
                     <div id="item-info" className="flex flex-col ml-3">
                         <p className="font-black text-xs">{itemData.name}</p>
                         <div className="flex text-xs">
-                            {showSlot && itemData.slot !== "Trinket" ? (
-                                <span className="mr-1">{itemData.slot}</span>
+                            {showSlot && itemData.slotKey !== "trinket" ? (
+                                <span className="mr-1">
+                                    {formatWowSlotKey(itemData.slotKey)}
+                                </span>
                             ) : null}
                             {showSubclass && itemData.itemSubclass ? (
                                 <span className="mr-1 text-muted-foreground/80">
@@ -159,7 +162,7 @@ export function WowItemIcon({
                             ) : null}
                             {showIlvl && currentIlvl ? (
                                 <span>
-                                    {(showSlot && itemData.slot !== "Trinket") ||
+                                    {(showSlot && itemData.slotKey !== "trinket") ||
                                     (showSubclass && itemData.itemSubclass)
                                         ? "• "
                                         : ""}

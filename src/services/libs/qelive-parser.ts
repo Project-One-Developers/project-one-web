@@ -369,7 +369,6 @@ export const parseEquippedGear = (
                 slotKey: wowItem.slotKey,
                 token: wowItem.token,
                 tierset: wowItem.tierset,
-                boe: wowItem.boe,
                 veryRare: wowItem.veryRare,
                 iconName: wowItem.iconName,
                 season: evalRealSeason(wowItem, equippedItem.level),

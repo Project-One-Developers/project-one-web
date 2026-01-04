@@ -9,6 +9,7 @@ import {
 } from "@/shared/libs/items/item-bonus-utils"
 import { formatWowSlotKey } from "@/shared/libs/items/item-slot-utils"
 import { trackNameToWowDiff } from "@/shared/libs/items/item-tracks"
+import { getIconUrl } from "@/shared/libs/items/item-url-utils"
 import { isHealerSpecs, isTankSpecs } from "@/shared/libs/spec-parser/spec-utils"
 import { s } from "@/shared/libs/string-utils"
 import type { GearItem } from "@/shared/models/item.models"
@@ -60,7 +61,6 @@ export function WowGearIcon({
 
     const hasSocket = gearhasSocket(bonusIds)
     const hasSpecials = hasSocket || gearTertiary(bonusIds)
-    const iconUrl = `https://wow.zamimg.com/images/wow/icons/large/${iconName}.jpg`
 
     const hrefString = `https://www.wowhead.com/item=${s(id)}&ilvl=${s(itemLevel)}${
         bonusIds?.length ? `&bonus=${bonusIds.join(":")}` : ""
@@ -186,7 +186,7 @@ export function WowGearIcon({
                     {/* Fixed-size container for icon and all overlays */}
                     <div className={cn("relative", iconClassName ?? DEFAULT_ICON_CLASS)}>
                         <Image
-                            src={iconUrl}
+                            src={getIconUrl(iconName)}
                             alt=""
                             width={48}
                             height={48}

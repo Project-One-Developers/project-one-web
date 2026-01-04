@@ -153,7 +153,6 @@ const parseUpgrades = async (
                     armorType: null, // not needed for comparison
                     token: false, // not needed for comparison
                     tierset: false, // not needed for comparison
-                    boe: false, // not needed for comparison,
                     veryRare: false, // not needed for comparison
                     iconName: "", // not needed for comparison
                     specIds: null, // not needed for comparison
@@ -393,7 +392,6 @@ export const parseEquippedGear = async (
                 slotKey: wowItem.slotKey,
                 token: wowItem.token,
                 tierset: wowItem.tierset,
-                boe: wowItem.boe,
                 veryRare: wowItem.veryRare,
                 iconName: wowItem.iconName,
                 season: evalRealSeason(wowItem, droptGearItem.itemLevel),

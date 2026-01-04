@@ -20,7 +20,6 @@ import {
     ARMOR_TYPES,
     CLASSES_NAME,
     ITEM_EQUIPPED_SLOTS_KEY,
-    ITEM_SLOTS_DESC,
     ITEM_SLOTS_KEY,
     MAX_CHARACTER_NAME_LENGTH,
     RAID_DIFF,
@@ -36,7 +35,6 @@ export const pgRoleEnum = pgEnum("role", ROLES)
 export const pgRaidDiffEnum = pgEnum("raid_diff", RAID_DIFF)
 
 export const pgItemArmorTypeEnum = pgEnum("item_armor_type", ARMOR_TYPES)
-export const pgItemSlotEnum = pgEnum("item_slot", ITEM_SLOTS_DESC)
 export const pgItemSlotKeyEnum = pgEnum("item_slot_key", ITEM_SLOTS_KEY)
 export const pgItemEquippedSlotKeyEnum = pgEnum(
     "item_equipped_slot_key",
@@ -311,28 +309,15 @@ export const itemTable = pgTable("items", {
     ilvlMythic: integer("ilvl_mythic").notNull(),
     ilvlHeroic: integer("ilvl_heroic").notNull(),
     ilvlNormal: integer("ilvl_normal").notNull(),
-    itemClass: varchar("item_class", { length: 50 }).notNull(),
-    slot: pgItemSlotEnum("slot").notNull(),
     slotKey: pgItemSlotKeyEnum("slot_key").notNull(),
     armorType: pgItemArmorTypeEnum("armor_type"),
     itemSubclass: varchar("item_subclass", { length: 50 }),
     token: boolean("token").notNull(), // whether this item generates a tierset piece
-    tokenPrefix: varchar("token_prefix", { length: 50 }), // e.g. Dreadful
     tierset: boolean("tierset").notNull(), // whether this is a tierset item
-    tiersetPrefix: varchar("tierset_prefix", { length: 50 }),
     veryRare: boolean("very_rare").notNull(),
-    boe: boolean("boe").notNull(),
-    onUseTrinket: boolean("on_use_trinket").notNull(),
-    specs: text("specs").array(), // null means all specs
     specIds: integer("spec_ids").array(),
     classes: text("classes").array(),
-    classesId: integer("classes_id").array(),
-    stats: text("stats"),
-    mainStats: varchar("main_stats", { length: 50 }),
-    secondaryStats: varchar("secondary_stats", { length: 50 }),
-    wowheadUrl: text("wowhead_url").notNull(),
     iconName: varchar("icon_name", { length: 255 }).notNull(),
-    iconUrl: text("icon_url").notNull(),
     catalyzed: boolean("catalyzed").notNull().default(false), // only obtainable via catalyst
     sourceId: integer("source_id").notNull(),
     sourceName: varchar("source_name").notNull(),

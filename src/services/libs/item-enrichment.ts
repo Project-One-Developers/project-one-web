@@ -14,16 +14,15 @@ import {
     WEAPON_TYPE_MAP,
     INVENTORY_TYPE_MAP,
     expandSpecsToClasses,
-    parseStats,
 } from "@/shared/libs/items/item-mappings"
 import { SOURCE_TYPES_TO_MATCH } from "@/shared/libs/items/raid-config"
 import { getItemLevelsForBoss, determineItemSeason } from "@/shared/libs/season-config"
 import { s } from "@/shared/libs/string-utils"
 import type { Item, ItemToCatalyst, ItemToTierset } from "@/shared/models/item.models"
-import type {
-    WowArmorType,
-    WowItemSlot,
-    WowItemSlotKey,
+import {
+    wowItemSlotKeySchema,
+    type WowArmorType,
+    type WowItemSlotKey,
 } from "@/shared/models/wow.models"
 import type {
     RaidbotsItem,
@@ -31,9 +30,6 @@ import type {
     RaidbotsEncounter,
 } from "./schemas/raidbots-static.schema"
 import type { WowheadItemData } from "./wowhead-scraper"
-
-// Icon URL base
-const ICON_URL_BASE = "https://wow.zamimg.com/images/wow/icons/large"
 
 // ============================================================================
 // Item Classification Types
@@ -43,7 +39,6 @@ type ItemClassification = {
     itemSubclass: string | null
     armorType: WowArmorType | null
     isToken: boolean
-    tokenPrefix: string | null
 }
 
 /**
@@ -61,7 +56,6 @@ function classifyItem(rawItem: RaidbotsItem): ItemClassification {
                 itemSubclass: weaponInfo ?? null,
                 armorType: null,
                 isToken: false,
-                tokenPrefix: null,
             }
         })
         .with([ITEM_CLASSES.ARMOR, P._], () => {
@@ -70,26 +64,22 @@ function classifyItem(rawItem: RaidbotsItem): ItemClassification {
                 itemSubclass: armorInfo?.subclass ?? null,
                 armorType: armorInfo?.armorType ?? null,
                 isToken: false,
-                tokenPrefix: null,
             }
         })
         .with([ITEM_CLASSES.REAGENT, 2], () => ({
             itemSubclass: "Token",
             armorType: null,
             isToken: true,
-            tokenPrefix: "Omni",
         }))
         .with([ITEM_CLASSES.MISCELLANEOUS, 0], () => ({
             itemSubclass: "Token",
             armorType: null,
             isToken: true,
-            tokenPrefix: rawItem.name.split(" ")[0] ?? null,
         }))
         .otherwise(() => ({
             itemSubclass: null,
             armorType: null,
             isToken: false,
-            tokenPrefix: null,
         }))
 }
 
@@ -182,15 +172,13 @@ export function enrichItem(
         // Classify item using ts-pattern-based helper
         const classification = classifyItem(rawItem)
         let { itemSubclass } = classification
-        const { armorType, isToken, tokenPrefix } = classification
+        const { armorType, isToken } = classification
 
-        // Determine slot and slot key from inventory type
-        let slot: WowItemSlot = "Omni"
+        // Determine slot key from inventory type
         let slotKey: WowItemSlotKey | null = null
 
         const inventoryInfo = INVENTORY_TYPE_MAP[rawItem.inventoryType]
         if (inventoryInfo) {
-            slot = inventoryInfo.slot
             slotKey = inventoryInfo.slotKey
 
             // Apply slot-specific subclass overrides (Neck, Back, Finger -> "", Trinket -> "Trinket")
@@ -202,17 +190,13 @@ export function enrichItem(
 
         // For reagent tokens, force slot to Omni
         if (rawItem.itemClass === ITEM_CLASSES.REAGENT && rawItem.itemSubClass === 2) {
-            slot = "Omni"
             slotKey = "omni"
         }
 
         // Determine if it's a tierset piece
-        let isTierset = false
-        let tiersetPrefix: string | null = null
-        if (rawItem.itemSetId && rawItem.allowableClasses?.length === 1) {
-            isTierset = true
-            tiersetPrefix = rawItem.name.split(" ")[0] ?? null
-        }
+        const isTierset = Boolean(
+            rawItem.itemSetId && rawItem.allowableClasses?.length === 1
+        )
 
         // Determine item levels
         const isVeryRare = rawItem.sources.some((src) => src.veryRare)
@@ -242,26 +226,7 @@ export function enrichItem(
 
         // Expand specs to classes
         const specIds = rawItem.specs ?? wowheadData?.specs ?? []
-        const { classIds, classNames, specNames } = expandSpecsToClasses(specIds)
-
-        // Parse stats from Wowhead
-        let stats: string | null = null
-        let mainStats: string | null = null
-        let secondaryStats: string | null = null
-        if (wowheadData?.stats && wowheadData.stats.length > 0) {
-            const parsedStats = parseStats(wowheadData.stats)
-            stats = parsedStats.stats
-            mainStats = parsedStats.mainStats || null
-            secondaryStats = parsedStats.secondaryStats || null
-        }
-
-        // Build icon URL
-        const iconUrl = `${ICON_URL_BASE}/${rawItem.icon}.jpg`
-        const wowheadUrl =
-            wowheadData?.wowheadUrl ?? `https://www.wowhead.com/item=${s(rawItem.id)}`
-
-        // Determine if BOE (TODO: needs additional logic, for now default to false)
-        const isBoe = false
+        const { classNames } = expandSpecsToClasses(specIds)
 
         // Determine if catalyzed item
         const isCatalyzed = instance.type === "catalyst"
@@ -273,29 +238,16 @@ export function enrichItem(
             ilvlNormal,
             ilvlHeroic,
             ilvlMythic,
-            itemClass: itemClassDesc,
-            slot,
-            slotKey: slotKey ?? ("omni" as WowItemSlotKey), // Default to omni if no slot key
+            slotKey: slotKey ?? wowItemSlotKeySchema.enum.omni, // Default to omni if no slot key
             itemSubclass,
             armorType,
             tierset: isTierset,
-            tiersetPrefix,
             token: isToken,
-            tokenPrefix,
             veryRare: isVeryRare,
-            boe: isBoe,
             catalyzed: isCatalyzed,
-            onUseTrinket: rawItem.onUseTrinket ?? false,
-            specs: specNames.length > 0 ? specNames : null,
             specIds: specIds.length > 0 ? specIds : null,
             classes: classNames.length > 0 ? classNames : null,
-            classesId: classIds.length > 0 ? classIds : null,
-            stats,
-            mainStats,
-            secondaryStats,
-            wowheadUrl,
             iconName: rawItem.icon,
-            iconUrl,
             bossName: encounter.name,
             bossId: encounter.id,
             sourceId: instance.id,
