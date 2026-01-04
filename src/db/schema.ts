@@ -374,6 +374,18 @@ export const itemToCatalystTable = pgTable(
     (t) => [primaryKey({ columns: [t.itemId, t.encounterId, t.catalyzedItemId] })]
 )
 
+// Bonus item tracks (upgrade tiers like Hero 1/8, Myth 4/8, etc.)
+export const bonusItemTrackTable = pgTable("bonus_item_tracks", {
+    id: integer("id").primaryKey(), // Bonus ID (e.g., 10256)
+    level: integer("level").notNull(), // Current level (1-8)
+    max: integer("max").notNull(), // Max level (6 or 8)
+    name: varchar("name", { length: 50 }).notNull(), // "Hero", "Myth", etc.
+    fullName: varchar("full_name", { length: 50 }).notNull(), // "Hero 6/6"
+    itemLevel: integer("item_level").notNull(),
+    maxItemLevel: integer("max_item_level").notNull(),
+    season: integer("season").notNull(),
+})
+
 //////////////////////////////////////////////////////////
 //                 SPREADSHEET LINKS                    //
 //////////////////////////////////////////////////////////

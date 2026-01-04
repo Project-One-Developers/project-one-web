@@ -1,6 +1,18 @@
-/// sources: https://www.raidbots.com/static/data/live/bonuses.json
-// parse tww item tracks:
-// jq 'map(select(.upgrade.fullName != null and (.upgrade.seasonId == 24 or .upgrade.seasonId == 25)) | {id, level: .upgrade.level, max: .upgrade.max, name: .upgrade.name, fullName: .upgrade.fullName, itemLevel: .upgrade.itemLevel})' bonus.json > parsed_bonus.json
+/**
+ * Item Tracks Module
+ *
+ * This module provides bonus item track data and utilities for WoW item upgrades.
+ *
+ * ARCHITECTURE:
+ * - This file (shared): Contains static hardcoded data + utility functions for CLIENT-SIDE use
+ * - Server-side: Use @/services/libs/bonus-tracks.ts for DB-backed access
+ *
+ * The static data here is kept for backward compatibility with client components.
+ * The database (bonus_item_tracks table) is the authoritative source and is synced
+ * via the item sync service from Raidbots bonuses.json.
+ *
+ * Data source: https://www.raidbots.com/static/data/live/bonuses.json
+ */
 import { match, P } from "ts-pattern"
 import type { WowItemTrackName, WowRaidDifficulty } from "@/shared/models/wow.models"
 

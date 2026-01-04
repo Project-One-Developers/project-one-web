@@ -62,6 +62,19 @@ export const itemToCatalystSchema = z.object({
 export type ItemToCatalyst = z.infer<typeof itemToCatalystSchema>
 export const itemToCatalystArraySchema = z.array(itemToCatalystSchema)
 
+// Bonus item track from database (with ID for DB key)
+export const bonusItemTrackSchema = z.object({
+    id: z.number(), // Bonus ID (primary key in DB)
+    level: z.number(),
+    max: z.number(),
+    name: wowItemTrackNameSchema,
+    fullName: z.string(),
+    itemLevel: z.number(),
+    maxItemLevel: z.number(),
+    season: z.number(),
+})
+export type BonusItemTrack = z.infer<typeof bonusItemTrackSchema>
+
 export const itemTrackSchema = z.object({
     name: wowItemTrackNameSchema,
     fullName: z.string(),
