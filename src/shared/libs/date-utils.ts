@@ -93,3 +93,18 @@ export const parseDateTimeFromAddon = (dateStr: string, timeStr: string): number
     }
     return dt.toSeconds()
 }
+
+/**
+ * Parses date string from QE Live reports to Unix timestamp.
+ * @param dateStr - Date string in "YYYY - M - D" format (e.g., "2025 - 8 - 19")
+ */
+export const parseDateFromQELive = (dateStr: string): number => {
+    const cleanDateString = dateStr.replace(/\s/g, "")
+    const dt = DateTime.fromFormat(cleanDateString, "yyyy-M-d", { zone: "utc" }).set({
+        hour: 8,
+    })
+    if (!dt.isValid) {
+        throw new Error(`Invalid QE Live date string format: ${dateStr}`)
+    }
+    return Math.floor(dt.toSeconds())
+}

@@ -6,13 +6,13 @@ import { z } from "zod"
 import { logger } from "@/lib/logger"
 import { parseWowDifficultyId } from "@/shared/libs/blizzard-mappings"
 import { getUnixTimestamp, parseDateTimeFromAddon } from "@/shared/libs/date-utils"
+import { createGearItem } from "@/shared/libs/items/gear-item-factory"
 import {
     applyAvoidance,
     applyDiffBonusId,
     applyLeech,
     applySocket,
     applySpeed,
-    evalRealSeason,
     getItemTrack,
     parseItemLevelFromRaidDiff,
     parseItemTrack,
@@ -23,16 +23,12 @@ import {
 } from "@/shared/libs/items/item-string-parser"
 import { s } from "@/shared/libs/string-utils"
 import type { Character } from "@/shared/models/character.models"
-import type { GearItem, Item, ItemTrack } from "@/shared/models/item.models"
+import type { Item } from "@/shared/models/item.models"
 import {
     rawLootRecordSchema,
     rawMrtRecordSchema,
 } from "@/shared/models/loot-import.models"
-import {
-    newLootSchema,
-    type NewLoot,
-    type NewLootManual,
-} from "@/shared/models/loot.models"
+import type { NewLoot, NewLootManual } from "@/shared/models/loot.models"
 import { PROFESSION_TYPES } from "@/shared/wow.consts"
 
 const getItemBonusString = (itemStringData: ItemStringData): string =>
@@ -76,11 +72,9 @@ export const parseMrtLoots = (
     const validatedRecords = z.array(rawMrtRecordSchema).parse(rawRecords)
 
     const itemsById = keyBy(allItemsInDb, (i) => i.id)
-
-    const res: NewLoot[] = []
     const recordMap = new Map<string, number>()
 
-    for (const record of validatedRecords) {
+    return validatedRecords.flatMap<NewLoot>((record) => {
         try {
             const { timeRec, encounterID, difficulty, quantity, itemLink } = record
 
@@ -90,7 +84,7 @@ export const parseMrtLoots = (
                     "LootParser",
                     `parseMrtLoots: skipping loot item outside raid session date time ${s(record)}`
                 )
-                continue
+                return []
             }
             // Skip items if WuE loot or something else (check Enum.ItemCreationContext)
             if (
@@ -103,7 +97,7 @@ export const parseMrtLoots = (
                         parsedItem.instanceDifficultyId
                     )}: ${s(record)}`
                 )
-                continue
+                return []
             }
             if (quantity > 1) {
                 logger.debug(
@@ -117,7 +111,6 @@ export const parseMrtLoots = (
             const itemId = parsedItem.itemID
             const bonusIds = getItemBonusString(parsedItem).split(":").map(Number)
             const wowItem = itemsById[itemId]
-
             const raidDiff = parseWowDifficultyId(difficulty)
 
             if (!wowItem) {
@@ -127,7 +120,7 @@ export const parseMrtLoots = (
                         itemId
                     )} https://www.wowhead.com/item=${s(itemId)}?bonus=${s(bonusIds)}`
                 )
-                continue
+                return []
             }
 
             if (wowItem.sourceType !== "raid") {
@@ -137,64 +130,40 @@ export const parseMrtLoots = (
                         itemId
                     )} - https://www.wowhead.com/item=${s(itemId)}?bonus=${s(bonusIds)}`
                 )
-                continue
+                return []
             }
 
             const itemTrack = parseItemTrack(bonusIds)
-            let itemLevel = 0
-
-            if (itemTrack !== null) {
-                itemLevel = itemTrack.itemLevel
-            } else {
-                // we are dealing with raid items only
-                itemLevel = parseItemLevelFromRaidDiff(wowItem, raidDiff)
-            }
+            const itemLevel =
+                itemTrack?.itemLevel ?? parseItemLevelFromRaidDiff(wowItem, raidDiff)
 
             const key = `${s(timeRec)}-${s(encounterID)}-${s(difficulty)}-${s(itemId)}`
-            const itemIndex = recordMap.get(key) || 0
+            const itemIndex = recordMap.get(key) ?? 0
             recordMap.set(key, itemIndex + 1)
 
             const id = `${key}-${s(itemIndex)}`
 
-            const gearItem: GearItem = {
-                item: {
-                    id: wowItem.id,
-                    name: wowItem.name,
-                    armorType: wowItem.armorType,
-                    slotKey: wowItem.slotKey,
-                    token: wowItem.token,
-                    tierset: wowItem.tierset,
-                    veryRare: wowItem.veryRare,
-                    iconName: wowItem.iconName,
-                    season: evalRealSeason(wowItem, itemLevel),
-                    specIds: wowItem.specIds,
-                },
-                source: "loot",
-                itemLevel: itemLevel,
-                bonusIds: bonusIds,
-                itemTrack: itemTrack,
-                gemIds: null,
-                enchantIds: null,
-            }
-
-            const loot: NewLoot = {
-                gearItem: gearItem,
+            return {
+                gearItem: createGearItem({
+                    wowItem,
+                    itemLevel,
+                    bonusIds,
+                    itemTrack,
+                    source: "loot",
+                }),
                 dropDate: timeRec,
                 itemString: itemLink,
                 raidDifficulty: raidDiff,
                 addonId: id,
             }
-
-            res.push(newLootSchema.parse(loot))
         } catch (error) {
             logger.error(
                 "LootParser",
                 `Error processing MRT record: ${s(record)} - ${s(error)}`
             )
+            return []
         }
-    }
-
-    return res
+    })
 }
 
 /**
@@ -240,11 +209,41 @@ export const parseRcLoots = (
         (c) =>
             `${c.name.toLowerCase()}-${c.realm.toLowerCase().replace("'", "").replace("-", "")}`
     )
-
-    const res: NewLoot[] = []
     const recordMap = new Map<string, number>()
 
-    for (const record of rawRecords) {
+    const resolveCharAssignment = (
+        player: string | undefined | null,
+        itemId: number,
+        bonusIds: number[]
+    ): Character | null => {
+        if (!importAssignedCharacter) {
+            return null
+        }
+
+        if (!player) {
+            logger.debug(
+                "LootParser",
+                `parseRcLoots: importAssignedCharacter is true but item not assigned to any character: ${s(
+                    itemId
+                )} - https://www.wowhead.com/item=${s(itemId)}?bonus=${s(bonusIds)}`
+            )
+            return null
+        }
+
+        const charKey = player.toLowerCase().replace("'", "")
+        const char = charsByKey[charKey] ?? null
+        if (!char) {
+            logger.debug(
+                "LootParser",
+                `parseRcLoots: importAssignedCharacter is true but assigned character is not in the roster: ${s(
+                    player
+                )} - https://www.wowhead.com/item=${s(itemId)}?bonus=${s(bonusIds)}`
+            )
+        }
+        return char
+    }
+
+    return rawRecords.flatMap<NewLoot>((record) => {
         try {
             const parsedItem = parseItemString(record.itemString)
             const { date, time, itemString, difficultyID, itemID: itemId, boss } = record
@@ -255,7 +254,7 @@ export const parseRcLoots = (
                     "LootParser",
                     `parseRcLoots: skipping loot item outside raid session date time ${s(record)}`
                 )
-                continue
+                return []
             }
             // Skip items if WuE loot or something else (check Enum.ItemCreationContext)
             if (
@@ -268,12 +267,11 @@ export const parseRcLoots = (
                         parsedItem.instanceDifficultyId
                     )}: ${s(record)}`
                 )
-                continue
+                return []
             }
 
             const bonusIds = getItemBonusString(parsedItem).split(":").map(Number)
             const wowItem = itemsById[itemId]
-
             const raidDiff = parseWowDifficultyId(difficultyID)
 
             if (!wowItem) {
@@ -283,7 +281,7 @@ export const parseRcLoots = (
                         itemId
                     )} https://www.wowhead.com/item=${s(itemId)}?bonus=${s(bonusIds)}`
                 )
-                continue
+                return []
             }
             if (wowItem.sourceType !== "raid") {
                 logger.debug(
@@ -292,89 +290,42 @@ export const parseRcLoots = (
                         itemId
                     )} - https://www.wowhead.com/item=${s(itemId)}?bonus=${s(bonusIds)}`
                 )
-                continue
+                return []
             }
 
             const itemTrack = parseItemTrack(bonusIds)
-            let itemLevel = 0
-
-            if (itemTrack !== null) {
-                itemLevel = itemTrack.itemLevel
-            } else {
-                // we are dealing with raid items only
-                itemLevel = parseItemLevelFromRaidDiff(wowItem, raidDiff)
-            }
+            const itemLevel =
+                itemTrack?.itemLevel ?? parseItemLevelFromRaidDiff(wowItem, raidDiff)
 
             const key = `${s(lootUnixTs)}-${s(boss)}-${s(difficultyID)}-${s(wowItem.id)}`
-            const itemIndex = recordMap.get(key) || 0
+            const itemIndex = recordMap.get(key) ?? 0
             recordMap.set(key, itemIndex + 1)
 
             const id = `${key}-${s(itemIndex)}`
+            const charAssignment = resolveCharAssignment(record.player, itemId, bonusIds)
 
-            const gearItem: GearItem = {
-                item: {
-                    id: wowItem.id,
-                    name: wowItem.name,
-                    armorType: wowItem.armorType,
-                    slotKey: wowItem.slotKey,
-                    token: wowItem.token,
-                    tierset: wowItem.tierset,
-                    veryRare: wowItem.veryRare,
-                    iconName: wowItem.iconName,
-                    season: evalRealSeason(wowItem, itemLevel),
-                    specIds: wowItem.specIds,
-                },
-                source: "loot",
-                itemLevel: itemLevel,
-                bonusIds: bonusIds,
-                itemTrack: itemTrack,
-                gemIds: null,
-                enchantIds: null,
-            }
-
-            let charAssignment: Character | null = null
-
-            if (importAssignedCharacter) {
-                if (!record.player) {
-                    logger.debug(
-                        "LootParser",
-                        `parseRcLoots: importAssignedCharacter is true but item not assigned to any character: ${s(
-                            itemId
-                        )} - https://www.wowhead.com/item=${s(itemId)}?bonus=${s(bonusIds)}`
-                    )
-                } else {
-                    const charKey = record.player.toLowerCase().replace("'", "")
-                    charAssignment = charsByKey[charKey] ?? null
-                    if (!charAssignment) {
-                        logger.debug(
-                            "LootParser",
-                            `parseRcLoots: importAssignedCharacter is true but assigned character is not in the roster: ${s(
-                                record.player
-                            )} - https://www.wowhead.com/item=${s(itemId)}?bonus=${s(bonusIds)}`
-                        )
-                    }
-                }
-            }
-
-            const loot: NewLoot = {
-                gearItem: gearItem,
+            return {
+                gearItem: createGearItem({
+                    wowItem,
+                    itemLevel,
+                    bonusIds,
+                    itemTrack,
+                    source: "loot",
+                }),
                 dropDate: lootUnixTs,
                 itemString: itemString,
                 assignedTo: charAssignment?.id,
                 raidDifficulty: raidDiff,
                 addonId: id,
             }
-
-            res.push(newLootSchema.parse(loot))
         } catch (error) {
             logger.error(
                 "LootParser",
                 `Error processing RC record: ${s(record)} - ${s(error)}`
             )
+            return []
         }
-    }
-
-    return res
+    })
 }
 
 /**
@@ -386,9 +337,7 @@ export const parseManualLoots = (
 ): NewLoot[] => {
     const itemsById = keyBy(allItemsInDb, (i) => i.id)
 
-    const res: NewLoot[] = []
-
-    for (const loot of loots) {
+    return loots.flatMap<NewLoot>((loot) => {
         try {
             const wowItem = itemsById[loot.itemId]
 
@@ -399,7 +348,7 @@ export const parseManualLoots = (
                         loot.itemId
                     )} https://www.wowhead.com/item=${s(loot.itemId)}`
                 )
-                continue
+                return []
             }
 
             const itemLevel = match(loot.raidDifficulty)
@@ -410,7 +359,6 @@ export const parseManualLoots = (
                 .exhaustive()
 
             const bonusIds: number[] = []
-
             if (loot.hasSocket) {
                 applySocket(bonusIds)
             }
@@ -424,51 +372,34 @@ export const parseManualLoots = (
                 applySpeed(bonusIds)
             }
 
-            let itemTrack: ItemTrack | null = null
+            // For tokens, apply difficulty bonus but no item track
+            // For regular items, get the item track
             if (wowItem.token) {
-                // apply bonus id to token (Mythic/Heroic tag)
                 applyDiffBonusId(bonusIds, loot.raidDifficulty)
-            } else {
-                itemTrack = getItemTrack(itemLevel, loot.raidDifficulty)
             }
+            const itemTrack = wowItem.token
+                ? null
+                : getItemTrack(itemLevel, loot.raidDifficulty)
 
-            const gearItem: GearItem = {
-                item: {
-                    id: wowItem.id,
-                    name: wowItem.name,
-                    armorType: wowItem.armorType,
-                    slotKey: wowItem.slotKey,
-                    token: wowItem.token,
-                    tierset: wowItem.tierset,
-                    veryRare: wowItem.veryRare,
-                    iconName: wowItem.iconName,
-                    season: evalRealSeason(wowItem, itemLevel),
-                    specIds: wowItem.specIds,
-                },
-                source: "loot",
-                itemLevel: itemLevel,
-                bonusIds: bonusIds,
-                itemTrack: itemTrack,
-                gemIds: null,
-                enchantIds: null,
-            }
-
-            const nl: NewLoot = {
+            return {
                 ...loot,
-                gearItem: gearItem,
+                gearItem: createGearItem({
+                    wowItem,
+                    itemLevel,
+                    bonusIds,
+                    itemTrack,
+                    source: "loot",
+                }),
                 addonId: null,
                 itemString: null,
-                dropDate: getUnixTimestamp(), // now
+                dropDate: getUnixTimestamp(),
             }
-
-            res.push(newLootSchema.parse(nl))
         } catch (error) {
             logger.error(
                 "LootParser",
                 `Error processing manual loot: ${s(loot)} - ${s(error)}`
             )
+            return []
         }
-    }
-
-    return res
+    })
 }

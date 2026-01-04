@@ -5,8 +5,9 @@ import { z } from "zod"
 import { itemRepo } from "@/db/repositories/items"
 import { logger } from "@/lib/logger"
 import type { SyncContext } from "@/services/droptimizer.service"
-import { getUnixTimestamp } from "@/shared/libs/date-utils"
-import { evalRealSeason, parseItemTrack } from "@/shared/libs/items/item-bonus-utils"
+import { getUnixTimestamp, parseDateFromQELive } from "@/shared/libs/date-utils"
+import { createGearItem } from "@/shared/libs/items/gear-item-factory"
+import { parseItemTrack } from "@/shared/libs/items/item-bonus-utils"
 import { slotToEquippedSlot } from "@/shared/libs/items/item-slot-utils"
 import { CURRENT_RAID_ID } from "@/shared/libs/season-config"
 import {
@@ -19,7 +20,6 @@ import type {
     Item,
     ItemToCatalyst,
     ItemToTierset,
-    ItemTrack,
 } from "@/shared/models/item.models"
 import {
     qeLiveURLSchema,
@@ -162,51 +162,20 @@ export function parseRaidDiff(id: number): WowRaidDifficulty {
 }
 
 export function parseQELiveSlotToEquippedSlot(slot: string): WowItemEquippedSlotKey {
-    if (slot === "1H Weapon") {
-        return wowItemEquippedSlotKeySchema.parse("main_hand")
-    } else if (slot === "Shield") {
-        return wowItemEquippedSlotKeySchema.parse("off_hand")
-    } else if (slot === "Finger") {
-        return wowItemEquippedSlotKeySchema.parse("finger1")
-    } else if (slot === "Trinket") {
-        return wowItemEquippedSlotKeySchema.parse("trinket1")
-    } else if (slot === "Offhand") {
-        return wowItemEquippedSlotKeySchema.parse("off_hand")
-    }
-    try {
-        return wowItemEquippedSlotKeySchema.parse(slot.toLowerCase().replace(" ", "_"))
-    } catch {
-        throw new Error(`Invalid slot name from QE Live: ${slot}`)
-    }
-}
-
-/**
- * Converts a date string in format 'YYYY - M - D' to Unix timestamp
- * @param dateString - The date string to parse (e.g., '2025 - 8 - 19')
- * @returns Unix timestamp in seconds
- */
-const parseDateToUnixTimestamp = (dateString: string): number => {
-    // Remove spaces and split by '-'
-    const cleanDateString = dateString.replace(/\s/g, "")
-    const parts = cleanDateString.split("-").map(Number)
-    const year = parts[0]
-    const month = parts[1]
-    const day = parts[2]
-
-    if (year === undefined || month === undefined || day === undefined) {
-        throw new Error(`Invalid date string format: ${dateString}`)
-    }
-
-    // Create date object (month is 0-indexed in JavaScript)
-    const date = new Date(year, month - 1, day, 8) // set to 8 AM to avoid timezone issues
-
-    // Validate the parsed date
-    if (isNaN(date.getTime())) {
-        throw new Error(`Invalid date string: ${dateString}`)
-    }
-
-    // Return Unix timestamp in seconds
-    return Math.floor(date.getTime() / 1000)
+    return match(slot)
+        .returnType<WowItemEquippedSlotKey>()
+        .with("1H Weapon", () => "main_hand")
+        .with("Shield", "Offhand", () => "off_hand")
+        .with("Finger", () => "finger1")
+        .with("Trinket", () => "trinket1")
+        .otherwise((s) => {
+            const normalized = s.toLowerCase().replace(" ", "_")
+            const result = wowItemEquippedSlotKeySchema.safeParse(normalized)
+            if (!result.success) {
+                throw new Error(`Invalid slot name from QE Live: ${slot}`)
+            }
+            return result.data
+        })
 }
 
 const convertJsonToDroptimizer = async (
@@ -292,7 +261,7 @@ const convertJsonToDroptimizer = async (
                 difficulty: raidDiff,
             },
             simInfo: {
-                date: parseDateToUnixTimestamp(data.dateCreated),
+                date: parseDateFromQELive(data.dateCreated),
                 fightstyle: "Patchwerk", // QE Live does not have fightstyle
                 duration: 300,
                 nTargets: 1,
@@ -318,10 +287,8 @@ export const parseEquippedGear = (
     itemsById: Record<number, Item>,
     equipped: z.infer<typeof qeliveEquippedItemSchema>[],
     url: string
-): GearItem[] => {
-    const res: GearItem[] = []
-
-    for (const equippedItem of equipped) {
+): GearItem[] =>
+    equipped.flatMap<GearItem>((equippedItem) => {
         if (!equippedItem.bonusIDS) {
             throw new Error(
                 `[error] parseEquippedGear: found equipped item without bonusIDS ${s(
@@ -340,50 +307,34 @@ export const parseEquippedGear = (
                     ":"
                 )} - URL: ${url}`
             )
-            continue
+            return []
         }
 
-        let itemTrack: ItemTrack | null = null
-        if (
+        const shouldParseTrack =
             wowItem.sourceType !== "profession593" &&
             !wowItem.sourceType.startsWith("special")
-        ) {
-            itemTrack = parseItemTrack(bonusIds)
-            if (!itemTrack) {
-                logger.warn(
-                    "QELiveParser",
-                    `parseEquippedGear: found equipped item without item track ${s(
-                        equippedItem.id
-                    )} - https://www.wowhead.com/item=${s(
-                        equippedItem.id
-                    )}?bonus=${bonusIds.join(":")} - URL: ${url}`
-                )
-            }
+        const itemTrack = shouldParseTrack ? parseItemTrack(bonusIds) : null
+
+        if (shouldParseTrack && !itemTrack) {
+            logger.warn(
+                "QELiveParser",
+                `parseEquippedGear: found equipped item without item track ${s(
+                    equippedItem.id
+                )} - https://www.wowhead.com/item=${s(
+                    equippedItem.id
+                )}?bonus=${bonusIds.join(":")} - URL: ${url}`
+            )
         }
 
-        res.push({
-            item: {
-                id: wowItem.id,
-                name: wowItem.name,
-                armorType: wowItem.armorType,
-                slotKey: wowItem.slotKey,
-                token: wowItem.token,
-                tierset: wowItem.tierset,
-                veryRare: wowItem.veryRare,
-                iconName: wowItem.iconName,
-                season: evalRealSeason(wowItem, equippedItem.level),
-                specIds: wowItem.specIds,
-            },
+        return createGearItem({
+            wowItem,
+            itemLevel: equippedItem.level,
+            bonusIds,
+            itemTrack,
             source: "equipped",
             equippedInSlot: parseQELiveSlotToEquippedSlot(equippedItem.slot),
-            itemLevel: equippedItem.level,
-            bonusIds: equippedItem.bonusIDS ? bonusIds : null,
-            enchantIds: null,
             gemIds: equippedItem.gemString
                 ? equippedItem.gemString.split(":").map(Number)
                 : null,
-            itemTrack: itemTrack,
         })
-    }
-    return res
-}
+    })
