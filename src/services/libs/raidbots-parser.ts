@@ -12,6 +12,7 @@ import {
     parseItemTrack,
 } from "@/shared/libs/items/item-bonus-utils"
 import { equippedSlotToSlot } from "@/shared/libs/items/item-slot-utils"
+import { CURRENT_SEASON } from "@/shared/libs/season-config"
 import { s } from "@/shared/libs/string-utils"
 import type {
     GearItem,
@@ -33,7 +34,7 @@ import {
     type WowItemEquippedSlotKey,
     type WowRaidDifficulty,
 } from "@/shared/models/wow.models"
-import { CURRENT_SEASON, realmSlugToName } from "@/shared/wow.consts"
+import { realmSlugToName } from "@/shared/wow.consts"
 import {
     droptimizerEquippedItemsSchema,
     raidbotJsonSchema,

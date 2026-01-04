@@ -1,43 +1,4 @@
-export const CURRENT_SEASON = 3 // todo: to be updated "manually" at the start of each season
-
 export const MAX_CHARACTER_NAME_LENGTH = 50 // WoW limit is ~12-24 depending on locale, using 50 for safety
-
-export const CURRENT_RAID_ID = (() => {
-    switch (CURRENT_SEASON as number) {
-        case 1:
-            return 1273 // 1273: S1 Nerubar
-        case 2:
-            return 1296 // 1296: S2 Undermine
-        case 3:
-            return 1302 // 1302: S3 Manaforge Omega
-        default:
-            return 1302 // fallback to S3
-    }
-})()
-
-export const CURRENT_CATALYST_CHARGE_ID = (() => {
-    switch (CURRENT_SEASON as number) {
-        case 1:
-            return 3116 // https://www.wowhead.com/currency=3116/essence-of-kajamite
-        case 2:
-            return 2813 // https://www.wowhead.com/currency=2813/harmonized-silk
-        case 3:
-            return 3269 // https://www.wowhead.com/currency=3269/ethereal-voidsplinter
-        default:
-            return 3269 // fallback to S3
-    }
-})()
-
-// Mount dropped from the last boss of the current raid (for mount tracker)
-// Note: Use Blizzard API mount ID (not Wowhead spell ID). Find IDs at warcraftmounts.com
-export const CURRENT_MOUNT_ID = (() => {
-    switch (CURRENT_SEASON as number) {
-        case 3:
-            return 2569 // Unbound Star-Eater https://warcraftmounts.com/mounts/unboundstareater.php
-        default:
-            return 2569
-    }
-})()
 
 export const CLASSES_NAME = [
     "Death Knight",

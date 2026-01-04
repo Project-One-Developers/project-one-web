@@ -8,11 +8,12 @@ import {
     parseItemLevelFromBonusIds,
     parseItemTrack,
 } from "@/shared/libs/items/item-bonus-utils"
+import { CURRENT_CATALYST_CHARGE_ID } from "@/shared/libs/season-config"
 import { s } from "@/shared/libs/string-utils"
 import type { GearItem, Item } from "@/shared/models/item.models"
 import type { DroptimizerCurrency } from "@/shared/models/simulation.models"
 import { wowItemEquippedSlotKeySchema } from "@/shared/models/wow.models"
-import { CURRENT_CATALYST_CHARGE_ID, realmSlugToName } from "@/shared/wow.consts"
+import { realmSlugToName } from "@/shared/wow.consts"
 
 export async function parseSimC(simc: string): Promise<{
     charName: string

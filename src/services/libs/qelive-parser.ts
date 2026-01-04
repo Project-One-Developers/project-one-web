@@ -8,6 +8,7 @@ import type { SyncContext } from "@/services/droptimizer.service"
 import { getUnixTimestamp } from "@/shared/libs/date-utils"
 import { evalRealSeason, parseItemTrack } from "@/shared/libs/items/item-bonus-utils"
 import { slotToEquippedSlot } from "@/shared/libs/items/item-slot-utils"
+import { CURRENT_RAID_ID } from "@/shared/libs/season-config"
 import {
     getWowClassFromIdOrName,
     getWowSpecByClassNameAndSpecName,
@@ -32,7 +33,6 @@ import {
     type WowItemEquippedSlotKey,
     type WowRaidDifficulty,
 } from "@/shared/models/wow.models"
-import { CURRENT_RAID_ID } from "@/shared/wow.consts"
 import {
     qeliveEquippedItemSchema,
     qeliveJsonSchema,
