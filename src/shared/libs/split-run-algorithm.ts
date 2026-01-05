@@ -1,7 +1,7 @@
 import { s } from "@/shared/libs/string-utils"
 import type { Run, RunStats, SplitRunParams } from "@/shared/models/split-run.models"
 import type { CharacterSummaryCompact, PlayerWithSummaryCompact } from "@/shared/types"
-import { CLASS_TO_ARMOR_TYPE } from "@/shared/wow.consts"
+import { CLASS_TO_ARMOR_TYPE, CLASSES_NAME } from "@/shared/wow.consts"
 
 /**
  * Calculate optimal split runs for raid planning
@@ -204,7 +204,8 @@ function calculateRunStats(run: Run): RunStats {
         // Count by armor type - ONLY MAINS
         if (char.character.main) {
             const armorType = CLASS_TO_ARMOR_TYPE[char.character.class]
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Property may not exist yet
+
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             stats.armorTypes[armorType] = (stats.armorTypes[armorType] ?? 0) + 1
         }
     }
@@ -236,6 +237,19 @@ function generateWarnings(run: Run, targetSize: number): string[] {
     const totalSize = run.characters.length
     if (totalSize < targetSize) {
         warnings.push(`Only ${s(totalSize)}/${s(targetSize)} players`)
+    }
+
+    // Class buff warnings (all classes except Death Knight provide unique buffs)
+    const classesInRun = new Set(run.characters.map((c) => c.character.class))
+    const requiredClasses = CLASSES_NAME.filter(
+        (className) => className !== "Death Knight"
+    )
+    const missingClasses = requiredClasses.filter(
+        (className) => !classesInRun.has(className)
+    )
+
+    if (missingClasses.length > 0) {
+        warnings.push(`Missing buffs: ${missingClasses.join(", ")}`)
     }
 
     return warnings
