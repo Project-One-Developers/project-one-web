@@ -32,9 +32,9 @@ export default function CharacterGearLayout({
                 <h3 className="font-semibold mb-2 text-sm">Tier Set Pieces</h3>
                 <div className="flex justify-center gap-3">
                     {hasTierItems
-                        ? tiersetInfo.map((tierItem) => (
+                        ? tiersetInfo.map((tierItem, index) => (
                               <WowGearIcon
-                                  key={tierItem.item.id}
+                                  key={index}
                                   gearItem={tierItem}
                                   showTiersetLine={false}
                                   iconClassName="rounded-lg h-10 w-10 border border-orange-500/50 shadow-md"
