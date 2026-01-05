@@ -60,12 +60,17 @@ export default function CharacterPaperdoll({ renderGearSlot }: CharacterPaperdol
             {/* Bottom Row - Weapons centered, spans all columns */}
             <div className="col-span-3 flex py-2">
                 <div className="w-[22%] shrink-0" />
+                {/* Use fixed-width containers so centering is based on icons only, not text */}
                 <div className="flex-1 flex items-center justify-center gap-8">
-                    <div className="flex justify-end">
-                        {renderGearSlot("main_hand", { rightSide: true })}
+                    <div className="w-12 h-12 shrink-0 relative">
+                        <div className="absolute right-0 flex items-center h-full">
+                            {renderGearSlot("main_hand", { rightSide: true })}
+                        </div>
                     </div>
-                    <div className="flex justify-start">
-                        {renderGearSlot("off_hand", { rightSide: false })}
+                    <div className="w-12 h-12 shrink-0 relative">
+                        <div className="absolute left-0 flex items-center h-full">
+                            {renderGearSlot("off_hand", { rightSide: false })}
+                        </div>
                     </div>
                 </div>
                 <div className="w-[22%] shrink-0" />
