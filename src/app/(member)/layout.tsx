@@ -1,39 +1,28 @@
-import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import AppSidebar from "@/components/app-sidebar"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { UserRoleProvider } from "@/lib/user-role-context"
 import { spreadsheetLinkService } from "@/services/spreadsheet-link.service"
 
+// Auth protection handled by proxy (src/auth.config.ts)
 export default async function MemberLayout({ children }: { children: React.ReactNode }) {
-    let session
-    try {
-        session = await auth()
-    } catch {
-        redirect("/login")
+    const session = await auth()
+
+    // Session with role is guaranteed by proxy - this is a safeguard
+    if (!session?.user.role) {
+        throw new Error("MemberLayout requires authenticated session with role")
     }
 
-    if (!session?.user) {
-        redirect("/login")
-    }
+    const { role } = session.user
 
-    // No role = stale session, force re-auth
-    if (!session.user.role) {
-        redirect("/login")
-    }
-
-    // Both officers and members can access these routes
     // Fetch spreadsheet links for officers (members won't see them anyway)
     const spreadsheetLinks =
-        session.user.role === "officer" ? await spreadsheetLinkService.getList() : []
+        role === "officer" ? await spreadsheetLinkService.getList() : []
 
     return (
-        <UserRoleProvider role={session.user.role}>
+        <UserRoleProvider role={role}>
             <SidebarProvider defaultOpen={true}>
-                <AppSidebar
-                    userRole={session.user.role}
-                    spreadsheetLinks={spreadsheetLinks}
-                />
+                <AppSidebar userRole={role} spreadsheetLinks={spreadsheetLinks} />
                 <main className="flex-1 overflow-auto">{children}</main>
             </SidebarProvider>
         </UserRoleProvider>
