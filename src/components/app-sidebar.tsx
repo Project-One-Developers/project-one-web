@@ -4,6 +4,7 @@ import {
     CloudDownload,
     Compass,
     FileSpreadsheet,
+    Globe,
     History,
     Home,
     LucideAccessibility,
@@ -240,6 +241,14 @@ export default function AppSidebar({
                                 >
                                     <CloudDownload />
                                 </Link>
+                                <a
+                                    href="https://drive.google.com/drive/folders/1OuFfOSISiO-tHve7cjhNNQsEBEmEz5ie"
+                                    target="_blank"
+                                    className="p-2 rounded-full hover:bg-muted w-fit focus:outline-none"
+                                    rel="noreferrer"
+                                >
+                                    <Globe />
+                                </a>
                             </div>
                         )}
                         <span className="text-xs text-muted-foreground px-2 mt-2">
