@@ -105,7 +105,7 @@ export const itemRepo = {
                     "tierset",
                     "veryRare",
                     "specIds",
-                    "classes",
+                    "classIds",
                     "iconName",
                     "catalyzed",
                     "sourceId",

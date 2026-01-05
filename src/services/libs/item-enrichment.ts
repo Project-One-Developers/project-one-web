@@ -204,7 +204,7 @@ export function enrichItem(
 
         // Expand specs to classes
         const specIds = rawItem.specs ?? wowheadData?.specs ?? []
-        const { classNames } = expandSpecsToClasses(specIds)
+        const { classIds } = expandSpecsToClasses(specIds)
 
         return {
             id: rawItem.id,
@@ -221,7 +221,7 @@ export function enrichItem(
             veryRare: isVeryRare,
             catalyzed: isCatalyzed,
             specIds: specIds.length > 0 ? specIds : null,
-            classes: classNames.length > 0 ? classNames : null,
+            classIds: classIds.length > 0 ? classIds : null,
             iconName: rawItem.icon,
             bossName: encounter.name,
             bossId: encounter.id,

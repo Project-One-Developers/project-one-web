@@ -27,6 +27,7 @@ import {
     parseMrtLoots,
     parseRcLoots,
 } from "@/services/libs/loot-parsers"
+import { mapClassNameToId } from "@/shared/libs/blizzard-mappings"
 import { isInCurrentWowWeek } from "@/shared/libs/date-utils"
 import { compareGearItem, gearAreTheSame } from "@/shared/libs/items/item-bonus-utils"
 import { getWowClassFromIdOrName } from "@/shared/libs/spec-parser/spec-utils"
@@ -303,7 +304,8 @@ export const lootService = {
         // Filter by class eligibility
         const filteredRoster = eligibleChars.filter(
             (character) =>
-                loot.item.classes === null || loot.item.classes.includes(character.class)
+                loot.item.classIds === null ||
+                loot.item.classIds.includes(mapClassNameToId(character.class))
         )
 
         // Build lookups for scoped queries
@@ -420,7 +422,9 @@ export const lootService = {
 
         // Filter to class-eligible characters
         const filteredRoster = roster.filter(
-            (character) => item.classes === null || item.classes.includes(character.class)
+            (character) =>
+                item.classIds === null ||
+                item.classIds.includes(mapClassNameToId(character.class))
         )
         const charIds = filteredRoster.map((c) => c.id)
 

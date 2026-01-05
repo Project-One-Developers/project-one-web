@@ -21,7 +21,7 @@ export const itemSchema = z.object({
     veryRare: z.boolean().default(false),
     catalyzed: z.boolean().default(false),
     specIds: z.number().array().nullable(),
-    classes: z.string().array().nullable(),
+    classIds: z.number().array().nullable(),
     iconName: z.string(),
     bossName: z.string(),
     bossId: z.number(),

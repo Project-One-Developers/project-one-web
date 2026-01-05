@@ -316,7 +316,7 @@ export const itemTable = pgTable("items", {
     tierset: boolean("tierset").notNull(), // whether this is a tierset item
     veryRare: boolean("very_rare").notNull(),
     specIds: integer("spec_ids").array(),
-    classes: text("classes").array(),
+    classIds: integer("class_ids").array(),
     iconName: varchar("icon_name", { length: 255 }).notNull(),
     catalyzed: boolean("catalyzed").notNull().default(false), // only obtainable via catalyst
     sourceId: integer("source_id").notNull(),

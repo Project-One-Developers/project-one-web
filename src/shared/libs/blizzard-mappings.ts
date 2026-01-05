@@ -72,6 +72,26 @@ export const mapBlizzardClassId = (classId: number): WowClassName | null =>
         .otherwise(() => null)
 
 /**
+ * Map WoW class name to Blizzard class ID (inverse of mapBlizzardClassId)
+ */
+export const mapClassNameToId = (className: WowClassName): number =>
+    match<WowClassName, number>(className)
+        .with("Warrior", () => 1)
+        .with("Paladin", () => 2)
+        .with("Hunter", () => 3)
+        .with("Rogue", () => 4)
+        .with("Priest", () => 5)
+        .with("Death Knight", () => 6)
+        .with("Shaman", () => 7)
+        .with("Mage", () => 8)
+        .with("Warlock", () => 9)
+        .with("Monk", () => 10)
+        .with("Druid", () => 11)
+        .with("Demon Hunter", () => 12)
+        .with("Evoker", () => 13)
+        .exhaustive()
+
+/**
  * Map Blizzard slot type to our internal equipped slot key
  * Returns null for non-gear slots (shirt, tabard)
  */
