@@ -16,3 +16,11 @@ export async function requireOfficer(): Promise<void> {
         throw new Error("Unauthorized: Officer access required")
     }
 }
+
+/**
+ * Checks if the current user is an officer.
+ */
+export async function isOfficer(): Promise<boolean> {
+    const session = await auth()
+    return session?.user.role === "officer"
+}

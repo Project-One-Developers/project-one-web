@@ -82,6 +82,7 @@ export const characterRepo = {
                 realm: data.realm,
                 role: data.role,
                 main: data.main,
+                priority: data.priority,
             })
             .where(eq(charTable.id, id))
     },

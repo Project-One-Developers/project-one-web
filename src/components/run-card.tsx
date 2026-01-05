@@ -191,7 +191,6 @@ export default function RunCard({
                 {/* Armor type distribution */}
                 <div className="flex flex-wrap gap-2">
                     {(["Cloth", "Leather", "Mail", "Plate"] as const).map((armorType) => {
-                        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                         const count = run.stats.armorTypes[armorType] ?? 0
                         if (count === 0) {
                             return null

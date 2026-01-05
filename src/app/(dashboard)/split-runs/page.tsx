@@ -9,9 +9,9 @@ import { EmptyState } from "@/components/ui/empty-state"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { usePlayersSummaryCompact } from "@/lib/queries/players"
 import { calculateSplitRuns } from "@/shared/libs/split-run-algorithm"
+import { s } from "@/shared/libs/string-utils"
 import type { Run, SplitRunParams } from "@/shared/models/split-run.models"
 import { CLASS_TO_ARMOR_TYPE } from "@/shared/wow.consts"
-import { s } from "@/shared/libs/string-utils"
 
 export default function SplitRunsPage(): JSX.Element {
     const playersQuery = usePlayersSummaryCompact()
@@ -51,18 +51,28 @@ export default function SplitRunsPage(): JSX.Element {
         }, 0)
     }
 
-    const handleCharacterMove = (sourceRunId: string, targetRunId: string, charId: string) => {
+    const handleCharacterMove = (
+        sourceRunId: string,
+        targetRunId: string,
+        charId: string
+    ) => {
         const sourceRun = runs.find((r) => r.id === sourceRunId)
         const targetRun = runs.find((r) => r.id === targetRunId)
 
-        if (!sourceRun || !targetRun) {return}
+        if (!sourceRun || !targetRun) {
+            return
+        }
 
         // Find the character in the source run
         const charIndex = sourceRun.characters.findIndex((c) => c.character.id === charId)
-        if (charIndex === -1) {return}
+        if (charIndex === -1) {
+            return
+        }
 
         const character = sourceRun.characters[charIndex]
-        if (!character) {return}
+        if (!character) {
+            return
+        }
 
         // Check if target run already has a character from the same player
         const hasPlayerChar = targetRun.characters.some(
@@ -111,15 +121,21 @@ export default function SplitRunsPage(): JSX.Element {
         targetIndex: number
     ) => {
         const run = runs.find((r) => r.id === runId)
-        if (!run) {return}
+        if (!run) {
+            return
+        }
 
         const sourceIndex = run.characters.findIndex((c) => c.character.id === charId)
-        if (sourceIndex === -1) {return}
+        if (sourceIndex === -1) {
+            return
+        }
 
         // Create new array with reordered characters
         const newCharacters = [...run.characters]
         const [movedChar] = newCharacters.splice(sourceIndex, 1)
-        if (!movedChar) {return}
+        if (!movedChar) {
+            return
+        }
 
         newCharacters.splice(targetIndex, 0, movedChar)
 
@@ -148,7 +164,9 @@ export default function SplitRunsPage(): JSX.Element {
         const sourceRun = runs.find((r) => r.id === sourceRunId)
         const targetRun = runs.find((r) => r.id === targetRunId)
 
-        if (!sourceRun || !targetRun) {return}
+        if (!sourceRun || !targetRun) {
+            return
+        }
 
         const sourceCharIndex = sourceRun.characters.findIndex(
             (c) => c.character.id === sourceCharId
@@ -157,12 +175,16 @@ export default function SplitRunsPage(): JSX.Element {
             (c) => c.character.id === targetCharId
         )
 
-        if (sourceCharIndex === -1 || targetCharIndex === -1) {return}
+        if (sourceCharIndex === -1 || targetCharIndex === -1) {
+            return
+        }
 
         const sourceChar = sourceRun.characters[sourceCharIndex]
         const targetChar = targetRun.characters[targetCharIndex]
 
-        if (!sourceChar || !targetChar) {return}
+        if (!sourceChar || !targetChar) {
+            return
+        }
 
         // Create new arrays with swapped characters
         const newSourceCharacters = [...sourceRun.characters]
@@ -202,7 +224,9 @@ export default function SplitRunsPage(): JSX.Element {
 
         for (let i = 0; i < runs.length; i++) {
             const run = runs[i]
-            if (!run) {continue}
+            if (!run) {
+                continue
+            }
 
             for (const charSummary of run.characters) {
                 const char = charSummary.character
@@ -243,14 +267,18 @@ export default function SplitRunsPage(): JSX.Element {
         }
 
         for (const char of characters) {
-            if (char.character.role === "Tank") {stats.tanks++}
-            else if (char.character.role === "Healer") {stats.healers++}
-            else {stats.dps++}
+            if (char.character.role === "Tank") {
+                stats.tanks++
+            } else if (char.character.role === "Healer") {
+                stats.healers++
+            } else {
+                stats.dps++
+            }
 
             // Only count armor types for MAINS
             if (char.character.main) {
                 const armorType = CLASS_TO_ARMOR_TYPE[char.character.class]
-                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Property may not exist yet
+
                 stats.armorTypes[armorType] = (stats.armorTypes[armorType] ?? 0) + 1
             }
         }

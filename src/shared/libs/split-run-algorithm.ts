@@ -19,7 +19,6 @@ export function calculateSplitRuns(
 
     // Filter by minimum item level if specified
     if (params.minItemLevel !== undefined) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const minIlvl = params.minItemLevel
         allCharacters = allCharacters.filter((char) => {
             const ilvl = parseInt(char.itemLevel, 10)
@@ -205,7 +204,6 @@ function calculateRunStats(run: Run): RunStats {
         if (char.character.main) {
             const armorType = CLASS_TO_ARMOR_TYPE[char.character.class]
 
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             stats.armorTypes[armorType] = (stats.armorTypes[armorType] ?? 0) + 1
         }
     }
@@ -261,7 +259,6 @@ function generateWarnings(run: Run, targetSize: number): string[] {
  */
 export function calculateArmorTypeVariance(run: Run): number {
     const counts = Object.values(run.stats.armorTypes).filter(
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         (count): count is number => count !== undefined
     )
     if (counts.length === 0) {

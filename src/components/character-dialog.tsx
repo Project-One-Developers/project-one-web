@@ -11,11 +11,7 @@ import type {
     NewCharacterWithoutClass,
     Player,
 } from "@/shared/models/character.models"
-import {
-    ROLES_CLASSES_MAP,
-    type WowClassName,
-    type WoWRole,
-} from "@/shared/models/wow.models"
+import type { WoWRole } from "@/shared/models/wow.models"
 import { REALMS, ROLES } from "@/shared/wow.consts"
 import { Button } from "./ui/button"
 import { Checkbox } from "./ui/checkbox"
@@ -47,15 +43,14 @@ type CharacterDialogProps = {
 type FormData = {
     name: string
     realm: string
-    class: WowClassName // Only used in edit mode
     role: WoWRole
     main: boolean
+    priority: number // Only used in edit mode (officer-only)
 }
 
 type FormErrors = {
     name?: string
     realm?: string
-    class?: string // Only used in edit mode
     role?: string
 }
 
@@ -79,17 +74,17 @@ export default function CharacterDialog({
             return {
                 name: existingCharacter.name,
                 realm: existingCharacter.realm,
-                class: existingCharacter.class,
                 role: existingCharacter.role,
                 main: existingCharacter.main,
+                priority: existingCharacter.priority ?? 1,
             }
         }
         return {
             name: "",
             realm: "Pozzo dell'Eternità",
-            class: "Death Knight",
             role: "DPS",
             main: false,
+            priority: 1,
         }
     }, [mode, existingCharacter])
 
@@ -114,9 +109,9 @@ export default function CharacterDialog({
         setFormData({
             name: "",
             realm: "Pozzo dell'Eternità",
-            class: "Death Knight",
             role: "DPS",
             main: false,
+            priority: 1,
         })
         setErrors({})
     }
@@ -153,6 +148,7 @@ export default function CharacterDialog({
                 realm: formData.realm,
                 role: formData.role,
                 main: formData.main,
+                priority: formData.priority,
             }
             editMutation.mutate(
                 { id: existingCharacter.id, data: editData },
@@ -194,18 +190,15 @@ export default function CharacterDialog({
         }
     }
 
-    const handleInputChange = (field: keyof FormData, value: string | boolean) => {
+    const handleInputChange = (
+        field: keyof FormData,
+        value: string | boolean | number
+    ) => {
         setFormData((prev) => ({ ...prev, [field]: value }))
     }
 
     const handleRoleChange = (value: string) => {
         handleInputChange("role", value)
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Select options match WoWRole
-        const availableClasses = ROLES_CLASSES_MAP[value as WoWRole]
-        const firstClass = availableClasses[0]
-        if (firstClass) {
-            handleInputChange("class", firstClass)
-        }
     }
 
     const isLoading = addMutation.isPending || editMutation.isPending
@@ -303,6 +296,31 @@ export default function CharacterDialog({
                             </p>
                         </div>
                     </div>
+
+                    {mode === "edit" && (
+                        <div className="space-y-2">
+                            <Label htmlFor="priority">Priority</Label>
+                            <Input
+                                id="priority"
+                                type="number"
+                                min={1}
+                                max={100}
+                                value={formData.priority}
+                                onChange={(e) => {
+                                    handleInputChange(
+                                        "priority",
+                                        Math.max(
+                                            1,
+                                            Math.min(100, parseInt(e.target.value) || 1)
+                                        )
+                                    )
+                                }}
+                            />
+                            <p className="text-sm text-muted-foreground">
+                                Priority level (1-100). Higher values = higher priority.
+                            </p>
+                        </div>
+                    )}
 
                     <Button disabled={isLoading} type="submit">
                         {isLoading ? <Loader2 className="animate-spin" /> : "Confirm"}

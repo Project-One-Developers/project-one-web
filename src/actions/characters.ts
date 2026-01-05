@@ -1,6 +1,7 @@
 "use server"
 
-import { requireOfficer } from "@/lib/auth-helpers"
+import { isOfficer, requireOfficer } from "@/lib/auth-helpers"
+import { stripOfficerFields } from "@/lib/officer-data"
 import { characterService } from "@/services/character.service"
 import { playerService } from "@/services/player.service"
 import type {
@@ -27,11 +28,25 @@ export async function addCharacterWithSync(
 export async function getCharacterWithGameInfo(
     id: string
 ): Promise<CharacterWithGameInfo | null> {
-    return characterService.getByIdWithGameInfo(id)
+    const data = await characterService.getByIdWithGameInfo(id)
+    if (!data) {
+        return null
+    }
+
+    if (!(await isOfficer())) {
+        return stripOfficerFields(data)
+    }
+
+    return data
 }
 
 export async function getCharacterList(): Promise<Character[]> {
-    return characterService.getList()
+    const characters = await characterService.getList()
+
+    if (!(await isOfficer())) {
+        return stripOfficerFields(characters)
+    }
+    return characters
 }
 
 export async function deleteCharacter(id: string): Promise<void> {
@@ -65,7 +80,15 @@ export async function editPlayer(edited: EditPlayer): Promise<Player | null> {
 }
 
 export async function getPlayerWithCharactersList(): Promise<PlayerWithCharacters[]> {
-    return playerService.getWithCharactersList()
+    const players = await playerService.getWithCharactersList()
+
+    if (!(await isOfficer())) {
+        return players.map((player) => ({
+            ...player,
+            characters: stripOfficerFields(player.characters),
+        }))
+    }
+    return players
 }
 
 // ============== CHARACTER MEDIA ==============

@@ -17,6 +17,7 @@ export const characterSchema = z.object({
     class: wowClassNameSchema,
     role: wowRolesSchema,
     main: z.boolean(),
+    priority: z.number().int().min(1).max(100).optional(), // officer-only, undefined for members
     playerId: playerSchema.shape.id,
 })
 export type Character = z.infer<typeof characterSchema>
@@ -60,6 +61,7 @@ export const editCharacterDataSchema = characterSchema.pick({
     realm: true,
     role: true,
     main: true,
+    priority: true,
 })
 export type EditCharacterData = z.infer<typeof editCharacterDataSchema>
 

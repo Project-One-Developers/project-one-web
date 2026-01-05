@@ -3,10 +3,10 @@
 import { Download, BarChart } from "lucide-react"
 import { useState, type JSX } from "react"
 import type { Run } from "@/shared/models/split-run.models"
+import RunCard from "./run-card"
 import { Button } from "./ui/button"
 import { GlassCard } from "./ui/glass-card"
 import { StatBadge } from "./ui/stat-badge"
-import RunCard from "./run-card"
 
 type SplitRunResultsProps = {
     runs: Run[]
@@ -53,8 +53,12 @@ export default function SplitRunResults({
         e.preventDefault()
         setDragOverRunId(null)
 
-        if (!draggedCharId || !dragSourceRunId) {return}
-        if (dragSourceRunId === targetRunId) {return} // Same run, no action needed
+        if (!draggedCharId || !dragSourceRunId) {
+            return
+        }
+        if (dragSourceRunId === targetRunId) {
+            return
+        } // Same run, no action needed
 
         onCharacterMove(dragSourceRunId, targetRunId, draggedCharId)
 
@@ -68,8 +72,12 @@ export default function SplitRunResults({
         targetCharId: string,
         targetIndex: number
     ) => {
-        if (!draggedCharId || !dragSourceRunId) {return}
-        if (draggedCharId === targetCharId) {return} // Same character
+        if (!draggedCharId || !dragSourceRunId) {
+            return
+        }
+        if (draggedCharId === targetCharId) {
+            return
+        } // Same character
 
         // Check if same run (reorder) or different run (swap or move)
         if (dragSourceRunId === targetRunId) {
@@ -79,8 +87,12 @@ export default function SplitRunResults({
             // Different runs - check if characters belong to same player (swap) or not (move)
             const sourceRun = runs.find((r) => r.id === dragSourceRunId)
             const targetRun = runs.find((r) => r.id === targetRunId)
-            const sourceChar = sourceRun?.characters.find((c) => c.character.id === draggedCharId)
-            const targetChar = targetRun?.characters.find((c) => c.character.id === targetCharId)
+            const sourceChar = sourceRun?.characters.find(
+                (c) => c.character.id === draggedCharId
+            )
+            const targetChar = targetRun?.characters.find(
+                (c) => c.character.id === targetCharId
+            )
 
             if (sourceChar?.character.playerId === targetChar?.character.playerId) {
                 // Same player - swap
@@ -111,7 +123,11 @@ export default function SplitRunResults({
     return (
         <div className="flex flex-col gap-6">
             {/* Summary bar */}
-            <GlassCard variant="solid" padding="sm" className="backdrop-blur-none bg-card/80">
+            <GlassCard
+                variant="solid"
+                padding="sm"
+                className="backdrop-blur-none bg-card/80"
+            >
                 <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
                     {/* Stats */}
                     <div className="flex flex-wrap gap-3">
@@ -122,7 +138,11 @@ export default function SplitRunResults({
                             value={totalCharacters}
                         />
                         <StatBadge variant="default" label="Tanks" value={totalTanks} />
-                        <StatBadge variant="success" label="Healers" value={totalHealers} />
+                        <StatBadge
+                            variant="success"
+                            label="Healers"
+                            value={totalHealers}
+                        />
                         <StatBadge variant="info" label="DPS" value={totalDps} />
                         {runsWithWarnings > 0 && (
                             <StatBadge
@@ -134,7 +154,11 @@ export default function SplitRunResults({
                     </div>
 
                     {/* Export button */}
-                    <Button onClick={onExport} variant="outline" className="flex items-center gap-2">
+                    <Button
+                        onClick={onExport}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                    >
                         <Download className="w-4 h-4" />
                         Export CSV
                     </Button>

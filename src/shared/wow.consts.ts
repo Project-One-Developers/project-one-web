@@ -81,17 +81,17 @@ export const CLASS_TO_ARMOR_TYPE: Record<
 > = {
     "Death Knight": "Plate",
     "Demon Hunter": "Leather",
-    "Druid": "Leather",
-    "Evoker": "Mail",
-    "Hunter": "Mail",
-    "Mage": "Cloth",
-    "Monk": "Leather",
-    "Paladin": "Plate",
-    "Priest": "Cloth",
-    "Rogue": "Leather",
-    "Shaman": "Mail",
-    "Warlock": "Cloth",
-    "Warrior": "Plate",
+    Druid: "Leather",
+    Evoker: "Mail",
+    Hunter: "Mail",
+    Mage: "Cloth",
+    Monk: "Leather",
+    Paladin: "Plate",
+    Priest: "Cloth",
+    Rogue: "Leather",
+    Shaman: "Mail",
+    Warlock: "Cloth",
+    Warrior: "Plate",
 } as const
 
 export const ITEM_SLOTS_DESC = [

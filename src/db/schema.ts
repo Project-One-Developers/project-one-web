@@ -59,6 +59,7 @@ export const charTable = pgTable(
         class: pgClassEnum().notNull(),
         role: pgRoleEnum().notNull(),
         main: boolean("main").notNull(), // consider player main char (for future me: dont put any constraint in case any player has more than one "main "char)
+        priority: integer("priority").notNull().default(1), // officer-only priority (1-100, higher = more priority)
         playerId: varchar("player_id")
             .references(() => playerTable.id, { onDelete: "cascade" })
             .notNull(),

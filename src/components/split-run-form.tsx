@@ -27,7 +27,11 @@ export default function SplitRunForm({
     }>({})
 
     const validateForm = (): boolean => {
-        const newErrors: { numRuns?: string; targetSize?: string; minItemLevel?: string } = {}
+        const newErrors: {
+            numRuns?: string
+            targetSize?: string
+            minItemLevel?: string
+        } = {}
 
         const numRunsValue = parseInt(numRuns, 10)
         if (isNaN(numRunsValue) || numRunsValue < 1 || numRunsValue > 10) {
