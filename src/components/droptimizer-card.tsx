@@ -23,6 +23,7 @@ const UpgradeItem = ({ upgrade }: { upgrade: DroptimizerUpgrade }) => {
                 item={upgrade.item}
                 iconOnly={true}
                 ilvl={upgrade.ilvl}
+                catalystBanner={upgrade.catalyzedItemId !== null}
                 iconClassName="object-cover object-top rounded-full h-9 w-9 border border-background"
             />
             <p className="text-xs text-center font-medium mt-1">

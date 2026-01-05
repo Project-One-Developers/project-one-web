@@ -23,6 +23,7 @@ type WowItemIconProps = {
     showIlvl?: boolean
     showRoleIcons?: boolean
     tierBanner?: boolean
+    catalystBanner?: boolean
 }
 
 export function WowItemIcon({
@@ -37,6 +38,7 @@ export function WowItemIcon({
     showIlvl = true,
     showRoleIcons = false,
     tierBanner = false,
+    catalystBanner = false,
 }: WowItemIconProps) {
     // Only fetch if item is a number (ID)
     const { data: fetchedItem, isLoading } = useItem(
@@ -112,6 +114,11 @@ export function WowItemIcon({
                         )}
                         unoptimized
                     />
+                    {catalystBanner && (
+                        <div className="absolute top-0 right-1 bg-red-600 text-white text-[7px] font-bold px-2 rounded-b-sm border border-background">
+                            CAT
+                        </div>
+                    )}
                     {tierBanner && (itemData.tierset || itemData.token) && (
                         <div className="absolute -bottom-1 left-0 right-0 h-px bg-red-600"></div>
                     )}
