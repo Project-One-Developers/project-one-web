@@ -1,10 +1,10 @@
 import NextAuth from "next-auth"
-import Discord from "next-auth/providers/discord"
 import "server-only"
+import authConfig from "@/auth.config"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
 import { s } from "@/shared/libs/string-utils"
-import { userRoleSchema, type UserRole } from "@/shared/models/auth.models"
+import type { UserRole } from "@/shared/models/auth.models"
 
 // Helper to determine user role from Discord roles
 function determineUserRole(userRoles: string[]): UserRole | null {
@@ -28,16 +28,9 @@ function determineUserRole(userRoles: string[]): UserRole | null {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-    providers: [
-        Discord({
-            authorization: {
-                params: {
-                    scope: "identify guilds.members.read",
-                },
-            },
-        }),
-    ],
+    ...authConfig,
     callbacks: {
+        ...authConfig.callbacks,
         async signIn({ account, profile }) {
             if (!profile?.id || !account?.access_token) {
                 return false
@@ -113,22 +106,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     }
                 } catch {
                     // Role fetch failed - token.role stays undefined
-                    // Layouts will force re-authentication
+                    // Proxy will force re-authentication
                 }
             }
 
             return token
         },
-        session({ session, token }) {
-            session.user.id = token.sub ?? ""
-            // Role may be undefined for stale sessions - layouts will handle redirect
-            const parsed = userRoleSchema.safeParse(token.role)
-            session.user.role = parsed.success ? parsed.data : undefined
-            return session
-        },
-    },
-    pages: {
-        signIn: "/login",
-        error: "/login",
     },
 })
