@@ -229,6 +229,7 @@ export function enrichItem(
             sourceName: instance.name,
             sourceType: instance.type,
             season,
+            note: null,
         }
     } catch (error) {
         logger.error(

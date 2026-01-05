@@ -327,14 +327,7 @@ export const itemTable = pgTable("items", {
     bossId: integer("boss_id")
         .references(() => bossTable.id)
         .notNull(),
-})
-
-// Item Note ( user can write note about item, we isolate in a dedicated table to avoid data loss on item reload)
-export const itemNoteTable = pgTable("items_note", {
-    itemId: integer("item_id")
-        .references(() => itemTable.id, { onDelete: "cascade" })
-        .primaryKey(),
-    note: varchar("note").notNull(),
+    note: varchar("note"),
 })
 
 // Maps tierset items to the token that generates them

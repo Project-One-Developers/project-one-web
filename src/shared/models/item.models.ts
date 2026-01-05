@@ -29,6 +29,7 @@ export const itemSchema = z.object({
     sourceName: z.string(),
     sourceType: z.string(),
     season: z.number(),
+    note: z.string().nullable(),
 })
 export type Item = z.infer<typeof itemSchema>
 

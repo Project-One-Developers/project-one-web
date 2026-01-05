@@ -1,13 +1,7 @@
 "use client"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import {
-    getAllItemNotes,
-    getItemById,
-    getItemNote,
-    searchItems,
-    setItemNote,
-} from "@/actions/items"
+import { getItemById, searchItems, setItemNote } from "@/actions/items"
 import { queryKeys } from "./keys"
 
 // ============== QUERIES ==============
@@ -34,27 +28,6 @@ export function useSearchItems(searchTerm: string, limit = 20) {
     })
 }
 
-export function useItemNotes() {
-    return useQuery({
-        queryKey: [queryKeys.items, "notes"],
-        queryFn: () => getAllItemNotes(),
-        staleTime: 60000, // 1 minute - user-editable but not frequent
-    })
-}
-
-export function useItemNote(id: number | undefined) {
-    return useQuery({
-        queryKey: [queryKeys.items, "notes", id],
-        queryFn: () => {
-            if (!id) {
-                throw new Error("No item id provided")
-            }
-            return getItemNote(id)
-        },
-        enabled: !!id,
-    })
-}
-
 // ============== MUTATIONS ==============
 
 export function useSetItemNote() {
@@ -63,10 +36,9 @@ export function useSetItemNote() {
     return useMutation({
         mutationFn: ({ id, note }: { id: number; note: string }) => setItemNote(id, note),
         onSuccess: (_, vars) => {
-            void queryClient.invalidateQueries({ queryKey: [queryKeys.items, "notes"] })
-            void queryClient.invalidateQueries({
-                queryKey: [queryKeys.items, "notes", vars.id],
-            })
+            // Invalidate item queries so the updated note is reflected
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.items, vars.id] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.bosses] })
         },
     })
 }

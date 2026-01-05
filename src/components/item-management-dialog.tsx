@@ -5,7 +5,7 @@ import { Loader2, Search, StickyNote, Users } from "lucide-react"
 import { useState, useMemo, type JSX } from "react"
 import { toast } from "sonner"
 import { useUpdateItemBisSpecs } from "@/lib/queries/bis-list"
-import { useItemNote, useSetItemNote } from "@/lib/queries/items"
+import { useSetItemNote } from "@/lib/queries/items"
 import { useCharactersWithLootsByItemId } from "@/lib/queries/loots"
 import { WOW_CLASS_WITH_SPECS } from "@/shared/libs/spec-parser/spec-utils.schemas"
 import type { CharacterWithGears } from "@/shared/models/character.models"
@@ -47,21 +47,12 @@ export default function ItemManagementDialog({
     const updateBisMutation = useUpdateItemBisSpecs()
     const setItemNoteMutation = useSetItemNote()
 
-    // Fetch item note
-    const itemNoteQuery = useItemNote(itemAndSpecs?.item.id)
-
     // Initialize state from props - use key prop on parent to reset when itemAndSpecs changes
     const [selectedSpecs, setSelectedSpecs] = useState<number[]>(
         () => itemAndSpecs?.specs ?? []
     )
-    const [itemNote, setItemNote] = useState<string>(() => itemNoteQuery.data?.note ?? "")
+    const [itemNote, setItemNote] = useState<string>(() => itemAndSpecs?.item.note ?? "")
     const [activeTab, setActiveTab] = useState<string>("bis-specs")
-
-    // Update itemNote when query data loads (only if different from current state)
-    const queryNote = itemNoteQuery.data?.note ?? ""
-    if (queryNote !== itemNote && itemNote === "" && queryNote !== "") {
-        setItemNote(queryNote)
-    }
 
     const handleSaveNote = () => {
         if (!itemAndSpecs) {

@@ -2,10 +2,9 @@ import { and, eq } from "drizzle-orm"
 import "server-only"
 import { z } from "zod"
 import { db } from "@/db"
-import { itemNoteRepo, itemRepo } from "@/db/repositories/items"
+import { itemRepo } from "@/db/repositories/items"
 import { itemTable } from "@/db/schema"
 import { CURRENT_SEASON } from "@/shared/libs/season-config"
-import type { ItemNote } from "@/shared/models/item-note.models"
 import { itemSchema, type Item } from "@/shared/models/item.models"
 import { itemSyncService, type SyncItemsResult } from "./item-sync.service"
 
@@ -37,20 +36,12 @@ export const itemService = {
 
     // ============== ITEM NOTES ==============
 
-    getAllNotes: async (): Promise<ItemNote[]> => {
-        return itemNoteRepo.getAll()
-    },
-
-    getNote: async (id: number): Promise<ItemNote | null> => {
-        return itemNoteRepo.getById(id)
-    },
-
-    setNote: async (id: number, note: string): Promise<ItemNote> => {
-        return itemNoteRepo.set(id, note)
+    setNote: async (id: number, note: string): Promise<Item> => {
+        return itemRepo.setNote(id, note)
     },
 
     deleteNote: async (id: number): Promise<void> => {
-        await itemNoteRepo.delete(id)
+        await itemRepo.deleteNote(id)
     },
 
     // ============== SYNC FROM RAIDBOTS ==============

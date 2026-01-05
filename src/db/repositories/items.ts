@@ -2,15 +2,9 @@ import { and, eq, ilike, inArray, or } from "drizzle-orm"
 import { unstable_cache, updateTag } from "next/cache"
 import "server-only"
 import { db } from "@/db"
-import {
-    itemNoteTable,
-    itemTable,
-    itemToCatalystTable,
-    itemToTiersetTable,
-} from "@/db/schema"
+import { itemTable, itemToCatalystTable, itemToTiersetTable } from "@/db/schema"
 import { buildConflictUpdateColumns, identity, mapAndParse } from "@/db/utils"
 import { CURRENT_SEASON } from "@/shared/libs/season-config"
-import { itemNoteSchema, type ItemNote } from "@/shared/models/item-note.models"
 import {
     itemSchema,
     itemToCatalystSchema,
@@ -144,40 +138,21 @@ export const itemRepo = {
         }
         await db.insert(itemToCatalystTable).values(itemsToCatalyst).onConflictDoNothing()
     },
-}
 
-export const itemNoteRepo = {
-    getAll: async (): Promise<ItemNote[]> => {
-        const items = await db.select().from(itemNoteTable)
-        return mapAndParse(items, identity, itemNoteSchema)
-    },
-
-    getById: async (id: number): Promise<ItemNote | null> => {
-        const res = await db
-            .select()
-            .from(itemNoteTable)
-            .where(eq(itemNoteTable.itemId, id))
-            .then((r) => r.at(0))
-        return res ? mapAndParse(res, identity, itemNoteSchema) : null
-    },
-
-    set: async (id: number, note: string): Promise<ItemNote> => {
+    setNote: async (id: number, note: string): Promise<Item> => {
         const [res] = await db
-            .insert(itemNoteTable)
-            .values({ itemId: id, note })
-            .onConflictDoUpdate({
-                target: itemNoteTable.itemId,
-                set: { note },
-            })
+            .update(itemTable)
+            .set({ note })
+            .where(eq(itemTable.id, id))
             .returning()
 
         if (!res) {
-            throw new Error(`Failed to upsert item note for item ${String(id)}`)
+            throw new Error(`Failed to update note for item ${String(id)}`)
         }
-        return mapAndParse(res, identity, itemNoteSchema)
+        return mapAndParse(res, identity, itemSchema)
     },
 
-    delete: async (id: number): Promise<void> => {
-        await db.delete(itemNoteTable).where(eq(itemNoteTable.itemId, id))
+    deleteNote: async (id: number): Promise<void> => {
+        await db.update(itemTable).set({ note: null }).where(eq(itemTable.id, id))
     },
 }

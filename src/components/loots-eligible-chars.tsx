@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type JSX } from "react"
 import { toast } from "sonner"
-import { useItemNote } from "@/lib/queries/items"
+import { useItem } from "@/lib/queries/items"
 import {
     useAssignLoot,
     useLootAssignmentInfo,
@@ -43,7 +43,7 @@ export default function LootsEligibleChars({
     const [showAlts, setShowAlts] = useState(false)
 
     const lootAssignmentInfoQuery = useLootAssignmentInfo(selectedLoot.id)
-    const itemNoteQuery = useItemNote(selectedLoot.gearItem.item.id)
+    const itemQuery = useItem(selectedLoot.gearItem.item.id)
     const assignLootMutation = useAssignLoot()
     const unassignLootMutation = useUnassignLoot()
 
@@ -110,7 +110,7 @@ export default function LootsEligibleChars({
         <div className="flex flex-col gap-4">
             <SelectedLootHeader
                 loot={selectedLoot}
-                itemNote={itemNoteQuery.data?.note}
+                itemNote={itemQuery.data?.note}
                 showAlts={showAlts}
                 onToggleShowAlts={() => {
                     setShowAlts(!showAlts)
