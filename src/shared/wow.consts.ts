@@ -74,6 +74,26 @@ export const ROLES = ["Tank", "Healer", "DPS"] as const
 export const RAID_DIFF = ["LFR", "Normal", "Heroic", "Mythic"] as const
 
 export const ARMOR_TYPES = ["Cloth", "Leather", "Mail", "Plate"] as const
+
+export const CLASS_TO_ARMOR_TYPE: Record<
+    (typeof CLASSES_NAME)[number],
+    (typeof ARMOR_TYPES)[number]
+> = {
+    "Death Knight": "Plate",
+    "Demon Hunter": "Leather",
+    "Druid": "Leather",
+    "Evoker": "Mail",
+    "Hunter": "Mail",
+    "Mage": "Cloth",
+    "Monk": "Leather",
+    "Paladin": "Plate",
+    "Priest": "Cloth",
+    "Rogue": "Leather",
+    "Shaman": "Mail",
+    "Warlock": "Cloth",
+    "Warrior": "Plate",
+} as const
+
 export const ITEM_SLOTS_DESC = [
     "Head",
     "Neck",

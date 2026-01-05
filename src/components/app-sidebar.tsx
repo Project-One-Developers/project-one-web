@@ -16,6 +16,7 @@ import {
     LucideSnail,
     LucideSwords,
     Settings,
+    Split,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -61,6 +62,11 @@ const preparationItems = [
         title: "Summary",
         url: "/summary",
         icon: LucideCpu,
+    },
+    {
+        title: "Split Runs",
+        url: "/split-runs",
+        icon: Split,
     },
 ]
 
