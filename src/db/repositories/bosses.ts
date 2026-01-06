@@ -97,7 +97,7 @@ export const bossRepo = {
 
     /**
      * Get bosses from multiple raids with recalculated sequential order across all raids.
-     * Bosses are sorted by raid order (instanceId), then by their original order within each raid.
+     * Bosses are sorted by the order of raidIds in the array, then by their original order within each raid.
      * The order field is recalculated to be sequential across all raids (0, 1, 2, 3...).
      *
      * Example: If raidIds = [1307, 1308, 1314] with 6, 2, and 1 bosses respectively:
@@ -117,7 +117,7 @@ export const bossRepo = {
 
         const bosses = mapAndParse(result, identity, bossSchema)
 
-        // Sort by instanceId (raid order), then by original order within raid
+        // Sort by raidIds array order, then by original order within raid
         bosses.sort((a, b) => {
             const raidOrderA = raidIds.indexOf(a.instanceId)
             const raidOrderB = raidIds.indexOf(b.instanceId)
@@ -139,6 +139,7 @@ export const bossRepo = {
     /**
      * Get loot tables (bosses with items) from multiple raids with recalculated sequential order.
      * Similar to getSeasonalRaidBosses but includes items for each boss.
+     * Bosses are sorted by the order of raidIds in the array, then by their original order within each raid.
      *
      * Example: If raidIds = [1307, 1308, 1314] with 6, 2, and 1 bosses respectively:
      * - Raid 1307 bosses get orders 0-5
@@ -162,7 +163,7 @@ export const bossRepo = {
 
         const bosses = mapAndParse(bossesResult, identity, bossSchema)
 
-        // Sort by instanceId (raid order), then by original order within raid
+        // Sort by raidIds array order, then by original order within raid
         bosses.sort((a, b) => {
             const raidOrderA = raidIds.indexOf(a.instanceId)
             const raidOrderB = raidIds.indexOf(b.instanceId)

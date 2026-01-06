@@ -149,7 +149,7 @@ export const SEASONS: Record<Season, SeasonConfig> = {
 
     // Midnight expansion (future)
     16: {
-        raidIds: [1307, 1308, 1314],
+        raidIds: [1307, 1314, 1308],
         mplusIds: [2825, 2811, 2874, 2813, 2915, 2859, 2923, 2805],
         catalystSourceId: 0, // TBD
         catalystChargeId: 0, // TBD
