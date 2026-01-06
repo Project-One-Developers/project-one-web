@@ -21,6 +21,9 @@ const envSchema = z.object({
     // Battle.net API
     BNET_CLIENT_ID: z.string(),
     BNET_CLIENT_SECRET: z.string(),
+    // Dev overrides (optional)
+    OVERRIDE_CURRENT_SEASON: z.coerce.number().int().positive().optional(),
+    OVERRIDE_RAIDBOTS_BASE_URL: z.url().optional(),
 })
 
 export const env = envSchema.parse(process.env)

@@ -190,7 +190,28 @@ export const SEASONS: Record<Season, SeasonConfig> = {
 
 // ============== Current Season (single place to update) ==============
 
-export const CURRENT_SEASON: Season = 3
+const DEFAULT_SEASON: Season = 3
+
+/**
+ * Get the effective current season, checking for dev override.
+ * OVERRIDE_CURRENT_SEASON env var can be set for local development.
+ * Note: In Next.js, process.env is inlined at build time for client code.
+ */
+function getEffectiveCurrentSeason(): Season {
+    const override = process.env.OVERRIDE_CURRENT_SEASON
+    if (override) {
+        const parsed = parseInt(override, 10)
+        // Type guard: check if parsed value is a valid Season
+        const validSeasons: readonly number[] = SEASON_NUMBERS
+        if (validSeasons.includes(parsed)) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Validated by includes check above
+            return parsed as Season
+        }
+    }
+    return DEFAULT_SEASON
+}
+
+export const CURRENT_SEASON: Season = getEffectiveCurrentSeason()
 
 // ============== Derived Values (type-safe, no runtime checks needed) ==============
 

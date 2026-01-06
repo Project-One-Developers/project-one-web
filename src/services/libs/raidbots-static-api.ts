@@ -3,6 +3,7 @@
  * Fetches encounter-items.json, instances.json, and bonuses.json
  */
 import "server-only"
+import { env } from "@/env"
 import { fetchWithRetry } from "@/lib/fetch-with-retry"
 import { logger } from "@/lib/logger"
 import { s } from "@/shared/libs/string-utils"
@@ -15,7 +16,8 @@ import {
     type RaidbotsBonuses,
 } from "./schemas/raidbots-static.schema"
 
-const RAIDBOTS_BASE_URL = "https://www.raidbots.com/static/data/live"
+const DEFAULT_RAIDBOTS_BASE_URL = "https://www.raidbots.com/static/data/live"
+const RAIDBOTS_BASE_URL = env.OVERRIDE_RAIDBOTS_BASE_URL ?? DEFAULT_RAIDBOTS_BASE_URL
 
 async function fetchJson<T>(url: string): Promise<T> {
     const response = await fetchWithRetry(
