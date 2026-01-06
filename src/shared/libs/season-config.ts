@@ -253,7 +253,7 @@ export function getRaidIdsByCatalystId(catalystId: number): number[] {
  */
 export function getItemLevelsForBoss(
     raidId: number,
-    bossOrder: number, // 1-indexed
+    bossOrder: number, // 0-indexed
     isVeryRare: boolean,
     isBoeOrCatalyst: boolean
 ): { normal: number; heroic: number; mythic: number } | null {
@@ -269,9 +269,6 @@ export function getItemLevelsForBoss(
     if (!config) {
         return null
     }
-
-    // Convert to 0-indexed
-    const bossIndex = bossOrder - 1
 
     // Very rare items always get max item level
     if (isVeryRare) {
@@ -293,7 +290,7 @@ export function getItemLevelsForBoss(
     }
 
     // BOE and catalyst items use configured BOE item levels
-    if (isBoeOrCatalyst || bossIndex === 98 || bossIndex < 0) {
+    if (isBoeOrCatalyst || bossOrder === 98 || bossOrder < 0) {
         return {
             normal: config.boeIlvl.champion,
             heroic: config.boeIlvl.hero,
@@ -302,7 +299,7 @@ export function getItemLevelsForBoss(
     }
 
     // Check if boss index is valid
-    if (bossIndex >= config.champion.length) {
+    if (bossOrder >= config.champion.length) {
         return {
             normal: config.boeIlvl.champion,
             heroic: config.boeIlvl.hero,
@@ -310,9 +307,9 @@ export function getItemLevelsForBoss(
         }
     }
 
-    const normal = config.champion[bossIndex]
-    const heroic = config.hero[bossIndex]
-    const mythic = config.mythic[bossIndex]
+    const normal = config.champion[bossOrder]
+    const heroic = config.hero[bossOrder]
+    const mythic = config.mythic[bossOrder]
     if (normal === undefined || heroic === undefined || mythic === undefined) {
         return null
     }
