@@ -4,6 +4,8 @@ import { median } from "es-toolkit"
 import {
     AlertTriangle,
     Download,
+    Grid3x3,
+    List,
     PlusIcon,
     Search,
     Swords,
@@ -16,6 +18,7 @@ import { type JSX, useMemo, useState } from "react"
 import CharacterDialog from "@/components/character-dialog"
 import PlayerDeleteDialog from "@/components/player-delete-dialog"
 import PlayerDialog from "@/components/player-dialog"
+import RosterTableView from "@/components/roster-table-view"
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
 import { GlassCard } from "@/components/ui/glass-card"
@@ -46,6 +49,7 @@ export default function RosterPage(): JSX.Element {
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
     const [searchQuery, setSearchQuery] = useState("")
     const [dragOverPlayerId, setDragOverPlayerId] = useState<string | null>(null)
+    const [viewMode, setViewMode] = useState<"grid" | "table">("grid")
 
     const playersQuery = usePlayersSummaryCompact()
     const assignMutation = useAssignCharacterToPlayer()
@@ -289,44 +293,76 @@ export default function RosterPage(): JSX.Element {
 
             {/* Stats Row - only show when data is loaded */}
             {!playersQuery.isLoading && (
-                <div className="flex flex-wrap gap-3">
-                    <StatBadge
-                        variant="primary"
-                        icon={<Users className="w-4 h-4 text-primary" />}
-                        label="Players"
-                        value={s(players.length)}
-                    />
-                    <StatBadge
-                        variant="primary"
-                        icon={<Swords className="w-4 h-4 text-primary" />}
-                        label="Characters"
-                        value={s(totalCharacters)}
-                    />
-                    {itemLevelStats.mainMedian > 0 && (
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap gap-3">
                         <StatBadge
-                            variant="info"
-                            icon={<span className="text-blue-400 font-bold">◆</span>}
-                            label="Median iLvl (Mains)"
-                            value={Math.round(itemLevelStats.mainMedian)}
+                            variant="primary"
+                            icon={<Users className="w-4 h-4 text-primary" />}
+                            label="Players"
+                            value={s(players.length)}
                         />
-                    )}
-                    {itemLevelStats.median > 0 && (
                         <StatBadge
-                            icon={
-                                <span className="text-muted-foreground font-bold">◆</span>
-                            }
-                            label="Median iLvl (All)"
-                            value={Math.round(itemLevelStats.median)}
+                            variant="primary"
+                            icon={<Swords className="w-4 h-4 text-primary" />}
+                            label="Characters"
+                            value={s(totalCharacters)}
                         />
-                    )}
-                    {itemLevelStats.lowCount > 0 && (
-                        <StatBadge
-                            variant="warning"
-                            icon={<AlertTriangle className="w-4 h-4 text-orange-400" />}
-                            label="Low Gear"
-                            value={s(itemLevelStats.lowCount)}
-                        />
-                    )}
+                        {itemLevelStats.mainMedian > 0 && (
+                            <StatBadge
+                                variant="info"
+                                icon={<span className="text-blue-400 font-bold">◆</span>}
+                                label="Median iLvl (Mains)"
+                                value={Math.round(itemLevelStats.mainMedian)}
+                            />
+                        )}
+                        {itemLevelStats.median > 0 && (
+                            <StatBadge
+                                icon={
+                                    <span className="text-muted-foreground font-bold">
+                                        ◆
+                                    </span>
+                                }
+                                label="Median iLvl (All)"
+                                value={Math.round(itemLevelStats.median)}
+                            />
+                        )}
+                        {itemLevelStats.lowCount > 0 && (
+                            <StatBadge
+                                variant="warning"
+                                icon={
+                                    <AlertTriangle className="w-4 h-4 text-orange-400" />
+                                }
+                                label="Low Gear"
+                                value={s(itemLevelStats.lowCount)}
+                            />
+                        )}
+                    </div>
+
+                    {/* View Toggle */}
+                    <div className="flex gap-1 bg-muted/30 p-1 rounded-lg">
+                        <Button
+                            variant={viewMode === "grid" ? "default" : "ghost"}
+                            size="sm"
+                            onClick={() => {
+                                setViewMode("grid")
+                            }}
+                            className="gap-2"
+                        >
+                            <Grid3x3 className="w-4 h-4" />
+                            <span className="hidden sm:inline">Grid</span>
+                        </Button>
+                        <Button
+                            variant={viewMode === "table" ? "default" : "ghost"}
+                            size="sm"
+                            onClick={() => {
+                                setViewMode("table")
+                            }}
+                            className="gap-2"
+                        >
+                            <List className="w-4 h-4" />
+                            <span className="hidden sm:inline">Table</span>
+                        </Button>
+                    </div>
                 </div>
             )}
 
@@ -336,7 +372,7 @@ export default function RosterPage(): JSX.Element {
             )}
 
             {/* Cards Grid */}
-            {!playersQuery.isLoading && (
+            {!playersQuery.isLoading && viewMode === "grid" && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                     {filteredPlayers.map((player) => (
                         <GlassCard
@@ -409,6 +445,16 @@ export default function RosterPage(): JSX.Element {
                         </GlassCard>
                     ))}
                 </div>
+            )}
+
+            {/* Table View */}
+            {!playersQuery.isLoading && viewMode === "table" && (
+                <RosterTableView
+                    players={filteredPlayers}
+                    isLowItemLevel={isLowItemLevel}
+                    onDeletePlayer={handleDeleteClick}
+                    onNewCharClick={handleNewCharClick}
+                />
             )}
 
             {/* Empty State */}
