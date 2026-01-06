@@ -52,16 +52,8 @@ export function parseItemTrackName(
  * Compare two gear item to find if its the same item id and diff tracks (es: Spymaster 632M and 639M are the same item)
  */
 export function gearAreTheSame(a: GearItem, b: GearItem): boolean {
-    let aItemId = a.item.id
-    let bItemId = b.item.id
-
-    // workaround for one armed bandit best-in-slots: 232526, 232805
-    if (aItemId === 232805) {
-        aItemId = 232526
-    }
-    if (bItemId === 232805) {
-        bItemId = 232526
-    }
+    const aItemId = a.item.id
+    const bItemId = b.item.id
 
     if (aItemId !== bItemId || a.item.season !== b.item.season) {
         return false // Different item ID or season

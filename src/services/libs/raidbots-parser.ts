@@ -121,20 +121,6 @@ const parseUpgrades = async (
         )
     }
 
-    // One Armed Bandit workaround for Best-In-Slots item
-    const bestInSlotUpgrades = upgrades.find(
-        (up) => up.itemId === 232526 || up.itemId === 232805
-    )
-    if (bestInSlotUpgrades) {
-        logger.debug(
-            "RaidbotsParser",
-            `parseUpgrades: applying workaround for Best-in-Slots item id ${s(bestInSlotUpgrades.itemId)}`
-        )
-        const otherId = bestInSlotUpgrades.itemId === 232526 ? 232805 : 232526
-        const newUprade = { ...bestInSlotUpgrades, itemId: otherId }
-        upgrades.push(newUprade)
-    }
-
     const charItems = [...itemsInBag, ...itemsEquipped]
 
     const upgradesMap = upgrades
