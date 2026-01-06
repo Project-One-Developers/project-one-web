@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 import { currencyIcon } from "@/lib/wow-icon"
 import { s } from "@/shared/libs/string-utils"
 import type { DroptimizerCurrency } from "@/shared/models/simulation.models"
-import { useRefreshWowheadTooltips } from "./wowhead-tooltips"
+import { useRefreshWowheadTooltips, WOWHEAD_HOST } from "./wowhead-tooltips"
 
 type WowCurrencyIconProps = {
     currency: DroptimizerCurrency
@@ -18,7 +18,7 @@ export function WowCurrencyIcon({
     iconClassName,
     size = 32,
 }: WowCurrencyIconProps) {
-    const currencyHref = `https://www.wowhead.com/${currency.type}=${s(currency.id)}`
+    const currencyHref = `https://${WOWHEAD_HOST}/${currency.type}=${s(currency.id)}`
     const dataWowhead = `${currency.type}=${s(currency.id)}`
     const currencyInfo = currencyIcon.get(currency.id)
 

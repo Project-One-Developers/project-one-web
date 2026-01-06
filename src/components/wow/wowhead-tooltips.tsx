@@ -2,6 +2,7 @@
 
 import Script from "next/script"
 import { useEffect } from "react"
+import { clientEnv } from "@/env.client"
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
@@ -17,6 +18,13 @@ declare global {
         }
     }
 }
+
+/**
+ * Wowhead host for tooltips and links.
+ * Override with NEXT_PUBLIC_OVERRIDE_WOWHEAD_HOST for PTR/beta (e.g., "ptr.wowhead.com").
+ */
+export const WOWHEAD_HOST =
+    clientEnv.NEXT_PUBLIC_OVERRIDE_WOWHEAD_HOST ?? "www.wowhead.com"
 
 export function WowheadTooltips() {
     return (

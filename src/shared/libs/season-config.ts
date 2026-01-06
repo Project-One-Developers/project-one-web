@@ -2,6 +2,7 @@
  * Consolidated season configuration
  * Single source of truth for all season-specific data
  */
+import { clientEnv } from "@/env.client"
 
 // Season numbers as a const array for type derivation
 export const SEASON_NUMBERS = [1, 2, 3, 16] as const
@@ -194,18 +195,15 @@ const DEFAULT_SEASON: Season = 3
 
 /**
  * Get the effective current season, checking for dev override.
- * OVERRIDE_CURRENT_SEASON env var can be set for local development.
- * Note: In Next.js, process.env is inlined at build time for client code.
+ * NEXT_PUBLIC_OVERRIDE_CURRENT_SEASON env var can be set for local development.
  */
 function getEffectiveCurrentSeason(): Season {
-    const override = process.env.OVERRIDE_CURRENT_SEASON
-    if (override) {
-        const parsed = parseInt(override, 10)
-        // Type guard: check if parsed value is a valid Season
+    const override = clientEnv.NEXT_PUBLIC_OVERRIDE_CURRENT_SEASON
+    if (override !== undefined) {
         const validSeasons: readonly number[] = SEASON_NUMBERS
-        if (validSeasons.includes(parsed)) {
+        if (validSeasons.includes(override)) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Validated by includes check above
-            return parsed as Season
+            return override as Season
         }
     }
     return DEFAULT_SEASON

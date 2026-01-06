@@ -13,7 +13,7 @@ import { getIconUrl } from "@/shared/libs/items/item-url-utils"
 import { isHealerSpecs, isTankSpecs } from "@/shared/libs/spec-parser/spec-utils"
 import { s } from "@/shared/libs/string-utils"
 import type { GearItem } from "@/shared/models/item.models"
-import { useRefreshWowheadTooltips } from "./wowhead-tooltips"
+import { useRefreshWowheadTooltips, WOWHEAD_HOST } from "./wowhead-tooltips"
 
 type WowGearIconProps = {
     gearItem: GearItem
@@ -62,7 +62,7 @@ export function WowGearIcon({
     const hasSocket = gearhasSocket(bonusIds)
     const hasSpecials = hasSocket || gearTertiary(bonusIds)
 
-    const hrefString = `https://www.wowhead.com/item=${s(id)}&ilvl=${s(itemLevel)}${
+    const hrefString = `https://${WOWHEAD_HOST}/item=${s(id)}&ilvl=${s(itemLevel)}${
         bonusIds?.length ? `&bonus=${bonusIds.join(":")}` : ""
     }${
         enchantIds?.length ? `&ench=${enchantIds.join(":")}` : ""

@@ -7,9 +7,10 @@ import { cn } from "@/lib/utils"
 import { formatWowSlotKey } from "@/shared/libs/items/item-slot-utils"
 import { getIconUrl } from "@/shared/libs/items/item-url-utils"
 import { isHealerSpecs, isTankSpecs } from "@/shared/libs/spec-parser/spec-utils"
+import { s } from "@/shared/libs/string-utils"
 import type { Item } from "@/shared/models/item.models"
 import type { WowRaidDifficulty } from "@/shared/models/wow.models"
-import { useRefreshWowheadTooltips } from "./wowhead-tooltips"
+import { useRefreshWowheadTooltips, WOWHEAD_HOST } from "./wowhead-tooltips"
 
 type WowItemIconProps = {
     item: Item | number
@@ -63,12 +64,12 @@ export function WowItemIcon({
         if (typeof item === "number") {
             return (
                 <a
-                    href={`https://www.wowhead.com/item=${String(item)}`}
+                    href={`https://${WOWHEAD_HOST}/item=${s(item)}`}
                     rel="noreferrer"
                     target="_blank"
                     className="text-blue-400 hover:underline"
                 >
-                    Item #{String(item)}
+                    Item #{s(item)}
                 </a>
             )
         }
@@ -92,8 +93,8 @@ export function WowItemIcon({
     }
 
     const currentIlvl = getIlvl()
-    const hrefString = `https://www.wowhead.com/item=${String(itemData.id)}&ilvl=${String(currentIlvl)}`
-    const dataWowhead = `item=${String(itemData.id)}&ilvl=${String(currentIlvl)}`
+    const hrefString = `https://${WOWHEAD_HOST}/item=${s(itemData.id)}&ilvl=${s(currentIlvl)}`
+    const dataWowhead = `item=${s(itemData.id)}&ilvl=${s(currentIlvl)}`
 
     // Role badges
     const healerItem = showRoleIcons ? isHealerSpecs(itemData.specIds) : undefined
