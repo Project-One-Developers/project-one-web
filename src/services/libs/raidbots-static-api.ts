@@ -10,7 +10,7 @@ import { s } from "@/shared/libs/string-utils"
 import {
     raidbotsEncounterItemsSchema,
     raidbotsInstancesSchema,
-    raidbotsBonusesSchema,
+    raidbotsBonusEntrySchema,
     type RaidbotsItem,
     type RaidbotsInstance,
     type RaidbotsBonuses,
@@ -95,19 +95,40 @@ export const raidbotsStaticApi = {
         logger.info("RaidbotsStaticApi", `Fetching bonuses from ${url}`)
 
         const data = await fetchJson<unknown>(url)
-        const parsed = raidbotsBonusesSchema.safeParse(data)
 
-        if (!parsed.success) {
+        // Validate each bonus entry individually, discarding non-compliant entries
+        if (typeof data !== "object" || data === null) {
             logger.error(
                 "RaidbotsStaticApi",
-                `Failed to parse bonuses: ${s(parsed.error.message)}`
+                `Failed to parse bonuses: expected object, got ${typeof data}`
             )
-            throw new Error(`Invalid bonuses data: ${parsed.error.message}`)
+            throw new Error("Invalid bonuses data: expected object")
         }
 
-        const count = Object.keys(parsed.data).length
-        logger.info("RaidbotsStaticApi", `Fetched ${s(count)} bonus entries`)
-        return parsed.data
+        const validBonuses: RaidbotsBonuses = {}
+        let discardedCount = 0
+
+        for (const [bonusId, bonusEntry] of Object.entries(data)) {
+            const parsed = raidbotsBonusEntrySchema.safeParse(bonusEntry)
+
+            if (parsed.success) {
+                validBonuses[bonusId] = parsed.data
+            } else {
+                discardedCount++
+                logger.warn(
+                    "RaidbotsStaticApi",
+                    `Discarding invalid bonus ${bonusId}: ${s(parsed.error.message)}`
+                )
+            }
+        }
+
+        const validCount = Object.keys(validBonuses).length
+        logger.info(
+            "RaidbotsStaticApi",
+            `Fetched ${s(validCount)} bonus entries${discardedCount > 0 ? ` (${s(discardedCount)} discarded)` : ""}`
+        )
+
+        return validBonuses
     },
 
     /**

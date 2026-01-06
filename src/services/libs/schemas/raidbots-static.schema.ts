@@ -95,7 +95,7 @@ const raidbotsBonusUpgradeSchema = z.object({
     seasonId: z.number().optional(),
 })
 
-const raidbotsBonusEntrySchema = z.object({
+export const raidbotsBonusEntrySchema = z.object({
     id: z.number(),
     quality: z.number().optional(),
     tag: z.string().optional(),
