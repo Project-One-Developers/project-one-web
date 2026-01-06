@@ -16,7 +16,10 @@ import {
     INVENTORY_TYPE_MAP,
     expandSpecsToClasses,
 } from "@/shared/libs/items/item-mappings"
-import { SOURCE_TYPES_TO_MATCH, INSTANCE_IDS_TO_IGNORE } from "@/shared/libs/items/raid-config"
+import {
+    SOURCE_TYPES_TO_MATCH,
+    INSTANCE_IDS_TO_IGNORE,
+} from "@/shared/libs/items/raid-config"
 import { getItemLevelsForBoss, determineItemSeason } from "@/shared/libs/season-config"
 import { s } from "@/shared/libs/string-utils"
 import type { Item, ItemToCatalyst, ItemToTierset } from "@/shared/models/item.models"
@@ -131,7 +134,8 @@ export function buildEncounterMap(instances: RaidbotsInstance[]): EncounterMap {
  */
 export function filterInstances(instances: RaidbotsInstance[]): RaidbotsInstance[] {
     return instances.filter(
-        (inst) => SOURCE_TYPES_TO_MATCH.has(inst.type) && !INSTANCE_IDS_TO_IGNORE.has(inst.id)
+        (inst) =>
+            SOURCE_TYPES_TO_MATCH.has(inst.type) && !INSTANCE_IDS_TO_IGNORE.has(inst.id)
     )
 }
 
