@@ -2,7 +2,7 @@ import "server-only"
 import { bossRepo } from "@/db/repositories/bosses"
 import { lootRepo } from "@/db/repositories/loots"
 import { raidSessionRepo } from "@/db/repositories/raid-sessions"
-import { CURRENT_RAID_ID } from "@/shared/libs/season-config"
+import { CURRENT_RAID_IDS } from "@/shared/libs/season-config"
 import type { BossWithItems } from "@/shared/models/boss.models"
 import type { LootWithAssigned } from "@/shared/models/loot.models"
 import type {
@@ -58,11 +58,14 @@ export const lootRecapService = {
     },
 
     getRecapBySession: async (sessionId: string): Promise<LootRecapDetail> => {
-        const [session, loots, encounterList] = await Promise.all([
+        const [session, loots, ...encounterLists] = await Promise.all([
             raidSessionRepo.getById(sessionId),
             lootRepo.getByRaidSessionIdWithAssigned(sessionId),
-            bossRepo.getLootTable(CURRENT_RAID_ID),
+            ...CURRENT_RAID_IDS.map((raidId) => bossRepo.getLootTable(raidId)),
         ])
+
+        // Merge all boss lists from all raids into a single list
+        const encounterList = encounterLists.flat()
 
         // Filter to only assigned loots and narrow the type
         const assignedLoots = loots.filter(

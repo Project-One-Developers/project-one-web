@@ -9,7 +9,7 @@ import { getUnixTimestamp, parseDateFromQELive } from "@/shared/libs/date-utils"
 import { createGearItem } from "@/shared/libs/items/gear-item-factory"
 import { parseItemTrack } from "@/shared/libs/items/item-bonus-utils"
 import { slotToEquippedSlot } from "@/shared/libs/items/item-slot-utils"
-import { CURRENT_RAID_ID } from "@/shared/libs/season-config"
+import { CURRENT_RAID_IDS } from "@/shared/libs/season-config"
 import {
     getWowClassFromIdOrName,
     getWowSpecByClassNameAndSpecName,
@@ -183,7 +183,9 @@ const convertJsonToDroptimizer = async (
     data: QELiveJson,
     context?: SyncContext
 ): Promise<NewDroptimizer[]> => {
-    const raidId = CURRENT_RAID_ID
+    // QE Live doesn't specify which raid the sim is for, so we default to the first raid in the season
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- Config guarantees at least one raid ID
+    const raidId = CURRENT_RAID_IDS[0]!
 
     const className = wowClassNameSchema.parse(data.spec.split(" ")[1])
     const wowClass = getWowClassFromIdOrName(className)

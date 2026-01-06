@@ -145,7 +145,7 @@ import { blizzardApi } from "@/services/blizzard/blizzard-api"
 - Repositories: camelCase + `Repo` suffix (`characterRepo`, `itemRepo`)
 - Schemas: camelCase + `Schema` suffix (`characterSchema`)
 - Hooks: `use` prefix (`usePlayersSummary()`)
-- Constants: SCREAMING_SNAKE_CASE (`CURRENT_RAID_ID`)
+- Constants: SCREAMING_SNAKE_CASE (`CURRENT_RAID_IDS`)
 
 ## External Integrations
 

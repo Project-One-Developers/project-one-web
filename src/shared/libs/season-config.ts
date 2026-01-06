@@ -195,9 +195,7 @@ export const CURRENT_SEASON: Season = 3
 // ============== Derived Values (type-safe, no runtime checks needed) ==============
 
 export const currentSeason = SEASONS[CURRENT_SEASON] // Guaranteed by Season type
-// TODO: this will need fixes for handling multiple raids
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- Config guarantees at least one raid ID
-export const CURRENT_RAID_ID = currentSeason.raidIds[0]!
+export const CURRENT_RAID_IDS = currentSeason.raidIds
 export const CURRENT_CATALYST_CHARGE_ID = currentSeason.catalystChargeId
 export const CURRENT_MOUNT_ID = currentSeason.mountId
 

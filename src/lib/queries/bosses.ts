@@ -3,21 +3,21 @@
 import { skipToken, useQuery } from "@tanstack/react-query"
 import { getRosterProgression } from "@/actions/blizzard"
 import { getBosses, getRaidLootTable } from "@/actions/bosses"
-import { CURRENT_RAID_ID } from "@/shared/libs/season-config"
+import { CURRENT_RAID_IDS } from "@/shared/libs/season-config"
 import { queryKeys } from "./keys"
 
-export function useBosses(raidId: number = CURRENT_RAID_ID) {
+export function useBosses() {
     return useQuery({
-        queryKey: [queryKeys.bosses, raidId],
-        queryFn: () => getBosses(raidId),
+        queryKey: [queryKeys.bosses, "seasonal", CURRENT_RAID_IDS],
+        queryFn: () => getBosses(),
         staleTime: 3600000, // 1 hour - boss data is static per patch
     })
 }
 
-export function useRaidLootTable(raidId: number = CURRENT_RAID_ID) {
+export function useRaidLootTable() {
     return useQuery({
-        queryKey: [queryKeys.bosses, "lootTable", raidId],
-        queryFn: () => getRaidLootTable(raidId),
+        queryKey: [queryKeys.bosses, "lootTable", "seasonal", CURRENT_RAID_IDS],
+        queryFn: () => getRaidLootTable(),
         staleTime: 3600000, // 1 hour - loot table is static per patch
     })
 }
