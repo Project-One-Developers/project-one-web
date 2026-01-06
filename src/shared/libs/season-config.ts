@@ -140,7 +140,7 @@ export const SEASONS: Record<Season, SeasonConfig> = {
             },
         },
         craftedConfig: {
-            primaryBonusId: 12050, // Starlight Crafted
+            primaryBonusId: 12050, // Starlight Crafted 12066
             crestBonusIds: { heroic: 12052, mythic: 12053 },
             ilvl: { heroic: 710, mythic: 720 },
         },
@@ -179,7 +179,11 @@ export const SEASONS: Record<Season, SeasonConfig> = {
                 boeIlvl: { champion: 253, hero: 266, mythic: 279 },
             },
         },
-        craftedConfig: null, // TBD
+        craftedConfig: {
+            primaryBonusId: 12066, // Radiance Crafted
+            crestBonusIds: { heroic: 0, mythic: 0 }, // tbd
+            ilvl: { heroic: 276, mythic: 285 },
+        },
         specialItems: [],
     },
 }
