@@ -8,10 +8,7 @@ import { bonusItemTrackRepo } from "@/db/repositories/bonus-item-tracks"
 import { bossRepo } from "@/db/repositories/bosses"
 import { itemRepo } from "@/db/repositories/items"
 import { logger } from "@/lib/logger"
-import {
-    SOURCE_TYPES_TO_MATCH,
-    ENCOUNTER_IDS_TO_IGNORE,
-} from "@/shared/libs/items/raid-config"
+import { SOURCE_TYPES_TO_MATCH } from "@/shared/libs/items/raid-config"
 import { CURRENT_SEASON, getRaidIdsByCatalystId } from "@/shared/libs/season-config"
 import { toSlug } from "@/shared/libs/slug-utils"
 import { s } from "@/shared/libs/string-utils"
@@ -60,17 +57,13 @@ type SyncOptions = {
 // ============================================================================
 
 /**
- * Filter items that match our source types and aren't in the ignore list
+ * Filter items that have at least one source from a valid encounter
+ * Note: Blacklisted instances are already filtered out by filterInstances()
  */
 function filterItems(items: RaidbotsItem[], encounterMap: EncounterMap): RaidbotsItem[] {
     return items.filter((item) => {
         // Check if any source matches our criteria
         return item.sources.some((source) => {
-            // Skip encounters we want to ignore
-            if (ENCOUNTER_IDS_TO_IGNORE.has(source.encounterId)) {
-                return false
-            }
-
             // Check if we have context for this encounter
             const context = encounterMap.get(source.encounterId)
             if (!context) {
@@ -127,11 +120,6 @@ function buildBosses(instances: RaidbotsInstance[]): Boss[] {
         }
 
         for (const encounter of instance.encounters) {
-            // Skip ignored encounters
-            if (ENCOUNTER_IDS_TO_IGNORE.has(encounter.id)) {
-                continue
-            }
-
             bosses.push({
                 id: encounter.id,
                 name: encounter.name,

@@ -4,8 +4,8 @@
  * Season-specific data is in season-config.ts
  */
 
-// Encounter IDs to ignore during sync
-export const ENCOUNTER_IDS_TO_IGNORE = new Set([
+// Instance IDs to ignore during sync
+export const INSTANCE_IDS_TO_IGNORE = new Set([
     1301, // Blackrock depths
     1278, // TWW World Bosses
     1312, // Midnight World Bosses
