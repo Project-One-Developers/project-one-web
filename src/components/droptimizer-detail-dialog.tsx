@@ -17,7 +17,10 @@ export default function DroptimizerDetailDialog({
     droptimizer,
     characterName = "Unknown",
 }: DroptimizerDetailDialogProps): JSX.Element {
-    const { data: bosses = [] } = useRaidLootTable(droptimizer.raidInfo.id)
+    const { data: allBosses = [] } = useRaidLootTable()
+
+    // Filter bosses to only those from this droptimizer's raid
+    const bosses = allBosses.filter((boss) => boss.instanceId === droptimizer.raidInfo.id)
 
     // Build lookups
     const bossByItemId = new Map<number, BossWithItems>()
