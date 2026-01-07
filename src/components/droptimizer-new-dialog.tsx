@@ -21,6 +21,7 @@ import {
 } from "./ui/dialog"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
+import { NumberInput } from "./ui/number-input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Textarea } from "./ui/textarea"
 
@@ -154,24 +155,14 @@ export default function DroptimizerNewDialog(): JSX.Element {
                                     </div>
                                 </Button>
                             </div>
-                            <div className="relative w-24">
-                                <Input
-                                    type="number"
-                                    id="sync-hours-input"
-                                    min={1}
-                                    value={hoursValue}
-                                    onChange={(e) => {
-                                        setHoursValue(parseInt(e.target.value, 10))
-                                    }}
-                                    className="pr-10"
-                                />
-                                <label
-                                    htmlFor="sync-hours-input"
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
-                                >
-                                    hrs
-                                </label>
-                            </div>
+                            <NumberInput
+                                id="sync-hours-input"
+                                min={1}
+                                value={hoursValue}
+                                onChange={setHoursValue}
+                                suffix="hrs"
+                                className="w-28"
+                            />
                         </div>
                     </TabsContent>
                     <TabsContent value="manual" className="p-4">
@@ -257,24 +248,14 @@ export default function DroptimizerNewDialog(): JSX.Element {
                                     </div>
                                 </Button>
                             </div>
-                            <div className="relative w-24">
-                                <Input
-                                    type="number"
-                                    id="cleanup-hours-input"
-                                    min={1}
-                                    value={hoursValue}
-                                    onChange={(e) => {
-                                        setHoursValue(parseInt(e.target.value, 10))
-                                    }}
-                                    className="pr-10"
-                                />
-                                <label
-                                    htmlFor="cleanup-hours-input"
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
-                                >
-                                    hrs
-                                </label>
-                            </div>
+                            <NumberInput
+                                id="cleanup-hours-input"
+                                min={1}
+                                value={hoursValue}
+                                onChange={setHoursValue}
+                                suffix="hrs"
+                                className="w-28"
+                            />
                         </div>
                     </TabsContent>
                 </Tabs>

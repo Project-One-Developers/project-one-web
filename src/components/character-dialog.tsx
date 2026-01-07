@@ -30,6 +30,7 @@ import {
 } from "./ui/dialog"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
+import { NumberInput } from "./ui/number-input"
 import {
     Select,
     SelectContent,
@@ -444,20 +445,13 @@ export default function CharacterDialog({
                     {mode === "edit" && (
                         <div className="space-y-2">
                             <Label htmlFor="priority">Priority</Label>
-                            <Input
+                            <NumberInput
                                 id="priority"
-                                type="number"
                                 min={1}
                                 max={100}
                                 value={formData.priority}
-                                onChange={(e) => {
-                                    handleInputChange(
-                                        "priority",
-                                        Math.max(
-                                            1,
-                                            Math.min(100, parseInt(e.target.value) || 1)
-                                        )
-                                    )
+                                onChange={(val) => {
+                                    handleInputChange("priority", val)
                                 }}
                             />
                             <p className="text-sm text-muted-foreground">

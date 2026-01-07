@@ -7,6 +7,7 @@ import { Button } from "./ui/button"
 import { GlassCard } from "./ui/glass-card"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
+import { NumberInput } from "./ui/number-input"
 
 type SplitRunFormProps = {
     onCalculate: (params: SplitRunParams) => void
@@ -17,8 +18,8 @@ export default function SplitRunForm({
     onCalculate,
     isCalculating,
 }: SplitRunFormProps): JSX.Element {
-    const [numRuns, setNumRuns] = useState("2")
-    const [targetSize, setTargetSize] = useState("20")
+    const [numRuns, setNumRuns] = useState(2)
+    const [targetSize, setTargetSize] = useState(20)
     const [minItemLevel, setMinItemLevel] = useState("")
     const [errors, setErrors] = useState<{
         numRuns?: string
@@ -33,13 +34,11 @@ export default function SplitRunForm({
             minItemLevel?: string
         } = {}
 
-        const numRunsValue = parseInt(numRuns, 10)
-        if (isNaN(numRunsValue) || numRunsValue < 1 || numRunsValue > 10) {
+        if (numRuns < 1 || numRuns > 10) {
             newErrors.numRuns = "Must be between 1 and 10"
         }
 
-        const targetSizeValue = parseInt(targetSize, 10)
-        if (isNaN(targetSizeValue) || targetSizeValue < 10 || targetSizeValue > 30) {
+        if (targetSize < 10 || targetSize > 30) {
             newErrors.targetSize = "Must be between 10 and 30"
         }
 
@@ -62,21 +61,21 @@ export default function SplitRunForm({
         }
 
         onCalculate({
-            numRuns: parseInt(numRuns, 10),
-            targetSize: parseInt(targetSize, 10),
+            numRuns,
+            targetSize,
             minItemLevel: minItemLevel ? parseInt(minItemLevel, 10) : undefined,
         })
     }
 
-    const handleNumRunsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setNumRuns(e.target.value)
+    const handleNumRunsChange = (value: number) => {
+        setNumRuns(value)
         if (errors.numRuns) {
             setErrors({ ...errors, numRuns: undefined })
         }
     }
 
-    const handleTargetSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setTargetSize(e.target.value)
+    const handleTargetSizeChange = (value: number) => {
+        setTargetSize(value)
         if (errors.targetSize) {
             setErrors({ ...errors, targetSize: undefined })
         }
@@ -98,11 +97,10 @@ export default function SplitRunForm({
                         <Label htmlFor="numRuns" className="text-sm font-medium">
                             Number of Runs
                         </Label>
-                        <Input
+                        <NumberInput
                             id="numRuns"
-                            type="number"
-                            min="1"
-                            max="10"
+                            min={1}
+                            max={10}
                             value={numRuns}
                             onChange={handleNumRunsChange}
                             className={errors.numRuns ? "border-red-500" : ""}
@@ -118,11 +116,10 @@ export default function SplitRunForm({
                         <Label htmlFor="targetSize" className="text-sm font-medium">
                             Target Players per Run
                         </Label>
-                        <Input
+                        <NumberInput
                             id="targetSize"
-                            type="number"
-                            min="10"
-                            max="30"
+                            min={10}
+                            max={30}
                             value={targetSize}
                             onChange={handleTargetSizeChange}
                             className={errors.targetSize ? "border-red-500" : ""}

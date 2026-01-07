@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { GlassCard } from "@/components/ui/glass-card"
 import { HighlightBadge } from "@/components/ui/highlight-badge"
+import { NumberInput } from "@/components/ui/number-input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { SectionHeader } from "@/components/ui/section-header"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
@@ -437,18 +438,17 @@ export const FilterBar = ({
                                                     Minimum upgrade
                                                 </label>
                                                 {filter.onlyUpgrades && (
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        step="500"
+                                                    <NumberInput
+                                                        min={0}
+                                                        step={500}
                                                         value={filter.minUpgrade}
-                                                        onChange={(e) => {
+                                                        onChange={(val) => {
                                                             updateFilter(
                                                                 "minUpgrade",
-                                                                Number(e.target.value)
+                                                                val
                                                             )
                                                         }}
-                                                        className="w-20 px-2 py-1 text-sm border border-border/50 rounded-lg bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                                        className="w-24"
                                                     />
                                                 )}
                                             </div>
