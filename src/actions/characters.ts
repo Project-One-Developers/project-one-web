@@ -10,6 +10,7 @@ import type {
     CharacterWithPlayer,
     EditCharacterData,
     EditPlayer,
+    NewCharacter,
     NewCharacterWithoutClass,
     NewPlayer,
     Player,
@@ -23,6 +24,13 @@ export async function addCharacterWithSync(
 ): Promise<CharacterWithPlayer | null> {
     await requireOfficer()
     return characterService.addWithSync(character)
+}
+
+export async function addCharacterWithManualClass(
+    character: NewCharacter
+): Promise<CharacterWithPlayer | null> {
+    await requireOfficer()
+    return characterService.addWithManualClass(character)
 }
 
 export async function getCharacterWithGameInfo(

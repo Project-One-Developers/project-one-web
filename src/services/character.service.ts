@@ -108,6 +108,38 @@ export const characterService = {
         return characterRepo.getWithPlayerById(id)
     },
 
+    /**
+     * Add a character with manually provided class (bypasses Blizzard API validation).
+     * Used as fallback when Blizzard API is unavailable.
+     */
+    addWithManualClass: async (
+        character: NewCharacter
+    ): Promise<CharacterWithPlayer | null> => {
+        logger.info(
+            "CharacterService",
+            `Adding character with manual class: ${character.name}-${character.realm} (${character.class})`
+        )
+
+        const id = await characterRepo.add(character)
+
+        // Try to sync Blizzard data (non-blocking, best effort)
+        try {
+            await blizzardService.syncCharacter(id, character.name, character.realm)
+        } catch (err: unknown) {
+            logger.warn(
+                "CharacterService",
+                `Could not sync Blizzard data for ${character.name}: ${s(err)}`
+            )
+        }
+
+        logger.info(
+            "CharacterService",
+            `Character ${character.name} (${character.class}) added with manual class`
+        )
+
+        return characterRepo.getWithPlayerById(id)
+    },
+
     edit: async (
         id: string,
         data: EditCharacterData

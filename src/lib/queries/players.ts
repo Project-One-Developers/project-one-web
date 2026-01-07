@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
+    addCharacterWithManualClass,
     addCharacterWithSync,
     addPlayer,
     deleteCharacter,
@@ -17,6 +18,7 @@ import { getPlayersWithSummaryCompact } from "@/actions/summary"
 import type {
     EditCharacterData,
     EditPlayer,
+    NewCharacter,
     NewCharacterWithoutClass,
     NewPlayer,
 } from "@/shared/models/character.models"
@@ -118,6 +120,24 @@ export function useAddCharacterWithSync() {
     return useMutation({
         mutationFn: (character: NewCharacterWithoutClass) =>
             addCharacterWithSync(character),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithCharacters],
+            })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithoutCharacters],
+            })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
+        },
+    })
+}
+
+export function useAddCharacterWithManualClass() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: (character: NewCharacter) => addCharacterWithManualClass(character),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
             void queryClient.invalidateQueries({

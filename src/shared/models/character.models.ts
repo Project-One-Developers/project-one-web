@@ -56,13 +56,18 @@ export const newCharacterWithoutClassSchema = newCharacterSchema.omit({
 })
 export type NewCharacterWithoutClass = z.infer<typeof newCharacterWithoutClassSchema>
 
-export const editCharacterDataSchema = characterSchema.pick({
-    name: true,
-    realm: true,
-    role: true,
-    main: true,
-    priority: true,
-})
+export const editCharacterDataSchema = characterSchema
+    .pick({
+        name: true,
+        realm: true,
+        class: true,
+        role: true,
+        main: true,
+        priority: true,
+    })
+    .extend({
+        class: characterSchema.shape.class.optional(), // Class is optional for edits
+    })
 export type EditCharacterData = z.infer<typeof editCharacterDataSchema>
 
 export const characterGameInfoSchema = z.object({
