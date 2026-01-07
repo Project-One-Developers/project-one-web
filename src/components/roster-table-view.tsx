@@ -13,6 +13,14 @@ import type { PlayerWithSummaryCompact } from "@/shared/types"
 import { ROLES } from "@/shared/wow.consts"
 import { Button } from "./ui/button"
 import { GlassCard } from "./ui/glass-card"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "./ui/select"
+import { Slider } from "./ui/slider"
 
 type RosterTableViewProps = {
     players: PlayerWithSummaryCompact[]
@@ -115,7 +123,15 @@ export default function RosterTableView({
                     {/* Characters Table */}
                     {player.charsSummary.length > 0 ? (
                         <div className="overflow-x-auto">
-                            <table className="w-full">
+                            <table className="w-full table-fixed">
+                                <colgroup>
+                                    <col className="w-[25%]" /> {/* Character */}
+                                    <col className="w-[20%]" /> {/* Class */}
+                                    <col className="w-[15%]" /> {/* Role */}
+                                    <col className="w-[10%]" /> {/* iLvl */}
+                                    <col className="w-[15%]" /> {/* Priority */}
+                                    <col className="w-[15%]" /> {/* Actions */}
+                                </colgroup>
                                 <thead>
                                     <tr className="border-b border-border/40 bg-muted/20">
                                         <th className="text-left px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -189,24 +205,27 @@ export default function RosterTableView({
                                                 {/* Role (Editable) */}
                                                 <td className="px-6 py-4">
                                                     {isEditing ? (
-                                                        <select
+                                                        <Select
                                                             value={editRole}
-                                                            onChange={(e) => {
-                                                                setEditRole(
-                                                                    e.target.value
-                                                                )
-                                                            }}
-                                                            className="px-2 py-1 bg-background border border-border rounded text-sm"
+                                                            onValueChange={setEditRole}
                                                         >
-                                                            {ROLES.map((role) => (
-                                                                <option
-                                                                    key={role}
-                                                                    value={role}
-                                                                >
-                                                                    {role}
-                                                                </option>
-                                                            ))}
-                                                        </select>
+                                                            <SelectTrigger
+                                                                size="sm"
+                                                                className="w-24"
+                                                            >
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {ROLES.map((role) => (
+                                                                    <SelectItem
+                                                                        key={role}
+                                                                        value={role}
+                                                                    >
+                                                                        {role}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
                                                     ) : (
                                                         <span
                                                             className={cn(
@@ -239,24 +258,22 @@ export default function RosterTableView({
                                                 {/* Priority (Editable) */}
                                                 <td className="px-6 py-4">
                                                     {isEditing ? (
-                                                        <div className="flex items-center gap-2">
-                                                            <input
-                                                                type="range"
-                                                                min="1"
-                                                                max="3"
-                                                                value={editPriority}
-                                                                onChange={(e) => {
+                                                        <div className="flex items-center gap-3">
+                                                            <Slider
+                                                                min={1}
+                                                                max={3}
+                                                                step={1}
+                                                                value={[editPriority]}
+                                                                onValueChange={(
+                                                                    values
+                                                                ) => {
                                                                     setEditPriority(
-                                                                        parseInt(
-                                                                            e.target
-                                                                                .value,
-                                                                            10
-                                                                        )
+                                                                        values[0] ?? 2
                                                                     )
                                                                 }}
-                                                                className="w-24"
+                                                                className="w-20"
                                                             />
-                                                            <span className="text-sm font-medium w-8">
+                                                            <span className="text-sm font-medium w-4 text-center">
                                                                 {s(editPriority)}
                                                             </span>
                                                         </div>
@@ -311,7 +328,7 @@ export default function RosterTableView({
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="icon"
-                                                                    className="h-8 w-8"
+                                                                    className="h-8 w-8 hover:bg-destructive/20 hover:text-destructive"
                                                                     onClick={handleCancel}
                                                                 >
                                                                     <X className="h-4 w-4" />
