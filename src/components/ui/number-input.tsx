@@ -2,29 +2,44 @@ import { ChevronDown, ChevronUp } from "lucide-react"
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
-export type NumberInputProps = Omit<
+type NumberInputBaseProps = Omit<
     React.ComponentProps<"input">,
     "type" | "onChange" | "value"
 > & {
-    value: number
-    onChange: (value: number) => void
     min?: number
     max?: number
     step?: number
     suffix?: string
 }
 
-function NumberInput({
-    className,
-    value,
-    onChange,
-    min,
-    max,
-    step = 1,
-    suffix,
-    disabled,
-    ...props
-}: NumberInputProps) {
+type RequiredNumberInputProps = NumberInputBaseProps & {
+    allowEmpty?: false
+    value: number
+    onChange: (value: number) => void
+}
+
+type OptionalNumberInputProps = NumberInputBaseProps & {
+    allowEmpty: true
+    value: number | undefined
+    onChange: (value: number | undefined) => void
+}
+
+export type NumberInputProps = RequiredNumberInputProps | OptionalNumberInputProps
+
+function NumberInput(props: NumberInputProps) {
+    const {
+        className,
+        value,
+        onChange,
+        min,
+        max,
+        step = 1,
+        suffix,
+        allowEmpty,
+        disabled,
+        ...rest
+    } = props
+
     const clamp = (val: number) => {
         let clamped = val
         if (min !== undefined) {
@@ -40,20 +55,41 @@ function NumberInput({
         if (disabled) {
             return
         }
-        onChange(clamp(value + step))
+        const base = value ?? min ?? 0
+        const clamped = clamp(base + step)
+        if (allowEmpty) {
+            ;(onChange as (v: number | undefined) => void)(clamped)
+        } else {
+            ;(onChange as (v: number) => void)(clamped)
+        }
     }
 
     const decrement = () => {
         if (disabled) {
             return
         }
-        onChange(clamp(value - step))
+        const base = value ?? min ?? 0
+        const clamped = clamp(base - step)
+        if (allowEmpty) {
+            ;(onChange as (v: number | undefined) => void)(clamped)
+        } else {
+            ;(onChange as (v: number) => void)(clamped)
+        }
     }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.value === "" && allowEmpty) {
+            ;(onChange as (v: number | undefined) => void)(undefined)
+            return
+        }
         const parsed = parseFloat(e.target.value)
         if (!isNaN(parsed)) {
-            onChange(clamp(parsed))
+            const clamped = clamp(parsed)
+            if (allowEmpty) {
+                ;(onChange as (v: number | undefined) => void)(clamped)
+            } else {
+                ;(onChange as (v: number) => void)(clamped)
+            }
         }
     }
 
@@ -73,7 +109,7 @@ function NumberInput({
                 type="number"
                 inputMode="numeric"
                 data-slot="number-input"
-                value={value}
+                value={value ?? ""}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 min={min}
@@ -88,7 +124,7 @@ function NumberInput({
                     suffix ? "pr-16" : "pr-8",
                     className
                 )}
-                {...props}
+                {...rest}
             />
             {suffix && (
                 <span className="absolute right-7 text-sm text-muted-foreground">
@@ -100,7 +136,10 @@ function NumberInput({
                     type="button"
                     tabIndex={-1}
                     onClick={increment}
-                    disabled={disabled || (max !== undefined && value >= max)}
+                    disabled={
+                        disabled ||
+                        (max !== undefined && value !== undefined && value >= max)
+                    }
                     className="flex h-1/2 w-6 items-center justify-center rounded-tr-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
                     aria-label="Increment"
                 >
@@ -110,7 +149,10 @@ function NumberInput({
                     type="button"
                     tabIndex={-1}
                     onClick={decrement}
-                    disabled={disabled || (min !== undefined && value <= min)}
+                    disabled={
+                        disabled ||
+                        (min !== undefined && value !== undefined && value <= min)
+                    }
                     className="flex h-1/2 w-6 items-center justify-center rounded-br-md border-t border-input text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
                     aria-label="Decrement"
                 >
