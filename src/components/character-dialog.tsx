@@ -4,6 +4,7 @@ import type { CheckedState } from "@radix-ui/react-checkbox"
 import { AlertCircle, Loader2 } from "lucide-react"
 import React, { useState, useMemo, type JSX } from "react"
 import { toast } from "sonner"
+import { ERROR_CODES, isErrorCode } from "@/lib/errors"
 import {
     useAddCharacterWithManualClass,
     useAddCharacterWithSync,
@@ -246,13 +247,21 @@ export default function CharacterDialog({
                         `The character ${formData.name} has been successfully added.`
                     )
                 },
-                onError: () => {
-                    // TODO: Check if error is specifically a Blizzard API failure vs other errors
-                    // (e.g. network error, auth error, etc.) and only show fallback for API failures
-                    setShowManualClassFallback(true)
-                    toast.error(
-                        "Could not fetch character data from Blizzard. Please select the class manually."
-                    )
+                onError: (error) => {
+                    // Show manual class fallback only for Blizzard API errors or character not found
+                    const isBlizzardError =
+                        isErrorCode(error.serialized, ERROR_CODES.BLIZZARD_API_ERROR) ||
+                        isErrorCode(error.serialized, ERROR_CODES.NOT_FOUND)
+
+                    if (isBlizzardError) {
+                        setShowManualClassFallback(true)
+                        toast.error(
+                            "Could not fetch character data from Blizzard. Please select the class manually."
+                        )
+                    } else {
+                        // For other errors (auth, network, etc.), show the actual error message
+                        toast.error(error.message)
+                    }
                 },
             })
         }

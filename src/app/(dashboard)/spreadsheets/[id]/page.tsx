@@ -4,6 +4,7 @@ import { getSpreadsheetLinkById } from "@/actions/spreadsheet-links"
 import { Button } from "@/components/ui/button"
 import { GlassCard } from "@/components/ui/glass-card"
 import { iconButtonVariants } from "@/components/ui/icon-button"
+import { unwrap } from "@/lib/errors"
 
 type SpreadsheetPageProps = {
     params: Promise<{ id: string }>
@@ -34,7 +35,7 @@ function toEmbedUrl(url: string): string | null {
 
 export default async function SpreadsheetPage({ params }: SpreadsheetPageProps) {
     const { id } = await params
-    const spreadsheet = await getSpreadsheetLinkById(id)
+    const spreadsheet = await unwrap(getSpreadsheetLinkById(id))
 
     if (!spreadsheet) {
         notFound()

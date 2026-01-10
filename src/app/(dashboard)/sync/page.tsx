@@ -21,6 +21,7 @@ import { syncDroptimizersFromDiscord } from "@/actions/droptimizer"
 import { syncItemsFromRaidbots } from "@/actions/items"
 import { Button } from "@/components/ui/button"
 import { GlassCard } from "@/components/ui/glass-card"
+import { unwrap } from "@/lib/errors"
 import { useCronLogs } from "@/lib/queries/cron-logs"
 import { queryKeys } from "@/lib/queries/keys"
 import { s } from "@/shared/libs/string-utils"
@@ -120,7 +121,7 @@ export default function SyncPage(): JSX.Element {
     const handleSyncBlizzard = async () => {
         setIsSyncingBlizzard(true)
         try {
-            const result = await syncAllCharactersBlizzard()
+            const result = await unwrap(syncAllCharactersBlizzard())
             toast.success(
                 `Blizzard sync completed: ${s(result.synced)} characters synced`
             )
@@ -145,7 +146,7 @@ export default function SyncPage(): JSX.Element {
     const handleSyncDiscord = async () => {
         setIsSyncingDiscord(true)
         try {
-            const result = await syncDroptimizersFromDiscord({ days: 7 })
+            const result = await unwrap(syncDroptimizersFromDiscord({ days: 7 }))
             toast.success(
                 `Discord sync completed: ${s(result.imported)} imported, ${s(result.skipped)} skipped`
             )
@@ -163,7 +164,7 @@ export default function SyncPage(): JSX.Element {
     const handleSyncItems = async () => {
         setIsSyncingItems(true)
         try {
-            const result = await syncItemsFromRaidbots({ skipWowhead: false })
+            const result = await unwrap(syncItemsFromRaidbots({ skipWowhead: false }))
             const totalCount =
                 result.bosses.count +
                 result.items.count +
@@ -190,7 +191,7 @@ export default function SyncPage(): JSX.Element {
     const handleImportGuild = async () => {
         setIsImportingGuild(true)
         try {
-            const result = await importGuildMembers()
+            const result = await unwrap(importGuildMembers())
             toast.success(
                 `Guild import completed: ${s(result.imported)} imported, ${s(result.skipped)} skipped`
             )

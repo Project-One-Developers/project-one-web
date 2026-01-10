@@ -2,6 +2,7 @@ import "server-only"
 import { blizzardRepo } from "@/db/repositories/blizzard"
 import { characterRepo } from "@/db/repositories/characters"
 import { droptimizerRepo } from "@/db/repositories/droptimizer"
+import { BlizzardApiError, NotFoundError } from "@/lib/errors"
 import { logger } from "@/lib/logger"
 import { blizzardService } from "@/services/blizzard.service"
 import { fetchCharacterMedia, fetchCharacterProfile } from "@/services/libs/blizzard-api"
@@ -65,14 +66,15 @@ export const characterService = {
         // Fetch character profile from Blizzard to get the class
         const profile = await fetchCharacterProfile(character.name, character.realm)
         if (!profile) {
-            throw new Error(
-                `Character "${character.name}" not found on "${character.realm}". Please check the name and realm are correct.`
+            throw new NotFoundError(
+                "Character",
+                `${character.name}-${character.realm}. Please check the name and realm are correct.`
             )
         }
 
         const wowClass = mapBlizzardClassId(profile.character_class.id)
         if (!wowClass) {
-            throw new Error(
+            throw new BlizzardApiError(
                 `Unknown class ID ${s(profile.character_class.id)} for ${character.name}`
             )
         }

@@ -1,5 +1,6 @@
 import "server-only"
 import { auth } from "@/auth"
+import { AuthError, ForbiddenError } from "@/lib/errors"
 
 /**
  * Throws an error if the current user doesn't have officer role.
@@ -9,11 +10,11 @@ export async function requireOfficer(): Promise<void> {
     const session = await auth()
 
     if (!session?.user.role) {
-        throw new Error("Unauthorized: Not authenticated")
+        throw new AuthError("You must be logged in to perform this action")
     }
 
     if (session.user.role !== "officer") {
-        throw new Error("Unauthorized: Officer access required")
+        throw new ForbiddenError("This action requires officer privileges")
     }
 }
 

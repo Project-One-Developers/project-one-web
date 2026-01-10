@@ -5,6 +5,7 @@ import {
 } from "@/actions/droptimizer"
 import { cronLogRepo } from "@/db/repositories/cron-log.repo"
 import { env } from "@/env"
+import { unwrap } from "@/lib/errors"
 import { logger } from "@/lib/logger"
 import { s } from "@/shared/libs/string-utils"
 
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
 
         // Discord droptimizer sync
         try {
-            const discordResult = await syncDroptimizersFromDiscord({ days: 2 })
+            const discordResult = await unwrap(syncDroptimizersFromDiscord({ days: 2 }))
             results.discord.success = true
             results.discord.imported = discordResult.imported
             results.discord.skipped = discordResult.skipped
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
 
         // Cleanup old simulations
         try {
-            await deleteSimulationsOlderThan({ days: 7 })
+            await unwrap(deleteSimulationsOlderThan({ days: 7 }))
             results.cleanup.success = true
         } catch (error) {
             results.cleanup.error =

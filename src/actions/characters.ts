@@ -1,12 +1,11 @@
 "use server"
 
 import { isOfficer, requireOfficer } from "@/lib/auth-helpers"
+import { safeAction } from "@/lib/errors/action-wrapper"
 import { stripOfficerFields } from "@/lib/officer-data"
 import { characterService } from "@/services/character.service"
 import { playerService } from "@/services/player.service"
 import type {
-    Character,
-    CharacterWithGameInfo,
     CharacterWithPlayer,
     EditCharacterData,
     EditPlayer,
@@ -14,28 +13,25 @@ import type {
     NewCharacterWithoutClass,
     NewPlayer,
     Player,
-    PlayerWithCharacters,
 } from "@/shared/models/character.models"
 
 // ============== CHARACTERS ==============
 
-export async function addCharacterWithSync(
-    character: NewCharacterWithoutClass
-): Promise<CharacterWithPlayer | null> {
-    await requireOfficer()
-    return characterService.addWithSync(character)
-}
+export const addCharacterWithSync = safeAction(
+    async (character: NewCharacterWithoutClass): Promise<CharacterWithPlayer | null> => {
+        await requireOfficer()
+        return characterService.addWithSync(character)
+    }
+)
 
-export async function addCharacterWithManualClass(
-    character: NewCharacter
-): Promise<CharacterWithPlayer | null> {
-    await requireOfficer()
-    return characterService.addWithManualClass(character)
-}
+export const addCharacterWithManualClass = safeAction(
+    async (character: NewCharacter): Promise<CharacterWithPlayer | null> => {
+        await requireOfficer()
+        return characterService.addWithManualClass(character)
+    }
+)
 
-export async function getCharacterWithGameInfo(
-    id: string
-): Promise<CharacterWithGameInfo | null> {
+export const getCharacterWithGameInfo = safeAction(async (id: string) => {
     const data = await characterService.getByIdWithGameInfo(id)
     if (!data) {
         return null
@@ -46,48 +42,49 @@ export async function getCharacterWithGameInfo(
     }
 
     return data
-}
+})
 
-export async function getCharacterList(): Promise<Character[]> {
+export const getCharacterList = safeAction(async () => {
     const characters = await characterService.getList()
 
     if (!(await isOfficer())) {
         return stripOfficerFields(characters)
     }
     return characters
-}
+})
 
-export async function deleteCharacter(id: string): Promise<void> {
+export const deleteCharacter = safeAction(async (id: string): Promise<void> => {
     await requireOfficer()
     return characterService.delete(id)
-}
+})
 
-export async function editCharacter(
-    id: string,
-    data: EditCharacterData
-): Promise<CharacterWithPlayer | null> {
-    await requireOfficer()
-    return characterService.edit(id, data)
-}
+export const editCharacter = safeAction(
+    async (id: string, data: EditCharacterData): Promise<CharacterWithPlayer | null> => {
+        await requireOfficer()
+        return characterService.edit(id, data)
+    }
+)
 
 // ============== PLAYERS ==============
 
-export async function addPlayer(player: NewPlayer): Promise<Player | null> {
+export const addPlayer = safeAction(async (player: NewPlayer): Promise<Player | null> => {
     await requireOfficer()
     return playerService.add(player)
-}
+})
 
-export async function deletePlayer(playerId: string): Promise<void> {
+export const deletePlayer = safeAction(async (playerId: string): Promise<void> => {
     await requireOfficer()
     return playerService.delete(playerId)
-}
+})
 
-export async function editPlayer(edited: EditPlayer): Promise<Player | null> {
-    await requireOfficer()
-    return playerService.edit(edited)
-}
+export const editPlayer = safeAction(
+    async (edited: EditPlayer): Promise<Player | null> => {
+        await requireOfficer()
+        return playerService.edit(edited)
+    }
+)
 
-export async function getPlayerWithCharactersList(): Promise<PlayerWithCharacters[]> {
+export const getPlayerWithCharactersList = safeAction(async () => {
     const players = await playerService.getWithCharactersList()
 
     if (!(await isOfficer())) {
@@ -97,23 +94,22 @@ export async function getPlayerWithCharactersList(): Promise<PlayerWithCharacter
         }))
     }
     return players
-}
+})
 
 // ============== CHARACTER MEDIA ==============
 
-export async function getCharacterRenderUrl(
-    name: string,
-    realm: string
-): Promise<string | null> {
+export const getCharacterRenderUrl = safeAction(async (name: string, realm: string) => {
     return characterService.getRenderUrl(name, realm)
-}
+})
 
 // ============== CHARACTER ASSIGNMENT ==============
 
-export async function assignCharacterToPlayer(
-    characterId: string,
-    targetPlayerId: string
-): Promise<CharacterWithPlayer | null> {
-    await requireOfficer()
-    return characterService.assignToPlayer(characterId, targetPlayerId)
-}
+export const assignCharacterToPlayer = safeAction(
+    async (
+        characterId: string,
+        targetPlayerId: string
+    ): Promise<CharacterWithPlayer | null> => {
+        await requireOfficer()
+        return characterService.assignToPlayer(characterId, targetPlayerId)
+    }
+)

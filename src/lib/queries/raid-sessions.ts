@@ -10,13 +10,14 @@ import {
     getRaidSessionWithSummaryList,
     importRosterInRaidSession,
 } from "@/actions/raid-sessions"
+import { unwrap } from "@/lib/errors"
 import type { EditRaidSession, NewRaidSession } from "@/shared/models/raid-session.models"
 import { queryKeys } from "./keys"
 
 export function useRaidSessions() {
     return useQuery({
         queryKey: [queryKeys.raidSessions],
-        queryFn: () => getRaidSessionWithSummaryList(),
+        queryFn: () => unwrap(getRaidSessionWithSummaryList()),
         refetchInterval: 10000,
         refetchOnWindowFocus: true,
     })
@@ -29,7 +30,7 @@ export function useRaidSession(id: string | undefined) {
             if (!id) {
                 throw new Error("No raid session id provided")
             }
-            return getRaidSessionWithRoster(id)
+            return unwrap(getRaidSessionWithRoster(id))
         },
         enabled: !!id,
         refetchInterval: 10000,
@@ -41,7 +42,7 @@ export function useAddRaidSession() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (session: NewRaidSession) => addRaidSession(session),
+        mutationFn: (session: NewRaidSession) => unwrap(addRaidSession(session)),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
         },
@@ -52,7 +53,7 @@ export function useEditRaidSession() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (session: EditRaidSession) => editRaidSession(session),
+        mutationFn: (session: EditRaidSession) => unwrap(editRaidSession(session)),
         onSuccess: (_, vars) => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
             void queryClient.invalidateQueries({
@@ -66,7 +67,7 @@ export function useDeleteRaidSession() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (id: string) => deleteRaidSession(id),
+        mutationFn: (id: string) => unwrap(deleteRaidSession(id)),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
         },
@@ -77,7 +78,7 @@ export function useCloneRaidSession() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (id: string) => cloneRaidSession(id),
+        mutationFn: (id: string) => unwrap(cloneRaidSession(id)),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
         },
@@ -89,7 +90,7 @@ export function useImportRosterInRaidSession() {
 
     return useMutation({
         mutationFn: ({ raidSessionId, csv }: { raidSessionId: string; csv: string }) =>
-            importRosterInRaidSession(raidSessionId, csv),
+            unwrap(importRosterInRaidSession(raidSessionId, csv)),
         onSuccess: (_, vars) => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.raidSessions] })
             void queryClient.invalidateQueries({

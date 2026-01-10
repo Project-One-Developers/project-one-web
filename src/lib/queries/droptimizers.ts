@@ -9,12 +9,13 @@ import {
     getDroptimizerLatestList,
     syncDroptimizersFromDiscord,
 } from "@/actions/droptimizer"
+import { unwrap } from "@/lib/errors"
 import { queryKeys } from "./keys"
 
 export function useLatestDroptimizers() {
     return useQuery({
         queryKey: [queryKeys.droptimizers, "latest"],
-        queryFn: () => getDroptimizerLatestList(),
+        queryFn: () => unwrap(getDroptimizerLatestList()),
         staleTime: 30000,
     })
 }
@@ -23,7 +24,7 @@ export function useDeleteDroptimizer() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (id: string) => deleteDroptimizer(id),
+        mutationFn: (id: string) => unwrap(deleteDroptimizer(id)),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
         },
@@ -34,7 +35,7 @@ export function useAddSimC() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (simcData: string) => addSimC(simcData),
+        mutationFn: (simcData: string) => unwrap(addSimC(simcData)),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
         },
@@ -45,7 +46,7 @@ export function useAddSimulationFromUrl() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (url: string) => addSimulationFromUrl(url),
+        mutationFn: (url: string) => unwrap(addSimulationFromUrl(url)),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
         },
@@ -58,7 +59,8 @@ export function useSyncDroptimizersFromDiscord() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (lookback: DurationInput) => syncDroptimizersFromDiscord(lookback),
+        mutationFn: (lookback: DurationInput) =>
+            unwrap(syncDroptimizersFromDiscord(lookback)),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
         },
@@ -69,7 +71,8 @@ export function useDeleteSimulationsOlderThan() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (lookback: DurationInput) => deleteSimulationsOlderThan(lookback),
+        mutationFn: (lookback: DurationInput) =>
+            unwrap(deleteSimulationsOlderThan(lookback)),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.droptimizers] })
         },

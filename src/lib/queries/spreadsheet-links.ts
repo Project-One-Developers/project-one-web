@@ -7,6 +7,7 @@ import {
     editSpreadsheetLink,
     getSpreadsheetLinks,
 } from "@/actions/spreadsheet-links"
+import { unwrap } from "@/lib/errors"
 import type {
     EditSpreadsheetLink,
     NewSpreadsheetLink,
@@ -16,7 +17,7 @@ import { queryKeys } from "./keys"
 export function useSpreadsheetLinks() {
     return useQuery({
         queryKey: [queryKeys.spreadsheetLinks],
-        queryFn: () => getSpreadsheetLinks(),
+        queryFn: () => unwrap(getSpreadsheetLinks()),
         staleTime: 60000,
     })
 }
@@ -25,7 +26,7 @@ export function useAddSpreadsheetLink() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (link: NewSpreadsheetLink) => addSpreadsheetLink(link),
+        mutationFn: (link: NewSpreadsheetLink) => unwrap(addSpreadsheetLink(link)),
         onSuccess: () => {
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.spreadsheetLinks],
@@ -38,7 +39,7 @@ export function useEditSpreadsheetLink() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (link: EditSpreadsheetLink) => editSpreadsheetLink(link),
+        mutationFn: (link: EditSpreadsheetLink) => unwrap(editSpreadsheetLink(link)),
         onSuccess: () => {
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.spreadsheetLinks],
@@ -51,7 +52,7 @@ export function useDeleteSpreadsheetLink() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (id: string) => deleteSpreadsheetLink(id),
+        mutationFn: (id: string) => unwrap(deleteSpreadsheetLink(id)),
         onSuccess: () => {
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.spreadsheetLinks],

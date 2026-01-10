@@ -1,15 +1,15 @@
 "use server"
 
 import { bisListRepo } from "@/db/repositories/bis-list"
+import { safeAction } from "@/lib/errors/action-wrapper"
 import type { BisList } from "@/shared/models/bis-list.models"
 
-export async function getBisList(): Promise<BisList[]> {
-    return await bisListRepo.getAll()
-}
+export const getBisList = safeAction(async (): Promise<BisList[]> => {
+    return bisListRepo.getAll()
+})
 
-export async function updateItemBisSpec(
-    itemId: number,
-    specIds: number[]
-): Promise<void> {
-    await bisListRepo.updateItemBisSpec(itemId, specIds)
-}
+export const updateItemBisSpec = safeAction(
+    async (itemId: number, specIds: number[]): Promise<void> => {
+        await bisListRepo.updateItemBisSpec(itemId, specIds)
+    }
+)

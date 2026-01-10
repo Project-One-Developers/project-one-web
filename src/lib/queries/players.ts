@@ -15,12 +15,15 @@ import {
     assignCharacterToPlayer,
 } from "@/actions/characters"
 import { getPlayersWithSummaryCompact } from "@/actions/summary"
+import { ActionError, unwrap, type SerializedAppError } from "@/lib/errors"
 import type {
+    CharacterWithPlayer,
     EditCharacterData,
     EditPlayer,
     NewCharacter,
     NewCharacterWithoutClass,
     NewPlayer,
+    Player,
 } from "@/shared/models/character.models"
 import type { PlayerWithSummaryCompact } from "@/shared/types"
 import { queryKeys } from "./keys"
@@ -30,7 +33,7 @@ import { queryKeys } from "./keys"
 export function usePlayersWithCharacters() {
     return useQuery({
         queryKey: [queryKeys.playersWithCharacters],
-        queryFn: () => getPlayerWithCharactersList(),
+        queryFn: () => unwrap(getPlayerWithCharactersList()),
         staleTime: 30000,
     })
 }
@@ -38,7 +41,7 @@ export function usePlayersWithCharacters() {
 export function useCharacters() {
     return useQuery({
         queryKey: [queryKeys.characters],
-        queryFn: () => getCharacterList(),
+        queryFn: () => unwrap(getCharacterList()),
         staleTime: 30000,
     })
 }
@@ -50,7 +53,7 @@ export function useCharacterWithGameInfo(id: string | undefined) {
             if (!id) {
                 throw new Error("No character id provided")
             }
-            return getCharacterWithGameInfo(id)
+            return unwrap(getCharacterWithGameInfo(id))
         },
         enabled: !!id,
     })
@@ -62,9 +65,18 @@ export function usePlayersSummaryCompact() {
     return useQuery({
         queryKey: [queryKeys.playersSummary, "compact"],
         staleTime: 30000,
-        queryFn: (): Promise<PlayerWithSummaryCompact[]> =>
-            getPlayersWithSummaryCompact(),
+        queryFn: () => unwrap(getPlayersWithSummaryCompact()),
     })
+}
+
+// ============== HELPER ==============
+
+/**
+ * Helper to throw an ActionError from a failed result.
+ * Satisfies @typescript-eslint/only-throw-error rule.
+ */
+function throwActionError(error: SerializedAppError): never {
+    throw new ActionError(error)
 }
 
 // ============== MUTATIONS ==============
@@ -72,8 +84,14 @@ export function usePlayersSummaryCompact() {
 export function useAddPlayer() {
     const queryClient = useQueryClient()
 
-    return useMutation({
-        mutationFn: (player: NewPlayer) => addPlayer(player),
+    return useMutation<Player | null, ActionError, NewPlayer>({
+        mutationFn: async (player) => {
+            const result = await addPlayer(player)
+            if (!result.success) {
+                throwActionError(result.error)
+            }
+            return result.data
+        },
         onSuccess: () => {
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithCharacters],
@@ -89,8 +107,14 @@ export function useAddPlayer() {
 export function useEditPlayer() {
     const queryClient = useQueryClient()
 
-    return useMutation({
-        mutationFn: (player: EditPlayer) => editPlayer(player),
+    return useMutation<Player | null, ActionError, EditPlayer>({
+        mutationFn: async (player) => {
+            const result = await editPlayer(player)
+            if (!result.success) {
+                throwActionError(result.error)
+            }
+            return result.data
+        },
         onSuccess: () => {
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithCharacters],
@@ -103,8 +127,14 @@ export function useEditPlayer() {
 export function useDeletePlayer() {
     const queryClient = useQueryClient()
 
-    return useMutation({
-        mutationFn: (id: string) => deletePlayer(id),
+    return useMutation<undefined, ActionError, string>({
+        mutationFn: async (id) => {
+            const result = await deletePlayer(id)
+            if (!result.success) {
+                throwActionError(result.error)
+            }
+            return undefined
+        },
         onSuccess: () => {
             void queryClient.invalidateQueries({
                 queryKey: [queryKeys.playersWithCharacters],
@@ -117,27 +147,42 @@ export function useDeletePlayer() {
 export function useAddCharacterWithSync() {
     const queryClient = useQueryClient()
 
-    return useMutation({
-        mutationFn: (character: NewCharacterWithoutClass) =>
-            addCharacterWithSync(character),
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
-            void queryClient.invalidateQueries({
-                queryKey: [queryKeys.playersWithCharacters],
-            })
-            void queryClient.invalidateQueries({
-                queryKey: [queryKeys.playersWithoutCharacters],
-            })
-            void queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] })
-        },
-    })
+    return useMutation<CharacterWithPlayer | null, ActionError, NewCharacterWithoutClass>(
+        {
+            mutationFn: async (character) => {
+                const result = await addCharacterWithSync(character)
+                if (!result.success) {
+                    throwActionError(result.error)
+                }
+                return result.data
+            },
+            onSuccess: () => {
+                void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.playersWithCharacters],
+                })
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.playersWithoutCharacters],
+                })
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.playersSummary],
+                })
+            },
+        }
+    )
 }
 
 export function useAddCharacterWithManualClass() {
     const queryClient = useQueryClient()
 
-    return useMutation({
-        mutationFn: (character: NewCharacter) => addCharacterWithManualClass(character),
+    return useMutation<CharacterWithPlayer | null, ActionError, NewCharacter>({
+        mutationFn: async (character) => {
+            const result = await addCharacterWithManualClass(character)
+            if (!result.success) {
+                throwActionError(result.error)
+            }
+            return result.data
+        },
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
             void queryClient.invalidateQueries({
@@ -154,9 +199,18 @@ export function useAddCharacterWithManualClass() {
 export function useEditCharacter() {
     const queryClient = useQueryClient()
 
-    return useMutation({
-        mutationFn: ({ id, data }: { id: string; data: EditCharacterData }) =>
-            editCharacter(id, data),
+    return useMutation<
+        CharacterWithPlayer | null,
+        ActionError,
+        { id: string; data: EditCharacterData }
+    >({
+        mutationFn: async ({ id, data }) => {
+            const result = await editCharacter(id, data)
+            if (!result.success) {
+                throwActionError(result.error)
+            }
+            return result.data
+        },
         onSuccess: (_data, variables) => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
             void queryClient.invalidateQueries({
@@ -173,8 +227,14 @@ export function useEditCharacter() {
 export function useDeleteCharacter() {
     const queryClient = useQueryClient()
 
-    return useMutation({
-        mutationFn: (id: string) => deleteCharacter(id),
+    return useMutation<undefined, ActionError, string>({
+        mutationFn: async (id) => {
+            const result = await deleteCharacter(id)
+            if (!result.success) {
+                throwActionError(result.error)
+            }
+            return undefined
+        },
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.characters] })
             void queryClient.invalidateQueries({
@@ -191,14 +251,19 @@ export function useDeleteCharacter() {
 export function useAssignCharacterToPlayer() {
     const queryClient = useQueryClient()
 
-    return useMutation({
-        mutationFn: ({
-            characterId,
-            targetPlayerId,
-        }: {
-            characterId: string
-            targetPlayerId: string
-        }) => assignCharacterToPlayer(characterId, targetPlayerId),
+    return useMutation<
+        CharacterWithPlayer | null,
+        ActionError,
+        { characterId: string; targetPlayerId: string },
+        { previousData: PlayerWithSummaryCompact[] | undefined }
+    >({
+        mutationFn: async ({ characterId, targetPlayerId }) => {
+            const result = await assignCharacterToPlayer(characterId, targetPlayerId)
+            if (!result.success) {
+                throwActionError(result.error)
+            }
+            return result.data
+        },
 
         onMutate: async ({ characterId, targetPlayerId }) => {
             // Cancel outgoing refetches

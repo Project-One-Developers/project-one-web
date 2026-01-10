@@ -1,5 +1,6 @@
 "use server"
 
+import { safeAction } from "@/lib/errors/action-wrapper"
 import { raidSessionService } from "@/services/raid-session.service"
 import type {
     EditRaidSession,
@@ -9,37 +10,40 @@ import type {
     RaidSessionWithSummary,
 } from "@/shared/models/raid-session.models"
 
-export async function getRaidSessionWithRoster(
-    id: string
-): Promise<RaidSessionWithRoster> {
-    return raidSessionService.getWithRoster(id)
-}
+export const getRaidSessionWithRoster = safeAction(
+    async (id: string): Promise<RaidSessionWithRoster> => {
+        return raidSessionService.getWithRoster(id)
+    }
+)
 
-export async function getRaidSessionWithSummaryList(): Promise<RaidSessionWithSummary[]> {
-    return raidSessionService.getWithSummaryList()
-}
+export const getRaidSessionWithSummaryList = safeAction(
+    async (): Promise<RaidSessionWithSummary[]> => {
+        return raidSessionService.getWithSummaryList()
+    }
+)
 
-export async function addRaidSession(raidSession: NewRaidSession): Promise<RaidSession> {
-    return raidSessionService.add(raidSession)
-}
+export const addRaidSession = safeAction(
+    async (raidSession: NewRaidSession): Promise<RaidSession> => {
+        return raidSessionService.add(raidSession)
+    }
+)
 
-export async function editRaidSession(
-    editedRaidSession: EditRaidSession
-): Promise<RaidSession> {
-    return raidSessionService.edit(editedRaidSession)
-}
+export const editRaidSession = safeAction(
+    async (editedRaidSession: EditRaidSession): Promise<RaidSession> => {
+        return raidSessionService.edit(editedRaidSession)
+    }
+)
 
-export async function deleteRaidSession(id: string): Promise<void> {
+export const deleteRaidSession = safeAction(async (id: string): Promise<void> => {
     return raidSessionService.delete(id)
-}
+})
 
-export async function cloneRaidSession(id: string): Promise<RaidSession> {
+export const cloneRaidSession = safeAction(async (id: string): Promise<RaidSession> => {
     return raidSessionService.clone(id)
-}
+})
 
-export async function importRosterInRaidSession(
-    raidSessionId: string,
-    csv: string
-): Promise<void> {
-    return raidSessionService.importRoster(raidSessionId, csv)
-}
+export const importRosterInRaidSession = safeAction(
+    async (raidSessionId: string, csv: string): Promise<void> => {
+        return raidSessionService.importRoster(raidSessionId, csv)
+    }
+)

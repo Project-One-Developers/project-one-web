@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { checkBlizzardUpdates } from "@/actions/blizzard"
 import { env } from "@/env"
+import { unwrap } from "@/lib/errors"
 import { logger } from "@/lib/logger"
 import { s } from "@/shared/libs/string-utils"
 
@@ -21,12 +22,11 @@ export async function GET(request: Request) {
     try {
         logger.info("Cron", `Blizzard sync started at ${new Date().toISOString()}`)
 
-        const result = await checkBlizzardUpdates()
+        const result = await unwrap(checkBlizzardUpdates())
 
         logger.info("Cron", `Blizzard sync completed: ${result.message}`)
 
         return NextResponse.json({
-            success: true,
             ...result,
             timestamp: new Date().toISOString(),
         })

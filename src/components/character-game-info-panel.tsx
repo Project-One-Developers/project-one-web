@@ -16,6 +16,7 @@ import { GlassCard } from "@/components/ui/glass-card"
 import { SectionHeader } from "@/components/ui/section-header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useIsWideScreen } from "@/hooks/use-wide-screen"
+import { unwrap } from "@/lib/errors"
 import { getClassBackgroundStyle } from "@/shared/libs/class-backgrounds"
 import { formatUnixTimestampForDisplay } from "@/shared/libs/date-utils"
 import { isRelevantCurrency } from "@/shared/libs/season-config"
@@ -157,7 +158,7 @@ function useCharacterRenderUrl(name: string, realm: string) {
         const fetchRenderUrl = async () => {
             try {
                 // Try Battle.net API first (via server action)
-                const bnetUrl = await getCharacterRenderUrl(name, realm)
+                const bnetUrl = await unwrap(getCharacterRenderUrl(name, realm))
                 if (bnetUrl) {
                     setRenderUrl(bnetUrl)
                     return

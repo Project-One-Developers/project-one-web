@@ -1,5 +1,6 @@
 "use server"
 
+import { safeAction } from "@/lib/errors/action-wrapper"
 import { spreadsheetLinkService } from "@/services/spreadsheet-link.service"
 import type {
     EditSpreadsheetLink,
@@ -7,28 +8,28 @@ import type {
     SpreadsheetLink,
 } from "@/shared/models/spreadsheet-link.models"
 
-export async function getSpreadsheetLinks(): Promise<SpreadsheetLink[]> {
+export const getSpreadsheetLinks = safeAction(async (): Promise<SpreadsheetLink[]> => {
     return spreadsheetLinkService.getList()
-}
+})
 
-export async function getSpreadsheetLinkById(
-    id: string
-): Promise<SpreadsheetLink | null> {
-    return spreadsheetLinkService.getById(id)
-}
+export const getSpreadsheetLinkById = safeAction(
+    async (id: string): Promise<SpreadsheetLink | null> => {
+        return spreadsheetLinkService.getById(id)
+    }
+)
 
-export async function addSpreadsheetLink(
-    link: NewSpreadsheetLink
-): Promise<SpreadsheetLink | null> {
-    return spreadsheetLinkService.add(link)
-}
+export const addSpreadsheetLink = safeAction(
+    async (link: NewSpreadsheetLink): Promise<SpreadsheetLink | null> => {
+        return spreadsheetLinkService.add(link)
+    }
+)
 
-export async function editSpreadsheetLink(
-    edited: EditSpreadsheetLink
-): Promise<SpreadsheetLink | null> {
-    return spreadsheetLinkService.edit(edited)
-}
+export const editSpreadsheetLink = safeAction(
+    async (edited: EditSpreadsheetLink): Promise<SpreadsheetLink | null> => {
+        return spreadsheetLinkService.edit(edited)
+    }
+)
 
-export async function deleteSpreadsheetLink(id: string): Promise<void> {
+export const deleteSpreadsheetLink = safeAction(async (id: string): Promise<void> => {
     return spreadsheetLinkService.delete(id)
-}
+})
