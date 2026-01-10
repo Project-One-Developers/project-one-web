@@ -41,6 +41,8 @@ export const pgItemEquippedSlotKeyEnum = pgEnum(
     ITEM_EQUIPPED_SLOTS_KEY
 )
 
+export const pgCronStatusEnum = pgEnum("cron_status", ["success", "failed"])
+
 //////////////////////////////////////////////////////////
 //                   CHARACHTERS                        //
 //////////////////////////////////////////////////////////
@@ -370,6 +372,25 @@ export const bonusItemTrackTable = pgTable("bonus_item_tracks", {
     maxItemLevel: integer("max_item_level").notNull(),
     season: integer("season").notNull(),
 })
+
+//////////////////////////////////////////////////////////
+//                    CRON LOGS                         //
+//////////////////////////////////////////////////////////
+
+export const cronLogTable = pgTable(
+    "cron_logs",
+    {
+        id: serial("id").primaryKey(),
+        jobName: varchar("job_name", { length: 50 }).notNull(),
+        status: pgCronStatusEnum().notNull(),
+        results: jsonb("results"),
+        errorMessage: text("error_message"),
+        startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+        completedAt: timestamp("completed_at", { withTimezone: true }).notNull(),
+        durationMs: integer("duration_ms").notNull(),
+    },
+    (t) => [index("idx_cron_logs_job_name_started").on(t.jobName, t.startedAt)]
+)
 
 //////////////////////////////////////////////////////////
 //                 SPREADSHEET LINKS                    //

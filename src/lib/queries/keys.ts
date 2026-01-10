@@ -20,4 +20,5 @@ export const queryKeys = {
     lootRecap: "lootRecap",
     spreadsheetLinks: "spreadsheetLinks",
     mountTracker: "mountTracker",
+    cronLogs: "cronLogs",
 } as const

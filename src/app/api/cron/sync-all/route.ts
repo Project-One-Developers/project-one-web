@@ -3,6 +3,7 @@ import {
     syncDroptimizersFromDiscord,
     deleteSimulationsOlderThan,
 } from "@/actions/droptimizer"
+import { cronLogRepo } from "@/db/repositories/cron-log.repo"
 import { env } from "@/env"
 import { logger } from "@/lib/logger"
 import { s } from "@/shared/libs/string-utils"
@@ -21,8 +22,10 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const startedAt = new Date()
+
     try {
-        logger.info("Cron", `Full sync started at ${new Date().toISOString()}`)
+        logger.info("Cron", `Full sync started at ${startedAt.toISOString()}`)
 
         const results = {
             discord: { success: false, imported: 0, skipped: 0, errors: [] as string[] },
@@ -52,20 +55,49 @@ export async function GET(request: Request) {
                 error instanceof Error ? error.message : "Unknown error"
         }
 
+        const completedAt = new Date()
+        const durationMs = completedAt.getTime() - startedAt.getTime()
+
+        // Log to database
+        await cronLogRepo.add({
+            jobName: "sync-all",
+            status: "success",
+            results,
+            errorMessage: null,
+            startedAt,
+            completedAt,
+            durationMs,
+        })
+
         logger.info("Cron", `Full sync completed: ${s(results)}`)
 
         return NextResponse.json({
             success: true,
             message: "Full sync completed",
             results,
-            timestamp: new Date().toISOString(),
+            timestamp: completedAt.toISOString(),
         })
     } catch (error) {
+        const completedAt = new Date()
+        const durationMs = completedAt.getTime() - startedAt.getTime()
+        const errorMessage = error instanceof Error ? error.message : "Unknown error"
+
+        // Log failure to database
+        await cronLogRepo.add({
+            jobName: "sync-all",
+            status: "failed",
+            results: null,
+            errorMessage,
+            startedAt,
+            completedAt,
+            durationMs,
+        })
+
         logger.error("Cron", `Full sync failed: ${s(error)}`)
         return NextResponse.json(
             {
                 error: "Sync failed",
-                message: error instanceof Error ? error.message : "Unknown error",
+                message: errorMessage,
             },
             { status: 500 }
         )

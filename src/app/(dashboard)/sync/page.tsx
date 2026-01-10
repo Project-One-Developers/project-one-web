@@ -2,6 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query"
 import {
+    CheckCircle2,
     Clock,
     CloudDownload,
     Database,
@@ -10,7 +11,9 @@ import {
     Play,
     Shield,
     Users,
+    XCircle,
 } from "lucide-react"
+import { DateTime } from "luxon"
 import { useState, type JSX, type ReactNode } from "react"
 import { toast } from "sonner"
 import { importGuildMembers, syncAllCharactersBlizzard } from "@/actions/blizzard"
@@ -18,8 +21,10 @@ import { syncDroptimizersFromDiscord } from "@/actions/droptimizer"
 import { syncItemsFromRaidbots } from "@/actions/items"
 import { Button } from "@/components/ui/button"
 import { GlassCard } from "@/components/ui/glass-card"
+import { useCronLogs } from "@/lib/queries/cron-logs"
 import { queryKeys } from "@/lib/queries/keys"
 import { s } from "@/shared/libs/string-utils"
+import { syncAllResultsSchema, type CronLog } from "@/shared/models/cron-log.models"
 
 type SyncActionCardProps = {
     icon: ReactNode
@@ -65,8 +70,48 @@ function SyncActionCard({
     )
 }
 
+function formatCronResults(log: CronLog): string {
+    if (log.status === "failed") {
+        return log.errorMessage ?? "Unknown error"
+    }
+
+    const parsed = syncAllResultsSchema.safeParse(log.results)
+    if (!parsed.success) {
+        return "Completed"
+    }
+
+    const { imported, skipped } = parsed.data.discord
+    return `${s(imported)} imported, ${s(skipped)} skipped`
+}
+
+function CronHistoryRow({ log }: { log: CronLog }) {
+    const isSuccess = log.status === "success"
+
+    return (
+        <div className="flex items-center gap-3 py-2">
+            {isSuccess ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+            ) : (
+                <XCircle className="w-4 h-4 text-red-500 shrink-0" />
+            )}
+            <span className="text-sm text-muted-foreground w-20 shrink-0">
+                {DateTime.fromJSDate(log.startedAt).toRelative()}
+            </span>
+            <span
+                className={`text-sm truncate ${isSuccess ? "text-foreground" : "text-red-400"}`}
+            >
+                {formatCronResults(log)}
+            </span>
+            <span className="text-xs text-muted-foreground/60 ml-auto shrink-0">
+                {(log.durationMs / 1000).toFixed(1)}s
+            </span>
+        </div>
+    )
+}
+
 export default function SyncPage(): JSX.Element {
     const queryClient = useQueryClient()
+    const { data: cronLogs } = useCronLogs(3)
     const [isSyncingBlizzard, setIsSyncingBlizzard] = useState(false)
     const [isSyncingDiscord, setIsSyncingDiscord] = useState(false)
     const [isSyncingItems, setIsSyncingItems] = useState(false)
@@ -220,14 +265,26 @@ export default function SyncPage(): JSX.Element {
                 />
             </div>
 
-            {/* Info Footer */}
-            <div className="flex items-start gap-3 text-sm text-muted-foreground">
-                <Clock className="w-4 h-4 mt-0.5 shrink-0" />
-                <p>
-                    These sync tasks also run automatically via scheduled jobs daily. Use
-                    manual sync when you need immediate updates.
-                </p>
-            </div>
+            {/* Scheduled Sync History */}
+            <GlassCard padding="lg">
+                <div className="flex items-center gap-2 mb-3">
+                    <Clock className="w-4 h-4 text-muted-foreground" />
+                    <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Scheduled Sync History
+                    </h3>
+                </div>
+                {cronLogs && cronLogs.length > 0 ? (
+                    <div className="divide-y divide-border/40">
+                        {cronLogs.map((log) => (
+                            <CronHistoryRow key={log.id} log={log} />
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-sm text-muted-foreground/60">
+                        No scheduled sync history yet. Cron jobs run daily at 6 PM UTC.
+                    </p>
+                )}
+            </GlassCard>
         </div>
     )
 }
