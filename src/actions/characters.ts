@@ -5,9 +5,9 @@ import { blizzardRepo } from "@/db/repositories/blizzard"
 import { characterRepo } from "@/db/repositories/characters"
 import { droptimizerRepo } from "@/db/repositories/droptimizer"
 import { playerRepo } from "@/db/repositories/player.repo"
-import { isOfficer, requireOfficer } from "@/lib/auth-helpers"
+import { isOfficer } from "@/lib/auth-helpers"
 import { BlizzardApiError, NotFoundError } from "@/lib/errors"
-import { safeAction } from "@/lib/errors/action-wrapper"
+import { officerAction, safeAction } from "@/lib/errors/action-wrapper"
 import { logger } from "@/lib/logger"
 import { stripOfficerFields } from "@/lib/officer-data"
 import { fetchCharacterMedia, fetchCharacterProfile } from "@/lib/server/blizzard-api"
@@ -28,10 +28,8 @@ import type {
 
 // ============== CHARACTERS ==============
 
-export const addCharacterWithSync = safeAction(
+export const addCharacterWithSync = officerAction(
     async (character: NewCharacterWithoutClass): Promise<CharacterWithPlayer | null> => {
-        await requireOfficer()
-
         logger.info(
             "Action",
             `Adding character with sync: ${character.name}-${character.realm}`
@@ -80,10 +78,8 @@ export const addCharacterWithSync = safeAction(
     }
 )
 
-export const addCharacterWithManualClass = safeAction(
+export const addCharacterWithManualClass = officerAction(
     async (character: NewCharacter): Promise<CharacterWithPlayer | null> => {
-        await requireOfficer()
-
         logger.info(
             "Action",
             `Adding character with manual class: ${character.name}-${character.realm} (${character.class})`
@@ -144,14 +140,12 @@ export const getCharacterList = safeAction(async (): Promise<Character[]> => {
     return characters
 })
 
-export const deleteCharacter = safeAction(async (id: string): Promise<void> => {
-    await requireOfficer()
+export const deleteCharacter = officerAction(async (id: string): Promise<void> => {
     await characterRepo.delete(id)
 })
 
-export const editCharacter = safeAction(
+export const editCharacter = officerAction(
     async (id: string, data: EditCharacterData): Promise<CharacterWithPlayer | null> => {
-        await requireOfficer()
         await characterRepo.edit(id, data)
         return characterRepo.getWithPlayerById(id)
     }
@@ -159,20 +153,19 @@ export const editCharacter = safeAction(
 
 // ============== PLAYERS ==============
 
-export const addPlayer = safeAction(async (player: NewPlayer): Promise<Player | null> => {
-    await requireOfficer()
-    const id = await playerRepo.add(player)
-    return playerRepo.getById(id)
-})
+export const addPlayer = officerAction(
+    async (player: NewPlayer): Promise<Player | null> => {
+        const id = await playerRepo.add(player)
+        return playerRepo.getById(id)
+    }
+)
 
-export const deletePlayer = safeAction(async (playerId: string): Promise<void> => {
-    await requireOfficer()
+export const deletePlayer = officerAction(async (playerId: string): Promise<void> => {
     await playerRepo.delete(playerId)
 })
 
-export const editPlayer = safeAction(
+export const editPlayer = officerAction(
     async (edited: EditPlayer): Promise<Player | null> => {
-        await requireOfficer()
         await playerRepo.edit(edited)
         return playerRepo.getById(edited.id)
     }
@@ -202,12 +195,11 @@ export const getCharacterRenderUrl = safeAction(
 
 // ============== CHARACTER ASSIGNMENT ==============
 
-export const assignCharacterToPlayer = safeAction(
+export const assignCharacterToPlayer = officerAction(
     async (
         characterId: string,
         targetPlayerId: string
     ): Promise<CharacterWithPlayer | null> => {
-        await requireOfficer()
         await characterRepo.assignToPlayer(characterId, targetPlayerId)
         return characterRepo.getWithPlayerById(characterId)
     }

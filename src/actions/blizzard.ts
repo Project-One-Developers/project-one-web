@@ -5,8 +5,7 @@ import { blizzardRepo } from "@/db/repositories/blizzard"
 import { bossRepo } from "@/db/repositories/bosses"
 import { characterRepo } from "@/db/repositories/characters"
 import { playerRepo } from "@/db/repositories/player.repo"
-import { requireOfficer } from "@/lib/auth-helpers"
-import { safeAction } from "@/lib/errors/action-wrapper"
+import { officerAction, safeAction } from "@/lib/errors/action-wrapper"
 import { logger } from "@/lib/logger"
 import {
     fetchGuildRoster,
@@ -403,21 +402,19 @@ async function importGuildMembersInternal(): Promise<{
 
 // ============== EXPORTED ACTIONS ==============
 
-export const syncAllCharactersBlizzard = safeAction(
+export const syncAllCharactersBlizzard = officerAction(
     async (): Promise<{ synced: number; errors: string[] }> => {
-        await requireOfficer()
         return syncAllCharactersInternal()
     }
 )
 
-export const syncCharacterBlizzard = safeAction(
+export const syncCharacterBlizzard = officerAction(
     async (
         characterId: string,
         characterName: string,
         characterRealm: string,
         preloadedProfile?: CharacterProfileResponse
     ): Promise<void> => {
-        await requireOfficer()
         return syncCharacterInternal(
             characterId,
             characterName,
@@ -427,13 +424,12 @@ export const syncCharacterBlizzard = safeAction(
     }
 )
 
-export const checkBlizzardUpdates = safeAction(
+export const checkBlizzardUpdates = officerAction(
     async (): Promise<{
         synced: boolean
         message: string
         result?: { synced: number; errors: string[] }
     }> => {
-        await requireOfficer()
         return checkAndSyncInternal()
     }
 )
@@ -444,9 +440,8 @@ export const getRosterProgression = safeAction(
     }
 )
 
-export const importGuildMembers = safeAction(
+export const importGuildMembers = officerAction(
     async (): Promise<{ imported: number; skipped: number; errors: string[] }> => {
-        await requireOfficer()
         return importGuildMembersInternal()
     }
 )

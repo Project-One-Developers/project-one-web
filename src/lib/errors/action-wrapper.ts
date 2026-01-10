@@ -1,5 +1,6 @@
 import "server-only"
 import { ZodError } from "zod"
+import { requireOfficer } from "@/lib/auth-helpers"
 import { logger } from "@/lib/logger"
 import { s } from "@/shared/libs/string-utils"
 import type { Result } from "@/shared/types"
@@ -35,6 +36,24 @@ export function safeAction<TArgs extends unknown[], TResult>(
             return handleActionError(error)
         }
     }
+}
+
+/**
+ * Wraps a server action that requires officer privileges.
+ * Combines officer auth check with safeAction error handling.
+ *
+ * @example
+ * export const deleteCharacter = officerAction(async (id: string) => {
+ *     await characterRepo.delete(id)
+ * })
+ */
+export function officerAction<TArgs extends unknown[], TResult>(
+    fn: (...args: TArgs) => Promise<TResult>
+): (...args: TArgs) => Promise<ActionResult<TResult>> {
+    return safeAction(async (...args: TArgs): Promise<TResult> => {
+        await requireOfficer()
+        return fn(...args)
+    })
 }
 
 type ActionErrorResult = { success: false; error: SerializedAppError }
