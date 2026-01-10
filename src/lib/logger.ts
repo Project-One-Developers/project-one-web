@@ -1,54 +1,36 @@
-type LogLevel = "debug" | "info" | "warn" | "error"
+import pino from "pino"
 
-const LOG_LEVELS: Record<LogLevel, number> = {
-    debug: 0,
-    info: 1,
-    warn: 2,
-    error: 3,
-}
+const isDev = process.env.NODE_ENV !== "production"
 
-const getMinLogLevel = (): LogLevel => {
-    if (process.env.NODE_ENV === "production") {
-        return "warn"
-    }
-    return "debug"
-}
-
-const shouldLog = (level: LogLevel): boolean => {
-    const minLevel = getMinLogLevel()
-    return LOG_LEVELS[level] >= LOG_LEVELS[minLevel]
-}
-
-const formatMessage = (category: string, message: string): string => {
-    return `[${category}] ${message}`
-}
+const pinoLogger = pino({
+    level: isDev ? "debug" : "warn",
+    transport: isDev
+        ? {
+              target: "pino-pretty",
+              options: {
+                  colorize: true,
+                  translateTime: "HH:MM:ss",
+                  ignore: "pid,hostname,category,data",
+                  messageFormat: "\x1b[36m[{category}]\x1b[0m {msg}",
+              },
+          }
+        : undefined,
+})
 
 export const logger = {
     debug: (category: string, message: string, ...args: unknown[]): void => {
-        if (shouldLog("debug")) {
-            // eslint-disable-next-line no-console
-            console.debug(formatMessage(category, message), ...args)
-        }
+        pinoLogger.debug({ category, data: args.length ? args : undefined }, message)
     },
 
     info: (category: string, message: string, ...args: unknown[]): void => {
-        if (shouldLog("info")) {
-            // eslint-disable-next-line no-console
-            console.info(formatMessage(category, message), ...args)
-        }
+        pinoLogger.info({ category, data: args.length ? args : undefined }, message)
     },
 
     warn: (category: string, message: string, ...args: unknown[]): void => {
-        if (shouldLog("warn")) {
-            // eslint-disable-next-line no-console
-            console.warn(formatMessage(category, message), ...args)
-        }
+        pinoLogger.warn({ category, data: args.length ? args : undefined }, message)
     },
 
     error: (category: string, message: string, ...args: unknown[]): void => {
-        if (shouldLog("error")) {
-            // eslint-disable-next-line no-console
-            console.error(formatMessage(category, message), ...args)
-        }
+        pinoLogger.error({ category, data: args.length ? args : undefined }, message)
     },
 }
