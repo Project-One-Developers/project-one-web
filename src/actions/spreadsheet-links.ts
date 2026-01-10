@@ -1,7 +1,7 @@
 "use server"
 
+import { spreadsheetLinkRepo } from "@/db/repositories/spreadsheet-link.repo"
 import { safeAction } from "@/lib/errors/action-wrapper"
-import { spreadsheetLinkService } from "@/services/spreadsheet-link.service"
 import type {
     EditSpreadsheetLink,
     NewSpreadsheetLink,
@@ -9,27 +9,29 @@ import type {
 } from "@/shared/models/spreadsheet-link.models"
 
 export const getSpreadsheetLinks = safeAction(async (): Promise<SpreadsheetLink[]> => {
-    return spreadsheetLinkService.getList()
+    return spreadsheetLinkRepo.getList()
 })
 
 export const getSpreadsheetLinkById = safeAction(
     async (id: string): Promise<SpreadsheetLink | null> => {
-        return spreadsheetLinkService.getById(id)
+        return spreadsheetLinkRepo.getById(id)
     }
 )
 
 export const addSpreadsheetLink = safeAction(
     async (link: NewSpreadsheetLink): Promise<SpreadsheetLink | null> => {
-        return spreadsheetLinkService.add(link)
+        const id = await spreadsheetLinkRepo.add(link)
+        return spreadsheetLinkRepo.getById(id)
     }
 )
 
 export const editSpreadsheetLink = safeAction(
     async (edited: EditSpreadsheetLink): Promise<SpreadsheetLink | null> => {
-        return spreadsheetLinkService.edit(edited)
+        await spreadsheetLinkRepo.edit(edited)
+        return spreadsheetLinkRepo.getById(edited.id)
     }
 )
 
 export const deleteSpreadsheetLink = safeAction(async (id: string): Promise<void> => {
-    return spreadsheetLinkService.delete(id)
+    await spreadsheetLinkRepo.delete(id)
 })

@@ -1,8 +1,8 @@
 import "server-only"
+import type { SyncContext } from "@/actions/droptimizer"
 import { itemRepo } from "@/db/repositories/items"
 import { type NewSimC } from "@/db/repositories/simc"
 import { logger } from "@/lib/logger"
-import type { SyncContext } from "@/services/droptimizer.service"
 import {
     evalRealSeason,
     parseItemLevelFromBonusIds,

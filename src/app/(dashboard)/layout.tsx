@@ -2,8 +2,8 @@ import { auth } from "@/auth"
 import AppSidebar from "@/components/app-sidebar"
 import { GlobalFilterProvider } from "@/components/global-filter-provider"
 import { SidebarProvider } from "@/components/ui/sidebar"
+import { spreadsheetLinkRepo } from "@/db/repositories/spreadsheet-link.repo"
 import { UserRoleProvider } from "@/lib/user-role-context"
-import { spreadsheetLinkService } from "@/services/spreadsheet-link.service"
 
 // Auth + officer role protection handled by proxy (src/auth.config.ts)
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -17,7 +17,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     const { role } = session.user
 
     // Fetch spreadsheet links for sidebar
-    const spreadsheetLinks = await spreadsheetLinkService.getList()
+    const spreadsheetLinks = await spreadsheetLinkRepo.getList()
 
     return (
         <UserRoleProvider role={role}>

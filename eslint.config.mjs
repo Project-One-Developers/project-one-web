@@ -96,7 +96,6 @@ const eslintConfig = defineConfig([
             "boundaries/elements": [
                 // Server-only (the critical boundaries)
                 { type: "db", pattern: ["src/db/**"] },
-                { type: "services", pattern: ["src/services/**"] },
                 { type: "env", pattern: ["src/env.ts", "src/auth.ts"] },
 
                 // Entry points (can access everything)
@@ -104,7 +103,10 @@ const eslintConfig = defineConfig([
                 { type: "api", pattern: ["src/app/api/**"] },
                 { type: "pages", pattern: ["src/app/**"], mode: "file" },
 
-                // Universal utilities
+                // Server-side utilities (can import db, env)
+                { type: "lib-server", pattern: ["src/lib/server/**"] },
+
+                // Universal utilities (client-safe)
                 { type: "lib", pattern: ["src/lib/**"] },
                 { type: "shared", pattern: ["src/shared/**"] },
 
@@ -122,21 +124,21 @@ const eslintConfig = defineConfig([
                         // CRITICAL: Components cannot import server-only modules
                         {
                             from: "components",
-                            disallow: ["db", "services", "env"],
+                            disallow: ["db", "lib-server", "env"],
                             message:
                                 "Components cannot import server-only code. Use a Server Action instead.",
                         },
                         // CRITICAL: Hooks cannot import server-only modules
                         {
                             from: "hooks",
-                            disallow: ["db", "services", "env"],
+                            disallow: ["db", "lib-server", "env"],
                             message:
                                 "Hooks cannot import server-only code. Use a Server Action instead.",
                         },
                         // Lib (includes queries) cannot import server-only modules
                         {
                             from: "lib",
-                            disallow: ["db", "services", "env"],
+                            disallow: ["db", "lib-server", "env"],
                             message: "Lib utilities cannot import server-only code.",
                         },
                         // Shared cannot import anything except shared
@@ -144,7 +146,7 @@ const eslintConfig = defineConfig([
                             from: "shared",
                             disallow: [
                                 "db",
-                                "services",
+                                "lib-server",
                                 "env",
                                 "actions",
                                 "api",

@@ -1,8 +1,8 @@
 import { auth } from "@/auth"
 import AppSidebar from "@/components/app-sidebar"
 import { SidebarProvider } from "@/components/ui/sidebar"
+import { spreadsheetLinkRepo } from "@/db/repositories/spreadsheet-link.repo"
 import { UserRoleProvider } from "@/lib/user-role-context"
-import { spreadsheetLinkService } from "@/services/spreadsheet-link.service"
 
 // Auth protection handled by proxy (src/auth.config.ts)
 export default async function MemberLayout({ children }: { children: React.ReactNode }) {
@@ -16,8 +16,7 @@ export default async function MemberLayout({ children }: { children: React.React
     const { role } = session.user
 
     // Fetch spreadsheet links for officers (members won't see them anyway)
-    const spreadsheetLinks =
-        role === "officer" ? await spreadsheetLinkService.getList() : []
+    const spreadsheetLinks = role === "officer" ? await spreadsheetLinkRepo.getList() : []
 
     return (
         <UserRoleProvider role={role}>

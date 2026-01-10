@@ -1,15 +1,114 @@
 "use server"
 
+import { keyBy } from "es-toolkit"
+import { DateTime } from "luxon"
+import { match, P } from "ts-pattern"
+import { characterGameInfoRepo } from "@/db/repositories/character-game-info"
+import { characterRepo } from "@/db/repositories/characters"
+import { playerRepo } from "@/db/repositories/player.repo"
 import { safeAction } from "@/lib/errors/action-wrapper"
-import { summaryService } from "@/services/summary.service"
-import type { CharacterSummary, PlayerWithSummaryCompact } from "@/shared/types"
+import type { CharacterGameInfoCompact } from "@/shared/models/character.models"
+import type { GearItem } from "@/shared/models/item.models"
+import {
+    BLIZZARD_WARN,
+    DROPTIMIZER_WARN,
+    type CharacterSummary,
+    type PlayerWithSummaryCompact,
+} from "@/shared/types"
+
+const parseItemLevelCompact = (
+    gameInfo: CharacterGameInfoCompact | undefined
+): string => {
+    return (
+        gameInfo?.droptimizer?.itemsAverageItemLevelEquipped?.toFixed(1) ??
+        gameInfo?.blizzard?.equippedItemLevel?.toString() ??
+        "?"
+    )
+}
+
+const parseTiersetCountCompact = (
+    gameInfo: CharacterGameInfoCompact | undefined
+): number => {
+    return (
+        gameInfo?.droptimizer?.tiersetInfo?.length ??
+        gameInfo?.blizzard?.itemsEquipped?.filter((item: GearItem) => item.item.tierset)
+            .length ??
+        0
+    )
+}
 
 export const getRosterSummary = safeAction(async (): Promise<CharacterSummary[]> => {
-    return summaryService.getRosterSummary()
+    const roster = await characterRepo.getWithPlayerList()
+    const charIds = roster.map((char) => char.id)
+    const gameInfoData = await characterGameInfoRepo.getByCharsFull(charIds)
+    const gameInfoByCharId = keyBy(gameInfoData, (g) => g.charId)
+    const oneWeekAgo = DateTime.now().minus({ weeks: 1 }).toSeconds()
+
+    return roster.map((char) => {
+        const info = gameInfoByCharId[char.id]
+
+        // Priority: droptimizer > blizzard
+        const itemLevel =
+            info?.droptimizer?.itemsAverageItemLevelEquipped?.toFixed(1) ??
+            info?.blizzard?.equippedItemLevel?.toString() ??
+            "?"
+
+        // Priority: droptimizer > blizzard (filtered)
+        const tierset: GearItem[] =
+            info?.droptimizer?.tiersetInfo ??
+            info?.blizzard?.itemsEquipped?.filter(
+                (item: GearItem) => item.item.tierset
+            ) ??
+            []
+
+        const warnDroptimizer = match(info?.droptimizer?.simDate)
+            .with(P.nullish, () => DROPTIMIZER_WARN.NotImported)
+            .when(
+                (d) => d < oneWeekAgo,
+                () => DROPTIMIZER_WARN.Outdated
+            )
+            .otherwise(() => DROPTIMIZER_WARN.None)
+
+        const warnBlizzard = match(info?.blizzard)
+            .with(P.nullish, () => BLIZZARD_WARN.NotTracked)
+            .otherwise(() => BLIZZARD_WARN.None)
+
+        return {
+            character: char,
+            itemLevel,
+            weeklyChest: info?.droptimizer?.weeklyChest ?? [],
+            tierset,
+            currencies: info?.droptimizer?.currencies ?? [],
+            warnDroptimizer,
+            warnBlizzard,
+            blizzardSyncedAt: info?.blizzard?.syncedAt,
+        }
+    })
 })
 
 export const getPlayersWithSummaryCompact = safeAction(
     async (): Promise<PlayerWithSummaryCompact[]> => {
-        return summaryService.getPlayersWithSummaryCompact()
+        const playersWithChars = await playerRepo.getWithCharactersList()
+        const allChars = playersWithChars.flatMap((p) => p.characters)
+        const charIds = allChars.map((c) => c.id)
+        const gameInfoData = await characterGameInfoRepo.getByCharsCompact(charIds)
+        const gameInfoByCharId = keyBy(gameInfoData, (g) => g.charId)
+
+        return playersWithChars.map((player) => ({
+            id: player.id,
+            name: player.name,
+            charsSummary: player.characters.map((char) => {
+                const gameInfo = gameInfoByCharId[char.id]
+
+                return {
+                    character: {
+                        ...char,
+                        player: { id: player.id, name: player.name },
+                    },
+                    itemLevel: parseItemLevelCompact(gameInfo),
+                    tiersetCount: parseTiersetCountCompact(gameInfo),
+                }
+            }),
+        }))
     }
 )

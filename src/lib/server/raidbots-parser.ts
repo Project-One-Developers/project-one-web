@@ -1,9 +1,9 @@
 import { keyBy } from "es-toolkit"
 import "server-only"
 import { z } from "zod"
+import type { SyncContext } from "@/actions/droptimizer"
 import { itemRepo } from "@/db/repositories/items"
 import { logger } from "@/lib/logger"
-import type { SyncContext } from "@/services/droptimizer.service"
 import { getUnixTimestamp } from "@/shared/libs/date-utils"
 import {
     applyItemTrackByIlvlAndDiff,

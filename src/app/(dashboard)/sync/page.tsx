@@ -18,7 +18,7 @@ import { useState, type JSX, type ReactNode } from "react"
 import { toast } from "sonner"
 import { importGuildMembers, syncAllCharactersBlizzard } from "@/actions/blizzard"
 import { syncDroptimizersFromDiscord } from "@/actions/droptimizer"
-import { syncItemsFromRaidbots } from "@/actions/items"
+import { syncFromRaidbots } from "@/actions/items"
 import { Button } from "@/components/ui/button"
 import { GlassCard } from "@/components/ui/glass-card"
 import { unwrap } from "@/lib/errors"
@@ -164,7 +164,7 @@ export default function SyncPage(): JSX.Element {
     const handleSyncItems = async () => {
         setIsSyncingItems(true)
         try {
-            const result = await unwrap(syncItemsFromRaidbots({ skipWowhead: false }))
+            const result = await unwrap(syncFromRaidbots({ skipWowhead: false }))
             const totalCount =
                 result.bosses.count +
                 result.items.count +

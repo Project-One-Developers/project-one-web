@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
+import { syncFromRaidbots } from "@/actions/items"
 import { env } from "@/env"
+import { unwrap } from "@/lib/errors"
 import { logger } from "@/lib/logger"
-import { itemSyncService } from "@/services/item-sync.service"
 import { s } from "@/shared/libs/string-utils"
 
 // Verify this is a cron request from Vercel or local dev
@@ -25,11 +26,8 @@ export async function GET(request: Request) {
     try {
         logger.info("SyncItems", `Items sync started at ${new Date().toISOString()}`)
 
-        // Use the new Raidbots sync service
-        // skipWowhead: false by default - enables full data enrichment
-        const results = await itemSyncService.syncFromRaidbots({
-            skipWowhead: false,
-        })
+        // Call the action and unwrap the result
+        const results = await unwrap(syncFromRaidbots({ skipWowhead: false }))
 
         logger.info("SyncItems", `Items sync completed: ${s(results)}`)
 
