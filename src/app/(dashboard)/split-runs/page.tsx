@@ -8,7 +8,7 @@ import SplitRunResults from "@/components/split-run-results"
 import { EmptyState } from "@/components/ui/empty-state"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { usePlayersSummaryCompact } from "@/lib/queries/players"
-import { calculateSplitRuns } from "@/shared/libs/split-run-algorithm"
+import { calculateSplitRuns, generateWarnings } from "@/shared/libs/split-run-algorithm"
 import { s } from "@/shared/libs/string-utils"
 import type { Run, SplitRunParams } from "@/shared/models/split-run.models"
 import { CLASS_TO_ARMOR_TYPE } from "@/shared/wow.consts"
@@ -94,17 +94,25 @@ export default function SplitRunsPage(): JSX.Element {
         // Update runs
         const newRuns = runs.map((run) => {
             if (run.id === sourceRunId) {
-                return {
+                const updatedRun = {
                     ...run,
                     characters: newSourceCharacters,
                     stats: calculateRunStats(newSourceCharacters),
                 }
+                return {
+                    ...updatedRun,
+                    warnings: params ? generateWarnings(updatedRun, params.targetSize) : [],
+                }
             }
             if (run.id === targetRunId) {
-                return {
+                const updatedRun = {
                     ...run,
                     characters: newTargetCharacters,
                     stats: calculateRunStats(newTargetCharacters),
+                }
+                return {
+                    ...updatedRun,
+                    warnings: params ? generateWarnings(updatedRun, params.targetSize) : [],
                 }
             }
             return run
@@ -142,10 +150,14 @@ export default function SplitRunsPage(): JSX.Element {
         // Update run
         const newRuns = runs.map((r) => {
             if (r.id === runId) {
-                return {
+                const updatedRun = {
                     ...r,
                     characters: newCharacters,
                     stats: calculateRunStats(newCharacters),
+                }
+                return {
+                    ...updatedRun,
+                    warnings: params ? generateWarnings(updatedRun, params.targetSize) : [],
                 }
             }
             return r
@@ -196,17 +208,25 @@ export default function SplitRunsPage(): JSX.Element {
         // Update runs
         const newRuns = runs.map((run) => {
             if (run.id === sourceRunId) {
-                return {
+                const updatedRun = {
                     ...run,
                     characters: newSourceCharacters,
                     stats: calculateRunStats(newSourceCharacters),
                 }
+                return {
+                    ...updatedRun,
+                    warnings: params ? generateWarnings(updatedRun, params.targetSize) : [],
+                }
             }
             if (run.id === targetRunId) {
-                return {
+                const updatedRun = {
                     ...run,
                     characters: newTargetCharacters,
                     stats: calculateRunStats(newTargetCharacters),
+                }
+                return {
+                    ...updatedRun,
+                    warnings: params ? generateWarnings(updatedRun, params.targetSize) : [],
                 }
             }
             return run

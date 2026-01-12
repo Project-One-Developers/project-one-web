@@ -214,7 +214,7 @@ function calculateRunStats(run: Run): RunStats {
 /**
  * Generate warnings for a run
  */
-function generateWarnings(run: Run, targetSize: number): string[] {
+export function generateWarnings(run: Run, targetSize: number): string[] {
     const warnings: string[] = []
 
     // Tank warnings
