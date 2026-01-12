@@ -1,8 +1,10 @@
 "use client"
 
 import { AlertTriangle, Shield, Heart, Swords, Crown } from "lucide-react"
+import Image from "next/image"
 import type { JSX } from "react"
 import { cn } from "@/lib/utils"
+import { classIcon } from "@/lib/wow-icon"
 import { s } from "@/shared/libs/string-utils"
 import type { Run } from "@/shared/models/split-run.models"
 import { GlassCard } from "./ui/glass-card"
@@ -114,12 +116,21 @@ export default function RunCard({
                     borderColor: `${classColor}40`,
                 }}
             >
-                <span
-                    className="text-sm font-medium truncate"
-                    style={{ color: classColor }}
-                >
-                    {char.player.name}
-                </span>
+                <div className="flex items-center gap-2 min-w-0">
+                    <Image
+                        src={classIcon.get(char.class) ?? ""}
+                        alt={char.class}
+                        width={20}
+                        height={20}
+                        className="rounded shrink-0"
+                    />
+                    <span
+                        className="text-sm font-medium truncate"
+                        style={{ color: classColor }}
+                    >
+                        {char.player.name}
+                    </span>
+                </div>
                 {char.main && (
                     <Crown
                         className="w-3.5 h-3.5 shrink-0"
