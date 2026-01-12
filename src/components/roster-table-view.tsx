@@ -124,14 +124,7 @@ export default function RosterTableView({
                     {player.charsSummary.length > 0 ? (
                         <div className="overflow-x-auto">
                             <table className="w-full table-fixed">
-                                <colgroup>
-                                    <col className="w-[25%]" /> {/* Character */}
-                                    <col className="w-[20%]" /> {/* Class */}
-                                    <col className="w-[15%]" /> {/* Role */}
-                                    <col className="w-[10%]" /> {/* iLvl */}
-                                    <col className="w-[15%]" /> {/* Priority */}
-                                    <col className="w-[15%]" /> {/* Actions */}
-                                </colgroup>
+                                <colgroup><col className="w-[25%]" /><col className="w-[20%]" /><col className="w-[15%]" /><col className="w-[10%]" /><col className="w-[15%]" /><col className="w-[15%]" /></colgroup>
                                 <thead>
                                     <tr className="border-b border-border/40 bg-muted/20">
                                         <th className="text-left px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">

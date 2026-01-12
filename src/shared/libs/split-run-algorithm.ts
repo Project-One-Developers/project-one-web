@@ -8,7 +8,11 @@ import { CLASS_TO_ARMOR_TYPE, CLASSES_NAME } from "@/shared/wow.consts"
  * Distributes characters across runs while satisfying:
  * - Hard constraint: Same player's characters in different runs
  * - Hard constraint: Minimum 2 tanks, 4 healers per run (warned if not met)
- * - Soft optimization: Balance mains evenly across armor types
+ * - Soft optimization (priority order):
+ *   1. Balance mains evenly across armor types (weight 10)
+ *   2. Minimize Priority 1 characters of same role in same run (weight 9)
+ *   3. Minimize Priority 1 characters of same armor type in same run (weight 8)
+ *   4. Balance run sizes (weight 1)
  */
 export function calculateSplitRuns(
     players: PlayerWithSummaryCompact[],
@@ -75,44 +79,72 @@ export function calculateSplitRuns(
 }
 
 /**
- * Distribute characters round-robin across runs
+ * Distribute characters (tanks/healers) across runs
  * Ensures same player's characters go to different runs
+ * Optimizes to avoid Priority 1 characters of same role/armor type in same run
  */
 function distributeCharacters(
     characters: CharacterSummaryCompact[],
     runs: Run[],
     charToPlayer: Map<string, string>
 ): void {
-    let runIndex = 0
-
     for (const char of characters) {
-        // Find next available run that doesn't have this player's character
-        let attempts = 0
-        while (attempts < runs.length) {
-            const currentRun = runs[runIndex % runs.length]
-            if (currentRun && canAddToRun(char, currentRun, charToPlayer)) {
-                currentRun.characters.push(char)
-                runIndex++
-                break
+        const charClass = char.character.class
+        const armorType = CLASS_TO_ARMOR_TYPE[charClass]
+        const charRole = char.character.role
+        const isPriority1 = char.character.priority === 1
+
+        let bestRun: Run | null = null
+        let bestScore = -Infinity
+
+        for (const run of runs) {
+            if (!canAddToRun(char, run, charToPlayer)) {
+                continue
             }
-            runIndex++
-            attempts++
+
+            let priority1RolePenalty = 0
+            let priority1ArmorPenalty = 0
+
+            if (isPriority1) {
+                // Penalize runs with Priority 1 characters of same role
+                const priority1SameRoleCount = run.characters.filter(
+                    (c) => c.character.priority === 1 && c.character.role === charRole
+                ).length
+                priority1RolePenalty = -priority1SameRoleCount * 9
+
+                // Penalize runs with Priority 1 characters of same armor type
+                const priority1SameArmorCount = run.characters.filter(
+                    (c) =>
+                        c.character.priority === 1 &&
+                        CLASS_TO_ARMOR_TYPE[c.character.class] === armorType
+                ).length
+                priority1ArmorPenalty = -priority1SameArmorCount * 8
+            }
+
+            // Prefer smaller runs for balance
+            const sizeScore = -run.characters.length
+
+            const score = priority1RolePenalty + priority1ArmorPenalty + sizeScore
+
+            if (score > bestScore) {
+                bestRun = run
+                bestScore = score
+            }
         }
 
-        // If we couldn't place the character in any run (all runs have this player)
-        // This happens when a player has more characters than available runs
-        // Skip this character to maintain the constraint
-        if (attempts === runs.length) {
-            // Character cannot be placed - player has too many characters for number of runs
-            // Skip this character to maintain one-per-player-per-run constraint
-            continue
+        // Add to best run or skip if no valid run found
+        if (bestRun) {
+            bestRun.characters.push(char)
         }
+        // If we couldn't place the character in any run (all runs have this player)
+        // Skip this character to maintain one-per-player-per-run constraint
     }
 }
 
 /**
- * Distribute DPS with armor type balancing
+ * Distribute DPS with armor type balancing and Priority 1 conflict avoidance
  * Prefers runs with fewer MAIN characters of the same armor type
+ * Also minimizes Priority 1 characters of same role/armor type being in same run
  */
 function distributeDPS(
     dpsChars: CharacterSummaryCompact[],
@@ -121,10 +153,12 @@ function distributeDPS(
 ): void {
     for (const char of dpsChars) {
         const armorType = CLASS_TO_ARMOR_TYPE[char.character.class]
+        const charRole = char.character.role
+        const isPriority1 = char.character.priority === 1
 
         // Find best run: one that doesn't have this player and has lowest armor type count
         let bestRun: Run | null = null
-        let bestScore = -1
+        let bestScore = -Infinity
 
         for (const run of runs) {
             if (!canAddToRun(char, run, charToPlayer)) {
@@ -139,13 +173,37 @@ function distributeDPS(
                     CLASS_TO_ARMOR_TYPE[c.character.class] === armorType
             ).length
 
+            let priority1RolePenalty = 0
+            let priority1ArmorPenalty = 0
+
+            if (isPriority1) {
+                // Penalize runs with Priority 1 characters of same role
+                const priority1SameRoleCount = run.characters.filter(
+                    (c) => c.character.priority === 1 && c.character.role === charRole
+                ).length
+                priority1RolePenalty = priority1SameRoleCount * 9
+
+                // Penalize runs with Priority 1 characters of same armor type
+                const priority1SameArmorCount = run.characters.filter(
+                    (c) =>
+                        c.character.priority === 1 &&
+                        CLASS_TO_ARMOR_TYPE[c.character.class] === armorType
+                ).length
+                priority1ArmorPenalty = priority1SameArmorCount * 8
+            }
+
             // Also consider total run size to keep runs somewhat balanced
             const sizeScore = run.characters.length
 
-            // Lower is better (fewer armor conflicts among mains, smaller runs preferred)
-            const score = -armorTypeCount * 10 - sizeScore
+            // Multi-factor scoring:
+            // 1. Armor type balance (weight 10) - PRIMARY
+            // 2. Priority 1 role conflicts (weight 9) - SECONDARY
+            // 3. Priority 1 armor conflicts (weight 8) - TERTIARY
+            // 4. Run size balance (weight 1) - QUATERNARY
+            // Lower is better for all factors
+            const score = -armorTypeCount * 10 - priority1RolePenalty - priority1ArmorPenalty - sizeScore
 
-            if (bestRun === null || score > bestScore) {
+            if (score > bestScore) {
                 bestRun = run
                 bestScore = score
             }

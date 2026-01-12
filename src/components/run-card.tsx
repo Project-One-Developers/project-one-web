@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { classIcon } from "@/lib/wow-icon"
 import { s } from "@/shared/libs/string-utils"
 import type { Run } from "@/shared/models/split-run.models"
+import { CLASS_TO_ARMOR_TYPE } from "@/shared/wow.consts"
 import { GlassCard } from "./ui/glass-card"
 import { StatBadge } from "./ui/stat-badge"
 
@@ -85,10 +86,63 @@ export default function RunCard({
     )
     const totalHelpers = tankHelpers + healerHelpers + dpsHelpers
 
+    // Calculate armor type rankings (top 3 per armor type)
+    const armorTypeRankings = new Map<string, number>()
+
+    // Group characters by armor type
+    const charactersByArmor = new Map<string, (typeof run.characters)[0][]>()
+    for (const char of run.characters) {
+        const armorType = CLASS_TO_ARMOR_TYPE[char.character.class]
+        const armor = charactersByArmor.get(armorType) ?? []
+        armor.push(char)
+        charactersByArmor.set(armorType, armor)
+    }
+
+    // For each armor type, rank top 3 by priority (with role-based tiebreaking)
+    for (const [_armorType, chars] of charactersByArmor) {
+        // Only rank characters that have a priority set
+        const charsWithPriority = chars.filter((c) => c.character.priority !== undefined)
+
+        // Role priority for tiebreaking: DPS > Healer > Tank
+        const getRolePriority = (role: string): number => {
+            if (role === "DPS") return 1
+            if (role === "Healer") return 2
+            if (role === "Tank") return 3
+            return 4
+        }
+
+        // Sort by priority (ascending, so 1 is highest), with role-based tiebreaking
+        const sorted = [...charsWithPriority].sort((a, b) => {
+            const prioA = a.character.priority ?? 999
+            const prioB = b.character.priority ?? 999
+
+            if (prioA === prioB) {
+                // Tiebreaking: DPS > Healer > Tank
+                const roleA = getRolePriority(a.character.role)
+                const roleB = getRolePriority(b.character.role)
+
+                if (roleA !== roleB) {
+                    return roleA - roleB
+                }
+
+                // Final tiebreaker: character ID for stable ordering
+                return a.character.id.localeCompare(b.character.id)
+            }
+
+            return prioA - prioB
+        })
+
+        // Assign ranks 1, 2, 3 to top 3
+        sorted.slice(0, 3).forEach((char, index) => {
+            armorTypeRankings.set(char.character.id, index + 1)
+        })
+    }
+
     // Render a player cell
     const renderPlayerCell = (charSummary: (typeof run.characters)[0], index: number) => {
         const char = charSummary.character
         const classColor = getClassColor(char.class)
+        const armorRank = armorTypeRankings.get(char.id)
 
         return (
             <div
@@ -131,12 +185,17 @@ export default function RunCard({
                         {char.player.name}
                     </span>
                 </div>
-                {char.main && (
-                    <Crown
-                        className="w-3.5 h-3.5 shrink-0"
-                        style={{ color: classColor }}
-                    />
-                )}
+                <div className="flex items-center gap-2 shrink-0">
+                    {armorRank !== undefined && (
+                        <span className="text-sm font-bold text-foreground">{armorRank}</span>
+                    )}
+                    {char.main && (
+                        <Crown
+                            className="w-3.5 h-3.5 shrink-0"
+                            style={{ color: classColor }}
+                        />
+                    )}
+                </div>
             </div>
         )
     }
