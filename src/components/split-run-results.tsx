@@ -2,6 +2,7 @@
 
 import { Download, BarChart } from "lucide-react"
 import { useState, type JSX } from "react"
+import { s } from "@/shared/libs/string-utils"
 import type { Run } from "@/shared/models/split-run.models"
 import RunCard from "./run-card"
 import { Button } from "./ui/button"
@@ -113,11 +114,33 @@ export default function SplitRunResults({
         setDragSourceRunId(null)
     }
 
-    // Calculate aggregate stats
+    // Calculate aggregate stats with main/alt split
     const totalCharacters = runs.reduce((sum, run) => sum + run.characters.length, 0)
-    const totalTanks = runs.reduce((sum, run) => sum + run.stats.tanks, 0)
-    const totalHealers = runs.reduce((sum, run) => sum + run.stats.healers, 0)
-    const totalDps = runs.reduce((sum, run) => sum + run.stats.dps, 0)
+
+    // Count mains and alts separately for each role
+    const allCharacters = runs.flatMap((run) => run.characters)
+
+    const tankMains = allCharacters.filter(
+        (c) => c.character.role === "Tank" && c.character.main
+    ).length
+    const tankAlts = allCharacters.filter(
+        (c) => c.character.role === "Tank" && !c.character.main
+    ).length
+
+    const healerMains = allCharacters.filter(
+        (c) => c.character.role === "Healer" && c.character.main
+    ).length
+    const healerAlts = allCharacters.filter(
+        (c) => c.character.role === "Healer" && !c.character.main
+    ).length
+
+    const dpsMains = allCharacters.filter(
+        (c) => c.character.role === "DPS" && c.character.main
+    ).length
+    const dpsAlts = allCharacters.filter(
+        (c) => c.character.role === "DPS" && !c.character.main
+    ).length
+
     const runsWithWarnings = runs.filter((run) => run.warnings.length > 0).length
 
     return (
@@ -137,13 +160,17 @@ export default function SplitRunResults({
                             label="Total"
                             value={totalCharacters}
                         />
-                        <StatBadge variant="default" label="Tanks" value={totalTanks} />
+                        <StatBadge
+                            variant="default"
+                            label="Tanks"
+                            value={`${s(tankMains)} mains / ${s(tankAlts)} alts`}
+                        />
                         <StatBadge
                             variant="success"
                             label="Healers"
-                            value={totalHealers}
+                            value={`${s(healerMains)} mains / ${s(healerAlts)} alts`}
                         />
-                        <StatBadge variant="info" label="DPS" value={totalDps} />
+                        <StatBadge variant="info" label="DPS" value={`${s(dpsMains)} mains / ${s(dpsAlts)} alts`} />
                         {runsWithWarnings > 0 && (
                             <StatBadge
                                 variant="warning"
