@@ -40,6 +40,16 @@ function NumberInput(props: NumberInputProps) {
         ...rest
     } = props
 
+    // Internal state to allow free typing without immediate validation
+    const [inputValue, setInputValue] = React.useState<string>(
+        value !== undefined ? String(value) : ""
+    )
+
+    // Sync internal state when external value changes
+    React.useEffect(() => {
+        setInputValue(value !== undefined ? String(value) : "")
+    }, [value])
+
     const clamp = (val: number) => {
         let clamped = val
         if (min !== undefined) {
@@ -49,6 +59,34 @@ function NumberInput(props: NumberInputProps) {
             clamped = Math.min(max, clamped)
         }
         return clamped
+    }
+
+    const commitValue = (val: string) => {
+        // Empty case
+        if (val === "") {
+            if (allowEmpty) {
+                ;(onChange as (v: number | undefined) => void)(undefined)
+            } else {
+                // Revert to previous value
+                setInputValue(String(value))
+            }
+            return
+        }
+
+        const parsed = parseFloat(val)
+        if (isNaN(parsed)) {
+            // Invalid input - revert
+            setInputValue(value !== undefined ? String(value) : "")
+            return
+        }
+
+        const clamped = clamp(parsed)
+        setInputValue(String(clamped))
+        if (allowEmpty) {
+            ;(onChange as (v: number | undefined) => void)(clamped)
+        } else {
+            ;(onChange as (v: number) => void)(clamped)
+        }
     }
 
     const increment = () => {
@@ -78,19 +116,11 @@ function NumberInput(props: NumberInputProps) {
     }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.value === "" && allowEmpty) {
-            ;(onChange as (v: number | undefined) => void)(undefined)
-            return
-        }
-        const parsed = parseFloat(e.target.value)
-        if (!isNaN(parsed)) {
-            const clamped = clamp(parsed)
-            if (allowEmpty) {
-                ;(onChange as (v: number | undefined) => void)(clamped)
-            } else {
-                ;(onChange as (v: number) => void)(clamped)
-            }
-        }
+        setInputValue(e.target.value)
+    }
+
+    const handleBlur = () => {
+        commitValue(inputValue)
     }
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -100,6 +130,8 @@ function NumberInput(props: NumberInputProps) {
         } else if (e.key === "ArrowDown") {
             e.preventDefault()
             decrement()
+        } else if (e.key === "Enter") {
+            commitValue(inputValue)
         }
     }
 
@@ -109,8 +141,9 @@ function NumberInput(props: NumberInputProps) {
                 type="number"
                 inputMode="numeric"
                 data-slot="number-input"
-                value={value ?? ""}
+                value={inputValue}
                 onChange={handleInputChange}
+                onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
                 min={min}
                 max={max}
