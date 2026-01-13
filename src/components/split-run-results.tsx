@@ -170,7 +170,11 @@ export default function SplitRunResults({
                             label="Healers"
                             value={`${s(healerMains)} mains / ${s(healerAlts)} alts`}
                         />
-                        <StatBadge variant="info" label="DPS" value={`${s(dpsMains)} mains / ${s(dpsAlts)} alts`} />
+                        <StatBadge
+                            variant="info"
+                            label="DPS"
+                            value={`${s(dpsMains)} mains / ${s(dpsAlts)} alts`}
+                        />
                         {runsWithWarnings > 0 && (
                             <StatBadge
                                 variant="warning"

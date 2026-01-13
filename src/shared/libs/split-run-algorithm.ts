@@ -201,7 +201,11 @@ function distributeDPS(
             // 3. Priority 1 armor conflicts (weight 8) - TERTIARY
             // 4. Run size balance (weight 1) - QUATERNARY
             // Lower is better for all factors
-            const score = -armorTypeCount * 10 - priority1RolePenalty - priority1ArmorPenalty - sizeScore
+            const score =
+                -armorTypeCount * 10 -
+                priority1RolePenalty -
+                priority1ArmorPenalty -
+                sizeScore
 
             if (score > bestScore) {
                 bestRun = run

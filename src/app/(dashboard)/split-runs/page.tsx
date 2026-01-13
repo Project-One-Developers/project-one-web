@@ -101,7 +101,9 @@ export default function SplitRunsPage(): JSX.Element {
                 }
                 return {
                     ...updatedRun,
-                    warnings: params ? generateWarnings(updatedRun, params.targetSize) : [],
+                    warnings: params
+                        ? generateWarnings(updatedRun, params.targetSize)
+                        : [],
                 }
             }
             if (run.id === targetRunId) {
@@ -112,7 +114,9 @@ export default function SplitRunsPage(): JSX.Element {
                 }
                 return {
                     ...updatedRun,
-                    warnings: params ? generateWarnings(updatedRun, params.targetSize) : [],
+                    warnings: params
+                        ? generateWarnings(updatedRun, params.targetSize)
+                        : [],
                 }
             }
             return run
@@ -157,7 +161,9 @@ export default function SplitRunsPage(): JSX.Element {
                 }
                 return {
                     ...updatedRun,
-                    warnings: params ? generateWarnings(updatedRun, params.targetSize) : [],
+                    warnings: params
+                        ? generateWarnings(updatedRun, params.targetSize)
+                        : [],
                 }
             }
             return r
@@ -215,7 +221,9 @@ export default function SplitRunsPage(): JSX.Element {
                 }
                 return {
                     ...updatedRun,
-                    warnings: params ? generateWarnings(updatedRun, params.targetSize) : [],
+                    warnings: params
+                        ? generateWarnings(updatedRun, params.targetSize)
+                        : [],
                 }
             }
             if (run.id === targetRunId) {
@@ -226,7 +234,9 @@ export default function SplitRunsPage(): JSX.Element {
                 }
                 return {
                     ...updatedRun,
-                    warnings: params ? generateWarnings(updatedRun, params.targetSize) : [],
+                    warnings: params
+                        ? generateWarnings(updatedRun, params.targetSize)
+                        : [],
                 }
             }
             return run

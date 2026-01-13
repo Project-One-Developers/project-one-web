@@ -105,9 +105,15 @@ export default function RunCard({
 
         // Role priority for tiebreaking: DPS > Healer > Tank
         const getRolePriority = (role: string): number => {
-            if (role === "DPS") return 1
-            if (role === "Healer") return 2
-            if (role === "Tank") return 3
+            if (role === "DPS") {
+                return 1
+            }
+            if (role === "Healer") {
+                return 2
+            }
+            if (role === "Tank") {
+                return 3
+            }
             return 4
         }
 
@@ -187,7 +193,9 @@ export default function RunCard({
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                     {armorRank !== undefined && (
-                        <span className="text-sm font-bold text-foreground">{armorRank}</span>
+                        <span className="text-sm font-bold text-foreground">
+                            {armorRank}
+                        </span>
                     )}
                     {char.main && (
                         <Crown
