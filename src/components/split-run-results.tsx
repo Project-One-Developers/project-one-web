@@ -1,5 +1,6 @@
 "use client"
 
+import { partition } from "es-toolkit"
 import { Download, BarChart } from "lucide-react"
 import { useState, type JSX } from "react"
 import { s } from "@/shared/libs/string-utils"
@@ -119,27 +120,9 @@ export default function SplitRunResults({
 
     // Count mains and alts separately for each role
     const allCharacters = runs.flatMap((run) => run.characters)
-
-    const tankMains = allCharacters.filter(
-        (c) => c.character.role === "Tank" && c.character.main
-    ).length
-    const tankAlts = allCharacters.filter(
-        (c) => c.character.role === "Tank" && !c.character.main
-    ).length
-
-    const healerMains = allCharacters.filter(
-        (c) => c.character.role === "Healer" && c.character.main
-    ).length
-    const healerAlts = allCharacters.filter(
-        (c) => c.character.role === "Healer" && !c.character.main
-    ).length
-
-    const dpsMains = allCharacters.filter(
-        (c) => c.character.role === "DPS" && c.character.main
-    ).length
-    const dpsAlts = allCharacters.filter(
-        (c) => c.character.role === "DPS" && !c.character.main
-    ).length
+    const [mains, alts] = partition(allCharacters, (c) => c.character.main)
+    const mainsByRole = Object.groupBy(mains, (c) => c.character.role)
+    const altsByRole = Object.groupBy(alts, (c) => c.character.role)
 
     const runsWithWarnings = runs.filter((run) => run.warnings.length > 0).length
 
@@ -163,17 +146,17 @@ export default function SplitRunResults({
                         <StatBadge
                             variant="default"
                             label="Tanks"
-                            value={`${s(tankMains)} mains / ${s(tankAlts)} alts`}
+                            value={`${s(mainsByRole.Tank?.length ?? 0)} mains / ${s(altsByRole.Tank?.length ?? 0)} alts`}
                         />
                         <StatBadge
                             variant="success"
                             label="Healers"
-                            value={`${s(healerMains)} mains / ${s(healerAlts)} alts`}
+                            value={`${s(mainsByRole.Healer?.length ?? 0)} mains / ${s(altsByRole.Healer?.length ?? 0)} alts`}
                         />
                         <StatBadge
                             variant="info"
                             label="DPS"
-                            value={`${s(dpsMains)} mains / ${s(dpsAlts)} alts`}
+                            value={`${s(mainsByRole.DPS?.length ?? 0)} mains / ${s(altsByRole.DPS?.length ?? 0)} alts`}
                         />
                         {runsWithWarnings > 0 && (
                             <StatBadge

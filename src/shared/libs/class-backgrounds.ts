@@ -1,7 +1,7 @@
 import type { WowClassName } from "@/shared/models/wow.models"
 
 /** WoW class colors (official Blizzard colors) */
-const CLASS_COLORS: Record<WowClassName, string> = {
+export const CLASS_COLORS: Record<WowClassName, string> = {
     "Death Knight": "#C41E3A",
     "Demon Hunter": "#A330C9",
     Druid: "#FF7C0A",
