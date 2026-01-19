@@ -45,8 +45,12 @@ export function calculateSplitRuns(
     // Group characters by role and sort by main/alt (mains first)
     const sortByMainFirst = (a: CharacterSummaryCompact, b: CharacterSummaryCompact) => {
         // Mains before alts
-        if (a.character.main && !b.character.main) return -1
-        if (!a.character.main && b.character.main) return 1
+        if (a.character.main && !b.character.main) {
+            return -1
+        }
+        if (!a.character.main && b.character.main) {
+            return 1
+        }
         return 0
     }
 
@@ -56,7 +60,9 @@ export function calculateSplitRuns(
     const healers = allCharacters
         .filter((c) => c.character.role === "Healer")
         .sort(sortByMainFirst)
-    const dps = allCharacters.filter((c) => c.character.role === "DPS").sort(sortByMainFirst)
+    const dps = allCharacters
+        .filter((c) => c.character.role === "DPS")
+        .sort(sortByMainFirst)
 
     // Phase 2: Initialize runs
     const runs: Run[] = Array.from({ length: params.numRuns }, () => ({
