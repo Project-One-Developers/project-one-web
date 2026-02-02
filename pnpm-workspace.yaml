@@ -1,7 +1,10 @@
 packages:
-    - .
+  - .
 ignoredBuiltDependencies:
-    - sharp
-    - unrs-resolver
+  - sharp
+  - unrs-resolver
 
 minimumReleaseAge: 4320
+minimumReleaseAgeExclude:
+  # Renovate security update: next@16.1.5
+  - next@16.1.5
