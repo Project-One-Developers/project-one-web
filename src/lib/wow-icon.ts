@@ -47,6 +47,10 @@ export const specIcon = new Map<number, string>([
         581,
         "https://wow.zamimg.com/images/wow/icons/medium/ability_demonhunter_spectank.jpg",
     ],
+    [
+        1480,
+        "https://wow.zamimg.com/images/wow/icons/medium/classicon_demonhunter_void.jpg",
+    ],
     [102, "https://wow.zamimg.com/images/wow/icons/medium/spell_nature_starfall.jpg"],
     [103, "https://wow.zamimg.com/images/wow/icons/medium/ability_druid_catform.jpg"],
     [104, "https://wow.zamimg.com/images/wow/icons/medium/ability_racial_bearform.jpg"],

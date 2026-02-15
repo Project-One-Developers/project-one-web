@@ -107,6 +107,7 @@ export const WOW_CLASS_WITH_SPECS: WowClass[] = [
         specs: [
             { id: 577, name: "Havoc", role: "DPS", position: "Melee" },
             { id: 581, name: "Vengeance", role: "Tank", position: "Melee" },
+            { id: 1480, name: "Devourer", role: "DPS", position: "Ranged" },
         ],
     },
     {
@@ -129,6 +130,7 @@ export const SPEC_ID_TO_CLASS_SPEC = {
     // Demon Hunter
     577: { wowClass: "Demon Hunter", wowSpec: "Havoc" },
     581: { wowClass: "Demon Hunter", wowSpec: "Vengeance" },
+    1480: { wowClass: "Demon Hunter", wowSpec: "Devourer" },
 
     // Druid
     102: { wowClass: "Druid", wowSpec: "Balance" },

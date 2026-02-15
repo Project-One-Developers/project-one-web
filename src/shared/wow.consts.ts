@@ -24,6 +24,7 @@ export const SPECS_NAME = [
     // Demon Hunter
     "Havoc",
     "Vengeance",
+    "Devourer",
     // Druid
     "Balance",
     "Feral",
