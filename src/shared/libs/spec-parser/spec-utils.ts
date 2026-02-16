@@ -1,7 +1,7 @@
 import { s } from "@/shared/libs/string-utils"
 import type { WowClassName, WoWRole, WowSpecName } from "@/shared/models/wow.models"
 import type { WowClass, WowSpec } from "@/shared/types"
-import { WOW_CLASS_WITH_SPECS } from "./spec-utils.schemas"
+import { WOW_CLASS_WITH_SPECS } from "@/shared/wow.consts"
 
 const tankSpecIds = [66, 73, 104, 250, 268, 581]
 const healerSpecIds = [65, 105, 256, 257, 264, 270, 1468]

@@ -16,61 +16,136 @@ export const CLASSES_NAME = [
     "Warrior",
 ] as const
 
-export const SPECS_NAME = [
-    // Death Knight
-    "Blood",
-    "Frost",
-    "Unholy",
-    // Demon Hunter
-    "Havoc",
-    "Vengeance",
-    "Devourer",
-    // Druid
-    "Balance",
-    "Feral",
-    "Guardian",
-    "Restoration",
-    // Evoker
-    "Devastation",
-    "Preservation",
-    "Augmentation",
-    // Hunter
-    "Beast Mastery",
-    "Marksmanship",
-    "Survival",
-    // Mage
-    "Arcane",
-    "Fire",
-    "Frost",
-    // Monk
-    "Brewmaster",
-    "Mistweaver",
-    "Windwalker",
-    // Paladin
-    "Holy",
-    "Protection",
-    "Retribution",
-    // Priest
-    "Discipline",
-    "Holy",
-    "Shadow",
-    // Rogue
-    "Assassination",
-    "Outlaw",
-    "Subtlety",
-    // Shaman
-    "Elemental",
-    "Enhancement",
-    "Restoration",
-    // Warlock
-    "Affliction",
-    "Demonology",
-    "Destruction",
-    // Warrior
-    "Arms",
-    "Fury",
-    "Protection",
+export const WOW_CLASS_WITH_SPECS = [
+    {
+        id: 1,
+        name: "Warrior",
+        specs: [
+            { id: 71, name: "Arms", role: "DPS", position: "Melee" },
+            { id: 72, name: "Fury", role: "DPS", position: "Melee" },
+            { id: 73, name: "Protection", role: "Tank", position: "Melee" },
+        ],
+    },
+    {
+        id: 2,
+        name: "Paladin",
+        specs: [
+            { id: 65, name: "Holy", role: "Healer", position: "Melee" },
+            { id: 66, name: "Protection", role: "Tank", position: "Melee" },
+            { id: 70, name: "Retribution", role: "DPS", position: "Melee" },
+        ],
+    },
+    {
+        id: 3,
+        name: "Hunter",
+        specs: [
+            { id: 253, name: "Beast Mastery", role: "DPS", position: "Ranged" },
+            { id: 254, name: "Marksmanship", role: "DPS", position: "Ranged" },
+            { id: 255, name: "Survival", role: "DPS", position: "Melee" },
+        ],
+    },
+    {
+        id: 4,
+        name: "Rogue",
+        specs: [
+            { id: 259, name: "Assassination", role: "DPS", position: "Melee" },
+            { id: 260, name: "Outlaw", role: "DPS", position: "Melee" },
+            { id: 261, name: "Subtlety", role: "DPS", position: "Melee" },
+        ],
+    },
+    {
+        id: 5,
+        name: "Priest",
+        specs: [
+            { id: 256, name: "Discipline", role: "Healer", position: "Ranged" },
+            { id: 257, name: "Holy", role: "Healer", position: "Ranged" },
+            { id: 258, name: "Shadow", role: "DPS", position: "Ranged" },
+        ],
+    },
+    {
+        id: 6,
+        name: "Death Knight",
+        specs: [
+            { id: 250, name: "Blood", role: "Tank", position: "Melee" },
+            { id: 251, name: "Frost", role: "DPS", position: "Melee" },
+            { id: 252, name: "Unholy", role: "DPS", position: "Melee" },
+        ],
+    },
+    {
+        id: 7,
+        name: "Shaman",
+        specs: [
+            { id: 262, name: "Elemental", role: "DPS", position: "Ranged" },
+            { id: 263, name: "Enhancement", role: "DPS", position: "Melee" },
+            { id: 264, name: "Restoration", role: "Healer", position: "Ranged" },
+        ],
+    },
+    {
+        id: 8,
+        name: "Mage",
+        specs: [
+            { id: 62, name: "Arcane", role: "DPS", position: "Ranged" },
+            { id: 63, name: "Fire", role: "DPS", position: "Ranged" },
+            { id: 64, name: "Frost", role: "DPS", position: "Ranged" },
+        ],
+    },
+    {
+        id: 9,
+        name: "Warlock",
+        specs: [
+            { id: 265, name: "Affliction", role: "DPS", position: "Ranged" },
+            { id: 266, name: "Demonology", role: "DPS", position: "Ranged" },
+            { id: 267, name: "Destruction", role: "DPS", position: "Ranged" },
+        ],
+    },
+    {
+        id: 10,
+        name: "Monk",
+        specs: [
+            { id: 268, name: "Brewmaster", role: "Tank", position: "Melee" },
+            { id: 269, name: "Windwalker", role: "DPS", position: "Melee" },
+            { id: 270, name: "Mistweaver", role: "Healer", position: "Melee" },
+        ],
+    },
+    {
+        id: 11,
+        name: "Druid",
+        specs: [
+            { id: 102, name: "Balance", role: "DPS", position: "Ranged" },
+            { id: 103, name: "Feral", role: "DPS", position: "Melee" },
+            { id: 104, name: "Guardian", role: "Tank", position: "Melee" },
+            { id: 105, name: "Restoration", role: "DPS", position: "Ranged" },
+        ],
+    },
+    {
+        id: 12,
+        name: "Demon Hunter",
+        specs: [
+            { id: 577, name: "Havoc", role: "DPS", position: "Melee" },
+            { id: 581, name: "Vengeance", role: "Tank", position: "Melee" },
+            { id: 1480, name: "Devourer", role: "DPS", position: "Ranged" },
+        ],
+    },
+    {
+        id: 13,
+        name: "Evoker",
+        specs: [
+            { id: 1467, name: "Devastation", role: "DPS", position: "Ranged" },
+            { id: 1468, name: "Preservation", role: "Healer", position: "Ranged" },
+            { id: 1473, name: "Augmentation", role: "DPS", position: "Ranged" },
+        ],
+    },
 ] as const
+
+type WowClassWithSpecs = typeof WOW_CLASS_WITH_SPECS
+type AnySpec = WowClassWithSpecs[number]["specs"][number]
+
+export type WowSpecId = AnySpec["id"]
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- z.enum() needs a non-empty readonly tuple, flatMap can't prove that
+export const SPECS_NAME = WOW_CLASS_WITH_SPECS.flatMap((c) =>
+    c.specs.map((s) => s.name)
+) as unknown as readonly [AnySpec["name"], ...AnySpec["name"][]]
 export const ROLES = ["Tank", "Healer", "DPS"] as const
 export const RAID_DIFF = ["LFR", "Normal", "Heroic", "Mythic"] as const
 

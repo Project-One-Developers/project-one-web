@@ -42,7 +42,7 @@ export type WowSpec = {
 export type WowClass = {
     id: number
     name: WowClassName
-    specs: WowSpec[]
+    specs: readonly WowSpec[]
 }
 
 export enum TierSetCompletion {

@@ -3,6 +3,7 @@ import type {
     WowClassName,
     WowItemSlotKey,
 } from "@/shared/models/wow.models"
+import type { WowSpecId } from "@/shared/wow.consts"
 
 export const classIcon = new Map<WowClassName, string>([
     [
@@ -26,108 +27,65 @@ export const classIcon = new Map<WowClassName, string>([
     ["Warrior", "https://wow.zamimg.com/images/wow/icons/medium/class_warrior.jpg"],
 ])
 
-export const specIcon = new Map<number, string>([
-    [
-        250,
-        "https://wow.zamimg.com/images/wow/icons/medium/spell_deathknight_bloodpresence.jpg",
-    ],
-    [
-        251,
-        "https://wow.zamimg.com/images/wow/icons/medium/spell_deathknight_frostpresence.jpg",
-    ],
-    [
-        252,
-        "https://wow.zamimg.com/images/wow/icons/medium/spell_deathknight_unholypresence.jpg",
-    ],
-    [
-        577,
-        "https://wow.zamimg.com/images/wow/icons/medium/ability_demonhunter_specdps.jpg",
-    ],
-    [
-        581,
-        "https://wow.zamimg.com/images/wow/icons/medium/ability_demonhunter_spectank.jpg",
-    ],
-    [
-        1480,
-        "https://wow.zamimg.com/images/wow/icons/medium/classicon_demonhunter_void.jpg",
-    ],
-    [102, "https://wow.zamimg.com/images/wow/icons/medium/spell_nature_starfall.jpg"],
-    [103, "https://wow.zamimg.com/images/wow/icons/medium/ability_druid_catform.jpg"],
-    [104, "https://wow.zamimg.com/images/wow/icons/medium/ability_racial_bearform.jpg"],
-    [105, "https://wow.zamimg.com/images/wow/icons/medium/spell_nature_healingtouch.jpg"],
-    [
-        253,
-        "https://wow.zamimg.com/images/wow/icons/medium/ability_hunter_bestialdiscipline.jpg",
-    ],
-    [254, "https://wow.zamimg.com/images/wow/icons/medium/ability_hunter_focusedaim.jpg"],
-    [255, "https://wow.zamimg.com/images/wow/icons/medium/ability_hunter_camouflage.jpg"],
-    [62, "https://wow.zamimg.com/images/wow/icons/medium/spell_holy_magicalsentry.jpg"],
-    [63, "https://wow.zamimg.com/images/wow/icons/medium/spell_fire_firebolt02.jpg"],
-    [64, "https://wow.zamimg.com/images/wow/icons/medium/spell_frost_frostbolt02.jpg"],
-    [
-        268,
-        "https://wow.zamimg.com/images/wow/icons/medium/spell_monk_brewmaster_spec.jpg",
-    ],
-    [
-        270,
-        "https://wow.zamimg.com/images/wow/icons/medium/spell_monk_mistweaver_spec.jpg",
-    ],
-    [
-        269,
-        "https://wow.zamimg.com/images/wow/icons/medium/spell_monk_windwalker_spec.jpg",
-    ],
-    [65, "https://wow.zamimg.com/images/wow/icons/medium/spell_holy_holybolt.jpg"],
-    [
-        66,
-        "https://wow.zamimg.com/images/wow/icons/medium/ability_paladin_shieldofthetemplar.jpg",
-    ],
-    [70, "https://wow.zamimg.com/images/wow/icons/medium/spell_holy_auraoflight.jpg"],
-    [
-        256,
-        "https://wow.zamimg.com/images/wow/icons/medium/spell_holy_powerwordshield.jpg",
-    ],
-    [257, "https://wow.zamimg.com/images/wow/icons/medium/spell_holy_guardianspirit.jpg"],
-    [
-        258,
-        "https://wow.zamimg.com/images/wow/icons/medium/spell_shadow_shadowwordpain.jpg",
-    ],
-    [259, "https://wow.zamimg.com/images/wow/icons/medium/ability_rogue_eviscerate.jpg"],
-    [260, "https://wow.zamimg.com/images/wow/icons/medium/ability_backstab.jpg"],
-    [261, "https://wow.zamimg.com/images/wow/icons/medium/ability_stealth.jpg"],
-    [262, "https://wow.zamimg.com/images/wow/icons/medium/spell_nature_lightning.jpg"],
-    [
-        263,
-        "https://wow.zamimg.com/images/wow/icons/medium/spell_shaman_improvedstormstrike.jpg",
-    ],
-    [
-        264,
-        "https://wow.zamimg.com/images/wow/icons/medium/spell_nature_magicimmunity.jpg",
-    ],
-    [265, "https://wow.zamimg.com/images/wow/icons/medium/spell_shadow_deathcoil.jpg"],
-    [
-        266,
-        "https://wow.zamimg.com/images/wow/icons/medium/spell_shadow_metamorphosis.jpg",
-    ],
-    [267, "https://wow.zamimg.com/images/wow/icons/medium/spell_shadow_rainoffire.jpg"],
-    [71, "https://wow.zamimg.com/images/wow/icons/medium/ability_warrior_savageblow.jpg"],
-    [72, "https://wow.zamimg.com/images/wow/icons/medium/ability_warrior_innerrage.jpg"],
-    [
-        73,
-        "https://wow.zamimg.com/images/wow/icons/medium/ability_warrior_defensivestance.jpg",
-    ],
-    [
-        1467,
-        "https://wow.zamimg.com/images/wow/icons/medium/classicon_evoker_devastation.jpg",
-    ],
-    [
-        1468,
-        "https://wow.zamimg.com/images/wow/icons/medium/classicon_evoker_preservation.jpg",
-    ],
-    [
-        1473,
-        "https://wow.zamimg.com/images/wow/icons/medium/classicon_evoker_augmentation.jpg",
-    ],
-])
+const specIconRecord = {
+    // Death Knight
+    250: "https://wow.zamimg.com/images/wow/icons/medium/spell_deathknight_bloodpresence.jpg",
+    251: "https://wow.zamimg.com/images/wow/icons/medium/spell_deathknight_frostpresence.jpg",
+    252: "https://wow.zamimg.com/images/wow/icons/medium/spell_deathknight_unholypresence.jpg",
+    // Demon Hunter
+    577: "https://wow.zamimg.com/images/wow/icons/medium/ability_demonhunter_specdps.jpg",
+    581: "https://wow.zamimg.com/images/wow/icons/medium/ability_demonhunter_spectank.jpg",
+    1480: "https://wow.zamimg.com/images/wow/icons/medium/classicon_demonhunter_void.jpg",
+    // Druid
+    102: "https://wow.zamimg.com/images/wow/icons/medium/spell_nature_starfall.jpg",
+    103: "https://wow.zamimg.com/images/wow/icons/medium/ability_druid_catform.jpg",
+    104: "https://wow.zamimg.com/images/wow/icons/medium/ability_racial_bearform.jpg",
+    105: "https://wow.zamimg.com/images/wow/icons/medium/spell_nature_healingtouch.jpg",
+    // Evoker
+    1467: "https://wow.zamimg.com/images/wow/icons/medium/classicon_evoker_devastation.jpg",
+    1468: "https://wow.zamimg.com/images/wow/icons/medium/classicon_evoker_preservation.jpg",
+    1473: "https://wow.zamimg.com/images/wow/icons/medium/classicon_evoker_augmentation.jpg",
+    // Hunter
+    253: "https://wow.zamimg.com/images/wow/icons/medium/ability_hunter_bestialdiscipline.jpg",
+    254: "https://wow.zamimg.com/images/wow/icons/medium/ability_hunter_focusedaim.jpg",
+    255: "https://wow.zamimg.com/images/wow/icons/medium/ability_hunter_camouflage.jpg",
+    // Mage
+    62: "https://wow.zamimg.com/images/wow/icons/medium/spell_holy_magicalsentry.jpg",
+    63: "https://wow.zamimg.com/images/wow/icons/medium/spell_fire_firebolt02.jpg",
+    64: "https://wow.zamimg.com/images/wow/icons/medium/spell_frost_frostbolt02.jpg",
+    // Monk
+    268: "https://wow.zamimg.com/images/wow/icons/medium/spell_monk_brewmaster_spec.jpg",
+    269: "https://wow.zamimg.com/images/wow/icons/medium/spell_monk_windwalker_spec.jpg",
+    270: "https://wow.zamimg.com/images/wow/icons/medium/spell_monk_mistweaver_spec.jpg",
+    // Paladin
+    65: "https://wow.zamimg.com/images/wow/icons/medium/spell_holy_holybolt.jpg",
+    66: "https://wow.zamimg.com/images/wow/icons/medium/ability_paladin_shieldofthetemplar.jpg",
+    70: "https://wow.zamimg.com/images/wow/icons/medium/spell_holy_auraoflight.jpg",
+    // Priest
+    256: "https://wow.zamimg.com/images/wow/icons/medium/spell_holy_powerwordshield.jpg",
+    257: "https://wow.zamimg.com/images/wow/icons/medium/spell_holy_guardianspirit.jpg",
+    258: "https://wow.zamimg.com/images/wow/icons/medium/spell_shadow_shadowwordpain.jpg",
+    // Rogue
+    259: "https://wow.zamimg.com/images/wow/icons/medium/ability_rogue_eviscerate.jpg",
+    260: "https://wow.zamimg.com/images/wow/icons/medium/ability_backstab.jpg",
+    261: "https://wow.zamimg.com/images/wow/icons/medium/ability_stealth.jpg",
+    // Shaman
+    262: "https://wow.zamimg.com/images/wow/icons/medium/spell_nature_lightning.jpg",
+    263: "https://wow.zamimg.com/images/wow/icons/medium/spell_shaman_improvedstormstrike.jpg",
+    264: "https://wow.zamimg.com/images/wow/icons/medium/spell_nature_magicimmunity.jpg",
+    // Warlock
+    265: "https://wow.zamimg.com/images/wow/icons/medium/spell_shadow_deathcoil.jpg",
+    266: "https://wow.zamimg.com/images/wow/icons/medium/spell_shadow_metamorphosis.jpg",
+    267: "https://wow.zamimg.com/images/wow/icons/medium/spell_shadow_rainoffire.jpg",
+    // Warrior
+    71: "https://wow.zamimg.com/images/wow/icons/medium/ability_warrior_savageblow.jpg",
+    72: "https://wow.zamimg.com/images/wow/icons/medium/ability_warrior_innerrage.jpg",
+    73: "https://wow.zamimg.com/images/wow/icons/medium/ability_warrior_defensivestance.jpg",
+} satisfies Record<WowSpecId, string>
+
+export const specIcon = new Map<number, string>(
+    Object.entries(specIconRecord).map(([k, v]) => [Number(k), v])
+)
 
 export const itemSlotIcon = new Map<WowItemSlotKey, string>([
     ["head", "https://wow.zamimg.com/images/wow/icons/large/inv_helmet_24.jpg"],
