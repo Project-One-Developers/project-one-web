@@ -148,14 +148,14 @@ export const SEASONS: Record<Season, SeasonConfig> = {
         specialItems: [{ sourceType: "special-tww-s3-back", assumedIlvl: 730 }],
     },
 
-    // Midnight expansion (future)
+    // Midnight expansion
     16: {
         raidIds: [1307, 1314, 1308],
-        mplusIds: [2825, 2811, 2874, 2813, 2915, 2859, 2923, 2805],
-        catalystSourceId: 0, // TBD
-        catalystChargeId: 0, // TBD
-        mountId: null,
-        relevantCurrencyIds: [], // TBD
+        mplusIds: [1201, 1300, 1315, 1316, 278, 945, 476, 1299],
+        catalystSourceId: -87,
+        catalystChargeId: 3378, // https://www.wowhead.com/currency=3378/dawnlight-manaflux
+        mountId: 2607, // Ashes of Belo'ren https://warcraftmounts.com/mount.php?mountid=2068
+        relevantCurrencyIds: [3378, 3345, 3347], // catalyst, hero crest, myth crest
         bonusGroupIds: [607, 608, 609, 610, 611, 612],
         raidIlvl: {
             // The Voidspire (6 bosses)
@@ -191,7 +191,7 @@ export const SEASONS: Record<Season, SeasonConfig> = {
 
 // ============== Current Season (single place to update) ==============
 
-const DEFAULT_SEASON: Season = 3
+const DEFAULT_SEASON: Season = 16
 
 /**
  * Get the effective current season, checking for dev override.
