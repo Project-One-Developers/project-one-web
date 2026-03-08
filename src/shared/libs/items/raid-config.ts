@@ -9,6 +9,10 @@ export const INSTANCE_IDS_TO_IGNORE = new Set([
     1301, // Blackrock depths
     1278, // TWW World Bosses
     1312, // Midnight World Bosses
+    // ignore individual raid IDs in midnights since raidbots introduced an aggregated source ID for all raid drops, so we use that for easier matching. Individual raid IDs are still included in case we want to display them separately in the future.
+    1307, 
+    1314, 
+    1308
 ])
 
 // Source types to match during sync

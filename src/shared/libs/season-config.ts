@@ -150,7 +150,7 @@ export const SEASONS: Record<Season, SeasonConfig> = {
 
     // Midnight expansion
     16: {
-        raidIds: [1307, 1314, 1308],
+        raidIds: [-91], // [1307, 1314, 1308] separated raid, but raidbots introduced an aggregated source ID for all raid drops, so we use that for easier matching. Individual raid IDs are still included in case we want to display them separately in the future.
         mplusIds: [1201, 1300, 1315, 1316, 278, 945, 476, 1299],
         catalystSourceId: -87,
         catalystChargeId: 3378, // https://www.wowhead.com/currency=3378/dawnlight-manaflux
