@@ -16,10 +16,11 @@ import {
 import { DateTime } from "luxon"
 import { useState, type JSX, type ReactNode } from "react"
 import { toast } from "sonner"
-import { importGuildMembers, syncAllCharactersBlizzard } from "@/actions/blizzard"
+import { syncAllCharactersBlizzard } from "@/actions/blizzard"
 import { syncDroptimizersFromDiscord } from "@/actions/droptimizer"
 import { syncFromRaidbots } from "@/actions/items"
 import { Button } from "@/components/ui/button"
+import { GuildImportDialog } from "@/components/guild-import-dialog"
 import { GlassCard } from "@/components/ui/glass-card"
 import { unwrap } from "@/lib/errors"
 import { useCronLogs } from "@/lib/queries/cron-logs"
@@ -116,7 +117,7 @@ export default function SyncPage(): JSX.Element {
     const [isSyncingBlizzard, setIsSyncingBlizzard] = useState(false)
     const [isSyncingDiscord, setIsSyncingDiscord] = useState(false)
     const [isSyncingItems, setIsSyncingItems] = useState(false)
-    const [isImportingGuild, setIsImportingGuild] = useState(false)
+    const [isGuildDialogOpen, setIsGuildDialogOpen] = useState(false)
 
     const handleSyncBlizzard = async () => {
         setIsSyncingBlizzard(true)
@@ -188,32 +189,28 @@ export default function SyncPage(): JSX.Element {
         }
     }
 
-    const handleImportGuild = async () => {
-        setIsImportingGuild(true)
-        try {
-            const result = await unwrap(importGuildMembers())
-            toast.success(
-                `Guild import completed: ${s(result.imported)} imported, ${s(result.skipped)} skipped`
-            )
-            if (result.errors.length > 0) {
-                toast.warning(`${s(result.errors.length)} errors occurred during import`)
-            }
-            await Promise.all([
-                queryClient.invalidateQueries({
-                    queryKey: [queryKeys.playersWithCharacters],
-                }),
-                queryClient.invalidateQueries({
-                    queryKey: [queryKeys.playersWithoutCharacters],
-                }),
-                queryClient.invalidateQueries({ queryKey: [queryKeys.characters] }),
-                queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] }),
-                queryClient.invalidateQueries({ queryKey: [queryKeys.rosterSummary] }),
-            ])
-        } catch (error) {
-            toast.error(`Guild import failed: ${s(error)}`)
-        } finally {
-            setIsImportingGuild(false)
+    const handleGuildImportComplete = async (result: {
+        imported: number
+        skipped: number
+        errors: string[]
+    }) => {
+        toast.success(
+            `Guild import completed: ${s(result.imported)} imported, ${s(result.skipped)} skipped`
+        )
+        if (result.errors.length > 0) {
+            toast.warning(`${s(result.errors.length)} errors occurred during import`)
         }
+        await Promise.all([
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithCharacters],
+            }),
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.playersWithoutCharacters],
+            }),
+            queryClient.invalidateQueries({ queryKey: [queryKeys.characters] }),
+            queryClient.invalidateQueries({ queryKey: [queryKeys.playersSummary] }),
+            queryClient.invalidateQueries({ queryKey: [queryKeys.rosterSummary] }),
+        ])
     }
 
     return (
@@ -237,8 +234,10 @@ export default function SyncPage(): JSX.Element {
                     icon={<Users className="w-5 h-5" />}
                     title="Guild Members"
                     description="Import new members from the guild roster"
-                    isLoading={isImportingGuild}
-                    onSync={() => void handleImportGuild()}
+                    isLoading={false}
+                    onSync={() => {
+                        setIsGuildDialogOpen(true)
+                    }}
                 />
 
                 <SyncActionCard
@@ -286,6 +285,14 @@ export default function SyncPage(): JSX.Element {
                     </p>
                 )}
             </GlassCard>
+
+            <GuildImportDialog
+                isOpen={isGuildDialogOpen}
+                setOpen={setIsGuildDialogOpen}
+                onImportComplete={(result) =>
+                    void handleGuildImportComplete(result)
+                }
+            />
         </div>
     )
 }

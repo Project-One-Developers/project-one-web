@@ -1,6 +1,7 @@
 "use server"
 
 import { keyBy, partition } from "es-toolkit"
+import { z } from "zod"
 import { blizzardRepo } from "@/db/repositories/blizzard"
 import { bossRepo } from "@/db/repositories/bosses"
 import { characterRepo } from "@/db/repositories/characters"
@@ -34,14 +35,24 @@ import type { WowRaidDifficulty } from "@/shared/models/wow.models"
 import type { Result } from "@/shared/types"
 import { realmSlugToName } from "@/shared/wow.consts"
 
-// Guild Import Config (hardcoded for now)
+// Guild Import Config
 const GUILD_CONFIG = {
     name: "Project One",
     realm: "pozzo-delleternità", // Use slug directly for API
     realmDisplay: "Pozzo dell'Eternità", // For display/DB storage
-    // Rank indices to import (0=GM, 1=Officer, 3=Raider, 5=Trial)
-    importRanks: [0, 1, 3, 5],
+    // Default rank indices to pre-select (0=GM, 1=Officer, 3=Raider, 5=Trial)
+    defaultImportRanks: [0, 1, 3, 5],
 }
+
+export type GuildRankPreview = {
+    rank: number
+    memberCount: number
+    sampleNames: string[]
+}
+
+const importRanksSchema = z
+    .array(z.number().int().min(0).max(9))
+    .min(1, "Select at least one rank")
 
 // ============== INTERNAL FUNCTIONS (shared with other actions) ==============
 
@@ -306,9 +317,43 @@ async function getRosterProgressionInternal(
 }
 
 /**
+ * Preview guild roster grouped by rank.
+ */
+async function previewGuildRosterInternal(): Promise<{
+    ranks: GuildRankPreview[]
+    totalMembers: number
+    defaultImportRanks: number[]
+}> {
+    const roster = await fetchGuildRoster(GUILD_CONFIG.name, GUILD_CONFIG.realm)
+    if (!roster) {
+        throw new Error("Failed to fetch guild roster from Blizzard API")
+    }
+
+    const grouped = Object.groupBy(roster.members, (m) => m.rank)
+
+    const ranks: GuildRankPreview[] = Object.entries(grouped)
+        .filter(
+            (entry): entry is [string, NonNullable<(typeof grouped)[number]>] =>
+                entry[1] !== undefined
+        )
+        .map(([rank, members]) => ({
+            rank: Number(rank),
+            memberCount: members.length,
+            sampleNames: members.slice(0, 5).map((m) => m.character.name),
+        }))
+        .sort((a, b) => a.rank - b.rank)
+
+    return {
+        ranks,
+        totalMembers: roster.members.length,
+        defaultImportRanks: GUILD_CONFIG.defaultImportRanks,
+    }
+}
+
+/**
  * Import guild members from Blizzard API.
  */
-async function importGuildMembersInternal(): Promise<{
+async function importGuildMembersInternal(ranks: number[]): Promise<{
     imported: number
     skipped: number
     errors: string[]
@@ -325,10 +370,8 @@ async function importGuildMembersInternal(): Promise<{
 
     logger.info("Action", `Found ${s(roster.members.length)} total guild members`)
 
-    // Filter by allowed ranks
-    const allowedMembers = roster.members.filter((m) =>
-        GUILD_CONFIG.importRanks.includes(m.rank)
-    )
+    // Filter by selected ranks
+    const allowedMembers = roster.members.filter((m) => ranks.includes(m.rank))
     logger.info(
         "Action",
         `Filtered to ${s(allowedMembers.length)} members with allowed ranks`
@@ -440,8 +483,21 @@ export const getRosterProgression = safeAction(
     }
 )
 
+export const previewGuildRoster = officerAction(
+    async (): Promise<{
+        ranks: GuildRankPreview[]
+        totalMembers: number
+        defaultImportRanks: number[]
+    }> => {
+        return previewGuildRosterInternal()
+    }
+)
+
 export const importGuildMembers = officerAction(
-    async (): Promise<{ imported: number; skipped: number; errors: string[] }> => {
-        return importGuildMembersInternal()
+    async (
+        ranks: number[]
+    ): Promise<{ imported: number; skipped: number; errors: string[] }> => {
+        const validatedRanks = importRanksSchema.parse(ranks)
+        return importGuildMembersInternal(validatedRanks)
     }
 )
