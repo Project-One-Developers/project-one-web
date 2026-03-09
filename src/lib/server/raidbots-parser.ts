@@ -258,7 +258,7 @@ const convertJsonToDroptimizer = async (
     )
 
     if (itemsInBag.length === 0) {
-        throw new Error(`No items found in bags: ${url}`)
+        logger.warn("RaidbotsParser", `No items found in bags: ${url}`)
     }
 
     // Merge currencies from rawFormData and parseCatalystFromSimc
