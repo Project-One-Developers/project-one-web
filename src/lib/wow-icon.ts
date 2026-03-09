@@ -173,6 +173,21 @@ export const encounterIcon = new Map<number, string>([
     [2690, "https://wow.zamimg.com/modelviewer/ptr2/webthumbs/npc/251/125691.webp"], // Nexus-King Salhadaar
     [2691, "https://wow.zamimg.com/modelviewer/ptr2/webthumbs/npc/99/128867.webp"], // Dimensius
     [-78, "https://wow.zamimg.com/modelviewer/classic/webthumbs/npc/55/117047.webp"], // Trash Drop
+
+    // The Voidspire
+    [2733, "https://wow.zamimg.com/modelviewer/live/webthumbs/npc/241/137457.webp"], // Imperator Averzian
+    [2734, "https://wow.zamimg.com/modelviewer/live/webthumbs/npc/21/131605.webp"], // Vorasius
+    [2735, "https://wow.zamimg.com/modelviewer/live/webthumbs/npc/48/131632.webp"], // Vaelgor & Ezzorak
+    [2736, "https://wow.zamimg.com/modelviewer/live/webthumbs/npc/50/131634.webp"], // Fallen-King Salhadaar
+    [2737, "https://wow.zamimg.com/modelviewer/live/webthumbs/npc/195/131523.webp"], // Lightblinded Vanguard
+    [2738, "https://wow.zamimg.com/images/wow/journal/ui-ej-boss-alleria.png"], // Crown of the Cosmos
+
+    // March on Quel'Danas
+    [2739, "https://wow.zamimg.com/images/wow/journal/ui-ej-boss-alar.png"], // Belo'ren, Child of Al'ar
+    [2740, "https://wow.zamimg.com/modelviewer/live/webthumbs/npc/226/76770.webp"], // Midnight Falls
+
+    // The Dreamrift
+    [2795, "https://wow.zamimg.com/images/wow/journal/ui-ej-boss-malformed-manifestation.png"], // Chimaerus the Undreamt God
 ])
 
 export const currencyIcon = new Map<number, { url: string; name: string }>([
