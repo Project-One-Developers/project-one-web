@@ -18,7 +18,7 @@ export const createGearSlotMapping = (itemsEquipped: GearItem[]) => {
 
 // Consistent icon size for all slots (square)
 const ICON_SIZE = "h-12 w-12"
-const ICON_STYLE = `rounded-md ${ICON_SIZE} border border-background/50 shadow-md`
+const ICON_STYLE = `rounded-md ${ICON_SIZE} border border-background/50 shadow-md overflow-hidden`
 
 type BaseGearSlotProps = {
     slotKey: WowItemEquippedSlotKey
