@@ -106,6 +106,7 @@ function classifyItem(rawItem: RaidbotsItem): ItemClassification {
 type EncounterContext = {
     encounter: RaidbotsEncounter
     instance: RaidbotsInstance
+    sequentialOrder: number // 0-indexed position within instance (remapped from potentially non-sequential encounter.order)
 }
 
 export type EncounterMap = Map<number, EncounterContext>
@@ -115,16 +116,38 @@ export type EncounterMap = Map<number, EncounterContext>
 // ============================================================================
 
 /**
- * Build a map of encounterId -> EncounterContext from instances data
+ * Build a map of encounterId -> EncounterContext from instances data.
+ * Computes sequentialOrder per instance by sorting encounters by their raw order
+ * and assigning 0-indexed positions. This is needed because Raidbots can return
+ * non-sequential order values (e.g. 0,1,2,3,4,5,101,200,201) which cannot be
+ * used directly as array indices into the raidIlvl config.
+ * Sentinel values (order 98, 99, negative) are preserved as-is.
  */
 export function buildEncounterMap(instances: RaidbotsInstance[]): EncounterMap {
     return new Map(
-        instances.flatMap((instance) =>
-            (instance.encounters ?? []).map((encounter) => [
+        instances.flatMap((instance) => {
+            const encounters = instance.encounters ?? []
+
+            // Sort non-sentinel encounters by raw order to assign sequential indices
+            const orderToIndex = new Map(
+                [...encounters]
+                    .filter((e) => {
+                        const order = e.order ?? 0
+                        return order >= 0 && order < 98
+                    })
+                    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                    .map((enc, index) => [enc.id, index])
+            )
+
+            return encounters.map((encounter) => [
                 encounter.id,
-                { encounter, instance },
+                {
+                    encounter,
+                    instance,
+                    sequentialOrder: orderToIndex.get(encounter.id) ?? (encounter.order ?? 0),
+                },
             ])
-        )
+        })
     )
 }
 
@@ -188,16 +211,16 @@ export function enrichItem(
 
         // Determine item levels
         const isVeryRare = rawItem.sources.some((src) => src.veryRare)
-        const bossOrder = encounter.order ?? 0
+        const rawOrder = encounter.order ?? 0
         // Determine if catalyzed item
         const isCatalyzed = instance.type === "catalyst"
-        const isBoeOrCatalyst = bossOrder === 99 || isCatalyzed
+        const isBoeOrCatalyst = rawOrder === 99 || isCatalyzed
 
         const raidLevels =
             instance.type === "raid"
                 ? getItemLevelsForBoss(
                       instance.id,
-                      bossOrder,
+                      context.sequentialOrder,
                       isVeryRare,
                       isBoeOrCatalyst
                   )

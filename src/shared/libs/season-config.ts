@@ -158,25 +158,11 @@ export const SEASONS: Record<Season, SeasonConfig> = {
         relevantCurrencyIds: [3378, 3345, 3347], // catalyst, hero crest, myth crest
         bonusGroupIds: [607, 608, 609, 610, 611, 612],
         raidIlvl: {
-            // The Voidspire (6 bosses)
-            1307: {
-                champion: [246, 250, 250, 253, 253, 256],
-                hero: [259, 263, 263, 266, 266, 269],
-                mythic: [272, 276, 276, 279, 279, 282],
-                boeIlvl: { champion: 253, hero: 266, mythic: 279 },
-            },
-            // March on Quel'Danas (2 bosses)
-            1308: {
-                champion: [253, 256],
-                hero: [266, 269],
-                mythic: [279, 282],
-                boeIlvl: { champion: 253, hero: 266, mythic: 279 },
-            },
-            // The Dreamrift (1 boss)
-            1314: {
-                champion: [253],
-                hero: [266],
-                mythic: [279],
+            // Midnight Season 1 Raids (-91 raidbots id)
+            "-91": {
+                champion: [246, 250, 250, 253, 253, 256, 250, 253, 256],
+                hero: [259, 263, 263, 266, 266, 269, 263, 266, 269],
+                mythic: [272, 276, 276, 279, 279, 282, 276, 279, 282],
                 boeIlvl: { champion: 253, hero: 266, mythic: 279 },
             },
         },
