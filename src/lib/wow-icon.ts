@@ -298,4 +298,54 @@ export const currencyIcon = new Map<number, { url: string; name: string }>([
             name: "Enchanted Gilded Undermine Crest",
         },
     ],
+    // MIDNIGHT SEASON 1
+    [
+        3378,
+        {
+            url: "https://wow.zamimg.com/images/wow/icons/large/inv_10_blacksmithing_craftedoptional_blacksmithdye_fire.jpg",
+            name: "Dawnlight Manaflux",
+        },
+    ],
+    [
+        3383,
+        {
+            url: "https://wow.zamimg.com/images/wow/icons/large/inv_120_crest_adventurer.jpg",
+            name: "Adventurer Dawncrest",
+        },
+    ],
+    [
+        3341,
+        {
+            url: "https://wow.zamimg.com/images/wow/icons/large/inv_120_crest_veteran.jpg",
+            name: "Veteran Dawncrest",
+        },
+    ],
+    [
+        3343,
+        {
+            url: "https://wow.zamimg.com/images/wow/icons/large/inv_120_crest_champion.jpg",
+            name: "Champion Dawncrest",
+        },
+    ],
+    [
+        3345,
+        {
+            url: "https://wow.zamimg.com/images/wow/icons/large/inv_120_crest_hero.jpg",
+            name: "Hero Dawncrest",
+        },
+    ],
+    [
+        3347,
+        {
+            url: "https://wow.zamimg.com/images/wow/icons/large/inv_120_crest_myth.jpg",
+            name: "Myth Dawncrest",
+        },
+    ],
+    [
+        232875,
+        {
+            url: "https://wow.zamimg.com/images/wow/icons/large/inv_12_profession_questandcrafting_sparkwhole_gold.jpg",
+            name: "Spark of Radiance",
+        },
+    ],
 ])
