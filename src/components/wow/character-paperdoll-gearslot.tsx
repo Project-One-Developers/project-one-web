@@ -1,7 +1,10 @@
 "use client"
 
+import Image from "next/image"
 import type React from "react"
+import { getEquippedSlotIcon } from "@/lib/wow-icon"
 import type { GearItem } from "@/shared/models/item.models"
+import type { WowItemEquippedSlotKey } from "@/shared/models/wow.models"
 import { WowGearIcon } from "./wow-gear-icon"
 
 export const createGearSlotMapping = (itemsEquipped: GearItem[]) => {
@@ -18,6 +21,7 @@ const ICON_SIZE = "h-12 w-12"
 const ICON_STYLE = `rounded-md ${ICON_SIZE} border border-background/50 shadow-md`
 
 type BaseGearSlotProps = {
+    slotKey: WowItemEquippedSlotKey
     equippedItem?: GearItem
     className?: string
     showTierBanner?: boolean
@@ -28,6 +32,7 @@ type BaseGearSlotProps = {
 }
 
 export default function BaseGearSlot({
+    slotKey,
     equippedItem,
     className = "",
     showTierBanner = false,
@@ -46,9 +51,15 @@ export default function BaseGearSlot({
                     iconClassName={ICON_STYLE}
                 />
             ) : (
-                <div
-                    className={`rounded-md ${ICON_SIZE} bg-black/40 ring-1 ring-white/10`}
-                />
+                <div className={`relative ${ICON_STYLE} bg-black/40`}>
+                    <Image
+                        src={getEquippedSlotIcon(slotKey)}
+                        alt={slotKey}
+                        width={48}
+                        height={48}
+                        className="opacity-30 saturate-0"
+                    />
+                </div>
             )}
             {children}
         </div>

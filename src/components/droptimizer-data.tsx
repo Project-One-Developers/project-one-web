@@ -16,6 +16,7 @@ export default function DroptimizerData({ data }: { data: Droptimizer }) {
 
         return (
             <BaseGearSlot
+                slotKey={slotKey}
                 equippedItem={equippedItem}
                 showExtendedInfo={true}
                 showTierBanner={true}

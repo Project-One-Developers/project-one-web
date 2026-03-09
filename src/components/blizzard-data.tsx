@@ -22,6 +22,7 @@ export default function BlizzardData({ data, tiersetInfo }: BlizzardDataProps) {
 
         return (
             <BaseGearSlot
+                slotKey={slotKey}
                 equippedItem={equippedItem}
                 showExtendedInfo={true}
                 showTierBanner={true}

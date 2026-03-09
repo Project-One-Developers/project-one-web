@@ -1,6 +1,7 @@
 import type {
     WowArmorType,
     WowClassName,
+    WowItemEquippedSlotKey,
     WowItemSlotKey,
 } from "@/shared/models/wow.models"
 import type { WowSpecId } from "@/shared/wow.consts"
@@ -107,6 +108,27 @@ export const itemSlotIcon = new Map<WowItemSlotKey, string>([
     ["off_hand", "https://wow.zamimg.com/images/wow/icons/large/inv_shield_04.jpg"],
     ["omni", "https://wow.zamimg.com/images/wow/icons/large/inv_ability_web_orb.jpg"],
 ])
+
+const SHIRT_ICON = "https://wow.zamimg.com/images/wow/icons/large/inv_shirt_grey_01.jpg"
+const TABARD_ICON =
+    "https://wow.zamimg.com/images/wow/icons/large/inv_shirt_guildtabard_01.jpg"
+
+export const getEquippedSlotIcon = (slotKey: WowItemEquippedSlotKey): string => {
+    switch (slotKey) {
+        case "finger1":
+        case "finger2":
+            return itemSlotIcon.get("finger")!
+        case "trinket1":
+        case "trinket2":
+            return itemSlotIcon.get("trinket")!
+        case "shirt":
+            return SHIRT_ICON
+        case "tabard":
+            return TABARD_ICON
+        default:
+            return itemSlotIcon.get(slotKey)!
+    }
+}
 
 export const armorTypesIcon = new Map<WowArmorType, string>([
     ["Cloth", "https://wow.zamimg.com/images/wow/icons/large/inv_chest_cloth_23.jpg"],
