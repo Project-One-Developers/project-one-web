@@ -2,6 +2,7 @@ import pLimit from "p-limit"
 import "server-only"
 import { z } from "zod"
 import { env } from "@/env"
+import { fetchWithRetry } from "@/lib/fetch-with-retry"
 import { logger } from "@/lib/logger"
 import { s } from "@/shared/libs/string-utils"
 import { realmNameToSlug } from "@/shared/wow.consts"
@@ -202,7 +203,7 @@ async function getAccessToken(): Promise<string | null> {
         })
 
         if (!response.ok) {
-            logger.error("Blizzard", `Failed to get access token: ${s(response.status)}`)
+            logger.error("Blizzard", `Failed to get access token: ${s(response.status)} (${response.statusText})`)
             return null
         }
 
@@ -229,62 +230,64 @@ export async function fetchCharacterMedia(
     realm: string,
     region = "eu"
 ): Promise<string | null> {
-    const token = await getAccessToken()
-    if (!token) {
-        return null
-    }
-
-    try {
-        const realmSlug = realmNameToSlug(realm)
-        const charName = name.toLowerCase()
-        const namespace = `profile-${region}`
-
-        const url = encodeURI(
-            `https://${region}.api.blizzard.com/profile/wow/character/${realmSlug}/${charName}/character-media?namespace=${namespace}&locale=en_GB`
-        )
-
-        const response = await fetch(url, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        })
-
-        if (!response.ok) {
-            if (response.status === 404) {
-                logger.debug(
-                    "Blizzard",
-                    `Character media not found: ${s(name)}-${s(realm)}`
-                )
-            } else {
-                logger.error(
-                    "Blizzard",
-                    `Failed to fetch character media: ${s(response.status)}`
-                )
-            }
+    return blizzardRateLimit(async () => {
+        const token = await getAccessToken()
+        if (!token) {
             return null
         }
 
-        const data = characterMediaResponseSchema.parse(await response.json())
+        try {
+            const realmSlug = realmNameToSlug(realm)
+            const charName = name.toLowerCase()
+            const namespace = `profile-${region}`
 
-        // Find main-raw asset (transparent full body render)
-        const mainRaw = data.assets.find((a) => a.key === "main-raw")
-        if (mainRaw) {
-            return mainRaw.value
+            const url = encodeURI(
+                `https://${region}.api.blizzard.com/profile/wow/character/${realmSlug}/${charName}/character-media?namespace=${namespace}&locale=en_GB`
+            )
+
+            const response = await fetchWithRetry(url, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    logger.debug(
+                        "Blizzard",
+                        `Character media not found: ${s(name)}-${s(realm)}`
+                    )
+                } else {
+                    logger.error(
+                        "Blizzard",
+                        `Failed to fetch character media: ${s(response.status)} (${response.statusText})`
+                    )
+                }
+                return null
+            }
+
+            const data = characterMediaResponseSchema.parse(await response.json())
+
+            // Find main-raw asset (transparent full body render)
+            const mainRaw = data.assets.find((a) => a.key === "main-raw")
+            if (mainRaw) {
+                return mainRaw.value
+            }
+
+            // Fallback to main if main-raw not available
+            const main = data.assets.find((a) => a.key === "main")
+            if (main) {
+                return main.value
+            }
+
+            // Last fallback to inset
+            const inset = data.assets.find((a) => a.key === "inset")
+            return inset?.value ?? null
+        } catch (error) {
+            logger.error("Blizzard", `Error fetching character media: ${s(error)}`)
+            return null
         }
-
-        // Fallback to main if main-raw not available
-        const main = data.assets.find((a) => a.key === "main")
-        if (main) {
-            return main.value
-        }
-
-        // Last fallback to inset
-        const inset = data.assets.find((a) => a.key === "inset")
-        return inset?.value ?? null
-    } catch (error) {
-        logger.error("Blizzard", `Error fetching character media: ${s(error)}`)
-        return null
-    }
+    })
 }
 
 // ============================================================================
@@ -314,7 +317,7 @@ export async function fetchCharacterProfile(
                 `https://${region}.api.blizzard.com/profile/wow/character/${realmSlug}/${charName}?namespace=${namespace}&locale=en_GB`
             )
 
-            const response = await fetch(url, {
+            const response = await fetchWithRetry(url, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -329,7 +332,7 @@ export async function fetchCharacterProfile(
                 } else {
                     logger.error(
                         "Blizzard",
-                        `Failed to fetch character profile: ${s(response.status)}`
+                        `Failed to fetch character profile: ${s(response.status)} (${response.statusText})`
                     )
                 }
                 return null
@@ -370,7 +373,7 @@ export async function fetchCharacterEquipment(
                 `https://${region}.api.blizzard.com/profile/wow/character/${realmSlug}/${charName}/equipment?namespace=${namespace}&locale=en_GB`
             )
 
-            const response = await fetch(url, {
+            const response = await fetchWithRetry(url, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -385,7 +388,7 @@ export async function fetchCharacterEquipment(
                 } else {
                     logger.error(
                         "Blizzard",
-                        `Failed to fetch character equipment: ${s(response.status)}`
+                        `Failed to fetch character equipment: ${s(response.status)} (${response.statusText})`
                     )
                 }
                 return null
@@ -426,7 +429,7 @@ export async function fetchCharacterEncountersRaids(
                 `https://${region}.api.blizzard.com/profile/wow/character/${realmSlug}/${charName}/encounters/raids?namespace=${namespace}&locale=en_GB`
             )
 
-            const response = await fetch(url, {
+            const response = await fetchWithRetry(url, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -441,7 +444,7 @@ export async function fetchCharacterEncountersRaids(
                 } else {
                     logger.error(
                         "Blizzard",
-                        `Failed to fetch character encounters: ${s(response.status)}`
+                        `Failed to fetch character encounters: ${s(response.status)} (${response.statusText})`
                     )
                 }
                 return null
@@ -495,7 +498,7 @@ export async function fetchCharacterMounts(
                 `https://${region}.api.blizzard.com/profile/wow/character/${realmSlug}/${charName}/collections/mounts?namespace=${namespace}&locale=en_GB`
             )
 
-            const response = await fetch(url, {
+            const response = await fetchWithRetry(url, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -510,7 +513,7 @@ export async function fetchCharacterMounts(
                 } else {
                     logger.error(
                         "Blizzard",
-                        `Failed to fetch character mounts: ${s(response.status)}`
+                        `Failed to fetch character mounts: ${s(response.status)} (${response.statusText})`
                     )
                 }
                 return null
@@ -565,7 +568,7 @@ export async function fetchJournalInstance(
             const namespace = `static-${region}`
             const url = `https://${region}.api.blizzard.com/data/wow/journal-instance/${s(instanceId)}?namespace=${namespace}&locale=en_GB`
 
-            const response = await fetch(url, {
+            const response = await fetchWithRetry(url, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -580,7 +583,7 @@ export async function fetchJournalInstance(
                 } else {
                     logger.error(
                         "Blizzard",
-                        `Failed to fetch journal instance: ${s(response.status)}`
+                        `Failed to fetch journal instance: ${s(response.status)} (${response.statusText})`
                     )
                 }
                 return null
@@ -621,7 +624,7 @@ export async function fetchGuildRoster(
                 `https://${region}.api.blizzard.com/data/wow/guild/${realmSlug}/${guildSlug}/roster?namespace=${namespace}&locale=en_GB`
             )
 
-            const response = await fetch(url, {
+            const response = await fetchWithRetry(url, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -709,7 +712,7 @@ export async function fetchItem(
             const namespace = `static-${region}`
             const url = `https://${region}.api.blizzard.com/data/wow/item/${s(itemId)}?namespace=${namespace}&locale=en_GB`
 
-            const response = await fetch(url, {
+            const response = await fetchWithRetry(url, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -721,7 +724,7 @@ export async function fetchItem(
                 } else {
                     logger.error(
                         "Blizzard",
-                        `Failed to fetch item: ${s(response.status)}`
+                        `Failed to fetch item: ${s(response.status)} (${response.statusText})`
                     )
                 }
                 return null
@@ -752,7 +755,7 @@ export async function fetchItemMedia(
             const namespace = `static-${region}`
             const url = `https://${region}.api.blizzard.com/data/wow/media/item/${s(itemId)}?namespace=${namespace}&locale=en_GB`
 
-            const response = await fetch(url, {
+            const response = await fetchWithRetry(url, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -764,7 +767,7 @@ export async function fetchItemMedia(
                 } else {
                     logger.error(
                         "Blizzard",
-                        `Failed to fetch item media: ${s(response.status)}`
+                        `Failed to fetch item media: ${s(response.status)} (${response.statusText})`
                     )
                 }
                 return null
