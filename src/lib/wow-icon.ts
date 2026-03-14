@@ -109,26 +109,29 @@ export const itemSlotIcon = new Map<WowItemSlotKey, string>([
     ["omni", "https://wow.zamimg.com/images/wow/icons/large/inv_ability_web_orb.jpg"],
 ])
 
-const SHIRT_ICON = "https://wow.zamimg.com/images/wow/icons/large/inv_shirt_grey_01.jpg"
-const TABARD_ICON =
-    "https://wow.zamimg.com/images/wow/icons/large/inv_shirt_guildtabard_01.jpg"
+const equippedSlotIcons = {
+    head: "https://wow.zamimg.com/images/wow/icons/large/inv_helmet_24.jpg",
+    neck: "https://wow.zamimg.com/images/wow/icons/large/inv_jewelry_necklace_07.jpg",
+    shoulder: "https://wow.zamimg.com/images/wow/icons/large/inv_shoulder_25.jpg",
+    back: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_cape_20.jpg",
+    chest: "https://wow.zamimg.com/images/wow/icons/large/inv_chest_chain_05.jpg",
+    shirt: "https://wow.zamimg.com/images/wow/icons/large/inv_shirt_grey_01.jpg",
+    tabard: "https://wow.zamimg.com/images/wow/icons/large/inv_shirt_guildtabard_01.jpg",
+    wrist: "https://wow.zamimg.com/images/wow/icons/large/inv_bracer_07.jpg",
+    hands: "https://wow.zamimg.com/images/wow/icons/large/inv_gauntlets_04.jpg",
+    waist: "https://wow.zamimg.com/images/wow/icons/large/inv_belt_15.jpg",
+    legs: "https://wow.zamimg.com/images/wow/icons/large/inv_pants_08.jpg",
+    feet: "https://wow.zamimg.com/images/wow/icons/large/inv_boots_05.jpg",
+    finger1: "https://wow.zamimg.com/images/wow/icons/large/inv_jewelry_ring_22.jpg",
+    finger2: "https://wow.zamimg.com/images/wow/icons/large/inv_jewelry_ring_22.jpg",
+    trinket1: "https://wow.zamimg.com/images/wow/icons/large/inv_jewelry_talisman_01.jpg",
+    trinket2: "https://wow.zamimg.com/images/wow/icons/large/inv_jewelry_talisman_01.jpg",
+    main_hand: "https://wow.zamimg.com/images/wow/icons/large/inv_sword_04.jpg",
+    off_hand: "https://wow.zamimg.com/images/wow/icons/large/inv_shield_04.jpg",
+} satisfies Record<WowItemEquippedSlotKey, string>
 
-export const getEquippedSlotIcon = (slotKey: WowItemEquippedSlotKey): string => {
-    switch (slotKey) {
-        case "finger1":
-        case "finger2":
-            return itemSlotIcon.get("finger")!
-        case "trinket1":
-        case "trinket2":
-            return itemSlotIcon.get("trinket")!
-        case "shirt":
-            return SHIRT_ICON
-        case "tabard":
-            return TABARD_ICON
-        default:
-            return itemSlotIcon.get(slotKey)!
-    }
-}
+export const getEquippedSlotIcon = (slotKey: WowItemEquippedSlotKey): string =>
+    equippedSlotIcons[slotKey]
 
 export const armorTypesIcon = new Map<WowArmorType, string>([
     ["Cloth", "https://wow.zamimg.com/images/wow/icons/large/inv_chest_cloth_23.jpg"],
